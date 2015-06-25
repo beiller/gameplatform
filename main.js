@@ -16,7 +16,6 @@ function World() {
 		32
 	];
 	this.lights = [];
-	this.characterMesh = null;
 	this.movementDirection = new THREE.Vector2(0,0);
 	this.animations = {};
 	this.animationNames = [];
@@ -24,7 +23,6 @@ function World() {
 	this.movementSpeed = 0.05;
 	
 	this.dynamicObjects = [];
-	
 	
 	this.world = new CANNON.World();
 	this.world.gravity.set(0,-9.82,0);
@@ -42,6 +40,13 @@ function World() {
 	this.createLights();
 	
 };
+World.prototype.getPlayer = function() {
+	for(var i = 0; i < this.dynamicObjects.length; i++) {
+		if(this.dynamicObjects[i].body.gameType == "player") {
+			return this.dynamicObjects[i];
+		}
+	}
+}
 World.prototype.update = function() {
 	var dt = 1/60;
 	this.world.step(dt);
@@ -58,10 +63,10 @@ World.prototype.createBody = function(mass, radius, position) {
 	body.addShape(shape);
 	body.position.set(position[0], position[1], position[2]);
 	body.collisionFilterGroup = this.collisionGroups[1];
-	body.collisionFilterMask = this.collisionGroups[0] | this.collisionGroups[1];
+	body.collisionFilterMask = this.collisionGroups[0];// | this.collisionGroups[1];
 	body.quaternion.setFromAxisAngle(new CANNON.Vec3(-0.5,0.5,0), 20 * (Math.PI / 180));
 	this.world.add(body); // Step 3
-	var cube = new THREE.Mesh( new THREE.BoxGeometry( radius*2, radius*2, radius*2 ), new THREE.MeshPhongMaterial() );
+	var cube = new THREE.Mesh( new THREE.BoxGeometry( radius*2, radius*2, radius*2 ), new THREE.MeshBasicMaterial({wireframe: true}) );
 	cube.position.copy(body.position);
 	this.scene.add(cube);
 	cube.body = body;
@@ -102,12 +107,13 @@ World.prototype.createGround = function() {
 	this.world.add(groundBody);
 	this.groundBody = groundBody;
 	var geometry = new THREE.PlaneBufferGeometry(500, 500, 16, 16);
-	var color = new THREE.ImageUtils.loadTexture('grass.jpg');
-	color.wrapS = THREE.RepeatWrapping;
-	color.wrapT = THREE.RepeatWrapping;
-	color.repeat.set(100,100);
+	//var color = new THREE.ImageUtils.loadTexture('grass.jpg');
+	//color.wrapS = THREE.RepeatWrapping;
+	//color.wrapT = THREE.RepeatWrapping;
+	//color.repeat.set(100,100);
 	var material = new THREE.MeshPhongMaterial({
-		map: color,
+		//map: color,
+		color: new THREE.Color(0x002200),
 		specular: new THREE.Color(0x090909),
 		shininess: 24,
 		side: THREE.DoubleSide
@@ -250,10 +256,10 @@ var keymap = {
 			PLAYER.movementDirection.z -= 1.0;
 		},
 		'68': function(){//a
-			PLAYER.movementDirection.x -= 1.0;
+			PLAYER.movementDirection.x += 1.0;
 		},
 		'65': function(){//d
-			PLAYER.movementDirection.x += 1.0
+			PLAYER.movementDirection.x -= 1.0
 		}
 	},
 	'keyup':{
@@ -264,10 +270,10 @@ var keymap = {
 			PLAYER.movementDirection.z += 1.0;
 		},
 		'68': function(){
-			PLAYER.movementDirection.x += 1.0;
+			PLAYER.movementDirection.x -= 1.0;
 		},
 		'65': function(){
-			PLAYER.movementDirection.x -= 1.0
+			PLAYER.movementDirection.x += 1.0
 		}
 	}
 }
@@ -361,9 +367,10 @@ NPC = new BasicAI (
 		"Billy",
 		100,
 		10,
-		world.createBody(0.25, 0.5, [2,3,0]),
+		world.createBody(0.25, 0.5, [12,3,0]),
 		world
-	)
+	),
+	THREE.Vector2(10, 0)
 );
 NPC.movementSpeed = 10.0;
 NPC2 = new BasicAI (
@@ -371,9 +378,10 @@ NPC2 = new BasicAI (
 		"Billy",
 		100,
 		10,
-		world.createBody(0.25, 0.5, [-2,3,0]),
+		world.createBody(0.25, 0.5, [-12,3,0]),
 		world
-	)
+	),
+	THREE.Vector2(-10, 0)
 );
 NPC2.movementSpeed = 20.0;
 

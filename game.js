@@ -116,7 +116,7 @@ Character.prototype.equip = function(attachPoint, item) {
 	}
 }
 Character.prototype.update = function() {
-	var from = this.body.position;
+	/*var from = this.body.position;
 	var to = new CANNON.Vec3(this.body.position.x, -100.0, this.body.position.y);
 	this.body.collisionResponse = false;
 	var ray = new CANNON.Ray(from, to);
@@ -126,7 +126,12 @@ Character.prototype.update = function() {
 	} else {
 		this.onGround = false;
 	}
-	this.body.collisionResponse = true;
+	this.body.collisionResponse = true;*/
+	if(this.body.position.y <= 0.5000001) {
+		this.onGround = true;
+	} else {
+		this.onGround = false;
+	}
 
 	if(this.onGround) {
 		var m = new Vec3().copy(this.movementDirection).multiplyScalar(this.movementSpeed);
@@ -145,22 +150,65 @@ Character.prototype.update = function() {
 }
 
 
-function BasicAI(character) {
+function BasicAI(character, basePoint) {
 	this.character = character;
 	this.updateFunc = this.wander;
 	this.character.movementDirection.x = 1.0;
 	
 	this.clock = new THREE.Clock(true);
-	this.basePoint = new Vec2(0,0);
+	this.basePoint = basePoint ? basePoint : new Vec2(0,0);
 	this.wanderDist = 100.0;
 	this.newWaypoint();
-	
+
+	this.sightThreshold = 5.0;
+
 }
 BasicAI.prototype.newWaypoint = function() {
 	var rand = new Vec2(Math.random() - 0.5, 0).normalize().multiplyScalar(Math.random() * this.wanderDist)
 	this.waypoint = new Vec2().copy(this.basePoint).add(rand);
 }
+BasicAI.prototype.attack = function() {
+	var pc = this.character.world.getPlayer();
+	if(pc) {
+		var pos = new Vec3().copy(pc.position);
+		//var mypos = ;
+		pos.sub(this.character.mesh.position);
+		var len = pos.length();
+		if(len < this.sightThreshold) {
+			pos.normalize();
+			if(len < 0.6) {
+				//apply force to player and player takes damage
+				var force = new CANNON.Vec3(pos.x, 0.01, 0.0);
+				force.normalize();
+				force.scale(400.0, force);
+				force.y = Math.min(force.y, 10.0);
+				console.log(force);
+				pc.body.applyForce(force, pc.body.position);
+			}
+			//console.log("I'm coming after you!");
+			this.character.movementDirection.lerp(pos, 0.1);
+		} else {
+			this.updateFunc = this.wander;
+			this.character.movementSpeed /= 5.0;
+		}
+	}
+}
 BasicAI.prototype.wander = function() {
+	/*
+		WHERE IS THE GOOD GUYS?
+	*/
+	var pc = this.character.world.getPlayer();
+	if(pc) {
+		var pos = new Vec3().copy(pc.position);
+		//var mypos = ;
+		pos.sub(this.character.mesh.position);
+		if(pos.length() < this.sightThreshold) {
+			console.log("I'm coming after you!");
+			this.updateFunc = this.attack;
+			this.character.movementSpeed *= 5.0;
+		}
+	}
+
 	if(this.clock.getElapsedTime() > (3 + (Math.random() * 10))) {
 		this.clock = new THREE.Clock(true);
 		this.newWaypoint();
