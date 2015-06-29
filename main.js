@@ -23,6 +23,7 @@ function World() {
 	this.movementSpeed = 0.05;
 	
 	this.dynamicObjects = [];
+	this.animations = {};
 	
 	this.world = new CANNON.World();
 	this.world.gravity.set(0,-9.82,0);
@@ -38,6 +39,10 @@ function World() {
 	this.initRendering();
 	this.createGround();
 	this.createLights();
+
+	this.timestep = 0.00;
+
+	this.clock = new THREE.Clock(true);
 	
 };
 World.prototype.getPlayer = function() {
@@ -48,12 +53,18 @@ World.prototype.getPlayer = function() {
 	}
 }
 World.prototype.update = function() {
-	var dt = 1/60;
-	this.world.step(dt);
+	var dt = clock.getDelta();
+	this.world.step(1.0/60.0);
 	
 	for(var i in this.dynamicObjects) {
 		this.dynamicObjects[i].update();
 	}
+	/*for(var i in this.animations) {
+		this.animations[i].update(1/24.0);
+		console.log('here');
+	}*/
+	//console.log(THREE.AnimationHandler);
+	THREE.AnimationHandler.update(dt);
 }
 World.prototype.createBody = function(mass, radius, position) {
 	var shape = new CANNON.Box(new CANNON.Vec3( radius, radius, radius ));
@@ -68,7 +79,7 @@ World.prototype.createBody = function(mass, radius, position) {
 	this.world.add(body); // Step 3
 	var cube = new THREE.Mesh( new THREE.BoxGeometry( radius*2, radius*2, radius*2 ), new THREE.MeshBasicMaterial({wireframe: true}) );
 	cube.position.copy(body.position);
-	this.scene.add(cube);
+	//this.scene.add(cube);
 	cube.body = body;
 	cube.castShadow = true;
 	cube.receiveShadow = true;
@@ -107,12 +118,12 @@ World.prototype.createGround = function() {
 	this.world.add(groundBody);
 	this.groundBody = groundBody;
 	var geometry = new THREE.PlaneBufferGeometry(500, 500, 16, 16);
-	//var color = new THREE.ImageUtils.loadTexture('grass.jpg');
-	//color.wrapS = THREE.RepeatWrapping;
-	//color.wrapT = THREE.RepeatWrapping;
-	//color.repeat.set(100,100);
+	var color = new THREE.ImageUtils.loadTexture('grass.jpg');
+	color.wrapS = THREE.RepeatWrapping;
+	color.wrapT = THREE.RepeatWrapping;
+	color.repeat.set(100,100);
 	var material = new THREE.MeshPhongMaterial({
-		//map: color,
+		map: color,
 		color: new THREE.Color(0x002200),
 		specular: new THREE.Color(0x090909),
 		shininess: 24,
@@ -358,7 +369,10 @@ PLAYER = new Character(
 	100,
 	10,
 	world.createBody(0.25, 0.5, [0,3,0]),
-	world
+	world,
+	null,
+	null,
+	'gizmo_thunder_ffmodel_upload.js'
 );
 PLAYER.movementSpeed = 10.0;
 PLAYER.body.gameType = "player";
@@ -368,7 +382,10 @@ NPC = new BasicAI (
 		100,
 		10,
 		world.createBody(0.25, 0.5, [12,3,0]),
-		world
+		world,
+		null,
+		null,
+		'gizmo_thunder_ffmodel_upload.js'
 	),
 	THREE.Vector2(10, 0)
 );
@@ -379,7 +396,10 @@ NPC2 = new BasicAI (
 		100,
 		10,
 		world.createBody(0.25, 0.5, [-12,3,0]),
-		world
+		world,
+		null,
+		null,
+		'gizmo_thunder_ffmodel_upload.js'
 	),
 	THREE.Vector2(-10, 0)
 );
