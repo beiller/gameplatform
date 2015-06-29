@@ -38,6 +38,13 @@ function World() {
 	
 	this.initRendering();
 	this.createGround();
+	this.loadProp("tree.js", new THREE.Vector3(0,0,0));
+	this.loadProp("tree.js", new THREE.Vector3(-20,0,0));
+	//this.loadProp("tree.js", new THREE.Vector3(-40,0,0));
+	//this.loadProp("tree.js", new THREE.Vector3(-60,0,0));
+	this.loadProp("tree.js", new THREE.Vector3(20,0,0));
+	//this.loadProp("tree.js", new THREE.Vector3(40,0,0));
+	//this.loadProp("tree.js", new THREE.Vector3(60,0,0));
 	this.createLights();
 
 	this.timestep = 0.00;
@@ -54,7 +61,7 @@ World.prototype.getPlayer = function() {
 }
 World.prototype.update = function() {
 	var dt = clock.getDelta();
-	this.world.step(1.0/60.0);
+	this.world.step(Math.min(dt, 0.5));
 	
 	for(var i in this.dynamicObjects) {
 		this.dynamicObjects[i].update();
@@ -106,6 +113,29 @@ World.prototype.createBody = function(mass, radius, position) {
 		}
 	});
 	return [body, cube];
+}
+World.prototype.loadProp = function(jsonFileName, position) {
+	var loader = new THREE.JSONLoader();
+	var scope = this;
+	if(position == undefined) {
+		var position = new THREE.Vector3(0,0,0);
+	}
+	loader.load( jsonFileName, function ( geometry, materials ) {
+		if(!materials) {
+			var material = new THREE.MeshPhongMaterial({
+				color: new THREE.Color(0x332211),
+				specular: new THREE.Color(0x020202),
+				shininess: 24,
+				side: THREE.DoubleSide
+			});
+			materials = [material];
+		}
+	    var mesh = new THREE.Mesh(geometry, materials[0]);
+	    mesh.position.copy(position);
+	    mesh.castShadow = true;
+		mesh.receiveShadow = true;
+	    scope.scene.add(mesh);
+	});
 }
 World.prototype.createGround = function() {
 	var groundShape = new CANNON.Plane();

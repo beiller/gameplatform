@@ -103,8 +103,10 @@ Character.prototype.createAvatar = function(jsonFileName) {
 	var scope = this;
 	loader.load( jsonFileName, function ( geometry, materials ) {
 		if(!materials) {
+			var color = new THREE.ImageUtils.loadTexture('fftex_furry.jpg');
 			var material = new THREE.MeshPhongMaterial({
-				color: new THREE.Color(0xFF0000),
+				map: color,
+				color: new THREE.Color(0x888888),
 				specular: new THREE.Color(0x020202),
 				shininess: 24,
 				side: THREE.DoubleSide,
