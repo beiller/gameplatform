@@ -29,7 +29,7 @@ function World() {
 	this.world.gravity.set(0,-9.82,0);
 	this.world.broadphase = new CANNON.NaiveBroadphase();
 	this.world.solver.iterations = 10;
-	this.world.defaultContactMaterial.friction = 0.01;
+	this.world.defaultContactMaterial.friction = 0.035;
     this.world.defaultContactMaterial.contactEquationStiffness = 1e8;
     this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
 	
@@ -37,12 +37,13 @@ function World() {
 	this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.1, 1000);
 	
 	this.initRendering();
-	this.createGround();
+	this.createHeightfield();
+	//this.createGround();
 	this.loadProp("tree.js", new THREE.Vector3(0,0,0));
-	this.loadProp("tree.js", new THREE.Vector3(-20,0,0));
+	//this.loadProp("tree.js", new THREE.Vector3(-20,0,0));
 	//this.loadProp("tree.js", new THREE.Vector3(-40,0,0));
 	//this.loadProp("tree.js", new THREE.Vector3(-60,0,0));
-	this.loadProp("tree.js", new THREE.Vector3(20,0,0));
+	//this.loadProp("tree.js", new THREE.Vector3(20,0,0));
 	//this.loadProp("tree.js", new THREE.Vector3(40,0,0));
 	//this.loadProp("tree.js", new THREE.Vector3(60,0,0));
 	this.createLights();
@@ -61,20 +62,90 @@ World.prototype.getPlayer = function() {
 }
 World.prototype.update = function() {
 	var dt = clock.getDelta();
-	this.world.step(Math.min(dt, 0.5));
+	this.world.step(Math.min(dt, 0.1));
 	
 	for(var i in this.dynamicObjects) {
 		this.dynamicObjects[i].update();
 	}
-	/*for(var i in this.animations) {
-		this.animations[i].update(1/24.0);
-		console.log('here');
-	}*/
-	//console.log(THREE.AnimationHandler);
 	THREE.AnimationHandler.update(dt);
 }
+World.prototype.createHeightfield = function() {
+
+	 // Create a matrix of height values
+	var matrix = [];
+	var sizeX = 200,
+		sizeY = 6;
+	for (var i = 0; i < sizeX; i++) {
+		matrix.push([]);
+		for (var j = 0; j < sizeY; j++) {
+			//var height = Math.cos(i/sizeX * Math.PI * 2)*Math.cos(j/sizeY * Math.PI * 2) + 2;
+			//if(i===0 || i === sizeX-1 || j===0 || j === sizeY-1)
+			//	height = 3;
+			var height = Math.random() * 3.25;
+			matrix[i].push(height);
+		}
+	}
+	// Create the heightfield
+	var hfShape = new CANNON.Heightfield(matrix, {
+		elementSize: 5
+	});
+	var hfBody = new CANNON.Body({ mass: 0 });
+	hfBody.addShape(hfShape);
+	hfBody.position.set(-sizeX * hfShape.elementSize / 2, -2, sizeY * hfShape.elementSize / 2);
+	hfBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), -90.0 * (Math.PI / 180));
+	hfBody.collisionFilterGroup = this.collisionGroups[0];
+	hfBody.collisionFilterMask = this.collisionGroups[0] | this.collisionGroups[1];
+	this.world.addBody(hfBody);
+	
+	var createMeshFromHeightField = function(shape) {
+		var geometry = new THREE.Geometry();
+		var v0 = new CANNON.Vec3();
+		var v1 = new CANNON.Vec3();
+		var v2 = new CANNON.Vec3();
+		for (var xi = 0; xi < shape.data.length - 1; xi++) {
+			for (var yi = 0; yi < shape.data[xi].length - 1; yi++) {
+				for (var k = 0; k < 2; k++) {
+					shape.getConvexTrianglePillar(xi, yi, k===0);
+					v0.copy(shape.pillarConvex.vertices[0]);
+					v1.copy(shape.pillarConvex.vertices[1]);
+					v2.copy(shape.pillarConvex.vertices[2]);
+					v0.vadd(shape.pillarOffset, v0);
+					v1.vadd(shape.pillarOffset, v1);
+					v2.vadd(shape.pillarOffset, v2);
+					geometry.vertices.push(
+						new THREE.Vector3(v0.x, v0.y, v0.z),
+						new THREE.Vector3(v1.x, v1.y, v1.z),
+						new THREE.Vector3(v2.x, v2.y, v2.z)
+					);
+					var i = geometry.vertices.length - 3;
+					geometry.faces.push(new THREE.Face3(i, i+1, i+2));
+				}
+			}
+		}
+		geometry.computeBoundingSphere();
+		geometry.computeFaceNormals();
+		/*var color = new THREE.ImageUtils.loadTexture('grass.jpg');
+		color.wrapS = THREE.RepeatWrapping;
+		color.wrapT = THREE.RepeatWrapping;
+		color.repeat.set(100,100);*/
+		var material = new THREE.MeshPhongMaterial({
+			//map: color,
+			color: new THREE.Color(0x002200),
+			specular: new THREE.Color(0x090909),
+			shininess: 24,
+			shading: THREE.FlatShading,
+			side: THREE.DoubleSide
+		});
+		mesh = new THREE.Mesh(geometry, material);
+		return mesh;
+	}
+	var mesh = createMeshFromHeightField(hfShape);
+	mesh.position.copy(hfBody.position);
+	mesh.quaternion.copy(hfBody.quaternion);
+	this.scene.add(mesh);
+}
 World.prototype.createBody = function(mass, radius, position) {
-	var shape = new CANNON.Box(new CANNON.Vec3( radius, radius, radius ));
+	var shape = new CANNON.Sphere( radius );
 	var body = new CANNON.Body({
 		mass: mass
 	});
@@ -83,9 +154,14 @@ World.prototype.createBody = function(mass, radius, position) {
 	body.collisionFilterGroup = this.collisionGroups[1];
 	body.collisionFilterMask = this.collisionGroups[0];// | this.collisionGroups[1];
 	body.quaternion.setFromAxisAngle(new CANNON.Vec3(-0.5,0.5,0), 20 * (Math.PI / 180));
+	body.fixedRotation = true;
+	body.updateMassProperties();
 	this.world.add(body); // Step 3
-	var cube = new THREE.Mesh( new THREE.BoxGeometry( radius*2, radius*2, radius*2 ), new THREE.MeshBasicMaterial({wireframe: true}) );
+	var cube = new THREE.Mesh( new THREE.SphereGeometry( radius, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
 	cube.position.copy(body.position);
+	body.addEventListener("collide",function(event){
+	   event.target.onGround = true;
+	})
 	//this.scene.add(cube);
 	cube.body = body;
 	cube.castShadow = true;
@@ -95,23 +171,6 @@ World.prototype.createBody = function(mass, radius, position) {
 		this.quaternion.copy(this.body.quaternion);
 	}
 	this.dynamicObjects.push(cube);
-	body.addEventListener("collide", function(e) {
-		if(e.body.gameType && e.body.gameType == "player") {
-			
-			//direction from enemy to player
-			var d = this.position.x - e.body.position.x;
-			if(d < 0.0001) {
-				var direction = new CANNON.Vec3(-0.9, 0.1, 0);
-			} else {
-				var direction = new CANNON.Vec3(0.9, 0.1, 0);
-			}
-			direction = direction.scale(-100.0);
-			console.log("ouch!");
-
-			//e.body.applyForce(direction, e.target.position);
-			//console.log(e);
-		}
-	});
 	return [body, cube];
 }
 World.prototype.loadProp = function(jsonFileName, position) {
@@ -144,7 +203,7 @@ World.prototype.createGround = function() {
 	groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(-1,0,0), 90 * (Math.PI / 180));
 	groundBody.collisionFilterGroup = this.collisionGroups[0];
 	groundBody.collisionFilterMask = this.collisionGroups[0] | this.collisionGroups[1];
-	//groundBody.position.set(0, -0.25, 0);
+	groundBody.position.set(0, -4, 0);
 	this.world.add(groundBody);
 	this.groundBody = groundBody;
 	var geometry = new THREE.PlaneBufferGeometry(500, 500, 16, 16);
@@ -162,6 +221,7 @@ World.prototype.createGround = function() {
 
 	var plane = new THREE.Mesh(geometry, material);
 	plane.rotateOnAxis(new THREE.Vector3(-1.0,0.0,0.0), 90 * (Math.PI / 180));
+	plane.position.copy(groundBody.position);
 	//plane.castShadow = true;
 	plane.receiveShadow = true;
 	this.scene.add(plane);
@@ -338,27 +398,6 @@ function onDocumentKeyUp( event ) {
 	}
 }
 
-function animationStateChanged() {
-	var movementVector = world.movementDirection.clone();
-	movementVector.normalize();
-	stopAllAnimations();
-	if(movementVector.y > 0.01) {
-	  	world.animations['walk_forwards'].play();		
-	}
-	if(movementVector.y < -0.01) {
-		world.animations['walk_backwards'].play();
-	}
-	if(movementVector.x > 0.01) {
-		world.animations['walk_left'].play();
-	}
-	if(movementVector.x < -0.01) {
-		world.animations['walk_right'].play();
-	}
-	if(Math.abs(movementVector.x) < 0.1 && Math.abs(movementVector.y) < 0.1) {
-		world.animations['idle'].play();
-	}	
-}
-
 function onDocumentMouseMove( event ) {
 	mouseX = ( event.clientX - windowHalfX );
 	mouseY = ( event.clientY - windowHalfY );
@@ -368,20 +407,19 @@ function onDocumentMouseDown( event ) {
 
 }			
 
-var GUIControls = function() {
+/*var GUIControls = function() {
   this.shininess = 175;
   this.specularColor = [128, 128, 128, 1.0];
   this.bumpScale = 0.015;
   this.opacity = 1.0;
   this.speed = 1.0;
-
-};
+};*/
 
 function onDoneLoading() {
 	requestAnimationFrame(render);
 }
 
-var controls = new GUIControls();
+/*var controls = new GUIControls();
 
 window.onload = function() {
   var gui = new dat.GUI();
@@ -390,28 +428,29 @@ window.onload = function() {
   gui.add(controls, 'bumpScale', 0, 0.1);
   gui.add(controls, 'opacity', 0, 1);
   gui.add(controls, 'speed', 0, 10);
-};
+};*/
 
 var clock = new THREE.Clock();
-
+var mass = 2;
+var radius = 0.5;
 PLAYER = new Character(
 	"Billy",
 	100,
 	10,
-	world.createBody(0.25, 0.5, [0,3,0]),
+	world.createBody(mass, radius, [0,3,0]),
 	world,
 	null,
 	null,
 	'gizmo_thunder_ffmodel_upload.js'
 );
-PLAYER.movementSpeed = 10.0;
+PLAYER.movementSpeed = 5.0;
 PLAYER.body.gameType = "player";
 NPC = new BasicAI (
 	new Character(
 		"Billy",
 		100,
 		10,
-		world.createBody(0.25, 0.5, [12,3,0]),
+		world.createBody(mass, radius, [12,3,0]),
 		world,
 		null,
 		null,
@@ -419,13 +458,13 @@ NPC = new BasicAI (
 	),
 	THREE.Vector2(10, 0)
 );
-NPC.movementSpeed = 10.0;
+NPC.movementSpeed = 5.0;
 NPC2 = new BasicAI (
 	new Character(
 		"Billy",
 		100,
 		10,
-		world.createBody(0.25, 0.5, [-12,3,0]),
+		world.createBody(mass, radius, [-12,3,0]),
 		world,
 		null,
 		null,
@@ -433,30 +472,13 @@ NPC2 = new BasicAI (
 	),
 	THREE.Vector2(-10, 0)
 );
-NPC2.movementSpeed = 20.0;
+NPC2.movementSpeed = 5.0;
 
 
 var animation = function() {
 	world.update();
 	NPC.update();
 	NPC2.update();
-	
-	//THREE.AnimationHandler.update(clock.getDelta() * controls.speed);
-	/*material.shininess = controls.shininess;
-	material.specular = new THREE.Color( controls.specularColor[0]/255, controls.specularColor[1]/255, controls.specularColor[2]/255 );
-	material.bumpScale = controls.bumpScale;
-	material.opacity = controls.opacity;
-	
-	var movementVector = world.movementDirection.clone();
-	movementVector.normalize();
-	movementVector.multiplyScalar(world.movementSpeed);
-	world.characterMesh.translateX(movementVector.x);
-	world.characterMesh.translateZ(movementVector.y);*/
-	
-	//camera.matrixWorld.copy(world.characterMesh.matrixWorld);
-	//camera.translateZ(5);
-	//world.characterMesh.matrixWorldNeedsUpdate = true;
-	//camera.translateZ(5);
 	PLAYER.update();
 
 	world.camera.position.x = PLAYER.body.position.x;

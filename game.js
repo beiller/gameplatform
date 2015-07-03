@@ -104,12 +104,14 @@ Character.prototype.createAvatar = function(jsonFileName) {
 	loader.load( jsonFileName, function ( geometry, materials ) {
 		if(!materials) {
 			var color = new THREE.ImageUtils.loadTexture('fftex_furry.jpg');
+			var random = Math.floor(Math.random()*16777215);
 			var material = new THREE.MeshPhongMaterial({
 				map: color,
-				color: new THREE.Color(0x888888),
+				color: new THREE.Color(random),
 				specular: new THREE.Color(0x020202),
 				shininess: 24,
 				side: THREE.DoubleSide,
+				shading: THREE.FlatShading,
 				skinning: true
 			});
 			materials = [material];
@@ -161,46 +163,36 @@ Character.prototype.takeHit = function() {
 
 }
 Character.prototype.update = function() {
-	/*var from = this.body.position;
-	var to = new CANNON.Vec3(this.body.position.x, -100.0, this.body.position.y);
-	this.body.collisionResponse = false;
-	var ray = new CANNON.Ray(from, to);
-	var intersect = ray.intersectWorld(this.world.world, {mode: CANNON.Ray.CLOSEST});
-	if(ray.result.hasHit && ray.result.distance < 0.5001) {
-		this.onGround = true;
-	} else {
-		this.onGround = false;
-	}
-	this.body.collisionResponse = true;*/
-	if(this.body.position.y <= 0.53) {
-		this.onGround = true;
-	} else {
-		this.onGround = false;
-	}
-
-	if(this.onGround) {
-		var m = new Vec3().copy(this.movementDirection).multiplyScalar(this.movementSpeed);
-		this.body.velocity.x = m.x;
+	if(this.body.onGround) {
+		var m = this.movementDirection;
+		//this.body.velocity.x = m.x;
+		//pc.body.applyForce(force, pc.body.position);
 		this.body.velocity.z = 0.0;
+		if(Math.abs(this.body.velocity.x) < this.movementSpeed) {
+			this.body.applyForce(new CANNON.Vec3(m.x * 100, 0, 0), this.body.position);
+		}
+		
 		//do jump?
-		if(this.movementDirection.z > 0.0000) {
+		if(this.movementDirection.z > 0.00001) {
 			//JUMP!
 			//console.log('Jumping!');
-			this.body.velocity.x = this.body.velocity.x * 0.5; //half our linear velocity when jumping because why not.
+			//this.body.velocity.x = this.body.velocity.x * 0.5; //half our linear velocity when jumping because why not.
 			this.body.velocity.y = this.jumpVelocity;
+			//this.body.applyForce(new CANNON.Vec3(0, m.x * 10000, 0), this.body.position);
+			this.body.onGround = false;
 		}
 	}
 	this.body.position.z = 0.0;
-	this.body.quaternion = new CANNON.Quaternion(0,0,0,1);
+	//this.body.quaternion.set(0,0,0,1);
 	if(this.skinnedMesh != undefined) {
 		this.skinnedMesh.position.copy(this.body.position);
 		this.skinnedMesh.position.y -= 0.5;
-		if(!this.animations["idle2"].isPlaying && !this.onGround) {
+		if(!this.animations["idle2"].isPlaying && !this.body.onGround) {
 			this.animations["run2"].stop();
 			this.animations["idle2"].play(0.0, 1.0);
 		}
 		if(Math.abs(this.movementDirection.x) > 0.1) {
-			if(this.animations["idle2"].isPlaying && this.onGround) {
+			if(this.animations["idle2"].isPlaying && this.body.onGround) {
 				this.animations["idle2"].stop();
 				this.animations["run2"].play(0.0, 1.0);
 			}
@@ -211,7 +203,7 @@ Character.prototype.update = function() {
 				this.skinnedMesh.quaternion.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), -Math.PI / 2 );
 			}
 		} else {
-			if(this.animations["run2"].isPlaying && this.onGround) {
+			if(this.animations["run2"].isPlaying && this.body.onGround) {
 				this.animations["run2"].stop();
 				this.animations["idle2"].play(0.0, 1.0);
 			}
@@ -251,13 +243,17 @@ BasicAI.prototype._detect_hit_player = function() {
 		var pos = new Vec3().copy(pc.position).sub(this.character.mesh.position);
 		var len = pos.length();
 		if(len < 0.6) {
-			pos.normalize();
+			//pos.normalize();
 			//apply force to player and player takes damage
-			var force = new CANNON.Vec3(pos.x, 0.01, 0.0);
-			force.normalize();
-			force.scale(400.0, force);
-			force.y = Math.min(force.y, 10.0);
-			pc.body.applyForce(force, pc.body.position);
+			//var force = new CANNON.Vec3(pos.x, 1, 0.0);
+			//force.normalize();
+			//force.scale(1000.0, force);
+			//force.y = Math.min(force.y, 10.0);
+			//pc.body.applyForce(force, pc.body.position);
+			pc.body.position.y += 2.0;
+			pc.body.position.x += 2.0;
+			pc.body.velocity.set(0,0,0);
+			pc.body.onGround = false;
 			return true;
 		}
 	}
