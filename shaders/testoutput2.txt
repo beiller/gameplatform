@@ -1,0 +1,477 @@
+1: precision highp float;
+2: precision highp int;
+3: #define SHADER_NAME MeshPhongMaterial
+4: #define VERTEX_TEXTURES
+5: #define GAMMA_FACTOR 2
+6: #define MAX_DIR_LIGHTS 2
+7: #define MAX_POINT_LIGHTS 0
+8: #define MAX_SPOT_LIGHTS 0
+9: #define MAX_HEMI_LIGHTS 0
+10: #define MAX_SHADOWS 0
+11: #define MAX_BONES 1024
+12: #define USE_MAP
+13: #define FLAT_SHADED
+14: #define USE_SKINNING
+15: #define BONE_TEXTURE
+16: #define DOUBLE_SIDED
+17: uniform mat4 modelMatrix;
+18: uniform mat4 modelViewMatrix;
+19: uniform mat4 projectionMatrix;
+20: uniform mat4 viewMatrix;
+21: uniform mat3 normalMatrix;
+22: uniform vec3 cameraPosition;
+23: attribute vec3 position;
+24: attribute vec3 normal;
+25: attribute vec2 uv;
+26: #ifdef USE_COLOR
+27: 	attribute vec3 color;
+28: #endif
+29: #ifdef USE_MORPHTARGETS
+30: 	attribute vec3 morphTarget0;
+31: 	attribute vec3 morphTarget1;
+32: 	attribute vec3 morphTarget2;
+33: 	attribute vec3 morphTarget3;
+34: 	#ifdef USE_MORPHNORMALS
+35: 		attribute vec3 morphNormal0;
+36: 		attribute vec3 morphNormal1;
+37: 		attribute vec3 morphNormal2;
+38: 		attribute vec3 morphNormal3;
+39: 	#else
+40: 		attribute vec3 morphTarget4;
+41: 		attribute vec3 morphTarget5;
+42: 		attribute vec3 morphTarget6;
+43: 		attribute vec3 morphTarget7;
+44: 	#endif
+45: #endif
+46: #ifdef USE_SKINNING
+47: 	attribute vec4 skinIndex;
+48: 	attribute vec4 skinWeight;
+49: #endif
+50: 
+51: #define PHONG
+52: varying vec3 vViewPosition;
+53: #ifndef FLAT_SHADED
+54: 	varying vec3 vNormal;
+55: #endif
+56: #define PI 3.14159
+57: #define PI2 6.28318
+58: #define RECIPROCAL_PI2 0.15915494
+59: #define LOG2 1.442695
+60: #define EPSILON 1e-6
+61: 
+62: #define saturate(a) clamp( a, 0.0, 1.0 )
+63: #define whiteCompliment(a) ( 1.0 - saturate( a ) )
+64: 
+65: vec3 transformDirection( in vec3 normal, in mat4 matrix ) {
+66: 
+67: 	return normalize( ( matrix * vec4( normal, 0.0 ) ).xyz );
+68: 
+69: }
+70: 
+71: vec3 inverseTransformDirection( in vec3 normal, in mat4 matrix ) {
+72: 
+73: 	return normalize( ( vec4( normal, 0.0 ) * matrix ).xyz );
+74: 
+75: }
+76: 
+77: vec3 projectOnPlane(in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {
+78: 
+79: 	float distance = dot( planeNormal, point - pointOnPlane );
+80: 
+81: 	return - distance * planeNormal + point;
+82: 
+83: }
+84: 
+85: float sideOfPlane( in vec3 point, in vec3 pointOnPlane, in vec3 planeNormal ) {
+86: 
+87: 	return sign( dot( point - pointOnPlane, planeNormal ) );
+88: 
+89: }
+90: 
+91: vec3 linePlaneIntersect( in vec3 pointOnLine, in vec3 lineDirection, in vec3 pointOnPlane, in vec3 planeNormal ) {
+92: 
+93: 	return lineDirection * ( dot( planeNormal, pointOnPlane - pointOnLine ) / dot( planeNormal, lineDirection ) ) + pointOnLine;
+94: 
+95: }
+96: 
+97: float calcLightAttenuation( float lightDistance, float cutoffDistance, float decayExponent ) {
+98: 
+99: 	if ( decayExponent > 0.0 ) {
+100: 
+101: 	  return pow( saturate( -lightDistance / cutoffDistance + 1.0 ), decayExponent );
+102: 
+103: 	}
+104: 
+105: 	return 1.0;
+106: 
+107: }
+108: 
+109: vec3 F_Schlick( in vec3 specularColor, in float dotLH ) {
+110: 
+111: 
+112: 	float fresnel = exp2( ( -5.55437 * dotLH - 6.98316 ) * dotLH );
+113: 
+114: 	return ( 1.0 - specularColor ) * fresnel + specularColor;
+115: 
+116: }
+117: 
+118: float G_BlinnPhong_Implicit( /* in float dotNL, in float dotNV */ ) {
+119: 
+120: 
+121: 	return 0.25;
+122: 
+123: }
+124: 
+125: float D_BlinnPhong( in float shininess, in float dotNH ) {
+126: 
+127: 
+128: 	return ( shininess * 0.5 + 1.0 ) * pow( dotNH, shininess );
+129: 
+130: }
+131: 
+132: vec3 BRDF_BlinnPhong( in vec3 specularColor, in float shininess, in vec3 normal, in vec3 lightDir, in vec3 viewDir ) {
+133: 
+134: 	vec3 halfDir = normalize( lightDir + viewDir );
+135: 
+136: 	float dotNH = saturate( dot( normal, halfDir ) );
+137: 	float dotLH = saturate( dot( lightDir, halfDir ) );
+138: 
+139: 	vec3 F = F_Schlick( specularColor, dotLH );
+140: 
+141: 	float G = G_BlinnPhong_Implicit( /* dotNL, dotNV */ );
+142: 
+143: 	float D = D_BlinnPhong( shininess, dotNH );
+144: 
+145: 	return F * G * D;
+146: 
+147: }
+148: 
+149: vec3 inputToLinear( in vec3 a ) {
+150: 
+151: 	#ifdef GAMMA_INPUT
+152: 
+153: 		return pow( a, vec3( float( GAMMA_FACTOR ) ) );
+154: 
+155: 	#else
+156: 
+157: 		return a;
+158: 
+159: 	#endif
+160: 
+161: }
+162: 
+163: vec3 linearToOutput( in vec3 a ) {
+164: 
+165: 	#ifdef GAMMA_OUTPUT
+166: 
+167: 		return pow( a, vec3( 1.0 / float( GAMMA_FACTOR ) ) );
+168: 
+169: 	#else
+170: 
+171: 		return a;
+172: 
+173: 	#endif
+174: 
+175: }
+176: 
+177: #if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP )
+178: 
+179: 	varying vec2 vUv;
+180: 	uniform vec4 offsetRepeat;
+181: 
+182: #endif
+183: 
+184: #if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )
+185: 
+186: 	attribute vec2 uv2;
+187: 	varying vec2 vUv2;
+188: 
+189: #endif
+190: #ifdef USE_DISPLACEMENTMAP
+191: 
+192: 	uniform sampler2D displacementMap;
+193: 	uniform float displacementScale;
+194: 	uniform float displacementBias;
+195: 
+196: #endif
+197: 
+198: #if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )
+199: 
+200: 	varying vec3 vReflect;
+201: 
+202: 	uniform float refractionRatio;
+203: 
+204: #endif
+205: 
+206: #if MAX_SPOT_LIGHTS > 0 || defined( USE_ENVMAP )
+207: 
+208: 	varying vec3 vWorldPosition;
+209: 
+210: #endif
+211: 
+212: #if MAX_POINT_LIGHTS > 0
+213: 
+214: 	uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];
+215: 
+216: #endif
+217: 
+218: #ifdef USE_COLOR
+219: 
+220: 	varying vec3 vColor;
+221: 
+222: #endif
+223: #ifdef USE_MORPHTARGETS
+224: 
+225: 	#ifndef USE_MORPHNORMALS
+226: 
+227: 	uniform float morphTargetInfluences[ 8 ];
+228: 
+229: 	#else
+230: 
+231: 	uniform float morphTargetInfluences[ 4 ];
+232: 
+233: 	#endif
+234: 
+235: #endif
+236: #ifdef USE_SKINNING
+237: 
+238: 	uniform mat4 bindMatrix;
+239: 	uniform mat4 bindMatrixInverse;
+240: 
+241: 	#ifdef BONE_TEXTURE
+242: 
+243: 		uniform sampler2D boneTexture;
+244: 		uniform int boneTextureWidth;
+245: 		uniform int boneTextureHeight;
+246: 
+247: 		mat4 getBoneMatrix( const in float i ) {
+248: 
+249: 			float j = i * 4.0;
+250: 			float x = mod( j, float( boneTextureWidth ) );
+251: 			float y = floor( j / float( boneTextureWidth ) );
+252: 
+253: 			float dx = 1.0 / float( boneTextureWidth );
+254: 			float dy = 1.0 / float( boneTextureHeight );
+255: 
+256: 			y = dy * ( y + 0.5 );
+257: 
+258: 			vec4 v1 = texture2D( boneTexture, vec2( dx * ( x + 0.5 ), y ) );
+259: 			vec4 v2 = texture2D( boneTexture, vec2( dx * ( x + 1.5 ), y ) );
+260: 			vec4 v3 = texture2D( boneTexture, vec2( dx * ( x + 2.5 ), y ) );
+261: 			vec4 v4 = texture2D( boneTexture, vec2( dx * ( x + 3.5 ), y ) );
+262: 
+263: 			mat4 bone = mat4( v1, v2, v3, v4 );
+264: 
+265: 			return bone;
+266: 
+267: 		}
+268: 
+269: 	#else
+270: 
+271: 		uniform mat4 boneGlobalMatrices[ MAX_BONES ];
+272: 
+273: 		mat4 getBoneMatrix( const in float i ) {
+274: 
+275: 			mat4 bone = boneGlobalMatrices[ int(i) ];
+276: 			return bone;
+277: 
+278: 		}
+279: 
+280: 	#endif
+281: 
+282: #endif
+283: 
+284: #ifdef USE_SHADOWMAP
+285: 
+286: 	uniform float shadowDarkness[ MAX_SHADOWS ];
+287: 	uniform mat4 shadowMatrix[ MAX_SHADOWS ];
+288: 	varying vec4 vShadowCoord[ MAX_SHADOWS ];
+289: 
+290: #endif
+291: #ifdef USE_LOGDEPTHBUF
+292: 
+293: 	#ifdef USE_LOGDEPTHBUF_EXT
+294: 
+295: 		varying float vFragDepth;
+296: 
+297: 	#endif
+298: 
+299: 	uniform float logDepthBufFC;
+300: 
+301: #endif
+302: void main() {
+303: #if defined( USE_MAP ) || defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( USE_SPECULARMAP ) || defined( USE_ALPHAMAP ) || defined( USE_EMISSIVEMAP )
+304: 
+305: 	vUv = uv * offsetRepeat.zw + offsetRepeat.xy;
+306: 
+307: #endif
+308: #if defined( USE_LIGHTMAP ) || defined( USE_AOMAP )
+309: 
+310: 	vUv2 = uv2;
+311: 
+312: #endif
+313: #ifdef USE_COLOR
+314: 
+315: 	vColor.xyz = color.xyz;
+316: 
+317: #endif
+318: 
+319: vec3 objectNormal = vec3( normal );
+320: 
+321: #ifdef USE_MORPHNORMALS
+322: 
+323: 	objectNormal += ( morphNormal0 - normal ) * morphTargetInfluences[ 0 ];
+324: 	objectNormal += ( morphNormal1 - normal ) * morphTargetInfluences[ 1 ];
+325: 	objectNormal += ( morphNormal2 - normal ) * morphTargetInfluences[ 2 ];
+326: 	objectNormal += ( morphNormal3 - normal ) * morphTargetInfluences[ 3 ];
+327: 
+328: #endif
+329: 
+330: #ifdef USE_SKINNING
+331: 
+332: 	mat4 boneMatX = getBoneMatrix( skinIndex.x );
+333: 	mat4 boneMatY = getBoneMatrix( skinIndex.y );
+334: 	mat4 boneMatZ = getBoneMatrix( skinIndex.z );
+335: 	mat4 boneMatW = getBoneMatrix( skinIndex.w );
+336: 
+337: #endif
+338: #ifdef USE_SKINNING
+339: 
+340: 	mat4 skinMatrix = mat4( 0.0 );
+341: 	skinMatrix += skinWeight.x * boneMatX;
+342: 	skinMatrix += skinWeight.y * boneMatY;
+343: 	skinMatrix += skinWeight.z * boneMatZ;
+344: 	skinMatrix += skinWeight.w * boneMatW;
+345: 	skinMatrix  = bindMatrixInverse * skinMatrix * bindMatrix;
+346: 
+347: 	objectNormal = vec4( skinMatrix * vec4( objectNormal, 0.0 ) ).xyz;
+348: 
+349: #endif
+350: 
+351: #ifdef FLIP_SIDED
+352: 
+353: 	objectNormal = -objectNormal;
+354: 
+355: #endif
+356: 
+357: vec3 transformedNormal = normalMatrix * objectNormal;
+358: 
+359: #ifndef FLAT_SHADED
+360: 	vNormal = normalize( transformedNormal );
+361: #endif
+362: 
+363: vec3 transformed = vec3( position );
+364: 
+365: #ifdef USE_DISPLACEMENTMAP
+366: 
+367: 	transformed += normal * ( texture2D( displacementMap, uv ).x * displacementScale + displacementBias );
+368: 
+369: #endif
+370: 
+371: #ifdef USE_MORPHTARGETS
+372: 
+373: 	transformed += ( morphTarget0 - position ) * morphTargetInfluences[ 0 ];
+374: 	transformed += ( morphTarget1 - position ) * morphTargetInfluences[ 1 ];
+375: 	transformed += ( morphTarget2 - position ) * morphTargetInfluences[ 2 ];
+376: 	transformed += ( morphTarget3 - position ) * morphTargetInfluences[ 3 ];
+377: 
+378: 	#ifndef USE_MORPHNORMALS
+379: 
+380: 	transformed += ( morphTarget4 - position ) * morphTargetInfluences[ 4 ];
+381: 	transformed += ( morphTarget5 - position ) * morphTargetInfluences[ 5 ];
+382: 	transformed += ( morphTarget6 - position ) * morphTargetInfluences[ 6 ];
+383: 	transformed += ( morphTarget7 - position ) * morphTargetInfluences[ 7 ];
+384: 
+385: 	#endif
+386: 
+387: #endif
+388: 
+389: #ifdef USE_SKINNING
+390: 
+391: 	vec4 skinVertex = bindMatrix * vec4( transformed, 1.0 );
+392: 
+393: 	vec4 skinned = vec4( 0.0 );
+394: 	skinned += boneMatX * skinVertex * skinWeight.x;
+395: 	skinned += boneMatY * skinVertex * skinWeight.y;
+396: 	skinned += boneMatZ * skinVertex * skinWeight.z;
+397: 	skinned += boneMatW * skinVertex * skinWeight.w;
+398: 	skinned  = bindMatrixInverse * skinned;
+399: 
+400: #endif
+401: 
+402: #ifdef USE_SKINNING
+403: 
+404: 	vec4 mvPosition = modelViewMatrix * skinned;
+405: 
+406: #else
+407: 
+408: 	vec4 mvPosition = modelViewMatrix * vec4( transformed, 1.0 );
+409: 
+410: #endif
+411: 
+412: gl_Position = projectionMatrix * mvPosition;
+413: 
+414: #ifdef USE_LOGDEPTHBUF
+415: 
+416: 	gl_Position.z = log2(max( EPSILON, gl_Position.w + 1.0 )) * logDepthBufFC;
+417: 
+418: 	#ifdef USE_LOGDEPTHBUF_EXT
+419: 
+420: 		vFragDepth = 1.0 + gl_Position.w;
+421: 
+422: #else
+423: 
+424: 		gl_Position.z = (gl_Position.z - 1.0) * gl_Position.w;
+425: 
+426: 	#endif
+427: 
+428: #endif
+429: 	vViewPosition = - mvPosition.xyz;
+430: #if defined( USE_ENVMAP ) || defined( PHONG ) || defined( LAMBERT ) || defined ( USE_SHADOWMAP )
+431: 
+432: 	#ifdef USE_SKINNING
+433: 
+434: 		vec4 worldPosition = modelMatrix * skinned;
+435: 
+436: 	#else
+437: 
+438: 		vec4 worldPosition = modelMatrix * vec4( transformed, 1.0 );
+439: 
+440: 	#endif
+441: 
+442: #endif
+443: 
+444: #if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )
+445: 
+446: 	vec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );
+447: 
+448: 	vec3 worldNormal = inverseTransformDirection( transformedNormal, viewMatrix );
+449: 
+450: 	#ifdef ENVMAP_MODE_REFLECTION
+451: 
+452: 		vReflect = reflect( cameraToVertex, worldNormal );
+453: 
+454: 	#else
+455: 
+456: 		vReflect = refract( cameraToVertex, worldNormal, refractionRatio );
+457: 
+458: 	#endif
+459: 
+460: #endif
+461: 
+462: #if MAX_SPOT_LIGHTS > 0 || defined( USE_ENVMAP )
+463: 
+464: 	vWorldPosition = worldPosition.xyz;
+465: 
+466: #endif
+467: 
+468: #ifdef USE_SHADOWMAP
+469: 
+470: 	for ( int i = 0; i < MAX_SHADOWS; i ++ ) {
+471: 
+472: 			vShadowCoord[ i ] = shadowMatrix[ i ] * worldPosition;
+473: 
+474: 	}
+475: 
+476: #endif
+477: }asdf

@@ -14,18 +14,6 @@
 				overflow:hidden;
 			}
 
-			a {	color: #eee;	}
-
-			#info {
-				position: absolute;
-				top: 0px; width: 100%;
-				color: #eee;
-				padding: 5px;
-				font-family:Monospace;
-				font-size:13px;
-				text-align:center;
-				z-index:1000;
-			}
 
 			#oldie {
 				background:rgb(200,100,0) !important;
@@ -43,7 +31,7 @@
 
 		<script src="three.js/build/three.js"></script>
 
-		<script src="shaders/ShaderSkin.js"></script>
+		<script src="shaders/ShaderSkinCustom.js"></script>
 
 		<script src="three.js/examples/js/shaders/BleachBypassShader.js"></script>
 		<script src="three.js/examples/js/shaders/ConvolutionShader.js"></script>
@@ -60,6 +48,50 @@
 		<script src="three.js/examples/js/Detector.js"></script>
 		<script src="three.js/examples/js/libs/stats.min.js"></script>
 
+		<script id="vertexShader1" type="x-shader/x-vertex">
+			varying vec2 vUv;
+			#ifdef USE_SKINNING
+			 	varying vec3 vViewPosition;
+				varying vec3 vNormal;
+				uniform mat4 bindMatrix;
+				uniform mat4 bindMatrixInverse;
+				uniform mat4 boneGlobalMatrices[ MAX_BONES ];
+				mat4 getBoneMatrix( const in float i ) {
+					mat4 bone = boneGlobalMatrices[ int(i) ];
+					return bone;
+				}
+			#endif
+			void main() {
+				vUv = uv;
+				#ifdef USE_SKINNING
+					mat4 boneMatX = getBoneMatrix( skinIndex.x );
+					mat4 boneMatY = getBoneMatrix( skinIndex.y );
+					mat4 boneMatZ = getBoneMatrix( skinIndex.z );
+					mat4 boneMatW = getBoneMatrix( skinIndex.w );
+					mat4 skinMatrix = mat4( 0.0 );
+					skinMatrix += skinWeight.x * boneMatX;
+					skinMatrix += skinWeight.y * boneMatY;
+					skinMatrix += skinWeight.z * boneMatZ;
+					skinMatrix += skinWeight.w * boneMatW;
+					skinMatrix  = bindMatrixInverse * skinMatrix * bindMatrix;
+					vec4 skinnedNormal = skinMatrix * vec4( normal, 0.0 );
+					vec3 objectNormal = skinnedNormal.xyz;
+					vec3 transformedNormal = normalMatrix * objectNormal;
+					vNormal = normalize( transformedNormal );
+					vec4 skinVertex = bindMatrix * vec4( position, 1.0 );
+					vec4 skinned = vec4( 0.0 );
+					skinned += boneMatX * skinVertex * skinWeight.x;
+					skinned += boneMatY * skinVertex * skinWeight.y;
+					skinned += boneMatZ * skinVertex * skinWeight.z;
+					skinned += boneMatW * skinVertex * skinWeight.w;
+					skinned  = bindMatrixInverse * skinned;
+					vec4 mvPosition = modelViewMatrix * skinned;
+				#else
+					vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
+				#endif
+				gl_Position = projectionMatrix * mvPosition;
+			}
+		</script>
 		<script>
 
 			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
@@ -86,10 +118,14 @@
 
 			var firstPass = true;
 
+			var mixer = null;
+			var clock = null;
+
 			init();
 			animate();
 
 			function init() {
+				clock = new THREE.Clock;
 
 				container = document.createElement( 'div' );
 				document.body.appendChild( container );
@@ -123,7 +159,9 @@
 
 				specular = 0x555555;
 
-				var shader = THREE.ShaderSkin[ "skin" ];
+				var shader = THREE.ShaderSkinCustom[ "skin" ];
+
+				//console.log(THREE.ShaderLib[ "phong" ].vertexShader);
 
 
 
@@ -152,12 +190,20 @@
 								u[ "tDiffuse" ].value = texture;
 								texloader.load(specularPath, function(texture) {
 									u[ "specularMap" ].value = texture;
-									var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: u, lights: true, derivatives: true, transparent: true };
+
+									var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: u, lights: true, derivatives: true, transparent: true, skinning: true, castShadow: true, receiveShadow: true, specularMap: texture };
 									var parametersUV = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShaderUV, uniforms: uuv, lights: true, derivatives: true };
-									var object = new THREE.Mesh( geometry, new THREE.ShaderMaterial( parameters ) );
+									var object = new THREE.SkinnedMesh( geometry, new THREE.ShaderMaterial( parameters ) );
 									var skinobject = new THREE.Mesh( geometry, new THREE.ShaderMaterial( parametersUV ) )
 									scene_normal.add( object );
 									scene_skin.add( skinobject );
+								    object.mixer = new THREE.AnimationMixer( object );
+									for ( var i in geometry.animations ) {
+										console.log("creating animation", geometry.animations[ i ] );
+										if(geometry.animations[ i ].name == 'breathe') {
+											object.mixer.addAction( new THREE.AnimationAction( geometry.animations[i] ) );	
+										}
+									}
 									onComplete(object);
 								});
 							});
@@ -168,10 +214,48 @@
 					o.position.x = -0.5;
 					//so.position.x = -1;
 				});
-				load_character("evilmage.json", "textures/diffuse_evil.png", "textures/specular.jpg", "textures/Summer/convert_normal/out.png", function(o) {
+				/*load_character("evilmage.json", "textures/diffuse_evil2.png", "textures/specular.jpg", "textures/Summer/convert_normal/out.png", function(o) {
 					o.position.x = 0.5;
 					//so.position.x = -1;
-				});				
+				});	*/
+
+				var createAvatar = function(jsonFileName) {
+					var loader = new THREE.JSONLoader();
+					var scene = scene_normal;
+					loader.load( jsonFileName, function ( geometry, materials ) {
+						if(true) {
+							var color = new THREE.ImageUtils.loadTexture('fftex_furry.jpg');
+							var random = Math.floor(Math.random()*16777215);
+							var material = new THREE.MeshPhongMaterial({
+								map: color,
+								color: new THREE.Color(random),
+								specular: new THREE.Color(0x020202),
+								shininess: 24,
+								side: THREE.DoubleSide,
+								shading: THREE.FlatShading,
+								skinning: true
+							});
+							materials = [material];
+							console.log(materials);
+						}
+					    var skinnedMesh = new THREE.SkinnedMesh(geometry, materials[0]);
+					    skinnedMesh.castShadow = true;
+						skinnedMesh.receiveShadow = true;
+					    //skinnedMesh.scale.set(0.2, 0.2, 0.2);
+					    //skinnedMesh.rotateOnAxis(new THREE.Vector3(0,1,0), 90);
+					    scene.add(skinnedMesh);
+					    console.log("geometry from file:", geometry);
+					    mixer = new THREE.AnimationMixer( skinnedMesh );
+						for ( var i in geometry.animations ) {
+							console.log("creating animation", geometry.animations[ i ] );
+							if(geometry.animations[ i ].name == 'breathe') {
+							mixer.addAction( new THREE.AnimationAction( geometry.animations[i] ) );	
+							}
+
+						}
+					});
+				}	
+				//createAvatar("princess.json");	
 
 				var geometry = new THREE.TorusGeometry( 1, 0.42 );
 				var material = new THREE.MeshNormalMaterial();
@@ -258,7 +342,7 @@
 
 				//
 
-				var effectBeckmann = new THREE.ShaderPass( THREE.ShaderSkin[ "beckmann" ] );
+				var effectBeckmann = new THREE.ShaderPass( THREE.ShaderSkinCustom[ "beckmann" ] );
 				composerBeckmann = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
 				composerBeckmann.addPass( effectBeckmann );
 
@@ -303,6 +387,10 @@
 				requestAnimationFrame( animate );
 
 				controls.update();
+
+				if( mixer ) {
+					mixer.update( clock.getDelta() );
+				}
 
 				render();
 				if ( statsEnabled ) stats.update();
