@@ -47,58 +47,13 @@
 		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
 		<script src="three.js/examples/js/Detector.js"></script>
 		<script src="three.js/examples/js/libs/stats.min.js"></script>
-
-		<script id="vertexShader1" type="x-shader/x-vertex">
-			varying vec2 vUv;
-			#ifdef USE_SKINNING
-			 	varying vec3 vViewPosition;
-				varying vec3 vNormal;
-				uniform mat4 bindMatrix;
-				uniform mat4 bindMatrixInverse;
-				uniform mat4 boneGlobalMatrices[ MAX_BONES ];
-				mat4 getBoneMatrix( const in float i ) {
-					mat4 bone = boneGlobalMatrices[ int(i) ];
-					return bone;
-				}
-			#endif
-			void main() {
-				vUv = uv;
-				#ifdef USE_SKINNING
-					mat4 boneMatX = getBoneMatrix( skinIndex.x );
-					mat4 boneMatY = getBoneMatrix( skinIndex.y );
-					mat4 boneMatZ = getBoneMatrix( skinIndex.z );
-					mat4 boneMatW = getBoneMatrix( skinIndex.w );
-					mat4 skinMatrix = mat4( 0.0 );
-					skinMatrix += skinWeight.x * boneMatX;
-					skinMatrix += skinWeight.y * boneMatY;
-					skinMatrix += skinWeight.z * boneMatZ;
-					skinMatrix += skinWeight.w * boneMatW;
-					skinMatrix  = bindMatrixInverse * skinMatrix * bindMatrix;
-					vec4 skinnedNormal = skinMatrix * vec4( normal, 0.0 );
-					vec3 objectNormal = skinnedNormal.xyz;
-					vec3 transformedNormal = normalMatrix * objectNormal;
-					vNormal = normalize( transformedNormal );
-					vec4 skinVertex = bindMatrix * vec4( position, 1.0 );
-					vec4 skinned = vec4( 0.0 );
-					skinned += boneMatX * skinVertex * skinWeight.x;
-					skinned += boneMatY * skinVertex * skinWeight.y;
-					skinned += boneMatZ * skinVertex * skinWeight.z;
-					skinned += boneMatW * skinVertex * skinWeight.w;
-					skinned  = bindMatrixInverse * skinned;
-					vec4 mvPosition = modelViewMatrix * skinned;
-				#else
-					vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );
-				#endif
-				gl_Position = projectionMatrix * mvPosition;
-			}
-		</script>
 		<script>
 
 			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
 			var statsEnabled = true;
 
-			var container, stats, loader;
+			var container, stats;
 
 			var camera, scene, renderer;
 
@@ -122,7 +77,6 @@
 			var clock = null;
 
 			init();
-			animate();
 
 			function init() {
 				clock = new THREE.Clock;
@@ -133,6 +87,8 @@
 				camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 0.01, 10000 );
 				camera.position.z = 0.1;
 
+				cubeCamera = new THREE.CubeCamera( 1, 1000, 256 );
+				//cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
 				
 				scene_skin = new THREE.Scene();
 				scene_normal = new THREE.Scene();
@@ -161,25 +117,20 @@
 
 				var shader = THREE.ShaderSkinCustom[ "skin" ];
 
-				//console.log(THREE.ShaderLib[ "phong" ].vertexShader);
-
-
-
 				// LOADER
 				var uniformsUV = THREE.UniformsUtils.clone( shader.uniforms );
 				uniformsUV[ "uNormalScale" ].value = -2.0;
 				uniformsUV[ "passID" ].value = 0;
 				uniformsUV[ "diffuse" ].value.setHex( diffuse );
 				uniformsUV[ "specular" ].value.setHex( specular );
-				uniformsUV[ "uRoughness" ].value = 0.185;
+				uniformsUV[ "uRoughness" ].value = 0.205;
 				uniformsUV[ "uSpecularBrightness" ].value = 0.8;				
 				var uniforms = THREE.UniformsUtils.clone( uniformsUV );	
 				uniforms[ "passID" ].value = 1;
-
-				function load_character(jsonPath, diffusePath, specularPath, normalPath, onComplete) {
-					loader = new THREE.JSONLoader();
+				var texloader = new THREE.TextureLoader();
+				var loader = new THREE.JSONLoader();
+				function loadCharacter(jsonPath, diffusePath, specularPath, normalPath, onComplete) {
 					loader.load(  jsonPath, function( geometry, materials ) { 
-						var texloader = new THREE.TextureLoader();
 						texloader.load(normalPath, function(texture) {
 							var uuv = THREE.UniformsUtils.clone( uniformsUV );
 							var u = THREE.UniformsUtils.clone( uniforms );
@@ -191,39 +142,73 @@
 								texloader.load(specularPath, function(texture) {
 									u[ "specularMap" ].value = texture;
 
-									var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: u, lights: true, derivatives: true, transparent: true, skinning: true, castShadow: true, receiveShadow: true, specularMap: texture };
+									var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: u, lights: true, derivatives: true, transparent: true, skinning: true };
 									var parametersUV = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShaderUV, uniforms: uuv, lights: true, derivatives: true };
 									var object = new THREE.SkinnedMesh( geometry, new THREE.ShaderMaterial( parameters ) );
 									var skinobject = new THREE.Mesh( geometry, new THREE.ShaderMaterial( parametersUV ) )
 									scene_normal.add( object );
 									scene_skin.add( skinobject );
-								    object.mixer = new THREE.AnimationMixer( object );
-									for ( var i in geometry.animations ) {
-										console.log("creating animation", geometry.animations[ i ] );
-										if(geometry.animations[ i ].name == 'breathe') {
-											object.mixer.addAction( new THREE.AnimationAction( geometry.animations[i] ) );	
-										}
-									}
 									onComplete(object);
 								});
 							});
 						});
 					} );
 				}
-				load_character("princess.json", "textures/diffuse.png", "textures/specular.jpg", "textures/Summer/convert_normal/out.png", function(o) {
-					o.position.x = -0.5;
-					//so.position.x = -1;
+				var clothing = [
+					"princess-hair.json",
+					//"princess-bodysuit.json",
+					//"princess-gloves.json",
+					"princess-thong.json",
+					"princess-pants.json",
+					"princess-shirt.json",
+					"princess-boots.json",
+					"princess-top.json",
+					"princess-jewels.json"
+				];
+
+				scene_normal.add( cubeCamera );
+				texloader.load("textures/tropical_beach.jpg", function(texture) {
+					var mesh = new THREE.Mesh( new THREE.SphereGeometry( 500, 60, 40 ), new THREE.MeshBasicMaterial( { map: texture } ) );
+					mesh.scale.x = -1;
+					scene_normal.add( mesh );
+
+					loadCharacter("princess.json", "textures/diffuse.png", "textures/specular.jpg", "textures/normal.png", function(parent) {
+						parent.material.envMap = cubeCamera.renderTarget;
+						for(var c in clothing) {
+							loadClothing(clothing[c], parent, function(clothingObject) { 
+								if(clothingObject.material.type == "MultiMaterial") {
+									for(var i in clothingObject.material.materials) {
+										clothingObject.material.materials[i].envMap = cubeCamera.renderTarget; 
+										clothingObject.material.materials[i].combine = THREE.MixOperation; 
+										clothingObject.material.materials[i].reflectivity  = 0.1;
+										//clothingObject.material.materials[i] = new THREE.MeshBasicMaterial( { envMap: cubeCamera.renderTarget } );
+									}
+								} else {
+									clothingObject.material.envMap = cubeCamera.renderTarget; 
+								}
+
+							});
+						}
+
+						mixer = new THREE.AnimationMixer( parent );
+						for ( var i in parent.geometry.animations ) {
+							if(parent.geometry.animations[ i ].name == 'breathe') {
+								mixer.addAction( new THREE.AnimationAction( parent.geometry.animations[i] ) );	
+							}
+						}
+						animate();
+					});
 				});
 				/*load_character("evilmage.json", "textures/diffuse_evil2.png", "textures/specular.jpg", "textures/Summer/convert_normal/out.png", function(o) {
 					o.position.x = 0.5;
 					//so.position.x = -1;
 				});	*/
 
-				var createAvatar = function(jsonFileName) {
+				var loadClothing = function(jsonFileName, parent, onComplete) {
 					var loader = new THREE.JSONLoader();
 					var scene = scene_normal;
 					loader.load( jsonFileName, function ( geometry, materials ) {
-						if(true) {
+						if(!materials) {
 							var color = new THREE.ImageUtils.loadTexture('fftex_furry.jpg');
 							var random = Math.floor(Math.random()*16777215);
 							var material = new THREE.MeshPhongMaterial({
@@ -236,26 +221,20 @@
 								skinning: true
 							});
 							materials = [material];
-							console.log(materials);
+						} else {
+							for(var i in materials) {
+								materials[i].skinning = true;
+							}
 						}
-					    var skinnedMesh = new THREE.SkinnedMesh(geometry, materials[0]);
+					    var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+					    //skinnedMesh.children = parent.children;
+					    skinnedMesh.skeleton = parent.skeleton;
 					    skinnedMesh.castShadow = true;
 						skinnedMesh.receiveShadow = true;
-					    //skinnedMesh.scale.set(0.2, 0.2, 0.2);
-					    //skinnedMesh.rotateOnAxis(new THREE.Vector3(0,1,0), 90);
 					    scene.add(skinnedMesh);
-					    console.log("geometry from file:", geometry);
-					    mixer = new THREE.AnimationMixer( skinnedMesh );
-						for ( var i in geometry.animations ) {
-							console.log("creating animation", geometry.animations[ i ] );
-							if(geometry.animations[ i ].name == 'breathe') {
-							mixer.addAction( new THREE.AnimationAction( geometry.animations[i] ) );	
-							}
-
-						}
+					    onComplete(skinnedMesh);
 					});
-				}	
-				//createAvatar("princess.json");	
+				}		
 
 				var geometry = new THREE.TorusGeometry( 1, 0.42 );
 				var material = new THREE.MeshNormalMaterial();
@@ -294,9 +273,9 @@
 
 				var effectCopy = new THREE.ShaderPass( THREE.CopyShader );
 
-				var effectBloom1 = new THREE.BloomPass( 1, 15, 2, 512 );
-				var effectBloom2 = new THREE.BloomPass( 1, 25, 3, 512 );
-				var effectBloom3 = new THREE.BloomPass( 1, 25, 4, 512 );
+				var effectBloom1 = new THREE.BloomPass( 1, 15, 2, 256 );
+				var effectBloom2 = new THREE.BloomPass( 1, 25, 3, 256 );
+				var effectBloom3 = new THREE.BloomPass( 1, 25, 4, 256 );
 
 				effectBloom1.clear = true;
 				effectBloom2.clear = true;
@@ -313,8 +292,8 @@
 					stencilBuffer: false
 				};
 
-				var rtwidth = 2048;
-				var rtheight = 256;
+				var rtwidth = 1024;
+				var rtheight = 128;
 
 				//
 
@@ -397,7 +376,17 @@
 
 			}
 
+			var cubemapRendered = false;
 			function render() {
+
+				//sphere.visible = false; // *cough*
+
+				if(!cubemapRendered) {
+					cubeCamera.updateCubeMap( renderer, scene_normal );
+					cubemapRendered = true;
+				}
+
+				//sphere.visible = true; // *cough*
 
 				renderer.clear();
 
