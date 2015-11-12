@@ -127,8 +127,11 @@
 				uniformsUV[ "uSpecularBrightness" ].value = 0.8;				
 				var uniforms = THREE.UniformsUtils.clone( uniformsUV );	
 				uniforms[ "passID" ].value = 1;
+				
+
 				var texloader = new THREE.TextureLoader();
 				var loader = new THREE.JSONLoader();
+
 				function loadCharacter(jsonPath, diffusePath, specularPath, normalPath, onComplete) {
 					loader.load(  jsonPath, function( geometry, materials ) { 
 						texloader.load(normalPath, function(texture) {
@@ -154,17 +157,21 @@
 						});
 					} );
 				}
-				var clothing = [
+				/*var clothing = [
 					"princess-hair.json",
-					//"princess-bodysuit.json",
-					//"princess-gloves.json",
 					"princess-thong.json",
 					"princess-pants.json",
 					"princess-shirt.json",
 					"princess-boots.json",
 					"princess-top.json",
 					"princess-jewels.json"
-				];
+				];*/
+
+				var clothing = [
+					"princess-hair.json",
+					"princess-bodysuit.json",
+					"princess-gloves.json"
+				]				
 
 				scene_normal.add( cubeCamera );
 				texloader.load("textures/tropical_beach.jpg", function(texture) {
@@ -172,7 +179,7 @@
 					mesh.scale.x = -1;
 					scene_normal.add( mesh );
 
-					loadCharacter("princess.json", "textures/diffuse.png", "textures/specular.jpg", "textures/normal.png", function(parent) {
+					loadCharacter("princess.json", "fftex_furry.jpg", "fftex_furry.jpg", "fftex_furry.jpg", function(parent) {
 						parent.material.envMap = cubeCamera.renderTarget;
 						for(var c in clothing) {
 							loadClothing(clothing[c], parent, function(clothingObject) { 
@@ -181,7 +188,6 @@
 										clothingObject.material.materials[i].envMap = cubeCamera.renderTarget; 
 										clothingObject.material.materials[i].combine = THREE.MixOperation; 
 										clothingObject.material.materials[i].reflectivity  = 0.1;
-										//clothingObject.material.materials[i] = new THREE.MeshBasicMaterial( { envMap: cubeCamera.renderTarget } );
 									}
 								} else {
 									clothingObject.material.envMap = cubeCamera.renderTarget; 
@@ -206,32 +212,15 @@
 
 				var loadClothing = function(jsonFileName, parent, onComplete) {
 					var loader = new THREE.JSONLoader();
-					var scene = scene_normal;
 					loader.load( jsonFileName, function ( geometry, materials ) {
-						if(!materials) {
-							var color = new THREE.ImageUtils.loadTexture('fftex_furry.jpg');
-							var random = Math.floor(Math.random()*16777215);
-							var material = new THREE.MeshPhongMaterial({
-								map: color,
-								color: new THREE.Color(random),
-								specular: new THREE.Color(0x020202),
-								shininess: 24,
-								side: THREE.DoubleSide,
-								shading: THREE.FlatShading,
-								skinning: true
-							});
-							materials = [material];
-						} else {
-							for(var i in materials) {
-								materials[i].skinning = true;
-							}
+						for(var i in materials) {
+							materials[i].skinning = true;
 						}
 					    var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-					    //skinnedMesh.children = parent.children;
 					    skinnedMesh.skeleton = parent.skeleton;
 					    skinnedMesh.castShadow = true;
 						skinnedMesh.receiveShadow = true;
-					    scene.add(skinnedMesh);
+					    parent.add(skinnedMesh);
 					    onComplete(skinnedMesh);
 					});
 				}		
