@@ -141,16 +141,15 @@ THREE.ShaderSkinCustom = {
 
 				"vec4 mSpecular = vec4( specular, opacity );",
 
-				"float specularStrength;",
-
 				"vec4 texelSpecular = texture2D( specularMap, vUv );",
-				"specularStrength = texelSpecular.r;",
-				"specularStrength = specularStrength * 6.0;",
+				"float roughness = (1.0 - texelSpecular.r) * 0.3;",
 
 				"vec4 colDiffuse = texture2D( tDiffuse, vUv );",
 				"colDiffuse *= colDiffuse;",
 
 				"diffuseColor *= colDiffuse;",
+
+				//environment color
 
 				// normal mapping
 
@@ -189,7 +188,7 @@ THREE.ShaderSkinCustom = {
 
 						"if ( passID == 1 ) {",
 
-							"float pointSpecularWeight = KS_Skin_Specular( normal, pointVector, viewerDirection, uRoughness, specularStrength );",
+							"float pointSpecularWeight = KS_Skin_Specular( normal, pointVector, viewerDirection, roughness, uSpecularBrightness );",
 
 							"totalSpecularLight += pointLightColor[ i ] * mSpecular.xyz * ( pointSpecularWeight * attenuation );",
 
@@ -213,7 +212,7 @@ THREE.ShaderSkinCustom = {
 
 						"if ( passID == 1 ) {",
 
-							"float dirSpecularWeight = KS_Skin_Specular( normal, dirVector, viewerDirection, uRoughness, specularStrength );",
+							"float dirSpecularWeight = KS_Skin_Specular( normal, dirVector, viewerDirection, roughness, uSpecularBrightness );",
 
 							"totalSpecularLight += directionalLightColor[ i ] * mSpecular.xyz * dirSpecularWeight;",
 
