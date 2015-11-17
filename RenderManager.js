@@ -1,21 +1,3 @@
-function SkinShaderPass() {
-	var diffuse = 0xbbbbbb, specular = 0x070707, shininess = 50;
-
-	specular = 0x555555;
-
-	var shader = THREE.ShaderSkinCustom[ "skin" ];
-
-	// LOADER
-	var uniformsUV = THREE.UniformsUtils.clone( shader.uniforms );
-	uniformsUV[ "uNormalScale" ].value = -1;
-	uniformsUV[ "passID" ].value = 0;
-	uniformsUV[ "diffuse" ].value.setHex( diffuse );
-	uniformsUV[ "specular" ].value.setHex( specular );
-	uniformsUV[ "uRoughness" ].value = 0.205;
-	uniformsUV[ "uSpecularBrightness" ].value = 2.0;
-	var uniforms = THREE.UniformsUtils.clone( uniformsUV );
-	uniforms[ "passID" ].value = 1;
-}
 
 function RenderManager() {
 	var camera = null;
@@ -49,6 +31,30 @@ RenderManager.prototype.init = function() {
 
 	addLight(THREE.DirectionalLight, 0xffeedd, 1.5, [0, 0.5, 1]);
 	addLight(THREE.DirectionalLight, 0xddddff, 0.5, [0, 0.5, -1]);
+
+	this.renderer = new THREE.WebGLRenderer( { antialias: false } );
+	this.renderer.setClearColor( 0x050505 );
+	this.renderer.setPixelRatio( window.devicePixelRatio );
+	this.renderer.setSize( window.innerWidth, window.innerHeight );
+	this.renderer.autoClear = false;
+
+
+	container.appendChild( renderer.domElement );
+
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
+	//controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
+	controls.enableDamping = true;
+	controls.dampingFactor = 0.25;
+	controls.enableZoom = true;
+	controls.zoomSpeed = 1.0;
+
+
+	if ( statsEnabled ) {
+
+		stats = new Stats();
+		container.appendChild( stats.domElement );
+
+	}
 
 }
 

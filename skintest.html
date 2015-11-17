@@ -43,6 +43,7 @@
 		<script src="three.js/examples/js/postprocessing/TexturePass.js"></script>
 		<script src="three.js/examples/js/postprocessing/ShaderPass.js"></script>
 		<script src="three.js/examples/js/postprocessing/MaskPass.js"></script>
+		<script src="SkinShaderPass.js"></script>
 
 		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
 		<script src="three.js/examples/js/Detector.js"></script>
@@ -58,11 +59,9 @@
 
 			var container, stats;
 
-			var camera, scene, renderer;
+			var camera, renderer;
 
-			var controls
-
-			var composer, composerUV1, composerUV2, composerUV3, composerBeckmann;
+			var controls;
 
 			var directionalLight, pointLight, ambientLight;
 
@@ -72,12 +71,11 @@
 			var windowHalfX = window.innerWidth / 2;
 			var windowHalfY = window.innerHeight / 2;
 
-			var firstPass = true;
-
 			var clock = null;
 
 			var animated_objects = [];
 			var characters = {};
+			var skinshaders = [];
 
 			init();
 
@@ -92,8 +90,7 @@
 
 				cubeCamera = new THREE.CubeCamera( 1, 1000, 256 );
 				//cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
-				
-				scene_skin = new THREE.Scene();
+
 				scene_normal = new THREE.Scene();
 
 				// LIGHTS
@@ -101,36 +98,12 @@
 				directionalLight = new THREE.DirectionalLight( 0xffeedd, 1.5 );
 				directionalLight.position.set( 0, 0.5, 1 );
 				scene_normal.add( directionalLight );
-				directionalLight = new THREE.DirectionalLight( 0xffeedd, 1.5 );
-				directionalLight.position.set( 0, 0.5, 1 );		
-				scene_skin.add( directionalLight );
+
 
 				directionalLight = new THREE.DirectionalLight( 0xddddff, 0.5 );
 				directionalLight.position.set( 0, 0.5, -1 );
 				scene_normal.add( directionalLight );
-				directionalLight = new THREE.DirectionalLight( 0xddddff, 0.5 );
-				directionalLight.position.set( 0, 0.5, -1 );				
-				scene_skin.add( directionalLight );
 
-				// MATERIALS
-
-				var diffuse = 0xbbbbbb, specular = 0x070707, shininess = 50;
-
-				specular = 0x555555;
-
-				var shader = THREE.ShaderSkinCustom[ "skin" ];
-
-				// LOADER
-				var uniformsUV = THREE.UniformsUtils.clone( shader.uniforms );
-				uniformsUV[ "uNormalScale" ].value = -1;
-				uniformsUV[ "passID" ].value = 0;
-				uniformsUV[ "diffuse" ].value.setHex( diffuse );
-				uniformsUV[ "specular" ].value.setHex( specular );
-				uniformsUV[ "uRoughness" ].value = 0.205;
-				uniformsUV[ "uSpecularBrightness" ].value = 2.0;				
-				var uniforms = THREE.UniformsUtils.clone( uniformsUV );	
-				uniforms[ "passID" ].value = 1;
-				
 
 				var texloader = new THREE.TextureLoader();
 				var loader = new THREE.JSONLoader();
@@ -145,7 +118,7 @@
 				}
 
 				function loadSSSMaterial(geometry, diffusePath, specularPath, normalPath, onComplete) {
-					texloader.load(normalPath, function(texture) {
+					/*texloader.load(normalPath, function(texture) {
 						var uuv = THREE.UniformsUtils.clone( uniformsUV );
 						var u = THREE.UniformsUtils.clone( uniforms );
 						uuv[ "tNormal" ].value = texture;
@@ -168,7 +141,30 @@
 									onComplete(object);
 							});
 						});
-					});	
+					});	*/
+					var object = new THREE.SkinnedMesh( geometry );
+					attachAnimations( object );
+					var sss = new SkinShaderPass(renderer, camera, object, diffusePath, specularPath, normalPath);
+					scene_normal.add(object);
+					skinshaders.push(sss);
+					animated_objects.push(object);
+					if(onComplete !== undefined) onComplete(object);
+
+					//DEBUGGING...........
+
+					var mesh = new THREE.Mesh( new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial( { map: sss.shader.uniforms.tBlur3.value } ) );
+					mesh.position.x = -1;
+					scene_normal.add( mesh );
+					mesh = new THREE.Mesh( new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial( { map: sss.shader.uniforms.tBeckmann.value } ) );
+					mesh.position.x = 1;
+					scene_normal.add( mesh );
+					mesh = new THREE.Mesh( new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial( { map: sss.shader.uniforms.tBlur4.value } ) );
+					mesh.position.x = -1;
+					mesh.position.y = 1;
+					scene_normal.add( mesh );
+
+
+
 				}
 
 				function loadCharacter(jsonPath, options, onComplete) {
@@ -222,25 +218,33 @@
 						mesh.scale.x = -1;
 						scene_normal.add( mesh );
 
-						loadCharacter("princess.json", "textures/diffuse.png", "textures/specular.jpg", "textures/normal.png", function(parent) {
-							parent.material.envMap = cubeCamera.renderTarget;
-							for(var c in clothing) {
-								loadClothing(clothing[c], parent, function(clothingObject) { 
-									if(clothingObject.material.type == "MultiMaterial") {
-										for(var i in clothingObject.material.materials) {
-											clothingObject.material.materials[i].envMap = cubeCamera.renderTarget; 
-											clothingObject.material.materials[i].combine = THREE.MixOperation; 
-											clothingObject.material.materials[i].reflectivity  = 0.2;
-										}
-									} else {
-										clothingObject.material.envMap = cubeCamera.renderTarget; 
-									}
+						loadCharacter(
+								"princess.json",
+								{
+									name: 'princess',
+									scale: 1,
+									sss: true,
+									diffusePath: "textures/diffuse.png",
+									specularPath: "textures/specular.jpg",
+									normalPath: "textures/normal.png"
+								}, function(parent) {
+									for(var c in clothing) {
+										loadClothing(clothing[c], parent, function(clothingObject) {
+											if(clothingObject.material.type == "MultiMaterial") {
+												for(var i in clothingObject.material.materials) {
+													clothingObject.material.materials[i].envMap = cubeCamera.renderTarget;
+													clothingObject.material.materials[i].combine = THREE.MixOperation;
+													clothingObject.material.materials[i].reflectivity  = 0.2;
+												}
+											} else {
+												clothingObject.material.envMap = cubeCamera.renderTarget;
+											}
 
-								});
-							}
-							parent.animations['breathe'].weight = 1.0;
-							animate();
-						});
+										});
+									}
+								}
+						);
+						animate();
 					});
 				}
 
@@ -251,17 +255,17 @@
 						scene_normal.add( mesh );
 
 						loadCharacter(
-							"models/DefenderLingerie00.json", 
+							"models/DefenderLingerie00.json",
 							{
 								name: 'eve',
 								scale: 0.333333,
 								sss: true,
-								diffusePath: "models/textures/diffuse.png", 
-								specularPath: "models/textures/specular.png", 
+								diffusePath: "models/textures/diffuse.png",
+								specularPath: "models/textures/specular.png",
 								normalPath: "models/textures/normal.png"
 							}
 						);
-						loadCharacter(
+						/*loadCharacter(
 							"models/alien.json", 
 							{
 								name: 'monster',
@@ -271,7 +275,7 @@
 								specularPath: "models/textures/Alien_Necromorph_S.png", 
 								normalPath: "models/textures/Alien_Necromorph_N.png"
 							}
-						);
+						);*/
 						loadCharacter(
 							"models/drip.json", 
 							{
@@ -280,7 +284,7 @@
 								sss: false
 							}
 						);
-						animate();
+						setTimeout(animate, 10000);
 					});					
 
 					var anim_map = [
@@ -308,7 +312,7 @@
 							'eve':  {name: 'titjob2', duration: 5000, timeScale: 1.5},
 							'monster':  {name: 'monster_titjob2', duration: 5000, timeScale: 1.5},
 							'drip':  {name: 'drip_hide', duration: 5000}
-						},						
+						},
 						{
 							'eve':  {name: 'fuck1', duration: 10000, crossFade: true},
 							'monster':  {name: 'fuck1', duration: 10000, crossFade: true},
@@ -318,7 +322,7 @@
 							'eve':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
 							'monster':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
 							'drip':  {name: 'drip_hide', duration: 5000}
-						},						
+						},
 						{
 							'eve':  {name: 'fuck1.finish', duration: 30000, loop: THREE.LoopPingPong},
 							'monster':  {name: 'monster_fuck1.finish', duration: 30000, loop: THREE.LoopOnce},
@@ -328,11 +332,12 @@
 
 					var currentAnimation = 0;
 					var changeAnimation = function() {
+
 						var map = anim_map[currentAnimation];
 						var duration = 10000;
 						for(characterName in map) {
 							duration = map[characterName].duration || duration;
-							if(characters[characterName] !== undefined) {
+							if(characters[characterName] !== undefined && characters[characterName].animations !== undefined) {
 								var character = characters[characterName];
 								var a = new THREE.AnimationAction( character.animations[map[characterName].name] );
 								a.loop = map[characterName].loop || THREE.LoopRepeat;
@@ -356,10 +361,9 @@
 							currentAnimation += 1;
 						}
 						setTimeout(changeAnimation, duration);
-					}	
+					}
 					setTimeout(changeAnimation, 5000);
 				}
-				scene2();					
 
 				var loadClothing = function(jsonFileName, parent, onComplete) {
 					var loader = new THREE.JSONLoader();
@@ -391,6 +395,8 @@
 
 				container.appendChild( renderer.domElement );
 
+				scene2();
+
 				controls = new THREE.OrbitControls( camera, renderer.domElement );
 				//controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
 				controls.enableDamping = true;
@@ -406,75 +412,6 @@
 					container.appendChild( stats.domElement );
 
 				}
-
-				// POSTPROCESSING
-
-				var renderModelUV = new THREE.RenderPass( scene_skin, camera, null, new THREE.Color( 0x575757 ) );
-
-				var effectCopy = new THREE.ShaderPass( THREE.CopyShader );
-
-				var effectBloom1 = new THREE.BloomPass( 1, 15, 2, 256 );
-				var effectBloom2 = new THREE.BloomPass( 1, 25, 3, 256 );
-				var effectBloom3 = new THREE.BloomPass( 1, 25, 4, 256 );
-
-				effectBloom1.clear = true;
-				effectBloom2.clear = true;
-				effectBloom3.clear = true;
-
-				effectCopy.renderToScreen = true;
-
-				//
-
-				var pars = {
-					minFilter: THREE.LinearMipmapLinearFilter,
-					magFilter: THREE.LinearFilter,
-					format: THREE.RGBFormat,
-					stencilBuffer: false
-				};
-
-				var rtwidth = 512;
-				var rtheight = 512;
-
-				//
-
-				composerScene = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
-				composerScene.addPass( renderModelUV );
-
-				renderScene = new THREE.TexturePass( composerScene.renderTarget2 );
-
-				//
-
-				composerUV1 = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
-
-				composerUV1.addPass( renderScene );
-				composerUV1.addPass( effectBloom1 );
-
-				composerUV2 = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
-
-				composerUV2.addPass( renderScene );
-				composerUV2.addPass( effectBloom2 );
-
-				composerUV3 = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
-
-				composerUV3.addPass( renderScene );
-				composerUV3.addPass( effectBloom3 );
-
-				//
-
-				var effectBeckmann = new THREE.ShaderPass( THREE.ShaderSkinCustom[ "beckmann" ] );
-				composerBeckmann = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
-				composerBeckmann.addPass( effectBeckmann );
-
-				//
-
-				uniforms[ "tBlur1" ].value = composerScene.renderTarget2;
-				uniforms[ "tBlur2" ].value = composerUV1.renderTarget2;
-				uniforms[ "tBlur3" ].value = composerUV2.renderTarget2;
-				uniforms[ "tBlur4" ].value = composerUV3.renderTarget2;
-
-				uniforms[ "tBeckmann" ].value = composerBeckmann.renderTarget1;
-
-				//
 
 				window.addEventListener( 'resize', onWindowResize, false );				
 
@@ -502,6 +439,7 @@
 			//
 			var timescale = 1;
 
+
 			function animate() {
 
 				requestAnimationFrame( animate );
@@ -521,26 +459,15 @@
 			var cubemapRendered = false;
 			function render() {
 
-				if(!cubemapRendered) {
+				/*if(!cubemapRendered) {
 					cubeCamera.updateCubeMap( renderer, scene_normal );
 					cubemapRendered = true;
-				}
+				}*/
 
 				renderer.clear();
-
-				if ( firstPass ) {
-
-					composerBeckmann.render();
-					firstPass = false;
-
+				for(var i in skinshaders) {
+					skinshaders[i].render();
 				}
-
-				composerScene.render();
-
-				composerUV1.render();
-				composerUV2.render();
-				composerUV3.render();
-
 				renderer.render( scene_normal, camera );
 
 			}
