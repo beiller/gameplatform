@@ -334,7 +334,7 @@ THREE.ShaderSkinCustom = {
 
 			"	vViewPosition = - mvPosition.xyz;",
 
-				"vNormal = normalize( normalMatrix * normal );",			
+				"vNormal = normalize( normalMatrix * normal );",
 
 				"vUv = uv;",
 
@@ -349,6 +349,8 @@ THREE.ShaderSkinCustom = {
 		].join( "\n" ),
 
 		vertexShaderUV: [
+
+			THREE.ShaderChunk[ "skinning_pars_vertex" ],
 
 			"varying vec3 vNormal;",
 			"varying vec2 vUv;",
@@ -368,10 +370,23 @@ THREE.ShaderSkinCustom = {
 			THREE.ShaderChunk[ "common" ],
 
 			"void main() {",
+				THREE.ShaderChunk[ "begin_vertex" ],
+				THREE.ShaderChunk[ "beginnormal_vertex" ],
+				THREE.ShaderChunk[ "skinbase_vertex" ],
+				THREE.ShaderChunk[ "skinnormal_vertex" ],
 
-				"vec4 worldPosition = modelMatrix * vec4( position, 1.0 );",
+				THREE.ShaderChunk[ "skinning_vertex" ],
 
-				"vec4 mvPosition = modelViewMatrix * vec4( position, 1.0 );",
+				"#ifdef USE_SKINNING",
+
+				"	vec4 mvPosition = modelViewMatrix * skinned;",
+
+				"#else",
+
+				"	vec4 mvPosition = modelViewMatrix * vec4( transformed, 1.0 );",
+
+				"#endif",
+
 
 				"vViewPosition = -mvPosition.xyz;",
 
