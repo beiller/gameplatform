@@ -28,7 +28,7 @@
 	</head>
 
 	<body>
-
+		<script type='text/javascript' src='cannon.js'></script>
 		<script src="three.js/build/three.js"></script>
 
 		<script src="shaders/ShaderSkinCustom.js"></script>
@@ -45,172 +45,197 @@
 		<script src="three.js/examples/js/postprocessing/MaskPass.js"></script>
 		<script src="SkinShaderPass.js"></script>
         <script src="Game.js"></script>
+		<script src="Character.js"></script>
 
 		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
 		<script src="three.js/examples/js/Detector.js"></script>
 		<script src="three.js/examples/js/libs/stats.min.js"></script>
-		<script>
+<script>
 
 
-        var game = new Game();
-        game.initRendering();
+var game = new Game();
+game.initRendering();
+game.initPhysics();
 
-        var scene1 = function() {
-            /*var clothing = [
-                "princess-hair.json",
-                "princess-thong.json",
-                //"princess-pants.json",
-                //"princess-shirt.json",
-                "princess-boots.json",
-                "princess-top.json",
-                "princess-jewels.json"
-            ];*/
-            var clothing = [
-                {file: "princess-hair.json", options: {reflectivity: 0.0001, emissive: new THREE.Color(0x222222), transparency: true, opacity: 0.7} },
-                {file: "princess-bodysuit.json", options: {reflectivity: 0.05}},
-                {file: "princess-gloves.json", options: {reflectivity: 0.05}}
-            ];
+var scene1 = function() {
+	game.addGroundPlane(-4);
+    /*var clothing = [
+        "princess-hair.json",
+        "princess-thong.json",
+        //"princess-pants.json",
+        //"princess-shirt.json",
+        "princess-boots.json",
+        "princess-top.json",
+        "princess-jewels.json"
+    ];*/
+    var clothing = [
+        {file: "princess-hair.json", options: {reflectivity: 0.0001, emissive: new THREE.Color(0x222222), transparency: true, opacity: 0.7} },
+        {file: "princess-bodysuit.json", options: {reflectivity: 0.05}},
+        {file: "princess-gloves.json", options: {reflectivity: 0.05}}
+    ];
 
-            game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
-                game.loadCharacter(
-                    "princess.json",
-                    {
-                        name: 'princess',
-                        scale: 1,
-                        sss: true,
-                        diffusePath: "textures/diffuse_low.png",
-                        specularPath: "textures/specular_low.jpg",
-                        normalPath: "textures/normal.png"
-                    }, function(parent) {
-                        var loopArr = function(index, arr, callbackFunction) {
-                            game.loadClothing(arr[index].file, parent, arr[index].options, function(clothingObject) {
-                                if(++index < arr.length) {
-                                    loopArr(index, arr, callbackFunction);
-                                } else {
-                                    if(callbackFunction !== undefined) { callbackFunction(); }
-                                }
-                            });
-                        };
-                        loopArr(0, clothing, function() {
-                            game.playAnimation('princess', 'breathe');
-                            animate();
-                        });
-                    }
-                );
-            });
-        }; //end scene1 function
-
-        var scene2 = function() {
-            game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
-                var sceneObjects = [
-                    {
-                        file: "models/DefenderLingerie00.json",
-                        settings: {
-                            name: 'eve',
-                            scale: 0.3,
-                            sss: true,
-                            diffusePath: "models/textures/diffuse.png",
-                            specularPath: "models/textures/specular.png",
-                            normalPath: "models/textures/normal.png"
+    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+        game.loadCharacter(
+            "princess.json",
+            {
+                name: 'princess',
+                scale: 1,
+                sss: true,
+                diffusePath: "textures/diffuse_low.png",
+                specularPath: "textures/specular_low.jpg",
+                normalPath: "textures/normal.png"
+            }, function(character) {
+                var loopArr = function(index, arr, callbackFunction) {
+                    game.loadClothing(arr[index].file, character.mesh, arr[index].options, function(clothingObject) {
+                        if(++index < arr.length) {
+                            loopArr(index, arr, callbackFunction);
+                        } else {
+                            if(callbackFunction !== undefined) { callbackFunction(); }
                         }
-                    },
-                    {
-                        file:  "models/alien.json",
-                        settings: {
-                            name: 'monster',
-                            scale: 0.3,
-                            sss: true,
-                            diffusePath: "models/textures/Alien_Necromorph_D.png",
-                            specularPath: "models/textures/Alien_Necromorph_S.png",
-                            normalPath: "models/textures/Alien_Necromorph_N.png"
-                        }
-                    },
-                    {
-                        file: "models/drip.json",
-                        settings: {
-                            name: 'drip',
-                            scale: 0.3,
-                            sss: false,
-                            emissive: new THREE.Color( 0xBBBBBB )
-                        }
-                    }
-                ];
-                game.loadCharacter(sceneObjects[0].file, sceneObjects[0].settings, function() {
-                    game.loadCharacter(sceneObjects[1].file, sceneObjects[1].settings, function() {
-                        game.loadCharacter(sceneObjects[2].file, sceneObjects[2].settings, function() {
-                            var anim_map = [
-                                {
-                                    'eve': {name: 'DE_Charming', duration: 10000},
-                                    'monster': {name: 'monster_fondle', duration: 10000},
-                                    'drip': {name: 'drip_hide', duration: 10000}
-                                },
-                                {
-                                    'eve': {name: 'fondleMonster', duration: 10000, crossFade: true},
-                                    'monster': {name: 'monster_fondle', duration: 10000},
-                                    'drip': {name: 'drip_hide', duration: 10000}
-                                },
-                                {
-                                    'eve':  {name: 'titjob', duration: 10000, crossFade: true},
-                                    'monster':  {name: 'monster_titjob', duration: 10000, crossFade: true},
-                                    'drip':  {name: 'drip_hide', duration: 10000}
-                                },
-                                {
-                                    'eve':  {name: 'titjob2', duration: 10000, crossFade: true},
-                                    'monster':  {name: 'monster_titjob2', duration: 10000, crossFade: true},
-                                    'drip':  {name: 'drip_hide', duration: 10000}
-                                },
-                                {
-                                    'eve':  {name: 'titjob2', duration: 5000, timeScale: 1.5},
-                                    'monster':  {name: 'monster_titjob2', duration: 5000, timeScale: 1.5},
-                                    'drip':  {name: 'drip_hide', duration: 5000}
-                                },
-                                {
-                                    'eve':  {name: 'fuck1', duration: 10000, crossFade: true},
-                                    'monster':  {name: 'fuck1', duration: 10000, crossFade: true},
-                                    'drip':  {name: 'drip_hide', duration: 10000}
-                                },
-                                {
-                                    'eve':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
-                                    'monster':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
-                                    'drip':  {name: 'drip_hide', duration: 5000}
-                                },
-                                {
-                                    'eve':  {name: 'fuck1.finish', duration: 30000, loop: THREE.LoopPingPong},
-                                    'monster':  {name: 'monster_fuck1.finish', duration: 30000, loop: THREE.LoopOnce},
-                                    'drip':  {name: 'drip_out', duration: 30000, loop: THREE.LoopOnce}
-                                }
-                            ];
-
-                            var currentAnimation = 0;
-                            var changeAnimation = function() {
-                                var map = anim_map[currentAnimation];
-                                var duration = 10000;
-                                for(characterName in map) {
-                                    duration = map[characterName].duration || duration;
-                                    var animationName = map[characterName].name;
-                                    var options = map[characterName];
-                                    game.playAnimation(characterName, animationName, options);
-                                }
-                                if(currentAnimation + 1 == anim_map.length) {
-                                    currentAnimation = 0;
-                                } else {
-                                    currentAnimation += 1;
-                                }
-                                setTimeout(changeAnimation, duration);
-                            };
-                            changeAnimation();
-                            animate();
-                        });
                     });
+                };
+                loopArr(0, clothing, function() {
+                    character.playAnimation('breathe');
+                    animate();
+                });
+            }
+        );
+    });
+}; //end scene1 function
+
+var scene2 = function() {
+	game.addGroundPlane(-4);
+    game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
+        var sceneObjects = [
+            {
+                file: "models/DefenderLingerie00.json",
+                settings: {
+                    name: 'eve',
+                    scale: 0.3,
+                    sss: true,
+                    diffusePath: "models/textures/diffuse.png",
+                    specularPath: "models/textures/specular.png",
+                    normalPath: "models/textures/normal.png"
+                }
+            },
+            {
+                file:  "models/alien.json",
+                settings: {
+                    name: 'monster',
+                    scale: 0.3,
+                    sss: true,
+                    diffusePath: "models/textures/Alien_Necromorph_D.png",
+                    specularPath: "models/textures/Alien_Necromorph_S.png",
+                    normalPath: "models/textures/Alien_Necromorph_N.png"
+                }
+            },
+            {
+                file: "models/drip.json",
+                settings: {
+                    name: 'drip',
+                    scale: 0.3,
+                    sss: false,
+                    emissive: new THREE.Color( 0xBBBBBB )
+                }
+            }
+        ];
+        game.loadCharacter(sceneObjects[0].file, sceneObjects[0].settings, function(c1) {
+            game.loadCharacter(sceneObjects[1].file, sceneObjects[1].settings, function(c2) {
+                game.loadCharacter(sceneObjects[2].file, sceneObjects[2].settings, function(c3) {
+                    var anim_map = [
+                        {
+                            'eve': {name: 'DE_Charming', duration: 10000},
+                            'monster': {name: 'monster_fondle', duration: 10000},
+                            'drip': {name: 'drip_hide', duration: 10000}
+                        },
+                        {
+                            'eve': {name: 'fondleMonster', duration: 10000, crossFade: true},
+                            'monster': {name: 'monster_fondle', duration: 10000},
+                            'drip': {name: 'drip_hide', duration: 10000}
+                        },
+                        {
+                            'eve':  {name: 'titjob', duration: 10000, crossFade: true},
+                            'monster':  {name: 'monster_titjob', duration: 10000, crossFade: true},
+                            'drip':  {name: 'drip_hide', duration: 10000}
+                        },
+                        {
+                            'eve':  {name: 'titjob2', duration: 10000, crossFade: true},
+                            'monster':  {name: 'monster_titjob2', duration: 10000, crossFade: true},
+                            'drip':  {name: 'drip_hide', duration: 10000}
+                        },
+                        {
+                            'eve':  {name: 'titjob2', duration: 5000, timeScale: 1.5},
+                            'monster':  {name: 'monster_titjob2', duration: 5000, timeScale: 1.5},
+                            'drip':  {name: 'drip_hide', duration: 5000}
+                        },
+                        {
+                            'eve':  {name: 'fuck1', duration: 10000, crossFade: true},
+                            'monster':  {name: 'fuck1', duration: 10000, crossFade: true},
+                            'drip':  {name: 'drip_hide', duration: 10000}
+                        },
+                        {
+                            'eve':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
+                            'monster':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
+                            'drip':  {name: 'drip_hide', duration: 5000}
+                        },
+                        {
+                            'eve':  {name: 'fuck1.finish', duration: 30000, loop: THREE.LoopPingPong},
+                            'monster':  {name: 'monster_fuck1.finish', duration: 30000, loop: THREE.LoopOnce},
+                            'drip':  {name: 'drip_out', duration: 30000, loop: THREE.LoopOnce}
+                        }
+                    ];
+
+                    var currentAnimation = 0;
+                    var changeAnimation = function() {
+                        var map = anim_map[currentAnimation];
+                        var duration = 10000;
+                        for(characterName in map) {
+                            duration = map[characterName].duration || duration;
+                            var animationName = map[characterName].name;
+                            var options = map[characterName];
+                            game.getCharacter(characterName).playAnimation(animationName, options);
+                        }
+                        if(currentAnimation + 1 == anim_map.length) {
+                            currentAnimation = 0;
+                        } else {
+                            currentAnimation += 1;
+                        }
+                        setTimeout(changeAnimation, duration);
+                    };
+                    changeAnimation();
+                    animate();
                 });
             });
-        }; //end scene2 function
-        function animate() {
-            requestAnimationFrame(animate);
-            game.animate();
-        }
-        scene1();
-		</script>
+        });
+    });
+}; //end scene2 function
+
+var scene3 = function() {
+	game.addGroundPlane(-4);
+    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+        game.loadCharacter(
+            "models/DefenderLingerie00.json",
+            {
+                name: 'foxy',
+                scale: 1,
+                sss: true,
+                diffusePath: "fftex_furry.jpg",
+                specularPath: "models/textures/specular.png",
+                normalPath: "models/textures/diffuse.png"
+            }, function(character) {
+                character.playAnimation('DE_Combatiddle');
+				game.addKeyboardController('foxy');
+                animate();
+            }
+        );
+    });
+}; //end scene1 function
+function animate() {
+    requestAnimationFrame(animate);
+    game.animate();
+}
+scene3();
+</script>
 
 	</body>
 </html>
