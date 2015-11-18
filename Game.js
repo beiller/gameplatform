@@ -19,13 +19,13 @@ function Game() {
 
     this.timescale = 1.0;
 
-    this.animated_objects = [];
     this.characters = {};
     this.skinshaders = [];
-    this.dynamicObjects = [];
 }
 
 Game.prototype.initPhysics = function() {
+    this.collisionGroups = [1,2,4,8,16,32];
+
     this.world = new CANNON.World();
     this.world.gravity.set(0,-9.82,0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
@@ -33,6 +33,96 @@ Game.prototype.initPhysics = function() {
     this.world.defaultContactMaterial.friction = 0.035;
     this.world.defaultContactMaterial.contactEquationStiffness = 1e8;
     this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
+};
+Game.prototype.addKeyboardController = function(characterName) {
+    var characterToBeControlled = this.characters[characterName];
+    characterToBeControlled.movementDirection = new THREE.Vector3(0,0,0);
+    var keymodifier = {}
+    var keymap = {
+    	'keydown': {
+    		'87': function(){//w
+    			characterToBeControlled.movementDirection.z += 1.0;
+    		},
+    		'83': function(){//s
+    			characterToBeControlled.movementDirection.z -= 1.0;
+    		},
+    		'68': function(){//a
+    			characterToBeControlled.movementDirection.x += 1.0;
+    		},
+    		'65': function(){//d
+    			characterToBeControlled.movementDirection.x -= 1.0
+    		}
+    	},
+    	'keyup':{
+    		'87': function(){
+    			characterToBeControlled.movementDirection.z -= 1.0;
+    		},
+    		'83': function(){
+    			characterToBeControlled.movementDirection.z += 1.0;
+    		},
+    		'68': function(){
+    			characterToBeControlled.movementDirection.x -= 1.0;
+    		},
+    		'65': function(){
+    			characterToBeControlled.movementDirection.x += 1.0
+    		}
+    	}
+    };
+    var onDocumentKeyDown = function( event ) {
+    	if((event.keyCode in keymodifier && keymodifier[event.keyCode] == false) || !(event.keyCode in keymodifier)) {
+    		if (event.keyCode in keymap['keydown']) {
+    			keymap['keydown'][event.keyCode]();
+    			keymodifier[event.keyCode] = true;
+    		}
+    	}
+    }
+    var onDocumentKeyUp = function( event ) {
+    	if ((event.keyCode in keymodifier && keymodifier[event.keyCode] == true) || !(event.keyCode in keymodifier)) {
+    		if (event.keyCode in keymap['keyup']) {
+    			keymap['keyup'][event.keyCode]();
+    			keymodifier[event.keyCode] = false;
+    		}
+    	}
+    }
+    window.addEventListener( 'keydown', onDocumentKeyDown, false );
+    window.addEventListener( 'keyup', onDocumentKeyUp, false );
+}
+Game.prototype.addGroundPlane = function(height) {
+    var groundShape = new CANNON.Plane();
+	var groundBody = new CANNON.Body({mass: 0});
+	groundBody.addShape(groundShape);
+	groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(-1,0,0), 90 * (Math.PI / 180));
+	groundBody.collisionFilterGroup = this.collisionGroups[0];
+	groundBody.collisionFilterMask = this.collisionGroups[0] | this.collisionGroups[1];
+	groundBody.position.set(0, height, 0);
+	this.world.add(groundBody);
+	this.groundBody = groundBody;
+};
+Game.prototype.addCharacterPhysics = function(radius, mass, position) {
+    var shape = new CANNON.Sphere( radius || 1.0 );
+	var body = new CANNON.Body({
+		mass: mass || 1.0
+	});
+    if(position === undefined) position = [0,0,0];
+	body.addShape(shape);
+	body.position.set(position[0], position[1], position[2]);
+	body.collisionFilterGroup = this.collisionGroups[1];
+	body.collisionFilterMask = this.collisionGroups[0];// | this.collisionGroups[1];
+	body.fixedRotation = true;
+	body.updateMassProperties();
+	this.world.add(body); // Step 3
+
+    /*var sphere = new THREE.Mesh( new THREE.SphereGeometry( radius, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
+    sphere.position.copy(body.position);
+	this.scene.add(sphere);
+    sphere.body = body;
+	sphere.update = function(dt) {
+        this.position.copy(this.body.position);
+        //this.mesh.quaternion.copy(this.body.quaternion);
+    }
+    this.characters['debugSphere'] = sphere;*/
+
+    return body;
 };
 Game.prototype.initRendering = function() {
     this.clock = new THREE.Clock;
@@ -96,13 +186,6 @@ Game.prototype.initRendering = function() {
     };
     window.addEventListener( 'resize', onWindowResize, false );
 };
-Game.prototype.attachAnimations	= function(object) {
-    object.animationMixer = new THREE.AnimationMixer( object );
-    object.animations = {};
-    for ( var i in object.geometry.animations ) {
-        object.animations[object.geometry.animations[ i ].name]  = object.geometry.animations[ i ];
-    }
-};
 Game.prototype.loadEnvironment = function(envMapPath, onComplete) {
     var game = this;
     this.texloader.load(envMapPath, function(texture) {
@@ -118,7 +201,6 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
         game.texloader.load(specularPath, function(specularTexture) {
             game.texloader.load(normalPath, function(normalTexture) {
                 var object = new THREE.SkinnedMesh( geometry );
-                game.attachAnimations( object );
                 var sss = new SkinShaderPass(game.renderer, game.camera, geometry, object, diffuseTexture, specularTexture, normalTexture);
                 var shader = THREE.ShaderSkinCustom[ "skin" ];
                 var uniforms = THREE.UniformsUtils.clone( sss.shader.uniforms );
@@ -134,7 +216,6 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
                 game.scene.add(object);
                 object.material = new THREE.ShaderMaterial( parameters );
                 game.skinshaders.push(sss);
-                game.animated_objects.push(object);
                 if(onComplete !== undefined) onComplete(object);
             });
         });
@@ -144,10 +225,12 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
     var game = this;
     this.jsonloader.load(jsonPath, function( geometry, materials ) {
         if(options.sss) {
-            game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(object) {
-                game.characters[options.name] = object;
-                object.scale.x = object.scale.y = object.scale.z = options.scale;
-                if(onComplete !== undefined) onComplete(object);
+            game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh) {
+                //create Character object
+                var character = new Character(mesh, game.addCharacterPhysics(1.0, 0.5, [0,5,0]));
+                game.characters[options.name] = character;
+                mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
+                if(onComplete !== undefined) onComplete(character);
             });
         } else {
             var material = new THREE.MeshPhongMaterial({
@@ -159,13 +242,12 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
                 combine: options.combine || THREE.MixOperation,
                 reflectivity: options.reflectivity || 0.2
             });
-            var object = new THREE.SkinnedMesh( geometry, material );
-            game.attachAnimations( object );
-            game.scene.add( object );
-            game.animated_objects.push(object);
-            game.characters[options.name] = object;
-            object.scale.x = object.scale.y = object.scale.z = options.scale || 1.0;
-            if(onComplete !== undefined) onComplete(object);
+            var mesh = new THREE.SkinnedMesh( geometry, material );
+            var character = new Character(mesh, game.addCharacterPhysics(1.0, 0.5, [0,5,0]));
+            game.characters[options.name] = character;
+            game.scene.add( mesh );
+            mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale || 1.0;
+            if(onComplete !== undefined) onComplete(character);
         }
     } );
 };
@@ -199,12 +281,13 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
 };
 Game.prototype.animate = function() {
     this.controls.update();
-    var delta = this.clock.getDelta() * this.timescale;
-    for(var i in this.animated_objects) {
-        if(this.animated_objects[i].animationMixer) {
-            this.animated_objects[i].animationMixer.update( delta );
-        }
+    var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
+
+    this.world.step(delta);
+    for(var i in this.characters) {
+        this.characters[i].update(delta);
     }
+
     this.render();
     if ( this.statsEnabled ) this.stats.update();
 };
@@ -220,25 +303,6 @@ Game.prototype.render = function() {
     }
     this.renderer.render( this.scene, this.camera );
 };
-Game.prototype.playAnimation = function(characterName, animationName, options) {
-    if(options === undefined) {
-        options = {};
-    }
-    if(this.characters[characterName] !== undefined && this.characters[characterName].animations !== undefined) {
-        var character = this.characters[characterName];
-        var a = new THREE.AnimationAction( character.animations[animationName] );
-        a.loop = options.loop || THREE.LoopRepeat;
-        a.timeScale = options.timeScale || 1.0;
-        if(options.crossFade && character.animationMixer !== undefined) {
-            a.weight = 0.0;
-            var crossFadeFrom = character.animationMixer.actions[character.animationMixer.actions.length - 1];
-            character.animationMixer = new THREE.AnimationMixer(character);
-            character.animationMixer.addAction( a );
-            character.animationMixer.addAction( crossFadeFrom );
-            character.animationMixer.crossFade( crossFadeFrom, a, 1.00, false );
-        } else {
-            character.animationMixer = new THREE.AnimationMixer(character);
-            character.animationMixer.play( a );
-        }
-    }
+Game.prototype.getCharacter = function(characterName) {
+    return this.characters[characterName];
 };
