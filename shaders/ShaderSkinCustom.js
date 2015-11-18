@@ -9,16 +9,10 @@ THREE.ShaderSkinCustom = {
 	'skin' : {
 
 		uniforms: THREE.UniformsUtils.merge( [
-			THREE.UniformsLib[ "common" ],
-			THREE.UniformsLib[ "aomap" ],
-			THREE.UniformsLib[ "lightmap" ],
-			THREE.UniformsLib[ "emissivemap" ],
-			THREE.UniformsLib[ "bumpmap" ],
-			THREE.UniformsLib[ "normalmap" ],
-			THREE.UniformsLib[ "displacementmap" ],
+
+
 			THREE.UniformsLib[ "fog" ],
 			THREE.UniformsLib[ "lights" ],
-			THREE.UniformsLib[ "shadowmap" ],
 
 			{
 
@@ -142,7 +136,7 @@ THREE.ShaderSkinCustom = {
 				"vec4 mSpecular = vec4( specular, opacity );",
 
 				"vec4 texelSpecular = texture2D( specularMap, vUv );",
-				"float roughness = (1.0 - texelSpecular.r) * 0.3;",
+				"float specularMapValue = texelSpecular.r * 3.0;",
 
 				"vec4 colDiffuse = texture2D( tDiffuse, vUv );",
 				"colDiffuse *= colDiffuse;",
@@ -188,7 +182,7 @@ THREE.ShaderSkinCustom = {
 
 						"if ( passID == 1 ) {",
 
-							"float pointSpecularWeight = KS_Skin_Specular( normal, pointVector, viewerDirection, roughness, uSpecularBrightness );",
+							"float pointSpecularWeight = KS_Skin_Specular( normal, pointVector, viewerDirection, uRoughness, specularMapValue );",
 
 							"totalSpecularLight += pointLightColor[ i ] * mSpecular.xyz * ( pointSpecularWeight * attenuation );",
 
@@ -212,7 +206,7 @@ THREE.ShaderSkinCustom = {
 
 						"if ( passID == 1 ) {",
 
-							"float dirSpecularWeight = KS_Skin_Specular( normal, dirVector, viewerDirection, roughness, uSpecularBrightness );",
+							"float dirSpecularWeight = KS_Skin_Specular( normal, dirVector, viewerDirection, uRoughness, specularMapValue );",
 
 							"totalSpecularLight += directionalLightColor[ i ] * mSpecular.xyz * dirSpecularWeight;",
 
@@ -332,11 +326,11 @@ THREE.ShaderSkinCustom = {
 				THREE.ShaderChunk[ "project_vertex" ],
 				THREE.ShaderChunk[ "logdepthbuf_vertex" ],
 
-			"	vViewPosition = - mvPosition.xyz;",
+			"	vViewPosition = -(modelViewMatrix * vec4( position, 1.0 )).xyz;",
 
-				"vNormal = normalize( normalMatrix * normal );",
+			"	vNormal = normalize( normalMatrix * normal );",
 
-				"vUv = uv;",
+			"	vUv = uv;",
 
 
 				THREE.ShaderChunk[ "worldpos_vertex" ],
@@ -349,70 +343,35 @@ THREE.ShaderSkinCustom = {
 		].join( "\n" ),
 
 		vertexShaderUV: [
+			"#define PHONG",
 
+			THREE.ShaderChunk[ "common" ],
+			THREE.ShaderChunk[ "lights_phong_pars_vertex" ],
 			THREE.ShaderChunk[ "skinning_pars_vertex" ],
+			THREE.ShaderChunk[ "shadowmap_pars_vertex" ],
 
 			"varying vec3 vNormal;",
 			"varying vec2 vUv;",
-
-			"#if MAX_POINT_LIGHTS > 0",
-
-				"uniform vec3 pointLightPosition[ MAX_POINT_LIGHTS ];",
-				"uniform float pointLightDistance[ MAX_POINT_LIGHTS ];",
-				"uniform float pointLightDecay[ MAX_POINT_LIGHTS ];",
-
-				"varying vec4 vPointLight[ MAX_POINT_LIGHTS ];",
-
-			"#endif",
-
 			"varying vec3 vViewPosition;",
 
-			THREE.ShaderChunk[ "common" ],
-
 			"void main() {",
-				THREE.ShaderChunk[ "begin_vertex" ],
+
+
 				THREE.ShaderChunk[ "beginnormal_vertex" ],
 				THREE.ShaderChunk[ "skinbase_vertex" ],
 				THREE.ShaderChunk[ "skinnormal_vertex" ],
+				THREE.ShaderChunk[ "defaultnormal_vertex" ],
 
+				THREE.ShaderChunk[ "begin_vertex" ],
 				THREE.ShaderChunk[ "skinning_vertex" ],
 
-				"#ifdef USE_SKINNING",
+			"	vViewPosition = -(modelViewMatrix * vec4( position, 1.0 )).xyz;",
 
-				"	vec4 mvPosition = modelViewMatrix * skinned;",
+			"	vNormal = objectNormal;",
 
-				"#else",
+			"	vUv = uv;",
 
-				"	vec4 mvPosition = modelViewMatrix * vec4( transformed, 1.0 );",
-
-				"#endif",
-
-
-				"vViewPosition = -mvPosition.xyz;",
-
-				"vNormal = normalize( normalMatrix * normal );",
-
-				"vUv = uv;",
-
-				// point lights
-
-				"#if MAX_POINT_LIGHTS > 0",
-
-					"for( int i = 0; i < MAX_POINT_LIGHTS; i++ ) {",
-
-						"vec3 lVector = pointLightPosition[ i ] - vViewPosition;",
-
-						"float attenuation = calcLightAttenuation( length( lVector ), pointLightDistance[ i ], pointLightDecay[i] );",
-
-						"lVector = normalize( lVector );",
-
-						"vPointLight[ i ] = vec4( lVector, attenuation );",
-
-					"}",
-
-				"#endif",
-
-				"gl_Position = vec4( uv.x * 2.0 - 1.0, uv.y * 2.0 - 1.0, 0.0, 1.0 );",
+			"	gl_Position = vec4( uv.x * 2.0 - 1.0, uv.y * 2.0 - 1.0, 0.0, 1.0 );",
 
 			"}"
 

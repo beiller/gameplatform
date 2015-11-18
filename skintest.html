@@ -44,6 +44,7 @@
 		<script src="three.js/examples/js/postprocessing/ShaderPass.js"></script>
 		<script src="three.js/examples/js/postprocessing/MaskPass.js"></script>
 		<script src="SkinShaderPass.js"></script>
+        <script src="Game.js"></script>
 
 		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
 		<script src="three.js/examples/js/Detector.js"></script>
@@ -51,427 +52,163 @@
 		<script>
 
 
-
-
-			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-
-			var statsEnabled = true;
-
-			var container, stats;
-
-			var camera, renderer;
-
-			var controls;
-
-			var directionalLight, pointLight, ambientLight;
-
-			var mouseX = 0, mouseY = 0;
-			var targetX = 0, targetY = 0;
-
-			var windowHalfX = window.innerWidth / 2;
-			var windowHalfY = window.innerHeight / 2;
-
-			var clock = null;
-
-			var animated_objects = [];
-			var characters = {};
-			var skinshaders = [];
-
-			init();
-
-			function init() {
-				clock = new THREE.Clock;
-
-				container = document.createElement( 'div' );
-				document.body.appendChild( container );
-
-				camera = new THREE.PerspectiveCamera( 35, window.innerWidth / window.innerHeight, 0.01, 10000 );
-				camera.position.z = 0.1;
-
-				cubeCamera = new THREE.CubeCamera( 1, 1000, 256 );
-				//cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
-
-				scene_normal = new THREE.Scene();
-
-				// LIGHTS
-
-				directionalLight = new THREE.DirectionalLight( 0xffeedd, 1.5 );
-				directionalLight.position.set( 0, 0.5, 1 );
-				scene_normal.add( directionalLight );
-
-
-				directionalLight = new THREE.DirectionalLight( 0xddddff, 0.5 );
-				directionalLight.position.set( 0, 0.5, -1 );
-				scene_normal.add( directionalLight );
-
-
-				var texloader = new THREE.TextureLoader();
-				var loader = new THREE.JSONLoader();
-
-				function attachAnimations(object) {
-					object.animationMixer = new THREE.AnimationMixer( object );
-					object.animations = {};
-					for ( var i in object.geometry.animations ) {
-						console.log(object.geometry.animations[ i ].name);
-						object.animations[object.geometry.animations[ i ].name]  = object.geometry.animations[ i ];
-					}		
-				}
-
-				function loadSSSMaterial(geometry, diffusePath, specularPath, normalPath, onComplete) {
-					/*texloader.load(normalPath, function(texture) {
-						var uuv = THREE.UniformsUtils.clone( uniformsUV );
-						var u = THREE.UniformsUtils.clone( uniforms );
-						uuv[ "tNormal" ].value = texture;
-						u[ "tNormal" ].value = texture;
-						texloader.load(diffusePath, function(texture) {
-							uuv[ "tDiffuse" ].value = texture;
-							u[ "tDiffuse" ].value = texture;
-							texloader.load(specularPath, function(texture) {
-								u[ "specularMap" ].value = texture;
-
-								var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: u, lights: true, derivatives: true, transparent: true, skinning: true };
-								var parametersUV = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShaderUV, uniforms: uuv, lights: true, derivatives: true };
-								var object = new THREE.SkinnedMesh( geometry, new THREE.ShaderMaterial( parameters ) );
-								var skinobject = new THREE.Mesh( geometry, new THREE.ShaderMaterial( parametersUV ) );
-								attachAnimations( object );
-								scene_normal.add( object );
-								scene_skin.add( skinobject );									
-								animated_objects.push(object);
-								if(onComplete !== undefined)		
-									onComplete(object);
-							});
-						});
-					});	*/
-					var object = new THREE.SkinnedMesh( geometry );
-					attachAnimations( object );
-					var sss = new SkinShaderPass(renderer, camera, object, diffusePath, specularPath, normalPath);
-					scene_normal.add(object);
-					skinshaders.push(sss);
-					animated_objects.push(object);
-					if(onComplete !== undefined) onComplete(object);
-
-					//DEBUGGING...........
-
-					var mesh = new THREE.Mesh( new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial( { map: sss.shader.uniforms.tBlur3.value } ) );
-					mesh.position.x = -1;
-					scene_normal.add( mesh );
-					mesh = new THREE.Mesh( new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial( { map: sss.shader.uniforms.tBeckmann.value } ) );
-					mesh.position.x = 1;
-					scene_normal.add( mesh );
-					mesh = new THREE.Mesh( new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial( { map: sss.shader.uniforms.tBlur4.value } ) );
-					mesh.position.x = -1;
-					mesh.position.y = 1;
-					scene_normal.add( mesh );
-
-
-
-				}
-
-				function loadCharacter(jsonPath, options, onComplete) {
-					loader.load(  jsonPath, function( geometry, materials ) { 
-						if(options.sss) {
-							loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(o) { 
-								characters[options.name] = o;
-								o.scale.x = o.scale.y = o.scale.z = options.scale;
-								if(onComplete !== undefined)
-									onComplete(o);
-							});
-						} else {
-							var material = new THREE.MeshPhongMaterial({
-								skinning: true,
-								diffuse: new THREE.Color( 0xFFFFFF ),
-								specular: new THREE.Color( 0xFFFFFF ),
-								emissive: new THREE.Color( 0x888888 )
-							});
-							var object = new THREE.SkinnedMesh( geometry, material );
-							attachAnimations( object );	
-							scene_normal.add( object );								
-							animated_objects.push(object);	
-							characters[options.name] = object;
-							object.scale.x = object.scale.y = object.scale.z = options.scale;
-							if(onComplete !== undefined)
-								onComplete(object);
-						}
-					} );
-				}
-
-				scene_normal.add( cubeCamera );
-
-				var scene1 = function() {
-					/*var clothing = [
-						"princess-hair.json",
-						//"princess-thong.json",
-						//"princess-pants.json",
-						//"princess-shirt.json",
-						"princess-boots.json",
-						//"princess-top.json",
-						"princess-jewels.json"
-					];*/
-
-					var clothing = [
-						"princess-hair.json",
-						"princess-bodysuit.json",
-						"princess-gloves.json"
-					];						
-					texloader.load("textures/tropical_beach.jpg", function(texture) {
-						var mesh = new THREE.Mesh( new THREE.SphereGeometry( 500, 60, 40 ), new THREE.MeshBasicMaterial( { map: texture } ) );
-						mesh.scale.x = -1;
-						scene_normal.add( mesh );
-
-						loadCharacter(
-								"princess.json",
-								{
-									name: 'princess',
-									scale: 1,
-									sss: true,
-									diffusePath: "textures/diffuse.png",
-									specularPath: "textures/specular.jpg",
-									normalPath: "textures/normal.png"
-								}, function(parent) {
-									for(var c in clothing) {
-										loadClothing(clothing[c], parent, function(clothingObject) {
-											if(clothingObject.material.type == "MultiMaterial") {
-												for(var i in clothingObject.material.materials) {
-													clothingObject.material.materials[i].envMap = cubeCamera.renderTarget;
-													clothingObject.material.materials[i].combine = THREE.MixOperation;
-													clothingObject.material.materials[i].reflectivity  = 0.2;
-												}
-											} else {
-												clothingObject.material.envMap = cubeCamera.renderTarget;
-											}
-
-										});
-									}
-								}
-						);
-						animate();
-					});
-				}
-
-				var scene2 = function() {
-					texloader.load("textures/tropical_beach.jpg", function(texture) {
-						var mesh = new THREE.Mesh( new THREE.SphereGeometry( 500, 60, 40 ), new THREE.MeshBasicMaterial( { map: texture } ) );
-						mesh.scale.x = -1;
-						scene_normal.add( mesh );
-
-						loadCharacter(
-							"models/DefenderLingerie00.json",
-							{
-								name: 'eve',
-								scale: 0.333333,
-								sss: true,
-								diffusePath: "models/textures/diffuse.png",
-								specularPath: "models/textures/specular.png",
-								normalPath: "models/textures/normal.png"
-							}
-						);
-						/*loadCharacter(
-							"models/alien.json", 
-							{
-								name: 'monster',
-								scale: 0.333333,
-								sss: true,
-								diffusePath: "models/textures/Alien_Necromorph_D.png", 
-								specularPath: "models/textures/Alien_Necromorph_S.png", 
-								normalPath: "models/textures/Alien_Necromorph_N.png"
-							}
-						);*/
-						loadCharacter(
-							"models/drip.json", 
-							{
-								name: 'drip',
-								scale: 0.333333,
-								sss: false
-							}
-						);
-						setTimeout(animate, 10000);
-					});					
-
-					var anim_map = [
-						{
-							'eve': {name: 'DE_Charming', duration: 10000},
-							'monster': {name: 'monster_fondle', duration: 10000},
-							'drip': {name: 'drip_hide', duration: 10000}
-						},
-						{
-							'eve': {name: 'fondleMonster', duration: 10000, crossFade: true},
-							'monster': {name: 'monster_fondle', duration: 10000},
-							'drip': {name: 'drip_hide', duration: 10000}
-						},
-						{
-							'eve':  {name: 'titjob', duration: 10000, crossFade: true},
-							'monster':  {name: 'monster_titjob', duration: 10000, crossFade: true},
-							'drip':  {name: 'drip_hide', duration: 10000}
-						},
-						{
-							'eve':  {name: 'titjob2', duration: 10000, crossFade: true},
-							'monster':  {name: 'monster_titjob2', duration: 10000, crossFade: true},
-							'drip':  {name: 'drip_hide', duration: 10000}
-						},
-						{
-							'eve':  {name: 'titjob2', duration: 5000, timeScale: 1.5},
-							'monster':  {name: 'monster_titjob2', duration: 5000, timeScale: 1.5},
-							'drip':  {name: 'drip_hide', duration: 5000}
-						},
-						{
-							'eve':  {name: 'fuck1', duration: 10000, crossFade: true},
-							'monster':  {name: 'fuck1', duration: 10000, crossFade: true},
-							'drip':  {name: 'drip_hide', duration: 10000}
-						},
-						{
-							'eve':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
-							'monster':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
-							'drip':  {name: 'drip_hide', duration: 5000}
-						},
-						{
-							'eve':  {name: 'fuck1.finish', duration: 30000, loop: THREE.LoopPingPong},
-							'monster':  {name: 'monster_fuck1.finish', duration: 30000, loop: THREE.LoopOnce},
-							'drip':  {name: 'drip_out', duration: 30000, loop: THREE.LoopOnce}
-						}
-					];
-
-					var currentAnimation = 0;
-					var changeAnimation = function() {
-
-						var map = anim_map[currentAnimation];
-						var duration = 10000;
-						for(characterName in map) {
-							duration = map[characterName].duration || duration;
-							if(characters[characterName] !== undefined && characters[characterName].animations !== undefined) {
-								var character = characters[characterName];
-								var a = new THREE.AnimationAction( character.animations[map[characterName].name] );
-								a.loop = map[characterName].loop || THREE.LoopRepeat;
-								a.timeScale = map[characterName].timeScale || 1.0;
-								if(map[characterName].crossFade && character.animationMixer !== undefined) {
-									a.weight = 0.0;
-									var crossFadeFrom = character.animationMixer.actions[character.animationMixer.actions.length - 1];
-									character.animationMixer = new THREE.AnimationMixer(character);
-									character.animationMixer.addAction( a );
-									character.animationMixer.addAction( crossFadeFrom );
-									character.animationMixer.crossFade( crossFadeFrom, a, 1.00, false );
-								} else {
-									character.animationMixer = new THREE.AnimationMixer(character);
-									character.animationMixer.play( a );
-								}
-							}
-						}
-						if(currentAnimation + 1 == anim_map.length) {
-							currentAnimation = 0;
-						} else {
-							currentAnimation += 1;
-						}
-						setTimeout(changeAnimation, duration);
-					}
-					setTimeout(changeAnimation, 5000);
-				}
-
-				var loadClothing = function(jsonFileName, parent, onComplete) {
-					var loader = new THREE.JSONLoader();
-					loader.load( jsonFileName, function ( geometry, materials ) {
-						for(var i in materials) {
-							materials[i].skinning = true;
-						}
-					    var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-					    skinnedMesh.skeleton = parent.skeleton;
-					    skinnedMesh.castShadow = true;
-						skinnedMesh.receiveShadow = true;
-					    parent.add(skinnedMesh);
-					    onComplete(skinnedMesh);
-					});
-				}		
-
-				/*var geometry = new THREE.TorusGeometry( 1, 0.42 );
-				var material = new THREE.MeshNormalMaterial();
-				var mesh = new THREE.Mesh( geometry, material );
-				scene_normal.add( mesh );*/
-
-				// RENDERER
-
-				renderer = new THREE.WebGLRenderer( { antialias: false } );
-				renderer.setClearColor( 0x050505 );
-				renderer.setPixelRatio( window.devicePixelRatio );
-				renderer.setSize( window.innerWidth, window.innerHeight );
-				renderer.autoClear = false;
-
-				container.appendChild( renderer.domElement );
-
-				scene2();
-
-				controls = new THREE.OrbitControls( camera, renderer.domElement );
-				//controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
-				controls.enableDamping = true;
-				controls.dampingFactor = 0.25;
-				controls.enableZoom = true;
-				controls.zoomSpeed = 1.0;
-
-				// STATS
-
-				if ( statsEnabled ) {
-
-					stats = new Stats();
-					container.appendChild( stats.domElement );
-
-				}
-
-				window.addEventListener( 'resize', onWindowResize, false );				
-
-			}
-
-			function onWindowResize() {
-
-				windowHalfX = window.innerWidth / 2;
-				windowHalfY = window.innerHeight / 2;
-
-				camera.aspect = window.innerWidth / window.innerHeight;
-				camera.updateProjectionMatrix();
-
-				renderer.setSize( window.innerWidth, window.innerHeight );
-
-			}
-
-			function onDocumentMouseMove( event ) {
-
-				mouseX = ( event.clientX - windowHalfX );
-				mouseY = ( event.clientY - windowHalfY );
-
-			}
-
-			//
-			var timescale = 1;
-
-
-			function animate() {
-
-				requestAnimationFrame( animate );
-				controls.update();
-				var delta = clock.getDelta();
-				for(var i in animated_objects) {
-					if(animated_objects[i].animationMixer) {
-						animated_objects[i].animationMixer.update( delta );
-					}
-				}
-
-				render();
-				if ( statsEnabled ) stats.update();
-
-			}
-
-			var cubemapRendered = false;
-			function render() {
-
-				/*if(!cubemapRendered) {
-					cubeCamera.updateCubeMap( renderer, scene_normal );
-					cubemapRendered = true;
-				}*/
-
-				renderer.clear();
-				for(var i in skinshaders) {
-					skinshaders[i].render();
-				}
-				renderer.render( scene_normal, camera );
-
-			}
-
+        var game = new Game();
+        game.initRendering();
+
+        var scene1 = function() {
+            var clothing = [
+                "princess-hair.json",
+                "princess-thong.json",
+                //"princess-pants.json",
+                //"princess-shirt.json",
+                "princess-boots.json",
+                "princess-top.json",
+                "princess-jewels.json"
+            ];
+            /*var clothing = [
+                //"princess-hair.json",
+                //"princess-bodysuit.json",
+                //"princess-gloves.json"
+            ];		*/
+
+            game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
+                game.loadCharacter(
+                    "princess.json",
+                    {
+                        name: 'princess',
+                        scale: 1,
+                        sss: true,
+                        diffusePath: "textures/diffuse.png",
+                        specularPath: "textures/specular.jpg",
+                        normalPath: "textures/normal.png"
+                    }, function(parent) {
+                        var loopArr = function(index, arr, callbackFunction) {
+                            game.loadClothing(arr[index], parent, function(clothingObject) {
+                                if(++index < arr.length) {
+                                    loopArr(index, arr, callbackFunction);
+                                } else {
+                                    if(callbackFunction !== undefined) { callbackFunction(); }
+                                }
+                            });
+                        };
+                        loopArr(0, clothing, function() {
+                            game.playAnimation('princess', 'breathe');
+                            animate();
+                        });
+                    }
+                );
+            });
+        }; //end scene1 function
+
+        var scene2 = function() {
+            game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
+                var sceneObjects = [
+                    {
+                        file: "models/DefenderLingerie00.json",
+                        settings: {
+                            name: 'eve',
+                            scale: 0.333333,
+                            sss: true,
+                            diffusePath: "models/textures/diffuse.png",
+                            specularPath: "models/textures/specular.png",
+                            normalPath: "models/textures/normal.png"
+                        }
+                    },
+                    {
+                        file:  "models/alien.json",
+                        settings: {
+                            name: 'monster',
+                            scale: 0.333333,
+                            sss: true,
+                            diffusePath: "models/textures/Alien_Necromorph_D.png",
+                            specularPath: "models/textures/Alien_Necromorph_S.png",
+                            normalPath: "models/textures/Alien_Necromorph_N.png"
+                        }
+                    },
+                    {
+                        file: "models/drip.json",
+                        settings: {
+                            name: 'drip',
+                            scale: 0.333333,
+                            sss: false
+                        }
+                    }
+                ];
+                game.loadCharacter(sceneObjects[0].file, sceneObjects[0].settings, function() {
+                    game.loadCharacter(sceneObjects[1].file, sceneObjects[1].settings, function() {
+                        game.loadCharacter(sceneObjects[2].file, sceneObjects[2].settings, function() {
+                            var anim_map = [
+                                {
+                                    'eve': {name: 'DE_Charming', duration: 10000},
+                                    'monster': {name: 'monster_fondle', duration: 10000},
+                                    'drip': {name: 'drip_hide', duration: 10000}
+                                },
+                                {
+                                    'eve': {name: 'fondleMonster', duration: 10000, crossFade: true},
+                                    'monster': {name: 'monster_fondle', duration: 10000},
+                                    'drip': {name: 'drip_hide', duration: 10000}
+                                },
+                                {
+                                    'eve':  {name: 'titjob', duration: 10000, crossFade: true},
+                                    'monster':  {name: 'monster_titjob', duration: 10000, crossFade: true},
+                                    'drip':  {name: 'drip_hide', duration: 10000}
+                                },
+                                {
+                                    'eve':  {name: 'titjob2', duration: 10000, crossFade: true},
+                                    'monster':  {name: 'monster_titjob2', duration: 10000, crossFade: true},
+                                    'drip':  {name: 'drip_hide', duration: 10000}
+                                },
+                                {
+                                    'eve':  {name: 'titjob2', duration: 5000, timeScale: 1.5},
+                                    'monster':  {name: 'monster_titjob2', duration: 5000, timeScale: 1.5},
+                                    'drip':  {name: 'drip_hide', duration: 5000}
+                                },
+                                {
+                                    'eve':  {name: 'fuck1', duration: 10000, crossFade: true},
+                                    'monster':  {name: 'fuck1', duration: 10000, crossFade: true},
+                                    'drip':  {name: 'drip_hide', duration: 10000}
+                                },
+                                {
+                                    'eve':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
+                                    'monster':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
+                                    'drip':  {name: 'drip_hide', duration: 5000}
+                                },
+                                {
+                                    'eve':  {name: 'fuck1.finish', duration: 30000, loop: THREE.LoopPingPong},
+                                    'monster':  {name: 'monster_fuck1.finish', duration: 30000, loop: THREE.LoopOnce},
+                                    'drip':  {name: 'drip_out', duration: 30000, loop: THREE.LoopOnce}
+                                }
+                            ];
+
+                            var currentAnimation = 0;
+                            var changeAnimation = function() {
+                                var map = anim_map[currentAnimation];
+                                var duration = 10000;
+                                for(characterName in map) {
+                                    duration = map[characterName].duration || duration;
+                                    var animationName = map[characterName].name;
+                                    var options = map[characterName];
+                                    game.playAnimation(characterName, animationName, options);
+                                }
+                                if(currentAnimation + 1 == anim_map.length) {
+                                    currentAnimation = 0;
+                                } else {
+                                    currentAnimation += 1;
+                                }
+                                setTimeout(changeAnimation, duration);
+                            };
+                            changeAnimation();
+                            animate();
+                        });
+                    });
+                });
+            });
+        }; //end scene2 function
+        function animate() {
+            requestAnimationFrame(animate);
+            game.animate();
+        }
+        scene1();
 		</script>
 
 	</body>

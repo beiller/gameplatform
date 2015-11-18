@@ -1,38 +1,47 @@
-function SkinShaderPass(renderer, camera, object, diffusePath, normalPath, specularPath) {
+function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, specularTexture, normalTexture, SSSparameters) {
     this.scene = new THREE.Scene();
     this.firstPass = true;
-    this.object = object;
-
-    this.scene.add(object);
+    this.object = new THREE.SkinnedMesh(geometry);
+    this.object.skeleton = object.skeleton;
+    this.scene.add(this.object);
+    if(SSSparameters === undefined) SSSparameters = {};
 
     var directionalLight = new THREE.DirectionalLight( 0xffeedd, 1.5 );
-    directionalLight.position.set( 0, 0.5, 1 );
+    directionalLight.position.set( 1, 0.5, 1 );
     this.scene.add( directionalLight );
 
     directionalLight = new THREE.DirectionalLight( 0xddddff, 0.5 );
-    directionalLight.position.set( 0, 0.5, -1 );
+    directionalLight.position.set( -1, 0.5, -1 );
     this.scene.add( directionalLight );
 
     var shader = THREE.ShaderSkinCustom[ "skin" ];
-
-    // LOADER
     var uniformsUV = THREE.UniformsUtils.clone( shader.uniforms );
-    uniformsUV[ "uNormalScale" ].value = -1;
+
+    /*
+        OPTIONS
+     */
+
+    var rtwidth = diffuseTexture.image.width / 8;
+    var rtheight = diffuseTexture.image.height / 8;
+    console.log("setting rendertarget size: ", [rtwidth, rtheight] );
+    uniformsUV[ "uNormalScale" ].value = SSSparameters.normalScale || -1.5;
     uniformsUV[ "passID" ].value = 0;
     uniformsUV[ "diffuse" ].value.setHex( 0xbbbbbb );
     uniformsUV[ "specular" ].value.setHex( 0x555555 );
-    uniformsUV[ "uRoughness" ].value = 0.205;
-    uniformsUV[ "uSpecularBrightness" ].value = 2.0;
-    uniformsUV[ "tNormal" ].value = THREE.ImageUtils.loadTexture( normalPath );
-    uniformsUV[ "tDiffuse" ].value = THREE.ImageUtils.loadTexture( diffusePath );
+    uniformsUV[ "uRoughness" ].value = SSSparameters.roughness || 0.185;
+    uniformsUV[ "uSpecularBrightness" ].value = SSSparameters.specular || 0.7;
+    uniformsUV[ "tNormal" ].value = normalTexture;
+    uniformsUV[ "tDiffuse" ].value = diffuseTexture;
+
+
     var uniforms = THREE.UniformsUtils.clone( uniformsUV );
     uniforms[ "passID" ].value = 1;
     uniforms[ "tDiffuse" ].value = uniformsUV[ "tDiffuse" ].value;
     uniforms[ "tNormal" ].value = uniformsUV[ "tNormal" ].value;
-    uniforms[ "specularMap" ].value = THREE.ImageUtils.loadTexture( specularPath );
+    uniforms[ "specularMap" ].value = specularTexture;
 
     var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, derivatives: true, transparent: true, skinning: true };
-    var parametersUV = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShaderUV, uniforms: uniformsUV, lights: true, derivatives: true };
+    var parametersUV = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShaderUV, uniforms: uniformsUV, lights: true, derivatives: true, transparent: true, skinning: true };
     this.shader = new THREE.ShaderMaterial( parameters );
     this.shaderUV = new THREE.ShaderMaterial( parametersUV );
 
@@ -61,17 +70,10 @@ function SkinShaderPass(renderer, camera, object, diffusePath, normalPath, specu
         stencilBuffer: false
     };
 
-    var rtwidth = 512;
-    var rtheight = 512;
-
-    //
-
     this.composerScene = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
     this.composerScene.addPass( this.renderModelUV );
 
     this.renderScene = new THREE.TexturePass( this.composerScene.renderTarget2 );
-
-    //
 
     this.composerUV1 = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
 
@@ -88,14 +90,9 @@ function SkinShaderPass(renderer, camera, object, diffusePath, normalPath, specu
     this.composerUV3.addPass( this.renderScene );
     this.composerUV3.addPass( this.effectBloom3 );
 
-    //
-
     this.effectBeckmann = new THREE.ShaderPass( THREE.ShaderSkinCustom[ "beckmann" ] );
     this.composerBeckmann = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
     this.composerBeckmann.addPass( this.effectBeckmann );
-
-    //
-
 
     uniforms[ "tBlur1" ].value = this.composerScene.renderTarget2;
     uniforms[ "tBlur2" ].value = this.composerUV1.renderTarget2;
@@ -105,30 +102,10 @@ function SkinShaderPass(renderer, camera, object, diffusePath, normalPath, specu
 
     //clean up
     this.renderModelUV.overrideMaterial = this.shaderUV;
-    object.material = this.shader;
+    this.object.material = this.shader;
 }
-
-SkinShaderPass.prototype.loadTextures = function(diffusePath, normalPath, specularPath, onComplete) {
-    var shaderNR = this.shader;
-    var shaderUV = this.shaderUV;
-    var texloader = new THREE.TextureLoader();
-    texloader.load(normalPath, function(texture) {
-        shaderNR.uniforms.tNormal = texture;
-        shaderUV.uniforms.tNormal = texture;
-        texloader.load(diffusePath, function(texture) {
-            shaderNR.uniforms.tDiffuse = texture;
-            shaderUV.uniforms.tDiffuse = texture;
-            texloader.load(specularPath, function(texture) {
-                shaderNR.uniforms.specularMap = texture;
-                if(onComplete !== undefined) onComplete();
-            });
-        });
-    });
-};
-
 SkinShaderPass.prototype.render = function() {
     if ( this.firstPass ) {
-        console.log(this);
         this.composerBeckmann.render();
         this.firstPass = false;
     }
