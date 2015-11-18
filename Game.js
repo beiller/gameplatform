@@ -155,9 +155,12 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
         } else {
             var material = new THREE.MeshPhongMaterial({
                 skinning: true,
-                diffuse: new THREE.Color( 0xFFFFFF ),
-                specular: new THREE.Color( 0xFFFFFF ),
-                emissive: new THREE.Color( 0x888888 )
+                diffuse: options.diffuse || new THREE.Color( 0xDDDDDD ),
+                specular: options.specular || new THREE.Color( 0xDDDDDD ),
+                emissive: options.emissive || new THREE.Color( 0x000000 ),
+                envMap: game.cubeCamera.renderTarget,
+                combine: options.combine || THREE.MixOperation,
+                reflectivity: options.reflectivity || 0.2
             });
             var object = new THREE.SkinnedMesh( geometry, material );
             game.attachAnimations( object );

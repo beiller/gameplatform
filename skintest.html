@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - materials - skin [Lee Perry-Smith]</title>
+		<title>mygame</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<style>
@@ -56,7 +56,7 @@
         game.initRendering();
 
         var scene1 = function() {
-            var clothing = [
+            /*var clothing = [
                 "princess-hair.json",
                 "princess-thong.json",
                 //"princess-pants.json",
@@ -64,12 +64,12 @@
                 "princess-boots.json",
                 "princess-top.json",
                 "princess-jewels.json"
+            ];*/
+            var clothing = [
+                {file: "princess-hair.json", options: {reflectivity: 0, emissive: new THREE.Color(0x555555)} },
+                {file: "princess-bodysuit.json"},
+                {file: "princess-gloves.json"}
             ];
-            /*var clothing = [
-                //"princess-hair.json",
-                //"princess-bodysuit.json",
-                //"princess-gloves.json"
-            ];		*/
 
             game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
                 game.loadCharacter(
@@ -107,7 +107,7 @@
                         file: "models/DefenderLingerie00.json",
                         settings: {
                             name: 'eve',
-                            scale: 0.333333,
+                            scale: 0.3,
                             sss: true,
                             diffusePath: "models/textures/diffuse.png",
                             specularPath: "models/textures/specular.png",
@@ -118,7 +118,7 @@
                         file:  "models/alien.json",
                         settings: {
                             name: 'monster',
-                            scale: 0.333333,
+                            scale: 0.3,
                             sss: true,
                             diffusePath: "models/textures/Alien_Necromorph_D.png",
                             specularPath: "models/textures/Alien_Necromorph_S.png",
@@ -129,8 +129,9 @@
                         file: "models/drip.json",
                         settings: {
                             name: 'drip',
-                            scale: 0.333333,
-                            sss: false
+                            scale: 0.3,
+                            sss: false,
+                            emissive: new THREE.Color( 0xBBBBBB )
                         }
                     }
                 ];
