@@ -42,13 +42,13 @@ Game.prototype.initRendering = function() {
 
     this.scene = new THREE.Scene();
 
-    this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.05, 1000);
     this.camera.position.z = 2;
     this.camera.position.y = 2;
     this.camera.position.x = 2;
 
     this.cubeCamera = new THREE.CubeCamera( 1, 1000, 256 );
-    //cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
+    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
     this.scene.add( this.cubeCamera );
 
     // LIGHTS
@@ -74,10 +74,7 @@ Game.prototype.initRendering = function() {
 
     this.container.appendChild( this.renderer.domElement );
 
-    //scene1();
-
     this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
-    //controls.addEventListener( 'change', render ); // add this only if there is no animation loop (requestAnimationFrame)
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.25;
     this.controls.enableZoom = true;
@@ -172,9 +169,10 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
         }
     } );
 };
-Game.prototype.loadClothing = function(jsonFileName, parent, onComplete) {
+Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete) {
     var loader = new THREE.JSONLoader();
     var game = this;
+    if(options === undefined) options = {};
     loader.load( jsonFileName, function ( geometry, materials ) {
         var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
         skinnedMesh.skeleton = parent.skeleton;
@@ -184,9 +182,13 @@ Game.prototype.loadClothing = function(jsonFileName, parent, onComplete) {
         if(skinnedMesh.material.type == "MultiMaterial") {
             for(var i in skinnedMesh.material.materials) {
                 skinnedMesh.material.materials[i].envMap = game.cubeCamera.renderTarget;
-                skinnedMesh.material.materials[i].combine = THREE.MixOperation;
-                skinnedMesh.material.materials[i].reflectivity  = 0.2;
+                skinnedMesh.material.materials[i].combine = options.combine || THREE.MixOperation;
+                skinnedMesh.material.materials[i].reflectivity = options.reflectivity || 0.2;
+                skinnedMesh.material.materials[i].emissive  = options.emissive || new THREE.Color( 0x000000 );
                 skinnedMesh.material.materials[i].skinning  = true;
+                skinnedMesh.material.materials[i].transparency = options.transparency || true;
+                skinnedMesh.material.materials[i].opacity  = options.opacity || 1.0;
+                skinnedMesh.material.materials[i].side  = THREE.DoubleSide;
             }
         } else {
             skinnedMesh.material.envMap = game.cubeCamera.renderTarget;

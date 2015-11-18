@@ -28,10 +28,10 @@
       <file leaf-file-name="skintest.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/skintest.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-6.875">
-              <caret line="68" column="54" selection-start-line="68" selection-start-column="54" selection-end-line="68" selection-end-column="54" />
+            <state vertical-scroll-proportion="-10.625">
+              <caret line="68" column="146" selection-start-line="68" selection-start-column="146" selection-end-line="68" selection-end-column="146" />
               <folding>
-                <element signature="e#3844#9687#0" expanded="false" />
+                <element signature="e#3978#9821#0" expanded="false" />
               </folding>
             </state>
           </provider>
@@ -40,8 +40,18 @@
       <file leaf-file-name="Game.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Game.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.04290429">
-              <caret line="144" column="2" selection-start-line="144" selection-start-column="2" selection-end-line="144" selection-end-column="2" />
+            <state vertical-scroll-proportion="0.6930693">
+              <caret line="190" column="75" selection-start-line="190" selection-start-column="75" selection-end-line="190" selection-end-column="75" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="three.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/three.js/build/three.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="0.0">
+              <caret line="255" column="0" selection-start-line="255" selection-start-column="0" selection-end-line="255" selection-end-column="18" />
               <folding />
             </state>
           </provider>
@@ -99,31 +109,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="worldpos_vertex.glsl" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/three.js/src/renderers/shaders/ShaderChunk/worldpos_vertex.glsl">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="4" column="50" selection-start-line="4" selection-start-column="29" selection-end-line="4" selection-end-column="50" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="skinning_vertex.glsl" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/three.js/src/renderers/shaders/ShaderChunk/skinning_vertex.glsl">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
               <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/.gitignore">
-          <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0">
-              <caret line="3" column="0" selection-start-line="3" selection-start-column="0" selection-end-line="3" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -264,6 +254,20 @@
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="textures" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="gameplatform" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="gameplatform" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="shaders" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
@@ -367,7 +371,13 @@
       <option name="project" value="LOCAL" />
       <updated>1447822310957</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="Various fixes">
+      <created>1447823787919</created>
+      <option name="number" value="00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1447823787919</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -407,7 +417,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Update" />
     <MESSAGE value="Refactor into Game, code clean up and new skin shader management." />
-    <option name="LAST_COMMIT_MESSAGE" value="Refactor into Game, code clean up and new skin shader management." />
+    <MESSAGE value="Various fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Various fixes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -421,7 +432,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#3844#9687#0" expanded="false" />
+            <element signature="e#3978#9821#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -513,7 +524,7 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#3844#9687#0" expanded="false" />
+            <element signature="e#3978#9821#0" expanded="false" />
           </folding>
         </state>
       </provider>
@@ -577,6 +588,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.3329776">
           <caret line="12761" column="9" selection-start-line="12761" selection-start-column="9" selection-end-line="12761" selection-end-column="9" />
+          <folding />
         </state>
       </provider>
     </entry>
@@ -585,16 +597,6 @@
         <state vertical-scroll-proportion="0.0">
           <caret line="0" column="0" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/main.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="27" column="0" selection-start-line="27" selection-start-column="0" selection-end-line="33" selection-end-column="77" />
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -622,20 +624,43 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/main.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="27" column="0" selection-start-line="27" selection-start-column="0" selection-end-line="33" selection-end-column="77" />
+          <folding>
+            <element signature="n#!!doc" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/three.js/build/three.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.0">
+          <caret line="255" column="0" selection-start-line="255" selection-start-column="0" selection-end-line="255" selection-end-column="18" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/textures/specular_low.jpg">
+      <provider selected="true" editor-type-id="images">
+        <state />
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/skintest.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.875">
-          <caret line="68" column="54" selection-start-line="68" selection-start-column="54" selection-end-line="68" selection-end-column="54" />
+        <state vertical-scroll-proportion="-10.625">
+          <caret line="68" column="146" selection-start-line="68" selection-start-column="146" selection-end-line="68" selection-end-column="146" />
           <folding>
-            <element signature="e#3844#9687#0" expanded="false" />
+            <element signature="e#3978#9821#0" expanded="false" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Game.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.04290429">
-          <caret line="144" column="2" selection-start-line="144" selection-start-column="2" selection-end-line="144" selection-end-column="2" />
+        <state vertical-scroll-proportion="0.6930693">
+          <caret line="190" column="75" selection-start-line="190" selection-start-column="75" selection-end-line="190" selection-end-column="75" />
           <folding />
         </state>
       </provider>

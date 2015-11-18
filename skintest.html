@@ -66,9 +66,9 @@
                 "princess-jewels.json"
             ];*/
             var clothing = [
-                {file: "princess-hair.json", options: {reflectivity: 0, emissive: new THREE.Color(0x555555)} },
-                {file: "princess-bodysuit.json"},
-                {file: "princess-gloves.json"}
+                {file: "princess-hair.json", options: {reflectivity: 0.0001, emissive: new THREE.Color(0x222222), transparency: true, opacity: 0.7} },
+                {file: "princess-bodysuit.json", options: {reflectivity: 0.05}},
+                {file: "princess-gloves.json", options: {reflectivity: 0.05}}
             ];
 
             game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
@@ -78,12 +78,12 @@
                         name: 'princess',
                         scale: 1,
                         sss: true,
-                        diffusePath: "textures/diffuse.png",
-                        specularPath: "textures/specular.jpg",
+                        diffusePath: "textures/diffuse_low.png",
+                        specularPath: "textures/specular_low.jpg",
                         normalPath: "textures/normal.png"
                     }, function(parent) {
                         var loopArr = function(index, arr, callbackFunction) {
-                            game.loadClothing(arr[index], parent, function(clothingObject) {
+                            game.loadClothing(arr[index].file, parent, arr[index].options, function(clothingObject) {
                                 if(++index < arr.length) {
                                     loopArr(index, arr, callbackFunction);
                                 } else {
