@@ -220,26 +220,45 @@ var scene2 = function() {
 var scene3 = function() {
 	game.addGroundPlane(-4);
     game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
-        game.loadCharacter(
-            "models/eve_highres.json",
+		game.loadCharacter(
+            "models/eve.json",
             {
-                name: 'foxy',
+                name: 'eve',
                 scale: 1,
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/evenormal.png"
             }, function(character) {
-                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.001});
+                //game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.001});
                 character.playAnimation('DE_Combatiddle');
-                character.controller = new KeyboardController(character);
+                character.addController(new KeyboardController(character, game));
+                animate();
+            }
+        );
+
+		game.loadCharacter(
+            "models/eve.json",
+            {
+                name: 'monster',
+                scale: 1,
+                sss: true,
+                diffusePath: "models/textures/evediffuse.png",
+                specularPath: "models/textures/specular.png",
+                normalPath: "models/textures/evenormal.png"
+            }, function(character) {
+                //game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.001});
+                character.playAnimation('DE_Combatiddle');
+                character.addController(new AIController(character, game));
                 animate();
             }
         );
     });
 }; //end scene1 function
 function animate() {
-    requestAnimationFrame(animate);
+	//setTimeout( function() {
+			requestAnimationFrame(animate);
+	//}, 1000 / 24);
     game.animate();
 }
 scene3();

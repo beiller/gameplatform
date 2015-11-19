@@ -3,6 +3,7 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
     this.firstPass = true;
     this.object = new THREE.SkinnedMesh(geometry);
     this.object.skeleton = object.skeleton;
+    this.object.frustumCulled = false;
     this.scene.add(this.object);
     if(SSSparameters === undefined) SSSparameters = {};
 

@@ -30,7 +30,7 @@ Game.prototype.initPhysics = function() {
     this.world.gravity.set(0,-9.82,0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
     this.world.solver.iterations = 10;
-    this.world.defaultContactMaterial.friction = 0.035;
+    this.world.defaultContactMaterial.friction = 0.2;
     this.world.defaultContactMaterial.contactEquationStiffness = 1e8;
     this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
 };
@@ -170,11 +170,13 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
 };
 Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
     var game = this;
+    var position = options.position || [0,5,0];
+    if(!options.name) return;
     this.jsonloader.load(jsonPath, function( geometry, materials ) {
         if(options.sss) {
             game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
                 //create Character object
-                var character = new Character(mesh, game.addCharacterPhysics(1.0, 0.5, [0,5,0]), null, sss.object);
+                var character = new Character(options.name, mesh, game.addCharacterPhysics(1.0, 0.5, position), null, sss.object);
                 game.characters[options.name] = character;
                 mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
                 if(onComplete !== undefined) onComplete(character);
@@ -190,7 +192,7 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
                 reflectivity: options.reflectivity || 0.2
             });
             var mesh = new THREE.SkinnedMesh( geometry, material );
-            var character = new Character(mesh, game.addCharacterPhysics(1.0, 0.5, [0,5,0]));
+            var character = new Character(options.name, mesh, game.addCharacterPhysics(1.0, 0.5, position));
             game.characters[options.name] = character;
             game.scene.add( mesh );
             mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale || 1.0;
