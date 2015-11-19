@@ -34,59 +34,6 @@ Game.prototype.initPhysics = function() {
     this.world.defaultContactMaterial.contactEquationStiffness = 1e8;
     this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
 };
-Game.prototype.addKeyboardController = function(characterName) {
-    var characterToBeControlled = this.characters[characterName];
-    characterToBeControlled.movementDirection = new THREE.Vector3(0,0,0);
-    var keymodifier = {}
-    var keymap = {
-    	'keydown': {
-    		'87': function(){//w
-    			characterToBeControlled.movementDirection.z += 1.0;
-    		},
-    		'83': function(){//s
-    			characterToBeControlled.movementDirection.z -= 1.0;
-    		},
-    		'68': function(){//a
-    			characterToBeControlled.movementDirection.x += 1.0;
-    		},
-    		'65': function(){//d
-    			characterToBeControlled.movementDirection.x -= 1.0
-    		}
-    	},
-    	'keyup':{
-    		'87': function(){
-    			characterToBeControlled.movementDirection.z -= 1.0;
-    		},
-    		'83': function(){
-    			characterToBeControlled.movementDirection.z += 1.0;
-    		},
-    		'68': function(){
-    			characterToBeControlled.movementDirection.x -= 1.0;
-    		},
-    		'65': function(){
-    			characterToBeControlled.movementDirection.x += 1.0
-    		}
-    	}
-    };
-    var onDocumentKeyDown = function( event ) {
-    	if((event.keyCode in keymodifier && keymodifier[event.keyCode] == false) || !(event.keyCode in keymodifier)) {
-    		if (event.keyCode in keymap['keydown']) {
-    			keymap['keydown'][event.keyCode]();
-    			keymodifier[event.keyCode] = true;
-    		}
-    	}
-    }
-    var onDocumentKeyUp = function( event ) {
-    	if ((event.keyCode in keymodifier && keymodifier[event.keyCode] == true) || !(event.keyCode in keymodifier)) {
-    		if (event.keyCode in keymap['keyup']) {
-    			keymap['keyup'][event.keyCode]();
-    			keymodifier[event.keyCode] = false;
-    		}
-    	}
-    }
-    window.addEventListener( 'keydown', onDocumentKeyDown, false );
-    window.addEventListener( 'keyup', onDocumentKeyUp, false );
-}
 Game.prototype.addGroundPlane = function(height) {
     var groundShape = new CANNON.Plane();
 	var groundBody = new CANNON.Body({mass: 0});
@@ -216,7 +163,7 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
                 game.scene.add(object);
                 object.material = new THREE.ShaderMaterial( parameters );
                 game.skinshaders.push(sss);
-                if(onComplete !== undefined) onComplete(object);
+                if(onComplete !== undefined) onComplete(object, sss);
             });
         });
     });
@@ -225,9 +172,9 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
     var game = this;
     this.jsonloader.load(jsonPath, function( geometry, materials ) {
         if(options.sss) {
-            game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh) {
+            game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
                 //create Character object
-                var character = new Character(mesh, game.addCharacterPhysics(1.0, 0.5, [0,5,0]));
+                var character = new Character(mesh, game.addCharacterPhysics(1.0, 0.5, [0,5,0]), null, sss.object);
                 game.characters[options.name] = character;
                 mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
                 if(onComplete !== undefined) onComplete(character);
@@ -296,7 +243,6 @@ Game.prototype.render = function() {
         this.cubeCamera.updateCubeMap( this.renderer, this.scene );
         this.cubemapRendered = true;
     }
-
     this.renderer.clear();
     for(var i in this.skinshaders) {
         this.skinshaders[i].render();

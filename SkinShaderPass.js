@@ -41,7 +41,7 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
     uniforms[ "specularMap" ].value = specularTexture;
 
     var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, derivatives: true, transparent: true, skinning: true };
-    var parametersUV = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShaderUV, uniforms: uniformsUV, lights: true, derivatives: true, transparent: true, skinning: true };
+    var parametersUV = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShaderUV, uniforms: uniformsUV, lights: true, derivatives: true, transparent: false, skinning: true };
     this.shader = new THREE.ShaderMaterial( parameters );
     this.shaderUV = new THREE.ShaderMaterial( parametersUV );
 

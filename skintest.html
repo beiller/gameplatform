@@ -45,7 +45,8 @@
 		<script src="three.js/examples/js/postprocessing/MaskPass.js"></script>
 		<script src="SkinShaderPass.js"></script>
         <script src="Game.js"></script>
-		<script src="Character.js"></script>
+        <script src="Character.js"></script>
+        <script src="Controller.js"></script>
 
 		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
 		<script src="three.js/examples/js/Detector.js"></script>
@@ -70,8 +71,13 @@ var scene1 = function() {
     ];*/
     var clothing = [
         {file: "princess-hair.json", options: {reflectivity: 0.0001, emissive: new THREE.Color(0x222222), transparency: true, opacity: 0.7} },
-        {file: "princess-bodysuit.json", options: {reflectivity: 0.05}},
-        {file: "princess-gloves.json", options: {reflectivity: 0.05}}
+        //{file: "princess-bodysuit.json", options: {reflectivity: 0.05}},
+        {file: "princess-gloves.json", options: {reflectivity: 0.05} },
+        {file:"princess-thong.json"},
+        {file:"princess-top.json"},
+        {file:"princess-boots.json"},
+        {file:"princess-jewels.json", options: {reflectivity: 0.8} }
+
     ];
 
     game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
@@ -108,14 +114,14 @@ var scene2 = function() {
     game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
         var sceneObjects = [
             {
-                file: "models/DefenderLingerie00.json",
+                file: "models/eve_highres.json",
                 settings: {
                     name: 'eve',
                     scale: 0.3,
                     sss: true,
-                    diffusePath: "models/textures/diffuse.png",
+                    diffusePath: "models/textures/evediffuse.png",
                     specularPath: "models/textures/specular.png",
-                    normalPath: "models/textures/normal.png"
+                    normalPath: "models/textures/evenormal.png"
                 }
             },
             {
@@ -139,9 +145,9 @@ var scene2 = function() {
                 }
             }
         ];
-        game.loadCharacter(sceneObjects[0].file, sceneObjects[0].settings, function(c1) {
-            game.loadCharacter(sceneObjects[1].file, sceneObjects[1].settings, function(c2) {
-                game.loadCharacter(sceneObjects[2].file, sceneObjects[2].settings, function(c3) {
+        game.loadCharacter(sceneObjects[0].file, sceneObjects[0].settings, function(charEve) {
+            game.loadCharacter(sceneObjects[1].file, sceneObjects[1].settings, function(charAlien) {
+                game.loadCharacter(sceneObjects[2].file, sceneObjects[2].settings, function(charDrip) {
                     var anim_map = [
                         {
                             'eve': {name: 'DE_Charming', duration: 10000},
@@ -194,6 +200,7 @@ var scene2 = function() {
                             var animationName = map[characterName].name;
                             var options = map[characterName];
                             game.getCharacter(characterName).playAnimation(animationName, options);
+                            game.getCharacter(characterName).playingAnimation = true;
                         }
                         if(currentAnimation + 1 == anim_map.length) {
                             currentAnimation = 0;
@@ -214,17 +221,18 @@ var scene3 = function() {
 	game.addGroundPlane(-4);
     game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
         game.loadCharacter(
-            "models/DefenderLingerie00.json",
+            "models/eve_highres.json",
             {
                 name: 'foxy',
                 scale: 1,
                 sss: true,
-                diffusePath: "fftex_furry.jpg",
+                diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/diffuse.png"
+                normalPath: "models/textures/evenormal.png"
             }, function(character) {
+                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.001});
                 character.playAnimation('DE_Combatiddle');
-				game.addKeyboardController('foxy');
+                character.controller = new KeyboardController(character);
                 animate();
             }
         );
