@@ -2,12 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7c3a04e4-c037-425f-a609-163c7bddd330" name="Default" comment="Allow more customization to materials for clothing">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/eve.blend" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/eve.blend1" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/Controller.js" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/eve.json" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/eve_highres.json" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/eveoutfit.json" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/textures/evediffuse.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/textures/evenormal.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/textures/normal_none.png" />
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/textures/specular_none.png" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-bodysuit.json" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-boots.json" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-gloves.json" />
@@ -18,15 +16,8 @@
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-thong.json" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-top.json" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess.json" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/DefenderLingerie00.blend" afterPath="$PROJECT_DIR$/models/DefenderLingerie00.blend" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/DefenderLingerie00.blend1" afterPath="$PROJECT_DIR$/models/DefenderLingerie00.blend1" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Character.js" afterPath="$PROJECT_DIR$/Character.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Game.js" afterPath="$PROJECT_DIR$/Game.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/SkinShaderPass.js" afterPath="$PROJECT_DIR$/SkinShaderPass.js" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/skintest.html" afterPath="$PROJECT_DIR$/skintest.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/three.js" afterPath="$PROJECT_DIR$/three.js" />
     </list>
     <ignored path="gameplatform.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -201,6 +192,24 @@
             </PATH_ELEMENT>
             <PATH_ELEMENT>
               <option name="myItemId" value="models" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="gameplatform" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="gameplatform" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="models" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="textures" />
               <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
             </PATH_ELEMENT>
           </PATH>
@@ -459,18 +468,24 @@
       <option name="project" value="LOCAL" />
       <updated>1447829683323</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="Update controls and add some more meshes">
+      <created>1447921451000</created>
+      <option name="number" value="00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1447921451000</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="25" width="1920" height="1055" extended-state="6" />
-    <editor active="false" />
+    <editor active="true" />
     <layout>
       <window_info id="Messages" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="9" side_tool="false" content_ui="tabs" />
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18177083" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.18177083" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.39937758" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -501,7 +516,8 @@
     <MESSAGE value="Refactor into Game, code clean up and new skin shader management." />
     <MESSAGE value="Various fixes" />
     <MESSAGE value="Allow more customization to materials for clothing" />
-    <option name="LAST_COMMIT_MESSAGE" value="Allow more customization to materials for clothing" />
+    <MESSAGE value="Update controls and add some more meshes" />
+    <option name="LAST_COMMIT_MESSAGE" value="Update controls and add some more meshes" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
