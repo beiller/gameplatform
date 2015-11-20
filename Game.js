@@ -29,8 +29,8 @@ Game.prototype.initPhysics = function() {
     this.world = new CANNON.World();
     this.world.gravity.set(0,-9.82,0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
-    this.world.solver.iterations = 10;
-    this.world.defaultContactMaterial.friction = 0.2;
+    this.world.solver.iterations = 5;
+    this.world.defaultContactMaterial.friction = 0.09;
     this.world.defaultContactMaterial.contactEquationStiffness = 1e8;
     this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
 };

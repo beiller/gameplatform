@@ -2,10 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="7c3a04e4-c037-425f-a609-163c7bddd330" name="Default" comment="Allow more customization to materials for clothing">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/textures/evediffuse.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/textures/evenormal.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/textures/normal_none.png" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/models/textures/specular_none.png" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-bodysuit.json" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-boots.json" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-gloves.json" />
@@ -16,8 +12,15 @@
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-thong.json" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess-top.json" />
       <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/princess.json" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/eve.blend" afterPath="$PROJECT_DIR$/models/eve.blend" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/eve.blend1" afterPath="$PROJECT_DIR$/models/eve.blend1" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitignore" afterPath="$PROJECT_DIR$/.gitignore" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/Game.js" afterPath="$PROJECT_DIR$/Game.js" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/eve.json" afterPath="$PROJECT_DIR$/models/eve.json" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/models/eveoutfit.json" afterPath="$PROJECT_DIR$/models/eveoutfit.json" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/skintest.html" afterPath="$PROJECT_DIR$/skintest.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/three.js" afterPath="$PROJECT_DIR$/three.js" />
     </list>
     <ignored path="gameplatform.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -41,18 +44,18 @@
       <file leaf-file-name="skintest.html" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/skintest.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-2.8269231">
-              <caret line="226" column="25" selection-start-line="226" selection-start-column="25" selection-end-line="226" selection-end-column="25" />
+            <state vertical-scroll-proportion="-4.9038463">
+              <caret line="232" column="16" selection-start-line="232" selection-start-column="16" selection-end-line="232" selection-end-column="16" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="Game.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="Game.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Game.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-6.428571">
-              <caret line="35" column="2" selection-start-line="35" selection-start-column="2" selection-end-line="35" selection-end-column="2" />
+            <state vertical-scroll-proportion="0.51155114">
+              <caret line="31" column="36" selection-start-line="31" selection-start-column="36" selection-end-line="31" selection-end-column="36" />
               <folding />
             </state>
           </provider>
@@ -62,9 +65,9 @@
         <entry file="file://$PROJECT_DIR$/Controller.js">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="33" column="47" selection-start-line="33" selection-start-column="47" selection-end-line="33" selection-end-column="47" />
+              <caret line="104" column="47" selection-start-line="104" selection-start-column="47" selection-end-line="104" selection-end-column="47" />
               <folding>
-                <element signature="n#!!doc;n#KeyboardController#0" expanded="false" />
+                <marker date="1447972210553" expanded="false" signature="0:39" placeholder="/** Created by bill on 19/11/15. ...*/" />
               </folding>
             </state>
           </provider>
@@ -73,8 +76,8 @@
       <file leaf-file-name="Character.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/Character.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="-9.857142">
-              <caret line="57" column="75" selection-start-line="57" selection-start-column="75" selection-end-line="57" selection-end-column="75" />
+            <state vertical-scroll-proportion="-27.642857">
+              <caret line="67" column="9" selection-start-line="67" selection-start-column="9" selection-end-line="67" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -84,17 +87,27 @@
         <entry file="file://$PROJECT_DIR$/SkinShaderPass.js">
           <provider selected="true" editor-type-id="text-editor">
             <state vertical-scroll-proportion="0.0">
-              <caret line="50" column="0" selection-start-line="50" selection-start-column="0" selection-end-line="50" selection-end-column="0" />
+              <caret line="112" column="0" selection-start-line="112" selection-start-column="0" selection-end-line="115" selection-end-column="30" />
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="true">
+      <file leaf-file-name="BloomPass.js" pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/three.js/examples/js/postprocessing/BloomPass.js">
+          <provider selected="true" editor-type-id="text-editor">
+            <state vertical-scroll-proportion="-1.1428572">
+              <caret line="4" column="68" selection-start-line="4" selection-start-column="58" selection-end-line="4" selection-end-column="68" />
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name=".gitignore" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/.gitignore">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.0726979">
-              <caret line="3" column="9" selection-start-line="3" selection-start-column="9" selection-end-line="3" selection-end-column="9" />
+            <state vertical-scroll-proportion="0.0">
+              <caret line="4" column="8" selection-start-line="4" selection-start-column="8" selection-end-line="4" selection-end-column="8" />
               <folding />
             </state>
           </provider>
@@ -118,12 +131,12 @@
       <list>
         <option value="$PROJECT_DIR$/RenderManager.js" />
         <option value="$PROJECT_DIR$/shaders/ShaderSkinCustom.js" />
-        <option value="$PROJECT_DIR$/SkinShaderPass.js" />
-        <option value="$PROJECT_DIR$/Game.js" />
         <option value="$PROJECT_DIR$/Character.js" />
         <option value="$PROJECT_DIR$/Controller.js" />
-        <option value="$PROJECT_DIR$/skintest.html" />
         <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/SkinShaderPass.js" />
+        <option value="$PROJECT_DIR$/skintest.html" />
+        <option value="$PROJECT_DIR$/Game.js" />
       </list>
     </option>
   </component>
@@ -245,10 +258,13 @@
           <option name="mySupportsDeletion" value="false" />
           <option name="myCanBeAbsent" value="false" />
           <option name="myId" value="UPDATED" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/.gitignore</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/Character.js</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/Controller.js</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/Game.js</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/SkinShaderPass.js</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/skintest.html</PATH>
           <PATH vcs="Git" revision="">$PROJECT_DIR$/three.js</PATH>
+          <PATH vcs="Git" revision="">$PROJECT_DIR$/three.js/CONTRIBUTING.md</PATH>
         </FILE-GROUP>
         <FILE-GROUP>
           <option name="myUpdateName" value="Created" />
@@ -256,7 +272,6 @@
           <option name="mySupportsDeletion" value="false" />
           <option name="myCanBeAbsent" value="false" />
           <option name="myId" value="CREATED" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/Character.js</PATH>
         </FILE-GROUP>
         <FILE-GROUP>
           <option name="myUpdateName" value="Deleted" />
@@ -264,31 +279,6 @@
           <option name="mySupportsDeletion" value="false" />
           <option name="myCanBeAbsent" value="true" />
           <option name="myId" value="REMOVED_FROM_REPOSITORY" />
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/Cube.001Geometry.1.animations.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/OBJLoader.js</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/OrbitControls.js</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/RenderManager.js</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/datgui.js</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/evilmage.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/final.jpg</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/game.js</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/gizmo_thunder_ffmodel_upload.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/index.html</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/main.js</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/mainOld.js</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-bodysuit.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-boots.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-gloves.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-hair.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-jewels.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-pants.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-shirt.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-thong.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess-top.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/princess.json</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/stats.min.js</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/three.js.old</PATH>
-          <PATH vcs="Git" revision="">$PROJECT_DIR$/threejs.html</PATH>
         </FILE-GROUP>
         <FILE-GROUP>
           <option name="myUpdateName" value="Restored" />
@@ -474,7 +464,13 @@
       <option name="project" value="LOCAL" />
       <updated>1447921451000</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Missing textures">
+      <created>1447921562537</created>
+      <option name="number" value="00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1447921562537</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="ToolWindowManager">
@@ -490,7 +486,7 @@
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="10" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.32987553" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32987553" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
@@ -512,12 +508,15 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="Update" />
     <MESSAGE value="Refactor into Game, code clean up and new skin shader management." />
     <MESSAGE value="Various fixes" />
     <MESSAGE value="Allow more customization to materials for clothing" />
     <MESSAGE value="Update controls and add some more meshes" />
-    <option name="LAST_COMMIT_MESSAGE" value="Update controls and add some more meshes" />
+    <MESSAGE value="Missing textures" />
+    <option name="LAST_COMMIT_MESSAGE" value="Missing textures" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -690,52 +689,60 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/SkinShaderPass.js">
+    <entry file="file://$PROJECT_DIR$/Controller.js">
       <provider selected="true" editor-type-id="text-editor">
         <state vertical-scroll-proportion="0.0">
-          <caret line="50" column="0" selection-start-line="50" selection-start-column="0" selection-end-line="50" selection-end-column="0" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/Game.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-6.428571">
-          <caret line="35" column="2" selection-start-line="35" selection-start-column="2" selection-end-line="35" selection-end-column="2" />
-          <folding />
+          <caret line="104" column="47" selection-start-line="104" selection-start-column="47" selection-end-line="104" selection-end-column="47" />
+          <folding>
+            <marker date="1447972210553" expanded="false" signature="0:39" placeholder="/** Created by bill on 19/11/15. ...*/" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/Character.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-9.857142">
-          <caret line="57" column="75" selection-start-line="57" selection-start-column="75" selection-end-line="57" selection-end-column="75" />
+        <state vertical-scroll-proportion="-27.642857">
+          <caret line="67" column="9" selection-start-line="67" selection-start-column="9" selection-end-line="67" selection-end-column="9" />
           <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/Controller.js">
+    <entry file="file://$PROJECT_DIR$/three.js/examples/js/postprocessing/BloomPass.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0">
-          <caret line="33" column="47" selection-start-line="33" selection-start-column="47" selection-end-line="33" selection-end-column="47" />
-          <folding>
-            <element signature="n#!!doc;n#KeyboardController#0" expanded="false" />
-          </folding>
+        <state vertical-scroll-proportion="-1.1428572">
+          <caret line="4" column="68" selection-start-line="4" selection-start-column="58" selection-end-line="4" selection-end-column="68" />
+          <folding />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/skintest.html">
+    <entry file="file://$PROJECT_DIR$/SkinShaderPass.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="-2.8269231">
-          <caret line="226" column="25" selection-start-line="226" selection-start-column="25" selection-end-line="226" selection-end-column="25" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="112" column="0" selection-start-line="112" selection-start-column="0" selection-end-line="115" selection-end-column="30" />
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.0726979">
-          <caret line="3" column="9" selection-start-line="3" selection-start-column="9" selection-end-line="3" selection-end-column="9" />
+        <state vertical-scroll-proportion="0.0">
+          <caret line="4" column="8" selection-start-line="4" selection-start-column="8" selection-end-line="4" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/skintest.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="-4.9038463">
+          <caret line="232" column="16" selection-start-line="232" selection-start-column="16" selection-end-line="232" selection-end-column="16" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/Game.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state vertical-scroll-proportion="0.51155114">
+          <caret line="31" column="36" selection-start-line="31" selection-start-column="36" selection-end-line="31" selection-end-column="36" />
           <folding />
         </state>
       </provider>

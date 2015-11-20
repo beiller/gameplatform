@@ -230,7 +230,7 @@ var scene3 = function() {
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/evenormal.png"
             }, function(character) {
-                //game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.001});
+                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.001});
                 character.playAnimation('DE_Combatiddle');
                 character.addController(new KeyboardController(character, game));
                 animate();
@@ -247,7 +247,7 @@ var scene3 = function() {
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/evenormal.png"
             }, function(character) {
-                //game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.001});
+                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.001});
                 character.playAnimation('DE_Combatiddle');
                 character.addController(new AIController(character, game));
                 animate();
