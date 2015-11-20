@@ -55,7 +55,7 @@ Character.prototype.update = function(delta) {
     }
     //update physics components and copy to mesh position
     if(this.body) {
-        this.mesh.position.copy(this.body.position);
+        this.mesh.position.copy(this.body.position).y -= this.mesh.geometry.boundingSphere.radius;
         this.mesh.frustumCulled = false;
         if(this.sssMesh) {
             this.sssMesh.position.copy(this.body.position);

@@ -29,7 +29,7 @@ Game.prototype.initPhysics = function() {
     this.world = new CANNON.World();
     this.world.gravity.set(0,-9.82,0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
-    this.world.solver.iterations = 5;
+    this.world.solver.iterations = 20;
     this.world.defaultContactMaterial.friction = 0.09;
     this.world.defaultContactMaterial.contactEquationStiffness = 1e8;
     this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
@@ -45,6 +45,7 @@ Game.prototype.addGroundPlane = function(height) {
 	this.world.add(groundBody);
 	this.groundBody = groundBody;
 };
+var counter=1;
 Game.prototype.addCharacterPhysics = function(radius, mass, position) {
     var shape = new CANNON.Sphere( radius || 1.0 );
 	var body = new CANNON.Body({
@@ -59,7 +60,7 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
 	body.updateMassProperties();
 	this.world.add(body); // Step 3
 
-    /*var sphere = new THREE.Mesh( new THREE.SphereGeometry( radius, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
+    var sphere = new THREE.Mesh( new THREE.SphereGeometry( radius, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
     sphere.position.copy(body.position);
 	this.scene.add(sphere);
     sphere.body = body;
@@ -67,7 +68,8 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
         this.position.copy(this.body.position);
         //this.mesh.quaternion.copy(this.body.quaternion);
     }
-    this.characters['debugSphere'] = sphere;*/
+    counter++
+    this.characters['debugSphere'+counter] = sphere;
 
     return body;
 };
@@ -80,7 +82,7 @@ Game.prototype.initRendering = function() {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.05, 1000);
-    this.camera.position.z = 2;
+    this.camera.position.z = 20;
     this.camera.position.y = 2;
     this.camera.position.x = 2;
 
@@ -149,7 +151,7 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
             game.texloader.load(normalPath, function(normalTexture) {
                 var object = new THREE.SkinnedMesh( geometry );
                 var sss = new SkinShaderPass(game.renderer, game.camera, geometry, object, diffuseTexture, specularTexture, normalTexture);
-                var shader = THREE.ShaderSkinCustom[ "skin" ];
+                /*var shader = THREE.ShaderSkinCustom[ "skin" ];
                 var uniforms = THREE.UniformsUtils.clone( sss.shader.uniforms );
                 uniforms[ "tNormal" ].value = sss.shaderUV.uniforms[ "tNormal" ].value;
                 uniforms[ "tDiffuse" ].value = sss.shaderUV.uniforms[ "tDiffuse" ].value;
@@ -160,8 +162,10 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
                 uniforms[ "tBlur4" ].value = sss.shader.uniforms[ "tBlur4" ].value;
                 uniforms[ "tBeckmann" ].value = sss.shader.uniforms[ "tBeckmann" ].value;
                 var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, derivatives: true, transparent: true, skinning: true };
+                */
+                //object.material = new THREE.ShaderMaterial( parameters );
+                object.material = sss.shader;
                 game.scene.add(object);
-                object.material = new THREE.ShaderMaterial( parameters );
                 game.skinshaders.push(sss);
                 if(onComplete !== undefined) onComplete(object, sss);
             });
@@ -173,10 +177,14 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
     var position = options.position || [0,5,0];
     if(!options.name) return;
     this.jsonloader.load(jsonPath, function( geometry, materials ) {
+        geometry.computeBoundingSphere();
+        var radius = geometry.boundingSphere.radius;
+        //var cen = geometry.boundingSphere.center;
+        //var pPos = [position[0], position[1] + radi, position[2]];
         if(options.sss) {
             game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
                 //create Character object
-                var character = new Character(options.name, mesh, game.addCharacterPhysics(1.0, 0.5, position), null, sss.object);
+                var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, 0.5, position), null, sss.object);
                 game.characters[options.name] = character;
                 mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
                 if(onComplete !== undefined) onComplete(character);

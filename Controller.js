@@ -1,6 +1,8 @@
 /**
  * Created by bill on 19/11/15.
  */
+var INVINCIBILITY_TIME = 2000;
+
 function AIController(character, game) {
     this.character = character;
     this.game = game;
@@ -8,14 +10,27 @@ function AIController(character, game) {
 
     this.attackMovementSpeed = this.character.movementSpeed * 2.0;
     this.nomalMovementSpeed = this.character.movementSpeed;
-    this.idleTillAttackTime = 3000;
+    this.idleTillAttackTime = 2000;
     this.idleAfterAttackTime = 4000;
     this.viewDistance = 25.0;
     this.attackDistance = 5.0;
+    this.damageDistance = this.character.mesh.geometry.boundingSphere.radius;
 
     this.updateFunction = this.idle;
 }
 AIController.prototype = {
+    checkForPlayerHit: function() {
+        var enemy = this.game.characters[this.target];
+        if(!enemy) {
+            return;
+        }
+        var dist = enemy.mesh.position.x - this.character.mesh.position.x;
+        if(Math.abs(dist) <= this.damageDistance && !enemy.invincible) {
+            console.log("Eve just took a hit from Monster!");
+            enemy.invincible = true;
+            setTimeout(function() { enemy.invincible = false}, INVINCIBILITY_TIME);
+        }
+    },
     sawTargetReaction: function(delta) {
         this.character.movementSpeed = this.attackMovementSpeed;
         var am = this.character.animationMixer;
@@ -74,6 +89,7 @@ AIController.prototype = {
     },
     update: function(delta) {
         this.updateFunction(delta);
+        this.checkForPlayerHit();
     }
 };
 
@@ -81,6 +97,8 @@ AIController.prototype = {
 function KeyboardController(character, game) {
     this.character = character;
     this.game = game;
+    this.onGround = false;
+
     var mv = this.character.movementDirection;
     var c = this.character;
     var ao = { crossFade: true, crossFadeDuration: 0.1, crossFadeWarp: false };
@@ -94,14 +112,14 @@ function KeyboardController(character, game) {
     }
     var keymap = {
         'keydown': {
-            '87': function() { mv.z += 1.0; setAnimations(); }, //W KEY
-            '83': function() { mv.z -= 1.0; setAnimations(); }, //S KEY
+            '87': function() { mv.y += 1.0; setAnimations(); }, //W KEY
+            '83': function() { mv.y -= 1.0; setAnimations(); }, //S KEY
             '68': function() { mv.x -= 1.0; setAnimations(); }, //A KEY
             '65': function() { mv.x += 1.0; setAnimations(); }  //D KEY
         },
         'keyup':{
-            '87': function() { mv.z -= 1.0; setAnimations(); },
-            '83': function() { mv.z += 1.0; setAnimations(); },
+            '87': function() { mv.y -= 1.0; setAnimations(); },
+            '83': function() { mv.y += 1.0; setAnimations(); },
             '68': function() { mv.x += 1.0; setAnimations(); },
             '65': function() { mv.x -= 1.0; setAnimations(); }
         }
@@ -127,17 +145,29 @@ function KeyboardController(character, game) {
 }
 KeyboardController.prototype.update = function(delta) {
     if(!this.character.playingAnimation) {
-        var forceVec = new CANNON.Vec3().copy(this.character.movementDirection);
-        forceVec.normalize();
-        var vLen = this.character.body.velocity.length();
-        var am = this.character.animationMixer;
-        if (vLen > this.character.movementSpeed / 2 + 3) {
-            var velNorm = new CANNON.Vec3().copy(this.character.body.velocity);
-            velNorm.normalize();
-            this.character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, velNorm.x, 0), Math.PI / 2);
+        var FLOOR = -4;
+        if(this.character.body.position.y <= FLOOR + this.character.mesh.geometry.boundingSphere.radius + 0.001) {
+            this.onGround = true;
         }
-        if (vLen < this.character.movementSpeed) {
-            this.character.body.applyForce(forceVec.scale(this.character.movementSpeed * 10.0), this.character.body.position);
+
+        if(this.onGround && this.character.movementDirection.y > 0.9) {
+            var jumpForce = new CANNON.Vec3(0, 230, 0);
+            this.character.body.applyForce(jumpForce, this.character.body.position);
+            this.onGround = false;
+        }
+        if(this.onGround) {
+            var forceVec = new CANNON.Vec3().set(this.character.movementDirection.x, 0, 0);
+            forceVec.normalize();
+            var vLen = this.character.body.velocity.length();
+            var am = this.character.animationMixer;
+            if (vLen > this.character.movementSpeed / 2 + 3) {
+                var velNorm = new CANNON.Vec3().copy(this.character.body.velocity);
+                velNorm.normalize();
+                this.character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, velNorm.x, 0), Math.PI / 2);
+            }
+            if (vLen < this.character.movementSpeed) {
+                this.character.body.applyForce(forceVec.scale(this.character.movementSpeed * 10.0), this.character.body.position);
+            }
         }
     }
 }
