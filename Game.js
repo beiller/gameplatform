@@ -1,10 +1,7 @@
 function Game() {
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
 
-    this.statsEnabled = true;
-
     this.container = null;
-    this.stats = null;
 
     this.camera = null;
     this.cubeCamera = null;
@@ -30,9 +27,10 @@ Game.prototype.initPhysics = function() {
     this.world.gravity.set(0,-9.82,0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
     this.world.solver.iterations = 20;
-    this.world.defaultContactMaterial.friction = 0.09;
-    this.world.defaultContactMaterial.contactEquationStiffness = 1e8;
+    this.world.defaultContactMaterial.friction = 0.1;
     this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
+    this.world.defaultContactMaterial.contactEquationStiffness = 1e9;
+    this.world.defaultContactMaterial.contactEquationRelaxation = 3;
 };
 Game.prototype.addGroundPlane = function(height) {
     var groundShape = new CANNON.Plane();
@@ -45,7 +43,7 @@ Game.prototype.addGroundPlane = function(height) {
 	this.world.add(groundBody);
 	this.groundBody = groundBody;
 };
-var counter=1;
+//var counter=1;
 Game.prototype.addCharacterPhysics = function(radius, mass, position) {
     var shape = new CANNON.Sphere( radius || 1.0 );
 	var body = new CANNON.Body({
@@ -58,9 +56,10 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
 	body.collisionFilterMask = this.collisionGroups[0];// | this.collisionGroups[1];
 	body.fixedRotation = true;
 	body.updateMassProperties();
+    //body.linearDamping = 0.;
 	this.world.add(body); // Step 3
 
-    var sphere = new THREE.Mesh( new THREE.SphereGeometry( radius, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
+    /*var sphere = new THREE.Mesh( new THREE.SphereGeometry( radius, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
     sphere.position.copy(body.position);
 	this.scene.add(sphere);
     sphere.body = body;
@@ -69,7 +68,7 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
         //this.mesh.quaternion.copy(this.body.quaternion);
     }
     counter++
-    this.characters['debugSphere'+counter] = sphere;
+    this.characters['debugSphere'+counter] = sphere;*/
 
     return body;
 };
@@ -82,9 +81,20 @@ Game.prototype.initRendering = function() {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.05, 1000);
-    this.camera.position.z = 20;
-    this.camera.position.y = 2;
-    this.camera.position.x = 2;
+    this.camera.position.z = 15;
+    this.camera.position.y = 0.25;
+    this.camera.position.x = 0;
+    var cam = this.camera;
+
+    function displaywheel(e) {
+        var evt=window.event || e; //equalize event object
+        var delta=evt.detail? evt.detail*(-120) : evt.wheelDelta; //check for detail first so Opera uses that instead of wheelDelta
+        //document.getElementById("wheelvalue").innerHTML=delta //delta returns +120 when wheel is scrolled up, -120 when down
+        cam.position.z += (delta/120*0.1);
+        cam.position.y += (delta/120*0.005);
+    }
+    var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
+    document.addEventListener(mousewheelevt, displaywheel, false);
 
     this.cubeCamera = new THREE.CubeCamera( 1, 1000, 256 );
     //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
@@ -113,20 +123,12 @@ Game.prototype.initRendering = function() {
 
     this.container.appendChild( this.renderer.domElement );
 
-    this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
+    /*this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.25;
     this.controls.enableZoom = true;
-    this.controls.zoomSpeed = 1.0;
+    this.controls.zoomSpeed = 1.0;*/
 
-    // STATS
-
-    if ( this.statsEnabled ) {
-
-        this.stats = new Stats();
-        this.container.appendChild( this.stats.domElement );
-
-    }
     var game = this;
     var onWindowResize = function() {
         game.camera.aspect = window.innerWidth / window.innerHeight;
@@ -173,6 +175,7 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
     });
 };
 Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
+    var characterMass = 10.0;
     var game = this;
     var position = options.position || [0,5,0];
     if(!options.name) return;
@@ -184,7 +187,7 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
         if(options.sss) {
             game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
                 //create Character object
-                var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, 0.5, position), null, sss.object);
+                var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, characterMass, position), null, sss.object);
                 game.characters[options.name] = character;
                 mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
                 if(onComplete !== undefined) onComplete(character);
@@ -200,7 +203,7 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
                 reflectivity: options.reflectivity || 0.2
             });
             var mesh = new THREE.SkinnedMesh( geometry, material );
-            var character = new Character(options.name, mesh, game.addCharacterPhysics(1.0, 0.5, position));
+            var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, characterMass, position));
             game.characters[options.name] = character;
             game.scene.add( mesh );
             mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale || 1.0;
@@ -237,16 +240,16 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
     });
 };
 Game.prototype.animate = function() {
-    this.controls.update();
+    //this.controls.update();
+    this.camera.position.x = this.characters['eve'].body.position.x;
     var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
 
-    this.world.step(delta);
+    this.world.step(1/60);
     for(var i in this.characters) {
         this.characters[i].update(delta);
     }
 
     this.render();
-    if ( this.statsEnabled ) this.stats.update();
 };
 Game.prototype.render = function() {
     if(!this.cubemapRendered) {

@@ -1,4 +1,11 @@
 function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, specularTexture, normalTexture, SSSparameters) {
+    /*
+
+        OPTIONS
+     */
+    this.disableSSSRenderFrame = true;
+
+
     this.scene = new THREE.Scene();
     this.firstPass = true;
     this.object = new THREE.SkinnedMesh(geometry);
@@ -106,13 +113,20 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
     this.object.material = this.shader;
 }
 SkinShaderPass.prototype.render = function() {
+    var scope = this;
+    var r = function() {
+        scope.composerScene.render();
+        scope.composerUV1.render();
+        scope.composerUV2.render();
+        scope.composerUV3.render();
+    };
     if ( this.firstPass ) {
         this.composerBeckmann.render();
+        if ( this.disableSSSRenderFrame ) { r(); }
         this.firstPass = false;
     }
-    this.composerScene.render();
-    this.composerUV1.render();
-    this.composerUV2.render();
-    this.composerUV3.render();
+    if (!this.disableSSSRenderFrame) {
+        r();
+    }
 
 };
