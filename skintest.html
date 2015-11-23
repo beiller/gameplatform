@@ -46,6 +46,9 @@
         <script src="Game.js"></script>
         <script src="Character.js"></script>
         <script src="Controller.js"></script>
+		<script src="AIController.js"></script>
+		<script src="UserController.js"></script>
+		<script src="CharacterStats.js"></script>
         <script src="gamecontroller.min.js"></script>
 
 		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
@@ -227,50 +230,47 @@ var scene3 = function() {
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/evenormalv2.png",
+                normalPath: "models/textures/evenormal.png",
                 position: [0, 2, 0]
             }, function(character) {
                 game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.2});
-                character.playAnimation('DE_Combatiddle');
-                character.addController(new KeyboardController(character, game));
+                character.addController(new UserController(character, game));
                 animate();
             }
         );
 
         game.loadCharacter(
-                "models/eve.json",
-                {
-                    name: 'monster',
-                    scale: 1,
-                    sss: true,
-                    diffusePath: "models/textures/evediffuse.png",
-                    specularPath: "models/textures/specular.png",
-                    normalPath: "models/textures/evenormalv2.png",
-                    position: [-15, 2, 0]
-                }, function(character) {
-                    game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.2});
-                    character.playAnimation('DE_Combatiddle');
-                    character.addController(new AIController(character, game));
-                    animate();
-                }
+            "models/eve.json",
+            {
+                name: 'monster',
+                scale: 1,
+                sss: true,
+                diffusePath: "models/textures/evediffuse.png",
+                specularPath: "models/textures/specular.png",
+                normalPath: "models/textures/evenormal.png",
+                position: [-18, 2, 0]
+            }, function(character) {
+                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.2});
+                character.addController(new AIController(character, game));
+                animate();
+            }
         );
 
         game.loadCharacter(
-                "models/eve.json",
-                {
-                    name: 'monster2',
-                    scale: 1,
-                    sss: true,
-                    diffusePath: "models/textures/evediffuse.png",
-                    specularPath: "models/textures/specular.png",
-                    normalPath: "models/textures/evenormalv2.png",
-                    position: [15, 2, 0]
-                }, function(character) {
-                    game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.2});
-                    character.playAnimation('DE_Combatiddle');
-                    character.addController(new AIController(character, game));
-                    animate();
-                }
+            "models/eve.json",
+            {
+                name: 'monster2',
+                scale: 1,
+                sss: true,
+                diffusePath: "models/textures/evediffuse.png",
+                specularPath: "models/textures/specular.png",
+                normalPath: "models/textures/evenormal.png",
+                position: [18, 2, 0]
+            }, function(character) {
+                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.2});
+                character.addController(new AIController(character, game));
+                animate();
+            }
         );
     });
 }; //end scene1 function

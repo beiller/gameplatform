@@ -1,4 +1,4 @@
-function Character(name, mesh, body, options, sssMesh) {
+function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.mesh = mesh;
     this.body = body;
     this.sssMesh = sssMesh;
@@ -13,8 +13,21 @@ function Character(name, mesh, body, options, sssMesh) {
     for ( var i in this.mesh.geometry.animations ) {
         this.animations[this.mesh.geometry.animations[ i ].name]  = this.mesh.geometry.animations[ i ];
     }
+    this.animationMixer.addAction( new THREE.AnimationAction( this.mesh.geometry.animations[0] ) );
     this.playingAnimation = false;
     this.currentAnimation = null;
+
+    this.characterStats = new CharacterStats();
+    this.createHealthBar();
+}
+Character.prototype.createHealthBar = function() {
+    var sprite = new THREE.Sprite();
+    var healthRatio = this.characterStats.health / this.characterStats.maxHealth;
+    sprite.scale.set(2 * healthRatio, 0.25, 0.25);
+    sprite.position.set(0, 6, 0);
+    sprite.material.color = new THREE.Color( 0x00FF00 );
+    this.mesh.add(sprite);
+    this.healthBarMesh = sprite;
 }
 Character.prototype.setAnimation = function(animationName, options) {
     if(this.currentAnimation != animationName) {
@@ -50,7 +63,7 @@ Character.prototype.addController = function(controller) {
 }
 Character.prototype.update = function(delta) {
     //do update skeletal Animation
-    if(this.animationMixer) {
+    if(this.animationMixer && this.animationMixer.actions.length > 0) {
         this.animationMixer.update(delta);
     }
     //update physics components and copy to mesh position
@@ -62,9 +75,24 @@ Character.prototype.update = function(delta) {
             this.mesh.frustumCulled = false;
         }
         //this.mesh.quaternion.copy(this.body.quaternion);
+        //update controller?
         if(this.controllers.length > 0) {
             for(var i in this.controllers)
                 this.controllers[i].update(delta);
         }
+    }
+};
+Character.prototype.hit = function(enemyStats) {
+    this.characterStats.health = this.characterStats.health - enemyStats.damage;
+    if(this.characterStats.health <= 0) {
+        console.log(this.name + " has died.");
+        this.invincible = true;
+        this.controllers[0].animation = "DE_Dance";
+        this.controllers[0].changeState(this.controllers[0].playAnimation);
+        this.playingAnimation = true;        
+    }
+    if(this.healthBarMesh) {
+        var healthRatio = this.characterStats.health / this.characterStats.maxHealth;
+        this.healthBarMesh.scale.set(2 * healthRatio, 0.25, 0.25);
     }
 };
