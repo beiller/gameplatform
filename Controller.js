@@ -162,14 +162,53 @@ function KeyboardController(character, game) {
     };
     window.addEventListener( 'keydown', onDocumentKeyDown, false );
     window.addEventListener( 'keyup', onDocumentKeyUp, false );
-    function addTouchEvent(idName, keyCode) {
-        document.getElementById(idName).addEventListener( 'touchstart', function(e) { onDocumentKeyDown({keyCode: keyCode}); }, false );
-        document.getElementById(idName).addEventListener( 'touchend', function(e) { onDocumentKeyUp({keyCode: keyCode}); }, false );
-    }
-    addTouchEvent('walk_button_left', '65');
-    addTouchEvent('walk_button_right', '68');
-    addTouchEvent('jump_button', '87');
-    addTouchEvent('attack_button', '32');
+    var mobileControlData = {
+        left: {
+            type: 'joystick',
+            joystick: {
+                radius: 100,
+                touchMove: function(e) {
+                    if(e.normalizedX > 0.01) {
+                        mv.x = 1.0;
+                    } else if(e.normalizedX < -0.01) {
+                        mv.x = -1.0;
+                    } else {
+                        mv.x = 0.0;
+                    }
+                },
+                touchEnd: function() {
+                    this.currentX = this.x;
+                    this.currentY = this.y;
+                    mv.x = 0.0;
+                }
+            }
+        },
+        right: {
+            type: 'buttons',
+            buttons: [
+                {
+                    label: 'jump',
+                    fontSize: 12,
+                    touchStart: function() {
+                        mv.y = 1.0;
+                    },
+                    touchEnd: function() {
+                        mv.y = 0.0;
+                    }
+                },
+                {
+                    label: 'xxx',
+                    fontSize: 12,
+                    touchStart: function() {
+                        scope.changeState(scope.searchForVictim);
+                    }
+                },
+                false,
+                false
+            ]
+        }
+    };
+    //GameController.init( mobileControlData );
 
     this.changeState(this.walk);
 }
