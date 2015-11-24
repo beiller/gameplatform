@@ -29,6 +29,8 @@
 	<body>
 		<script type='text/javascript' src='cannon.js'></script>
 		<script src="three.js/build/three.js"></script>
+		<script src="javascript-state-machine/state-machine.min.js"></script>
+        <script src="gamecontroller.min.js"></script>
 
 		<script src="shaders/ShaderSkinCustom.js"></script>
 
@@ -49,7 +51,6 @@
 		<script src="AIController.js"></script>
 		<script src="UserController.js"></script>
 		<script src="CharacterStats.js"></script>
-        <script src="gamecontroller.min.js"></script>
 
 		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
 		<script src="three.js/examples/js/Detector.js"></script>
@@ -238,7 +239,7 @@ var scene3 = function() {
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/evenormalv2.png",
+                normalPath: "models/textures/evenormal.png",
                 position: [0, 2, 0]
             }, function(character) {
                 game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)});
@@ -256,12 +257,12 @@ var scene3 = function() {
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/evenormalv2.png",
+                normalPath: "models/textures/evenormal.png",
                 position: [-18, 2, 0]
             }, function(character) {
                 game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)});
                 game.loadStaticObject("models/staff.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
-                character.addController(new AIController(character, game));
+                character.addController(new Controllerv2(character, game));
                 animate();
             }
         );
@@ -274,7 +275,7 @@ var scene3 = function() {
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/evenormalv2.png",
+                normalPath: "models/textures/evenormal.png",
                 position: [18, 2, 0]
             }, function(character) {
                 game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)});
