@@ -8,6 +8,9 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
 
     this.movementDirection = new CANNON.Vec3(0,0,0);
     this.movementSpeed = options.movementSpeed || 10.0;
+    this.stunned = false;
+
+
     this.animations = {};
     this.animationMixer = new THREE.AnimationMixer(this.mesh);
     for ( var i in this.mesh.geometry.animations ) {
@@ -28,7 +31,7 @@ Character.prototype.createHealthBar = function() {
     sprite.material.color = new THREE.Color( 0x00FF00 );
     this.mesh.add(sprite);
     this.healthBarMesh = sprite;
-}
+};
 Character.prototype.setAnimation = function(animationName, options) {
     if(this.currentAnimation != animationName) {
         this.playAnimation(animationName, options);
@@ -57,10 +60,10 @@ Character.prototype.playAnimation = function(animationName, options) {
             this.animationMixer.play( a );
         }
     }
-}
+};
 Character.prototype.addController = function(controller) {
     this.controllers.push(controller);
-}
+};
 Character.prototype.update = function(delta) {
     //do update skeletal Animation
     if(this.animationMixer && this.animationMixer.actions.length > 0) {
@@ -92,7 +95,7 @@ Character.prototype.hit = function(enemyStats) {
         this.playingAnimation = true;        
     }
     if(this.healthBarMesh) {
-        var healthRatio = this.characterStats.health / this.characterStats.maxHealth;
+        var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
         this.healthBarMesh.scale.set(2 * healthRatio, 0.25, 0.25);
     }
 };

@@ -123,12 +123,6 @@ Game.prototype.initRendering = function() {
 
     this.container.appendChild( this.renderer.domElement );
 
-    /*this.controls = new THREE.OrbitControls( this.camera, this.renderer.domElement );
-    this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.25;
-    this.controls.enableZoom = true;
-    this.controls.zoomSpeed = 1.0;*/
-
     var game = this;
     var onWindowResize = function() {
         game.camera.aspect = window.innerWidth / window.innerHeight;
@@ -153,19 +147,6 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
             game.texloader.load(normalPath, function(normalTexture) {
                 var object = new THREE.SkinnedMesh( geometry );
                 var sss = new SkinShaderPass(game.renderer, game.camera, geometry, object, diffuseTexture, specularTexture, normalTexture);
-                /*var shader = THREE.ShaderSkinCustom[ "skin" ];
-                var uniforms = THREE.UniformsUtils.clone( sss.shader.uniforms );
-                uniforms[ "tNormal" ].value = sss.shaderUV.uniforms[ "tNormal" ].value;
-                uniforms[ "tDiffuse" ].value = sss.shaderUV.uniforms[ "tDiffuse" ].value;
-                uniforms[ "specularMap" ].value = sss.shader.uniforms[ "specularMap" ].value;
-                uniforms[ "tBlur1" ].value = sss.shader.uniforms[ "tBlur1" ].value;
-                uniforms[ "tBlur2" ].value = sss.shader.uniforms[ "tBlur2" ].value;
-                uniforms[ "tBlur3" ].value = sss.shader.uniforms[ "tBlur3" ].value;
-                uniforms[ "tBlur4" ].value = sss.shader.uniforms[ "tBlur4" ].value;
-                uniforms[ "tBeckmann" ].value = sss.shader.uniforms[ "tBeckmann" ].value;
-                var parameters = { fragmentShader: shader.fragmentShader, vertexShader: shader.vertexShader, uniforms: uniforms, lights: true, derivatives: true, transparent: true, skinning: true };
-                */
-                //object.material = new THREE.ShaderMaterial( parameters );
                 object.material = sss.shader;
                 game.scene.add(object);
                 game.skinshaders.push(sss);
@@ -182,8 +163,6 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
     this.jsonloader.load(jsonPath, function( geometry, materials ) {
         geometry.computeBoundingSphere();
         var radius = geometry.boundingSphere.radius;
-        //var cen = geometry.boundingSphere.center;
-        //var pPos = [position[0], position[1] + radi, position[2]];
         if(options.sss) {
             game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
                 //create Character object
@@ -211,32 +190,52 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
         }
     } );
 };
+Game.prototype.setMaterialOptions = function(mesh, options) {
+    if(options === undefined) {
+        return;
+    }
+    var scope = game;
+    function _setopt(mat, options) {
+        mat.envMap = scope.cubeCamera.renderTarget;
+        mat.combine = options.combine || THREE.MixOperation;
+        mat.reflectivity = options.reflectivity || 0.2;
+        mat.emissive  = options.emissive || new THREE.Color( 0x000000 );
+        mat.skinning  = options.skinning || false;
+        mat.transparency = options.transparency || true;
+        mat.opacity  = options.opacity || 1.0;
+        mat.side  = THREE.DoubleSide;
+        mat.color = options.color || mat.color;
+    }
+    if(mesh.material.type == "MultiMaterial") {
+        for(var i in mesh.material.materials) {
+            _setopt(mesh.material.materials[i], options);
+        }
+    } else {
+        _setopt(mesh.material, options);
+    }
+};
 Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete) {
-    var loader = new THREE.JSONLoader();
     var game = this;
     if(options === undefined) options = {};
-    loader.load( jsonFileName, function ( geometry, materials ) {
+    this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
         var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
         skinnedMesh.skeleton = parent.skeleton;
         skinnedMesh.castShadow = true;
         skinnedMesh.receiveShadow = true;
         parent.add(skinnedMesh);
-        if(skinnedMesh.material.type == "MultiMaterial") {
-            for(var i in skinnedMesh.material.materials) {
-                skinnedMesh.material.materials[i].envMap = game.cubeCamera.renderTarget;
-                skinnedMesh.material.materials[i].combine = options.combine || THREE.MixOperation;
-                skinnedMesh.material.materials[i].reflectivity = options.reflectivity || 0.2;
-                skinnedMesh.material.materials[i].emissive  = options.emissive || new THREE.Color( 0x000000 );
-                skinnedMesh.material.materials[i].skinning  = true;
-                skinnedMesh.material.materials[i].transparency = options.transparency || true;
-                skinnedMesh.material.materials[i].opacity  = options.opacity || 1.0;
-                skinnedMesh.material.materials[i].side  = THREE.DoubleSide;
-            }
-        } else {
-            skinnedMesh.material.envMap = game.cubeCamera.renderTarget;
-            skinnedMesh.material.skinning  = true;
-        }
+        options.skinning = true;
+        game.setMaterialOptions(skinnedMesh, options);
         if(onComplete !== undefined) onComplete(skinnedMesh);
+    });
+};
+Game.prototype.loadStaticObject = function(jsonFileName, parent, options, onComplete) {
+    this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
+        var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+        game.setMaterialOptions(mesh, options);
+        parent.add(mesh);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        if (onComplete !== undefined) onComplete(mesh);
     });
 };
 Game.prototype.animate = function() {

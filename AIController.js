@@ -9,7 +9,7 @@ function AIController(character, game) {
     this.idleTillAttackTime = 1200;
     this.idleAfterAttackTime = 3000;
     this.viewDistance = 6.0;
-    this.attackDistance = 2.0;
+    this.attackDistance = 0.1;
     this.damageDistance = this.character.mesh.geometry.boundingSphere.radius * 0.75;
     this.stunDuration = 1000;
     this.timeout = null;
@@ -21,6 +21,28 @@ AIController.prototype.update = function(delta) {
     if(!this.character.playingAnimation) {
         this.checkForPlayerHit();
     }
+};
+AIController.prototype.meleeDefending = function(delta) {
+    var blockChance = Math.random();
+    if(blockChance < 0.25) {
+        var randomCounterDelay = Math.floor(Math.random() * 800) + 400;
+        console.log("Monster has blocked", randomCounterDelay);
+        this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false, timeScale: 2 });
+        this.changeState(this.sawTargetReaction);
+        this.changeState(this.attack, randomCounterDelay);
+    } else {
+        console.log("Monster has taken damage");
+        this.character.hit(this.game.characters[this.target].characterStats);
+        this.character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false, loop:THREE.LoopOnce, timeScale: 1 });
+        this.changeState(this.stunned);
+        this.changeState(this.idle, 1000);
+    }
+};
+AIController.prototype.stunned = function(delta) {
+    //this.character.setAnimation("DE_Hit", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false, loop:THREE.LoopPingPong, timeScale: 1 });
+};
+AIController.prototype.readyCounter = function(delta) {
+    //this.character.setAnimation("DE_Hit", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false, loop:THREE.LoopPingPong, timeScale: 1 });
 };
 AIController.prototype.checkForPlayerHit = function() {
     var enemy = this.game.characters[this.target];
@@ -42,17 +64,16 @@ AIController.prototype.checkForPlayerHit = function() {
 };
 AIController.prototype.sawTargetReaction = function(delta) {
     this.character.movementSpeed = this.attackMovementSpeed;
-    var am = this.character.animationMixer;
-    this.character.setAnimation("DE_Provoke", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false, timeScale: 2 });
+    this.character.setAnimation("DE_Provoke", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false, timeScale: 2 });
 };
 AIController.prototype.finishedAttack = function(delta) {
     this.character.movementSpeed = this.normalMovementSpeed;
     var am = this.character.animationMixer;
-    this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false });
+    this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false });
 };
 AIController.prototype.idle = function(delta) {
     var am = this.character.animationMixer;
-    this.character.setAnimation("DE_Boredom", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false });
+    this.character.setAnimation("DE_Boredom", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false });
     //search for enemy
     var enemy = this.game.characters[this.target];
     if(!enemy) { return; }
@@ -85,9 +106,9 @@ AIController.prototype.attack = function(delta) {
             var velNorm = new CANNON.Vec3().copy(this.character.body.velocity);
             velNorm.normalize();
             this.character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, velNorm.x, 0), Math.PI / 2);
-            this.character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false });
+            this.character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false });
         } else {
-            this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false });
+            this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false });
         }
         if (vLen < this.character.movementSpeed) {
             this.character.body.applyForce(forceVec.scale(this.character.movementSpeed * 100.0), this.character.body.position);

@@ -3,11 +3,12 @@ UserController.prototype.constructor = UserController;
 function UserController(character, game) {
     Controller.prototype.constructor.call(this, character, game);
     this.onGround = false;
-    this.jumpForce = 6000;
+    this.timeout = null;
+    this.attackCooldown = false;
 
     var mv = this.character.movementDirection;
     var c = this.character;
-    var ao = { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false };
+    var ao = { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false };
     var keymodifier = {};
     var scope = this;
     var keymap = {
@@ -42,6 +43,10 @@ function UserController(character, game) {
             }
         }
     };
+    var clickFunction = function( event ) {
+        scope.changeState(scope.meleeAttackStart);
+    };
+    window.addEventListener( 'click', clickFunction, false );
     window.addEventListener( 'keydown', onDocumentKeyDown, false );
     window.addEventListener( 'keyup', onDocumentKeyUp, false );
     var mobileControlData = {
@@ -107,6 +112,12 @@ UserController.prototype.searchForVictim = function(delta) {
         var dist = game.characters[c].body.position.x - this.character.body.position.x;
         var controller = game.characters[c].controllers[0];
         if(controller instanceof AIController && Math.abs(dist) <= 3.0) {
+            for(var child in controller.character.mesh.children) {
+                controller.character.mesh.children[child].visible = false;
+            }
+            for(var child in this.character.mesh.children) {
+                this.character.mesh.children[child].visible = false;
+            }
             controller.animation = "fuck_self_monster1";
             controller.changeState(controller.playAnimation);
             this.animation = "fuck_self_eve1";
@@ -128,19 +139,50 @@ UserController.prototype.searchForVictim = function(delta) {
                             controller.changeState(controller.idle);
                             scope.changeState(scope.walk);
                             scope.character.invincible = true;
+                            for(var child in controller.character.mesh.children) {
+                                controller.character.mesh.children[child].visible = true;
+                            }
+                            for(var child in scope.character.mesh.children) {
+                                scope.character.mesh.children[child].visible = true;
+                            }
                             setTimeout(function() { scope.character.invincible = false}, INVINCIBILITY_TIME);
-                        }, 5000);
-                    }, 5000);
-                }, 5000);
+                        }, 9000);
+                    }, 9000);
+                }, 9000);
             }(this, controller));
             return;
         }
     }
     this.changeState(this.walk);
 };
+UserController.prototype.meleeAttackStart = function(delta) {
+    if(this.attackCooldown) {
+        this.changeState(this.walk);
+        return;
+    }
+    this.character.setAnimation("DE_Combatattack", {timeScale: 2.0, loop: THREE.LoopOnce});
+    var range = 3.5;
+    for(var c in game.characters) {
+        var dist = game.characters[c].body.position.x - this.character.body.position.x;
+        var controller = game.characters[c].controllers[0];
+        //var distanceModifier = this.character.animationMixer.actions[0].clipTime / this.character.animationMixer.actions[0].clip.duration + 1.0;
+        if(controller instanceof AIController && Math.abs(dist) <= range) {
+            controller.changeState(controller.meleeDefending);
+            game.characters[c].body.applyForce(new CANNON.Vec3(dist * 400.0, 150.0, 0), this.character.body.position);
+        }
+    }
+    this.attackCooldown = true;
+    var scope = this;
+    setTimeout(function() {scope.attackCooldown = false;}, this.character.characterStats.attackCooldown);
+    this.changeState(this.meleeAttacking);
+    this.changeState(this.walk, 400);
+};
+UserController.prototype.meleeAttacking = function(delta) {
+
+};
 UserController.prototype.hit = function(delta) {
-    this.character.setAnimation("DE_Hit", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false, loop:THREE.LoopPingPong, timeScale: 1 });
-}
+    this.character.setAnimation("DE_Hit", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false, loop:THREE.LoopPingPong, timeScale: 1 });
+};
 UserController.prototype.walk = function(delta) {
     if(!this.character.playingAnimation) {
         this.character.invincible = false;
@@ -162,12 +204,12 @@ UserController.prototype.walk = function(delta) {
         }
         if(this.character.movementDirection.x > 0.1) {
             this.character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-            this.character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false });
+            this.character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false });
         } else if(this.character.movementDirection.x < -0.01) {
             this.character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
-            this.character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false });
+            this.character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false });
         } else {
-            this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false });
+            this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false });
         }
     }
 };
@@ -186,11 +228,11 @@ UserController.prototype.inAir = function(delta) {
     }
     if(this.__setOnGround()) {
         this.changeState(this.walk);
-        this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: BLEND_ANIMATION_TIME, crossFadeWarp: false, loop:THREE.LoopOnce });
+        this.character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false, loop:THREE.LoopOnce });
     }
 };
 UserController.prototype.jump = function(delta) {
-    var jumpForce = new CANNON.Vec3(0, this.jumpForce, 0);
+    var jumpForce = new CANNON.Vec3(0, this.character.characterStats.jumpForce, 0);
     this.character.body.applyForce(jumpForce, this.character.body.position);
     this.onGround = false;
     this.changeState(this.inAir);
