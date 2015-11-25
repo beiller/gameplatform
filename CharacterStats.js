@@ -5,11 +5,14 @@ function CharacterStats(params) {
     this.damage = params.damage || 20;
 
     //ATTACK cool down in MS
-    this.attackCooldown = params.attackCooldown || 600;
+    this.attackCooldown = params.attackCooldown || 200;
+    //Stun duration after hit in MS
+    this.hitStunDuration = params.attackCooldown || 2000;
     //force in some arbitrary unit (CANNON JS)
     this.jumpForce = params.jumpForce || 6000;
     //chance to block
     this.blockRatio = params.blockRatio || 0.2;
-    //time to
+    //range
+    this.range = params.range || 3.5;
 
 }

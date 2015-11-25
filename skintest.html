@@ -219,7 +219,7 @@ var scene2 = function() {
         });
     });
 }; //end scene2 function
-
+var objectCount = 0;
 var scene3 = function() {
     function find_bone(mesh, bone_name) {
         for(var bone in mesh.skeleton.bones) {
@@ -242,10 +242,9 @@ var scene3 = function() {
                 normalPath: "models/textures/evenormal.png",
                 position: [0, 2, 0]
             }, function(character) {
-                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)});
+                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
                 game.loadStaticObject("models/katana.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
                 character.addController(new UserController(character, game));
-                animate();
             }
         );
 
@@ -260,10 +259,9 @@ var scene3 = function() {
                 normalPath: "models/textures/evenormal.png",
                 position: [-18, 2, 0]
             }, function(character) {
-                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)});
+                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
                 game.loadStaticObject("models/staff.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
-                character.addController(new Controllerv2(character, game));
-                animate();
+                character.addController(new AIController(character, game));
             }
         );
 
@@ -278,21 +276,22 @@ var scene3 = function() {
                 normalPath: "models/textures/evenormal.png",
                 position: [18, 2, 0]
             }, function(character) {
-                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)});
+                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
                 game.loadStaticObject("models/staff.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
                 character.addController(new AIController(character, game));
-                animate();
             }
         );
     });
 }; //end scene1 function
 function animate() {
-	setTimeout( function() {
-			requestAnimationFrame(animate);
-	}, 1000 / 60);
-    game.animate();
+	//setTimeout( function() {
+	requestAnimationFrame(animate);
+	//}, 1000 / 60);
+    if(objectCount > 2)
+        game.animate();
 }
 scene3();
+animate();
 </script>
 
 	</body>

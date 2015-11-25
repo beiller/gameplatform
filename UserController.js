@@ -2,6 +2,161 @@ UserController.prototype = new Controller();
 UserController.prototype.constructor = UserController;
 function UserController(character, game) {
     Controller.prototype.constructor.call(this, character, game);
+
+    var controller = this;
+
+    var mv = character.movementDirection;
+    var keymodifier = {};
+    var keymap = {
+        'keydown': {
+            '87': function() { try {controller.fsm.jump();} catch(e) {} }, //W KEY
+            '83': function() {  }, //S KEY
+            '68': function() { mv.x += 1.0; }, //A KEY
+            '65': function() { mv.x -= 1.0; }  //D KEY
+            //'32': function() { scope.changeState(scope.searchForVictim); }
+        },
+        'keyup':{
+            '87': function() {  },
+            '83': function() {  },
+            '68': function() { mv.x -= 1.0; },
+            '65': function() { mv.x += 1.0; }
+        }
+    };
+    var onDocumentKeyDown = function( event ) {
+        if((event.keyCode in keymodifier && keymodifier[event.keyCode] == false) || !(event.keyCode in keymodifier)) {
+            if (event.keyCode in keymap['keydown']) {
+                keymap['keydown'][event.keyCode]();
+                keymodifier[event.keyCode] = true;
+            }
+        }
+    };
+    var onDocumentKeyUp = function( event ) {
+        if ((event.keyCode in keymodifier && keymodifier[event.keyCode] == true) || !(event.keyCode in keymodifier)) {
+            if (event.keyCode in keymap['keyup']) {
+                keymap['keyup'][event.keyCode]();
+                keymodifier[event.keyCode] = false;
+            }
+        }
+    };
+    var clickFunction = function( event ) {
+        try { controller.fsm.attack(); } catch(e) {}
+    };
+    window.addEventListener( 'keydown', onDocumentKeyDown, false );
+    window.addEventListener( 'keyup', onDocumentKeyUp, false );
+    window.addEventListener( 'click', clickFunction, false );
+    this.updateFunction = this.applyForces;
+
+    this.fsm = StateMachine.create({
+        initial: 'idle',
+        error: function(eventName, from, to, args, errorCode, errorMessage) {
+            //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+        },
+        events: [
+            { name: 'activate',      from: ['attackcooldown', 'idle'],                  to: 'onGround' },
+            { name: 'jump',          from: 'onGround',                                  to: 'inAir' },
+            { name: 'fall',          from: ['inAir', 'HIT'],                            to: 'freeFall' },
+            { name: 'attack',        from: ['onGround', 'freeFall'],                    to: 'attacking' },
+            { name: 'cooldown',      from: 'attacking',                                 to: 'attackcooldown'},
+            { name: 'finishAirAttack',      from: 'attackcooldown',                     to: 'freeFall'},
+            { name: 'land',          from: 'freeFall',                                  to: 'onGround'},
+            { name: 'hit',          from: ['attackcooldown', 'idle', 'onGround', 'inAir', 'freeFall', 'attacking', 'attackcooldown'], to: 'HIT'},
+            { name: 'dead',          from: '*',                                  to: 'DEAD'}
+        ],
+        callbacks: {
+            onenterHIT: function(event, from, to, msg) {
+                controller.updateFunction = controller.idle;
+                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false });
+                this.hitTimeout = setTimeout(function(){
+                    controller.fsm.fall();
+                }, character.characterStats.hitStunDuration);
+            },
+            onleaveHIT: function() {
+                clearTimeout(this.hitTimeout);
+            },
+            onenteridle:  function(event, from, to, msg) {
+                this.activate();
+            },
+            onenteronGround:  function(event, from, to, msg) {
+                controller.updateFunction = function(delta) {
+                    if(character.movementDirection.x > 0.1) {
+                        character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
+                        character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+                    } else if(character.movementDirection.x < -0.1) {
+                        character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
+                        character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
+                    } else {
+                        character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
+                    }
+                    controller.applyForces(delta);
+                };
+            },
+            onleaveonGround: function(event, from, to, msg) {
+                controller.updateFunction = controller.applyForces;
+            },
+            onenterinAir: function(event, from, to, msg) {
+                character.body.applyForce(new CANNON.Vec3(0, character.characterStats.jumpForce, 0), character.body.position);
+                controller.fsm.fall();
+            },
+            onenterfreeFall: function(event, from, to, msg) {
+                controller.updateFunction = function() {
+                    if(character.body.velocity.x > 0) {
+                        character.body.velocity.x = Math.min(character.body.velocity.x, 4.0);
+                    } else {
+                        character.body.velocity.x = Math.max(character.body.velocity.x, -4.0);
+                    }
+                    if(character.body.velocity.y > 0.01) {
+                        character.setAnimation("DE_CombatJumpUp", { loop:THREE.LoopOnce });
+                    } else if(character.body.velocity.y < -0.1) {
+                        character.setAnimation("DE_CombatJumpDown", { loop:THREE.LoopOnce });
+                    } else {
+                        //this.character.setAnimation("DE_CombatJumpDown", { crossFade: true, crossFadeDuration: 0.1, crossFadeWarp: false, loop:THREE.LoopOnce });
+                    }
+                    controller.checkForGround();
+                };
+            },
+            onleavefreeFall: function(event, from, to, msg) {
+                controller.updateFunction = controller.applyForces;
+            },
+            onenterattacking: function(event, from, to, msg) {
+                character.setAnimation("DE_Combatattack", {timeScale: 2.0, loop: THREE.LoopOnce});
+                controller.updateFunction = function() {
+                    if (character.body.velocity.x > 0) {
+                        character.body.velocity.x = Math.min(character.body.velocity.x, 4.0);
+                    } else {
+                        character.body.velocity.x = Math.max(character.body.velocity.x, -4.0);
+                    }
+                    controller.applyForces();
+                };
+                controller.attack();
+            },
+            onleaveattacking: function() {
+                clearTimeout(this.attackTimeout);
+            },
+            onenterattackcooldown: function(event, from, to, msg) {
+                character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
+                controller.updateFunction = controller.idle;
+                setTimeout(function() {
+                    var FLOOR = -4.0;
+                    if(character.body.position.y >= FLOOR + character.mesh.geometry.boundingSphere.radius + 0.01) {
+                        controller.fsm.finishAirAttack();
+                    } else {
+                        controller.fsm.activate();
+                    }
+                }, character.characterStats.attackCooldown);
+            }
+        }
+    });
+}
+UserController.prototype.checkForGround = function(delta) {
+    var FLOOR = -4.0;
+    if(this.character.body.position.y >= FLOOR + this.character.mesh.geometry.boundingSphere.radius + 0.01) {
+        return false;
+    } else {
+        this.fsm.land();
+    }
+    return true;
+};
+/*
     this.onGround = false;
     this.timeout = null;
     this.attackCooldown = false;
@@ -237,3 +392,4 @@ UserController.prototype.jump = function(delta) {
     this.onGround = false;
     this.changeState(this.inAir);
 };
+*/

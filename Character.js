@@ -89,10 +89,7 @@ Character.prototype.hit = function(enemyStats) {
     this.characterStats.health = this.characterStats.health - enemyStats.damage;
     if(this.characterStats.health <= 0) {
         console.log(this.name + " has died.");
-        this.invincible = true;
-        this.controllers[0].animation = "DE_Dance";
-        this.controllers[0].changeState(this.controllers[0].playAnimation);
-        this.playingAnimation = true;        
+        this.controllers[0].fsm.dead();
     }
     if(this.healthBarMesh) {
         var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
