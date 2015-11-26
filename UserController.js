@@ -94,16 +94,16 @@ function UserController(character, game) {
                 controller.updateFunction = controller.applyForces;
             },
             onenterinAir: function(event, from, to, msg) {
-                character.body.applyForce(new CANNON.Vec3(0, character.characterStats.jumpForce, 0), character.body.position);
+                character.body.applyForce(new CANNON.Vec3(0, controller.jumpForce * character.characterStats.jumpHeight, 0), character.body.position);
                 controller.fsm.fall();
             },
             onenterfreeFall: function(event, from, to, msg) {
                 controller.updateFunction = function() {
-                    if(character.body.velocity.x > 0) {
+                    /*if(character.body.velocity.x > 0) {
                         character.body.velocity.x = Math.min(character.body.velocity.x, 4.0);
                     } else {
                         character.body.velocity.x = Math.max(character.body.velocity.x, -4.0);
-                    }
+                    }*/
                     if(character.body.velocity.y > 0.01) {
                         character.setAnimation("DE_CombatJumpUp", { loop:THREE.LoopOnce });
                     } else if(character.body.velocity.y < -0.1) {

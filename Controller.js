@@ -5,6 +5,9 @@ function Controller(character, game) {
     this.game = game;
     this.blendAnimationDuration = 0.15;
 
+    this.movementForce = 2000;
+    this.jumpForce = 50000;
+
 }
 Controller.prototype.attack = function() {
     var scope = this;
@@ -16,16 +19,18 @@ Controller.prototype.attack = function() {
             var myQuaternion = scope.character.mesh.quaternion;
             var dist = game.characters[c].body.position.x - character.body.position.x;
             var facingDist = dist;
+            var verticalDist = game.characters[c].body.position.y - character.body.position.y;
             if(myQuaternion.y < 0.0) {
                 facingDist *= -1.0;
             }
-            if(Math.abs(dist) <= range && facingDist > 0.0 && game.characters[c] !== character) {
+            if(Math.abs(verticalDist) < 2.0 && Math.abs(dist) <= range && facingDist > 0.0 && game.characters[c] !== character) {
                 game.characters[c].controllers[0].fsm.hit();
                 var unitDist = -1;
                 if(dist > 0) {
                     unitDist = 1;
                 }
-                game.characters[c].body.applyForce(new CANNON.Vec3(unitDist * 1000.0, 500.0, 0), character.body.position);
+                var cont = game.characters[c].controllers[0];
+                game.characters[c].body.applyForce(new CANNON.Vec3(unitDist * cont.movementForce * 20.0, cont.movementForce * 5.0, 0), character.body.position);
                 game.characters[c].hit(character.characterStats);
             }
 
@@ -51,6 +56,6 @@ Controller.prototype.applyForces = function(delta) {
     forceVec.normalize();
     var vLen = this.character.body.velocity.length();
     if (vLen < this.character.movementSpeed) {
-        this.character.body.applyForce(forceVec.scale(this.character.movementSpeed * 100.0), this.character.body.position);
+        this.character.body.applyForce(forceVec.scale(this.character.movementSpeed * this.movementForce), this.character.body.position);
     }
 };

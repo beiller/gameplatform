@@ -22,7 +22,7 @@ function AIController(character, game) {
             console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
         },
         events: [
-            { name: 'activate',      from: ['idle', 'approach', 'HIT'],       to: 'search' },
+            { name: 'activate',      from: ['idle', 'approach', 'HIT', 'DEAD'],       to: 'search' },
             { name: 'foundEnemy',    from: ['search', 'attackcooldown'],     to: 'approach'    },
             { name: 'attack',        from: 'approach',   to: 'attacking' },
             { name: 'cooldown',      from: 'attacking',     to: 'attackcooldown'  },
@@ -95,7 +95,12 @@ function AIController(character, game) {
             },
             onleaveattackcooldown:  function(event, from, to, msg) {
                 clearTimeout(this.cooldownTimeout);
-            }
+            },
+            onenterDEAD: function() {
+                var fsm = this;
+                this.deadTimeout = setTimeout(function(){ fsm.activate(); character.characterStats.health = 20; }, 30000);
+            },
+            onleaveDEAD: function() { clearTimeout(this.deadTimeout); }
         }
     });
 }

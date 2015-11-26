@@ -24,7 +24,8 @@ Game.prototype.initPhysics = function() {
     this.collisionGroups = [1,2,4,8,16,32];
 
     this.world = new CANNON.World();
-    this.world.gravity.set(0,-9.82,0);
+    //this.world.gravity.set(0,-9.82,0);
+    this.world.gravity.set(0,-40,0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
     this.world.solver.iterations = 20;
     this.world.defaultContactMaterial.friction = 0.1;
@@ -47,7 +48,7 @@ Game.prototype.addGroundPlane = function(height) {
 Game.prototype.addCharacterPhysics = function(radius, mass, position) {
     var shape = new CANNON.Sphere( radius || 1.0 );
 	var body = new CANNON.Body({
-		mass: mass || 1.0
+		mass: mass || 49.0
 	});
     if(position === undefined) position = [0,0,0];
 	body.addShape(shape);
@@ -55,8 +56,8 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
 	body.collisionFilterGroup = this.collisionGroups[1];
 	body.collisionFilterMask = this.collisionGroups[0];// | this.collisionGroups[1];
 	body.fixedRotation = true;
+    body.linearDamping = 0.000001;
 	body.updateMassProperties();
-    //body.linearDamping = 0.;
 	this.world.add(body); // Step 3
 
     /*var sphere = new THREE.Mesh( new THREE.SphereGeometry( radius, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
@@ -156,7 +157,7 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
     });
 };
 Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
-    var characterMass = 10.0;
+    var characterMass = 49.0; //50 KG
     var game = this;
     var position = options.position || [0,5,0];
     if(!options.name) return;
@@ -239,11 +240,10 @@ Game.prototype.loadStaticObject = function(jsonFileName, parent, options, onComp
     });
 };
 Game.prototype.animate = function() {
-    //this.controls.update();
     this.camera.position.x = this.characters['eve'].body.position.x;
     var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
-
-    this.world.step(1/60);
+    var maxSubSteps = 3;
+    this.world.step(1.0/60, delta, maxSubSteps);
     for(var i in this.characters) {
         this.characters[i].update(delta);
     }
