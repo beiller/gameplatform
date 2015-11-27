@@ -109,8 +109,9 @@ function AIController(character, game) {
                     bone.remove(mesh);
                     var dynamic = new Dynamic().findDynamic(controller.game, mesh);
                     bone.localToWorld(mesh.position);
-                    dynamic.body.position.copy(mesh.position).y = 2.0;
+                    dynamic.body.position.copy(mesh.position);//.y = 10.0;
                     dynamic.sleep = false;
+                    controller.game.scene.add(mesh);
                 } catch(e) {
                     console.log(e);
                 }
