@@ -1,6 +1,32 @@
-function Character(name, mesh, body, options, sssMesh, characterStats) {
+function Dynamic(mesh, body) {
     this.mesh = mesh;
     this.body = body;
+    this.sleep = false;
+}
+Dynamic.prototype.update = function() {
+    if(!this.sleep) {
+        //update physics components and copy to mesh position
+        this.body.position.z = 0.0;
+        this.mesh.position.copy(this.body.position);
+        this.mesh.quaternion.copy(this.body.quaternion);
+    } else {
+        this.mesh.position.set(0,0,0);
+        this.mesh.quaternion.set(0,0,0,1);
+    }
+};
+Dynamic.prototype.findDynamic = function(game, mesh) {
+    for(var i in game.dynamics) {
+        if(game.dynamics[i].mesh === mesh) {
+            return game.dynamics[i];
+        }
+    }
+};
+
+Character.prototype = new Dynamic();
+Character.prototype.constructor = Character;
+function Character(name, mesh, body, options, sssMesh, characterStats) {
+    Dynamic.prototype.constructor.call(this, mesh, body);
+
     this.sssMesh = sssMesh;
     this.controllers = [];
     this.name = name;
@@ -65,6 +91,7 @@ Character.prototype.addController = function(controller) {
     this.controllers.push(controller);
 };
 Character.prototype.update = function(delta) {
+    this.body.position.z = 0.0; //2d game here
     //do update skeletal Animation
     if(this.animationMixer && this.animationMixer.actions.length > 0) {
         this.animationMixer.update(delta);
@@ -95,4 +122,12 @@ Character.prototype.hit = function(enemyStats) {
         var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
         this.healthBarMesh.scale.set(2 * healthRatio, 0.25, 0.25);
     }
+};
+Character.prototype.findBone = function(bone_name) {
+    for(var bone in this.mesh.skeleton.bones) {
+        if(this.mesh.skeleton.bones[bone].name === bone_name) {
+            return this.mesh.skeleton.bones[bone];
+        }
+    }
+    return null;
 };

@@ -3,7 +3,7 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
 
         OPTIONS
      */
-    this.disableSSSRenderFrame = true;
+    this.disableSSSRenderFrame = false;
 
 
     this.scene = new THREE.Scene();

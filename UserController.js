@@ -65,7 +65,7 @@ function UserController(character, game) {
         callbacks: {
             onenterHIT: function(event, from, to, msg) {
                 controller.updateFunction = controller.idle;
-                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false });
+                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 this.hitTimeout = setTimeout(function(){
                     controller.fsm.fall();
                 }, character.characterStats.hitStunDuration);

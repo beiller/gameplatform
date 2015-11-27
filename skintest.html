@@ -220,15 +220,14 @@ var scene2 = function() {
     });
 }; //end scene2 function
 var objectCount = 0;
-var scene3 = function() {
-    function find_bone(mesh, bone_name) {
-        for(var bone in mesh.skeleton.bones) {
-            if(mesh.skeleton.bones[bone].name === bone_name) {
-                return mesh.skeleton.bones[bone];
-            }
+function find_bone(mesh, bone_name) {
+    for(var bone in mesh.skeleton.bones) {
+        if(mesh.skeleton.bones[bone].name === bone_name) {
+            return mesh.skeleton.bones[bone];
         }
     }
-
+}
+var scene3 = function() {
 	game.addGroundPlane(-4);
     game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
 		game.loadCharacter(
@@ -247,6 +246,13 @@ var scene3 = function() {
                 character.addController(new UserController(character, game));
             }
         );
+
+        //TRY LOADING STATIC KATANA
+        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
 
         game.loadCharacter(
             "models/eve.json",
