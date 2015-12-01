@@ -35,6 +35,7 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.movementDirection = new CANNON.Vec3(0,0,0);
     this.movementSpeed = options.movementSpeed || 10.0;
     this.stunned = false;
+    this.blocking = false;
 
 
     this.animations = {};
@@ -113,14 +114,25 @@ Character.prototype.update = function(delta) {
     }
 };
 Character.prototype.hit = function(enemyStats) {
-    this.characterStats.health = this.characterStats.health - enemyStats.damage;
-    if(this.characterStats.health <= 0) {
-        console.log(this.name + " has died.");
-        this.controllers[0].fsm.dead();
-    }
-    if(this.healthBarMesh) {
-        var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
-        this.healthBarMesh.scale.set(2 * healthRatio, 0.25, 0.25);
+    if(!this.blocking) {
+        console.log(this.name + ' takes ' + enemyStats.damage + ' damage.')
+        this.characterStats.health = this.characterStats.health - enemyStats.damage;
+        if (this.characterStats.health <= 0) {
+            console.log(this.name + " has died.");
+            this.controllers[0].fsm.dead();
+        }
+        if (this.healthBarMesh) {
+            var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
+            this.healthBarMesh.scale.set(2 * healthRatio, 0.25, 0.25);
+        }
+    } else {
+        console.log(this.name + " blocked an attack!");
+        //determine chance to stun me
+        var rand = Math.random();
+        if(rand <= this.characterStats.stunWhileBlockingChance) {
+            console.log(this.name + " was stunned!");
+            this.controllers[0].fsm.stun();
+        }
     }
 };
 Character.prototype.findBone = function(bone_name) {

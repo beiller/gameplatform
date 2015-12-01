@@ -12,14 +12,15 @@ function UserController(character, game) {
             '87': function() { try {controller.fsm.jump();} catch(e) {} }, //W KEY
             '83': function() {  }, //S KEY
             '68': function() { mv.x += 1.0; }, //A KEY
-            '65': function() { mv.x -= 1.0; }  //D KEY
-            //'32': function() { scope.changeState(scope.searchForVictim); }
+            '65': function() { mv.x -= 1.0; },  //D KEY
+            '32': function() { game.explosion(character, new CANNON.Vec3(100000, 100000, 0), character.body.position); }
         },
         'keyup':{
             '87': function() {  },
             '83': function() {  },
             '68': function() { mv.x -= 1.0; },
-            '65': function() { mv.x += 1.0; }
+            '65': function() { mv.x += 1.0; },
+            '32': function() {  }
         }
     };
     var onDocumentKeyDown = function( event ) {
@@ -38,12 +39,101 @@ function UserController(character, game) {
             }
         }
     };
-    var clickFunction = function( event ) {
-        try { controller.fsm.attack(); } catch(e) {}
+    var onMouseDownFunction = function( event ) {
+        //console.log(event);
+        if(event.buttons == 1) {
+            try {
+                controller.fsm.attack();
+            } catch (e) {
+            }
+        } else if(event.buttons == 2) {
+            try {
+                controller.fsm.block();
+            } catch (e) {
+            }
+        }
+    };
+    var onMouseUpFunction = function( event ) {
+        //console.log(event);
+        if(event.buttons == 2) {
+            try {
+                controller.fsm.fall();
+            } catch (e) {
+            }
+        }
     };
     window.addEventListener( 'keydown', onDocumentKeyDown, false );
     window.addEventListener( 'keyup', onDocumentKeyUp, false );
-    window.addEventListener( 'click', clickFunction, false );
+    window.addEventListener( 'mousedown', onMouseDownFunction, false );
+    window.addEventListener( 'mouseup', onMouseUpFunction, false );
+
+    function MobileControl(onTouchStart, onTouchEnd) {
+        //this.container = document.createElement( 'div' );
+        //document.body.appendChild( this.container );
+
+        //this.container.className = "button";
+        //this.container.innerHTML = "HELLO WORLD!";
+        document.body.addEventListener('touchstart', function(e) { alert(e.targetTouches[0].pageX / screen.width); });
+        //this.container.addEventListener('touchend', function(e) { console.log('touchend', e); });
+        //this.container.addEventListener('touchmove', function(e) { console.log('touchmove', e); });
+        //this.container.addEventListener('touchcancel', function(e) { console.log('touchcancel', e); });
+    }
+    var control = new MobileControl();
+
+
+    var mobileControlData = {
+        left: {
+            type: 'joystick',
+            joystick: {
+                radius: 300,
+                touchMove: function(e) {
+                    if(e.normalizedX > 0.01) {
+                        mv.x = 1.0;
+                    } else if(e.normalizedX < -0.01) {
+                        mv.x = -1.0;
+                    } else {
+                        mv.x = 0.0;
+                    }
+
+                    if(e.normalizedY > 0.5) {
+                        try {controller.fsm.jump();} catch(e) {}
+                    }
+                },
+                touchEnd: function() {
+                    this.currentX = this.x;
+                    this.currentY = this.y;
+                    mv.x = 0.0;
+                }
+            }
+        },
+        right: {
+            type: 'buttons',
+            buttons: [
+                {
+                    label: 'block',
+                    fontSize: 16,
+                    touchStart: function() {
+                        controller.fsm.block();
+                    },
+                    touchEnd: function() {
+                        controller.fsm.fall();
+                    }
+                },
+                {
+                    label: 'attack',
+                    fontSize: 16,
+                    touchStart: function() {
+                        controller.fsm.attack();
+                    }
+                },
+                false,
+                false
+            ]
+        }
+    };
+    //GameController.init( mobileControlData );
+
+
     this.updateFunction = this.applyForces;
 
     this.fsm = StateMachine.create({
@@ -54,20 +144,45 @@ function UserController(character, game) {
         events: [
             { name: 'activate',      from: ['attackcooldown', 'idle'],                  to: 'onGround' },
             { name: 'jump',          from: 'onGround',                                  to: 'inAir' },
-            { name: 'fall',          from: ['inAir', 'HIT'],                            to: 'freeFall' },
+            { name: 'fall',          from: ['inAir', 'BLOCKING', 'waking'],             to: 'freeFall' },
             { name: 'attack',        from: ['onGround', 'freeFall'],                    to: 'attacking' },
             { name: 'cooldown',      from: 'attacking',                                 to: 'attackcooldown'},
             { name: 'finishAirAttack',      from: 'attackcooldown',                     to: 'freeFall'},
             { name: 'land',          from: 'freeFall',                                  to: 'onGround'},
-            { name: 'hit',          from: ['attackcooldown', 'idle', 'onGround', 'inAir', 'freeFall', 'attacking', 'attackcooldown'], to: 'HIT'},
-            { name: 'dead',          from: '*',                                  to: 'DEAD'}
+            { name: 'hit',           from: ['attackcooldown', 'idle', 'onGround', 'inAir', 'freeFall', 'attacking', 'attackcooldown', 'STUNNED'], to: 'HIT'},
+            { name: 'dead',          from: '*',                                  to: 'DEAD'},
+            { name: 'block',         from: ['onGround', 'freeFall'],             to: 'BLOCKING'},
+            { name: 'stun',          from: ['BLOCKING'],                         to: 'STUNNED'},
+            { name: 'wake',          from: ['STUNNED', 'HIT'],                    to: 'waking'},
         ],
         callbacks: {
+            onenterwaking: function() {
+                this.fall();
+            },
+            onenterSTUNNED: function() {
+                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                controller.updateFunction = controller.idle;
+                var fsm = this;
+                this.hitTimeout = setTimeout(function(){
+                    fsm.wake();
+                }, character.characterStats.hitStunDuration * 4);
+            },
+            onleaveSTUNNED: function() {
+                clearTimeout(this.hitTimeout);
+            },
+            onenterBLOCKING: function(event, from, to, msg) {
+                character.blocking = true;
+                controller.updateFunction = controller.idle;
+                character.playAnimation("DE_Combatblock", { crossFade: true, crossFadeDuration: 0.2, crossFadeWarp: false, loop: THREE.LoopOnce });
+            },
+            onleaveBLOCKING: function(event, from, to, msg) {
+                character.blocking = false;
+            },
             onenterHIT: function(event, from, to, msg) {
                 controller.updateFunction = controller.idle;
                 character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 this.hitTimeout = setTimeout(function(){
-                    controller.fsm.fall();
+                    controller.fsm.wake();
                 }, character.characterStats.hitStunDuration);
             },
             onleaveHIT: function() {
@@ -109,7 +224,7 @@ function UserController(character, game) {
                     } else if(character.body.velocity.y < -0.1) {
                         character.setAnimation("DE_CombatJumpDown", { loop:THREE.LoopOnce });
                     } else {
-                        //this.character.setAnimation("DE_CombatJumpDown", { crossFade: true, crossFadeDuration: 0.1, crossFadeWarp: false, loop:THREE.LoopOnce });
+                        this.character.setAnimation("DE_CombatJumpDown", { crossFade: true, crossFadeDuration: 0.1, crossFadeWarp: false, loop:THREE.LoopOnce });
                     }
                     controller.checkForGround();
                 };
@@ -204,53 +319,7 @@ UserController.prototype.checkForGround = function(delta) {
     window.addEventListener( 'click', clickFunction, false );
     window.addEventListener( 'keydown', onDocumentKeyDown, false );
     window.addEventListener( 'keyup', onDocumentKeyUp, false );
-    var mobileControlData = {
-        left: {
-            type: 'joystick',
-            joystick: {
-                radius: 100,
-                touchMove: function(e) {
-                    if(e.normalizedX > 0.01) {
-                        mv.x = 1.0;
-                    } else if(e.normalizedX < -0.01) {
-                        mv.x = -1.0;
-                    } else {
-                        mv.x = 0.0;
-                    }
-                },
-                touchEnd: function() {
-                    this.currentX = this.x;
-                    this.currentY = this.y;
-                    mv.x = 0.0;
-                }
-            }
-        },
-        right: {
-            type: 'buttons',
-            buttons: [
-                {
-                    label: 'jump',
-                    fontSize: 12,
-                    touchStart: function() {
-                        mv.y = 1.0;
-                    },
-                    touchEnd: function() {
-                        mv.y = 0.0;
-                    }
-                },
-                {
-                    label: 'xxx',
-                    fontSize: 12,
-                    touchStart: function() {
-                        scope.changeState(scope.searchForVictim);
-                    }
-                },
-                false,
-                false
-            ]
-        }
-    };
-    //GameController.init( mobileControlData );
+
 
     this.changeState(this.walk);
 }

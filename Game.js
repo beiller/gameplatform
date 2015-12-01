@@ -21,6 +21,19 @@ function Game() {
 
     this.dynamics = [];
 }
+Game.prototype.explosion = function(character, impulse, worldPoint) {
+    if(this.world !== undefined) {
+        for(var body in this.world.bodies) {
+            if(this.world.bodies[body] !== character.body) {
+                var dist = new CANNON.Vec3().copy(this.world.bodies[body].position).vsub(character.body.position);
+                var range = 5.0;
+                var attenuation = range / Math.max(range, dist.x*dist.x);
+                var fImpulse = new CANNON.Vec3(impulse.x * attenuation, impulse.y * attenuation, 0.0);
+                this.world.bodies[body].applyForce(fImpulse, worldPoint);
+            }
+        }
+    }
+};
 
 Game.prototype.initPhysics = function() {
     this.collisionGroups = [1,2,4,8,16,32];
@@ -255,6 +268,7 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
     });
 };
 Game.prototype.loadStaticObject = function(jsonFileName, parent, options, onComplete) {
+    options = options === undefined ? {} : options;
     var mass = options.mass || 10.0;
     var position = options.position || [0,1,0];
     var game = this;

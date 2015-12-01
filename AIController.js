@@ -12,6 +12,8 @@ function AIController(character, game) {
     this.damageDistance = this.character.mesh.geometry.boundingSphere.radius * 0.75;
     this.stunDuration = 1000;
     this.searchFrequency = 200; //look around every 200ms
+    this.blockChanceRatio = 0.25;
+    this.blockChanceTimer = 1000;
 
     this.updateFunction = this.idle;
 
@@ -19,22 +21,53 @@ function AIController(character, game) {
     this.fsm = StateMachine.create({
         initial: 'idle',
         error: function(eventName, from, to, args, errorCode, errorMessage) {
-            console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+            //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
         },
         events: [
-            { name: 'activate',      from: ['idle', 'approach', 'HIT', 'DEAD'],       to: 'search' },
+            { name: 'activate',      from: ['idle', 'approach', 'DEAD', 'BLOCKING', 'waking'],       to: 'search' },
             { name: 'foundEnemy',    from: ['search', 'attackcooldown'],     to: 'approach'    },
             { name: 'attack',        from: 'approach',   to: 'attacking' },
             { name: 'cooldown',      from: 'attacking',     to: 'attackcooldown'  },
-            { name: 'hit',      from: ['idle', 'approach', 'search', 'attackcooldown', 'attacking'],     to: 'HIT'  },
-            { name: 'dead',          from: '*',                                  to: 'DEAD'}
+            { name: 'hit',      from: ['idle', 'approach', 'search', 'attackcooldown', 'attacking', 'STUNNED'],     to: 'HIT'  },
+            { name: 'dead',          from: '*',                                  to: 'DEAD'},
+            { name: 'block',         from: ['approach', 'search'],               to: 'BLOCKING'},
+            { name: 'stun',          from: ['BLOCKING'],                         to: 'STUNNED'},
+            { name: 'wake',          from: ['STUNNED', 'HIT'],                    to: 'waking'},
         ],
         callbacks: {
+            onenterwaking: function() {
+                this.activate();
+            },
+            onenterSTUNNED: function() {
+                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                controller.updateFunction = controller.idle;
+                var fsm = this;
+                this.hitTimeout = setTimeout(function(){
+                    fsm.wake();
+                }, character.characterStats.hitStunDuration * 4);
+            },
+            onleaveSTUNNED: function() {
+                clearTimeout(this.hitTimeout);
+            },
+            onleaveBLOCKING: function(event, from, to, msg) {
+                character.blocking = false;
+                clearTimeout(this.blockingTimeout);
+            },
+            onenterBLOCKING: function(event, from, to, msg) {
+                character.blocking = true;
+                var fsm = this;
+                controller.updateFunction = controller.idle;
+                character.playAnimation("DE_Combatblock", { crossFade: true, crossFadeDuration: 0.2, crossFadeWarp: false, loop: THREE.LoopOnce });
+                var delay = Math.floor(200 + (Math.random() * controller.blockChanceTimer));
+                this.blockingTimeout = setTimeout(function() {
+                    fsm.activate();
+                }, delay);
+            },
             onenterHIT: function(event, from, to, msg) {
                 controller.updateFunction = controller.idle;
                 character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 this.hitTimeout = setTimeout(function(){
-                    controller.fsm.activate();
+                    controller.fsm.wake();
                 }, character.characterStats.hitStunDuration);
             },
             onleaveHIT: function() {
@@ -66,7 +99,12 @@ function AIController(character, game) {
                 controller.updateFunction = function() {
                     var dist = game.characters[controller.target].mesh.position.x - character.mesh.position.x;
                     if(Math.abs(dist) <= character.characterStats.range) {
-                        fsm.attack();
+                        var rand = Math.random();
+                        if(rand >= controller.blockChanceRatio) {
+                            fsm.attack();
+                        } else {
+                            fsm.block();
+                        }
                     }
                     if(Math.abs(dist) >= controller.viewDistance) {
                         fsm.activate();

@@ -15,4 +15,7 @@ function CharacterStats(params) {
     //range
     this.range = params.range || 3.5;
 
+    //chance to stun opponent while blocking
+    this.stunWhileBlockingChance = params.stunWhileBlockingChance || 0.1;
+
 }

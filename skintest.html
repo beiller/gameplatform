@@ -23,10 +23,20 @@
                 user-select:none;
                 -webkit-tap-highlight-color:rgba(0,0,0,0);
             }
+
+            div.button {
+                height: 100px;
+                width: 100px;
+                border: solid 1px #000000;
+                background-color: #ffffff;
+                position: absolute;
+                top: 0px;
+                left: 0px;
+            }
 		</style>
 	</head>
 
-	<body>
+	<body oncontextmenu="return false;">
 		<script type='text/javascript' src='cannon.js'></script>
 		<script src="three.js/build/three.js"></script>
 		<script src="javascript-state-machine/state-machine.min.js"></script>
@@ -238,21 +248,21 @@ var scene3 = function() {
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/evenormal.png",
+                normalPath: "models/textures/evenormalv2.png",
                 position: [0, 2, 0]
             }, function(character) {
-                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
+                game.loadClothing("models/underwear.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
                 game.loadStaticObject("models/katana.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
                 character.addController(new UserController(character, game));
             }
         );
 
         //TRY LOADING STATIC KATANA
+        /*game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
         game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
         game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
         game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });*/
 
         game.loadCharacter(
             "models/eve.json",
@@ -262,10 +272,10 @@ var scene3 = function() {
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/evenormal.png",
+                normalPath: "models/textures/evenormalv2.png",
                 position: [-18, 2, 0]
             }, function(character) {
-                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
+                game.loadClothing("models/underwear.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
                 game.loadStaticObject("models/staff.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
                 character.addController(new AIController(character, game));
             }
@@ -279,11 +289,11 @@ var scene3 = function() {
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/evenormal.png",
+                normalPath: "models/textures/evenormalv2.png",
                 position: [18, 2, 0]
             }, function(character) {
-                game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
-                game.loadStaticObject("models/staff.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
+                game.loadClothing("models/underwear.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
+                game.loadStaticObject("models/wooden-staff.json", find_bone(character.mesh, "Bip01 weapon"));
                 character.addController(new AIController(character, game));
             }
         );
