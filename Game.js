@@ -21,20 +21,96 @@ function Game() {
 
     this.dynamics = [];
 }
-Game.prototype.explosion = function(character, impulse, worldPoint) {
+Game.prototype.explosion = function(character, impulse) {
     if(this.world !== undefined) {
         for(var body in this.world.bodies) {
             if(this.world.bodies[body] !== character.body) {
                 var dist = new CANNON.Vec3().copy(this.world.bodies[body].position).vsub(character.body.position);
                 var range = 5.0;
-                var attenuation = range / Math.max(range, dist.x*dist.x);
-                var fImpulse = new CANNON.Vec3(impulse.x * attenuation, impulse.y * attenuation, 0.0);
-                this.world.bodies[body].applyForce(fImpulse, worldPoint);
+                var dlen = (dist.x + dist.y) / 2.0;
+                var attenuation;
+                if(dlen > range || dlen < -range) {
+                    attenuation = 0;
+                } else {
+                    if(dlen <= 0)
+                        attenuation = -1;
+                    if(dlen > 0)
+                        attenuation = 1;
+                }
+                var fImpulse = new CANNON.Vec3(impulse.x * attenuation, impulse.y * Math.pow(attenuation, 2), 0.0);
+                this.world.bodies[body].applyForce(fImpulse, character.body.position);
             }
         }
     }
 };
+Game.prototype.makeTextSprite = function( message, parameters ) {
+    if ( parameters === undefined ) parameters = {};
+    var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "MainFont";
+    var fontsize = parameters.hasOwnProperty("fontsize") ? parameters["fontsize"] : 48;
+    var borderThickness = parameters.hasOwnProperty("borderThickness") ? parameters["borderThickness"] : 4;
+    var borderColor = parameters.hasOwnProperty("borderColor") ? parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
+    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ? parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
+    //var spriteAlignment = THREE.SpriteAlignment.topLeft;
+    var canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
+    canvas.lineWidth = 1;
+    var context = canvas.getContext('2d');
+    context.font = fontsize + 'px ' + fontface;
 
+    // get size data (height depends only on font size)
+    var metrics = context.measureText( message );
+    var textWidth = metrics.width;
+
+    //console.log(textWidth, ' textWidth');
+
+    // background color
+    context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
+        + backgroundColor.b + "," + backgroundColor.a + ")";
+    // border color
+    context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + ","
+        + borderColor.b + "," + borderColor.a + ")";
+    context.textAlign = "center";
+    context.lineWidth = borderThickness;
+    //roundRect(context, borderThickness/2, borderThickness/2, textWidth + borderThickness, fontsize * 1.4 + borderThickness, 6);
+    // 1.4 is extra height factor for text below baseline: g,j,p,q.
+    // text color
+    //context.strokeStyle = "rgba(0, 0, 0, 1.0)";
+    context.strokeText( message, canvas.width/2, fontsize + 5);
+    //context.fillStyle = "rgba(1.0, 0, 0, 1.0)";
+    context.fillText( message, canvas.width/2, fontsize + 5);
+
+    // canvas contents will be used for a texture
+    var texture = new THREE.Texture(canvas);
+    texture.needsUpdate = true;
+    var spriteMaterial = new THREE.SpriteMaterial(
+        { map: texture }
+    );
+    var sprite = new THREE.Sprite( spriteMaterial );
+    sprite.scale.set(8,4,1.0);
+    return sprite;
+};
+Game.prototype.displayText = function(position, text, timeout) {
+    var scope = this;
+    var clock = new THREE.Clock( true );
+    setTimeout(function() {
+        var sprite = scope.makeTextSprite(text, {backgroundColor: { r:255, g:0, b:0, a:0.5 },borderColor:{ r:0, g:0, b:0, a:1.0 }});
+        sprite.position.copy(position);
+        sprite.position.y = Math.sin(1.2) * 15 - 15;
+        scope.scene.add(sprite);
+        var interval = setInterval(function() {
+            var e = clock.getElapsedTime();
+            sprite.position.y = (Math.sin((e*1.2)+1.2) * 15) - 15;
+            sprite.position.x += 0.05;
+        }, 1000 / 60);
+        setTimeout(function(){
+            clearInterval(interval);
+            scope.scene.remove(sprite);
+            sprite.material.map.dispose();
+            sprite.geometry.dispose();
+        }, timeout);
+    }, 100);
+};
 Game.prototype.initPhysics = function() {
     this.collisionGroups = [1,2,4,8,16,32];
 
@@ -258,6 +334,7 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
     if(options === undefined) options = {};
     this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
         var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+        skinnedMesh.frustumCulled = false;
         skinnedMesh.skeleton = parent.skeleton;
         skinnedMesh.castShadow = true;
         skinnedMesh.receiveShadow = true;

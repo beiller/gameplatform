@@ -114,11 +114,17 @@ Character.prototype.update = function(delta) {
     }
 };
 Character.prototype.hit = function(enemyStats) {
+    if(this.dead) {
+        return;
+    }
     if(!this.blocking) {
-        console.log(this.name + ' takes ' + enemyStats.damage + ' damage.')
-        this.characterStats.health = this.characterStats.health - enemyStats.damage;
+        var damage = enemyStats.damage + Math.ceil(Math.random() * 2.0);
+        console.log(this.name + ' takes ' + damage + ' damage.');
+        game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 4, 1.0), damage, 3000);
+        this.characterStats.health = this.characterStats.health - damage;
         if (this.characterStats.health <= 0) {
             console.log(this.name + " has died.");
+            this.dead = true;
             this.controllers[0].fsm.dead();
         }
         if (this.healthBarMesh) {
@@ -127,11 +133,16 @@ Character.prototype.hit = function(enemyStats) {
         }
     } else {
         console.log(this.name + " blocked an attack!");
+        game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 4, 1.0), "Blocked", 3000);
         //determine chance to stun me
         var rand = Math.random();
         if(rand <= this.characterStats.stunWhileBlockingChance) {
             console.log(this.name + " was stunned!");
             this.controllers[0].fsm.stun();
+            var scope = this;
+            setTimeout(function() {
+                game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y + 4, 1.0), "Stunned", 3000);
+            }, 100);
         }
     }
 };

@@ -39,7 +39,7 @@ function AIController(character, game) {
                 this.activate();
             },
             onenterSTUNNED: function() {
-                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 controller.updateFunction = controller.idle;
                 var fsm = this;
                 this.hitTimeout = setTimeout(function(){
@@ -65,7 +65,7 @@ function AIController(character, game) {
             },
             onenterHIT: function(event, from, to, msg) {
                 controller.updateFunction = controller.idle;
-                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 this.hitTimeout = setTimeout(function(){
                     controller.fsm.wake();
                 }, character.characterStats.hitStunDuration);
@@ -77,7 +77,7 @@ function AIController(character, game) {
                 this.activate();
             },
             onentersearch:  function(event, from, to, msg) {
-                character.playAnimation("DE_Boredom", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false });
+                character.playAnimation("DE_Boredom", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false });
                 //search for enemy
                 controller.updateFunction = function() {
                     var enemy = game.characters[controller.target];
@@ -93,7 +93,7 @@ function AIController(character, game) {
                 controller.updateFunction = controller.idle;
             },
             onenterapproach:  function(event, from, to, msg) {
-                character.playAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false });
+                character.playAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false });
                 var fsm = this;
                 character.movementSpeed = controller.attackMovementSpeed;
                 controller.updateFunction = function() {
@@ -127,7 +127,7 @@ function AIController(character, game) {
                 controller.attack();
             },
             onenterattackcooldown:  function(event, from, to, msg) {
-                character.playAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: this.runBlendAnimationSpeed, crossFadeWarp: false });
+                character.playAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false });
                 var fsm = this;
                 this.cooldownTimeout = setTimeout(function() { fsm.foundEnemy();}, controller.idleAfterAttackTime);
             },
@@ -153,6 +153,7 @@ function AIController(character, game) {
                 } catch(e) {
                     console.log(e);
                 }
+                character.playAnimation("DE_Die", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
             },
             onleaveDEAD: function() { clearTimeout(this.deadTimeout); }
         }

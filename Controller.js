@@ -3,7 +3,8 @@
 function Controller(character, game) {
     this.character = character;
     this.game = game;
-    this.blendAnimationDuration = 0.15;
+    this.blendAnimationDuration = 0.01;
+    this.runBlendAnimationSpeed = 0.01;
 
     this.movementForce = 2000;
     this.jumpForce = 50000;
@@ -54,8 +55,15 @@ Controller.prototype.idle = function(delta) {
 Controller.prototype.applyForces = function(delta) {
     var forceVec = new CANNON.Vec3().copy(this.character.movementDirection);
     forceVec.normalize();
-    var vLen = this.character.body.velocity.length();
+    var vLen = Math.abs(this.character.body.velocity.x);
     if (vLen < this.character.movementSpeed) {
         this.character.body.applyForce(forceVec.scale(this.character.movementSpeed * this.movementForce), this.character.body.position);
+    } else if(vLen > this.character.movementSpeed) {
+        var v = this.character.body.velocity;
+        if(this.character.body.velocity.x > 0) {
+            v.set(this.character.movementSpeed, v.y, v.z);
+        } else {
+            v.set(-this.character.movementSpeed, v.y, v.z);
+        }
     }
 };

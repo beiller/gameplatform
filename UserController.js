@@ -13,7 +13,7 @@ function UserController(character, game) {
             '83': function() {  }, //S KEY
             '68': function() { mv.x += 1.0; }, //A KEY
             '65': function() { mv.x -= 1.0; },  //D KEY
-            '32': function() { game.explosion(character, new CANNON.Vec3(100000, 100000, 0), character.body.position); }
+            '32': function() { controller.fsm.magic(); }
         },
         'keyup':{
             '87': function() {  },
@@ -146,21 +146,30 @@ function UserController(character, game) {
             { name: 'jump',          from: 'onGround',                                  to: 'inAir' },
             { name: 'fall',          from: ['inAir', 'BLOCKING', 'waking'],             to: 'freeFall' },
             { name: 'attack',        from: ['onGround', 'freeFall'],                    to: 'attacking' },
-            { name: 'cooldown',      from: 'attacking',                                 to: 'attackcooldown'},
+            { name: 'cooldown',      from: ['onGround', 'freeFall', 'attacking'],       to: 'attackcooldown'},
             { name: 'finishAirAttack',      from: 'attackcooldown',                     to: 'freeFall'},
             { name: 'land',          from: 'freeFall',                                  to: 'onGround'},
             { name: 'hit',           from: ['attackcooldown', 'idle', 'onGround', 'inAir', 'freeFall', 'attacking', 'attackcooldown', 'STUNNED'], to: 'HIT'},
-            { name: 'dead',          from: '*',                                  to: 'DEAD'},
-            { name: 'block',         from: ['onGround', 'freeFall'],             to: 'BLOCKING'},
-            { name: 'stun',          from: ['BLOCKING'],                         to: 'STUNNED'},
+            { name: 'dead',          from: '*',                                   to: 'DEAD'},
+            { name: 'block',         from: ['onGround', 'freeFall'],              to: 'BLOCKING'},
+            { name: 'stun',          from: ['BLOCKING'],                          to: 'STUNNED'},
             { name: 'wake',          from: ['STUNNED', 'HIT'],                    to: 'waking'},
+            { name: 'magic',         from: ['onGround', 'freeFall'],              to: 'attackcooldown'}
         ],
         callbacks: {
+            onenterDEAD: function() {
+                character.playAnimation("DE_Die", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+            },
+            onmagic: function() {
+                //alert('here');
+                game.explosion(character, new CANNON.Vec3(40000, 40000, 0));
+                return true;
+            },
             onenterwaking: function() {
                 this.fall();
             },
             onenterSTUNNED: function() {
-                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 controller.updateFunction = controller.idle;
                 var fsm = this;
                 this.hitTimeout = setTimeout(function(){
@@ -173,14 +182,14 @@ function UserController(character, game) {
             onenterBLOCKING: function(event, from, to, msg) {
                 character.blocking = true;
                 controller.updateFunction = controller.idle;
-                character.playAnimation("DE_Combatblock", { crossFade: true, crossFadeDuration: 0.2, crossFadeWarp: false, loop: THREE.LoopOnce });
+                character.playAnimation("DE_Combatblock", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false });
             },
             onleaveBLOCKING: function(event, from, to, msg) {
                 character.blocking = false;
             },
             onenterHIT: function(event, from, to, msg) {
                 controller.updateFunction = controller.idle;
-                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: character.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 this.hitTimeout = setTimeout(function(){
                     controller.fsm.wake();
                 }, character.characterStats.hitStunDuration);
