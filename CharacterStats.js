@@ -13,7 +13,9 @@ function CharacterStats(params) {
     //chance to block
     this.blockRatio = params.blockRatio || 0.2;
     //range
-    this.range = params.range || 3.5;
+    this.range = params.range || 1.0;
+
+    this.movementSpeed = params.movementSpeed || 5.0;
 
     //chance to stun opponent while blocking
     this.stunWhileBlockingChance = params.stunWhileBlockingChance || 0.1;

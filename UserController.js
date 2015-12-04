@@ -183,6 +183,7 @@ function UserController(character, game) {
                 character.blocking = true;
                 controller.updateFunction = controller.idle;
                 character.playAnimation("DE_Combatblock", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false });
+                character.body.velocity.set(0,0,0);
             },
             onleaveBLOCKING: function(event, from, to, msg) {
                 character.blocking = false;
@@ -242,7 +243,7 @@ function UserController(character, game) {
                 controller.updateFunction = controller.applyForces;
             },
             onenterattacking: function(event, from, to, msg) {
-                character.setAnimation("DE_Combatattack", {timeScale: 2.0, loop: THREE.LoopOnce});
+                character.setAnimation("DE_Combatpunch", {timeScale: 2.0, loop: THREE.LoopOnce});
                 controller.updateFunction = function() {
                     if (character.body.velocity.x > 0) {
                         character.body.velocity.x = Math.min(character.body.velocity.x, 4.0);
@@ -271,14 +272,27 @@ function UserController(character, game) {
         }
     });
 }
+
+//_game.player.isGrounded = (new CANNON.Ray(_game.player.mesh.position, new CANNON.Vec3(0, 0, -1)).intersectBody(event.contact.bi).length > 0);
 UserController.prototype.checkForGround = function(delta) {
-    var FLOOR = -4.0;
-    if(this.character.body.position.y >= FLOOR + this.character.mesh.geometry.boundingSphere.radius + 0.01) {
-        return false;
-    } else {
-        this.fsm.land();
+    var from = new CANNON.Vec3().copy(this.character.body.position);
+    var to = new CANNON.Vec3().copy(this.character.body.position);
+    to.y -= 1;
+    var ray = new CANNON.Ray(from, to);
+    if(this.character.body.velocity.y < 0.00001) {
+        var options = {
+            collisionFilterGroup: this.game.collisionGroups[1],
+            collisionFilterMask: this.game.collisionGroups[0],
+            mode: CANNON.Ray.CLOSEST
+        };
+        if (ray.intersectWorld(game.world, options)) {
+            if (ray.result.distance <= this.character.mesh.geometry.boundingSphere.radius + 0.01) {
+                this.fsm.land();
+                return true;
+            }
+        }
     }
-    return true;
+    return false;
 };
 /*
     this.onGround = false;

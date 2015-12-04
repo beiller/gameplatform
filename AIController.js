@@ -95,7 +95,7 @@ function AIController(character, game) {
             onenterapproach:  function(event, from, to, msg) {
                 character.playAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false });
                 var fsm = this;
-                character.movementSpeed = controller.attackMovementSpeed;
+                character.characterStats.movementSpeed = controller.attackMovementSpeed;
                 controller.updateFunction = function() {
                     var dist = game.characters[controller.target].mesh.position.x - character.mesh.position.x;
                     if(Math.abs(dist) <= character.characterStats.range) {
@@ -119,7 +119,7 @@ function AIController(character, game) {
                 };
             },
             onleaveapproach: function(event, from, to, msg) {
-                character.movementSpeed = controller.normalMovementSpeed;
+                character.characterStats.movementSpeed = controller.normalMovementSpeed;
                 controller.updateFunction = controller.idle;
             },
             onenterattacking:  function(event, from, to, msg) {
@@ -137,10 +137,10 @@ function AIController(character, game) {
             onenterDEAD: function() {
                 try {
                     var fsm = this;
-                    this.deadTimeout = setTimeout(function () {
+                    /*this.deadTimeout = setTimeout(function () {
                         fsm.activate();
                         character.characterStats.health = 20;
-                    }, 30000);
+                    }, 30000);*/
                     var bone = character.findBone("Bip01 weapon");
                     var mesh = bone.children[0];
                     mesh.scale.set(0.3333, 0.3333, 0.3333);

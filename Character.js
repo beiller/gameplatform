@@ -33,7 +33,7 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     if(!options || options === undefined) options = {};
 
     this.movementDirection = new CANNON.Vec3(0,0,0);
-    this.movementSpeed = options.movementSpeed || 10.0;
+
     this.stunned = false;
     this.blocking = false;
 
@@ -53,8 +53,8 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
 Character.prototype.createHealthBar = function() {
     var sprite = new THREE.Sprite();
     var healthRatio = this.characterStats.health / this.characterStats.maxHealth;
-    sprite.scale.set(2 * healthRatio, 0.25, 0.25);
-    sprite.position.set(0, 6, 0);
+    sprite.scale.set( healthRatio, 0.05, 0.25);
+    sprite.position.set(0, 2, 0);
     sprite.material.color = new THREE.Color( 0x00FF00 );
     this.mesh.add(sprite);
     this.healthBarMesh = sprite;
@@ -129,7 +129,7 @@ Character.prototype.hit = function(enemyStats) {
         }
         if (this.healthBarMesh) {
             var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
-            this.healthBarMesh.scale.set(2 * healthRatio, 0.25, 0.25);
+            this.healthBarMesh.scale.x = healthRatio;
         }
     } else {
         console.log(this.name + " blocked an attack!");

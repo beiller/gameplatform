@@ -20,6 +20,7 @@ function Game() {
     this.skinshaders = [];
 
     this.dynamics = [];
+    this.statics = [];
 }
 Game.prototype.explosion = function(character, impulse) {
     if(this.world !== undefined) {
@@ -87,7 +88,7 @@ Game.prototype.makeTextSprite = function( message, parameters ) {
         { map: texture }
     );
     var sprite = new THREE.Sprite( spriteMaterial );
-    sprite.scale.set(8,4,1.0);
+    sprite.scale.set(2,1,1.0);
     return sprite;
 };
 Game.prototype.displayText = function(position, text, timeout) {
@@ -96,12 +97,12 @@ Game.prototype.displayText = function(position, text, timeout) {
     setTimeout(function() {
         var sprite = scope.makeTextSprite(text, {backgroundColor: { r:255, g:0, b:0, a:0.5 },borderColor:{ r:0, g:0, b:0, a:1.0 }});
         sprite.position.copy(position);
-        sprite.position.y = Math.sin(1.2) * 15 - 15;
+        sprite.position.y = ((Math.sin(1.2) * 15) - 19) * 0.5;
         scope.scene.add(sprite);
         var interval = setInterval(function() {
             var e = clock.getElapsedTime();
-            sprite.position.y = (Math.sin((e*1.2)+1.2) * 15) - 15;
-            sprite.position.x += 0.05;
+            sprite.position.y = ((Math.sin((e*1.2)+1.2) * 15) - 19) * 0.5;
+            sprite.position.x += 0.017;
         }, 1000 / 60);
         setTimeout(function(){
             clearInterval(interval);
@@ -115,11 +116,11 @@ Game.prototype.initPhysics = function() {
     this.collisionGroups = [1,2,4,8,16,32];
 
     this.world = new CANNON.World();
-    //this.world.gravity.set(0,-9.82,0);
+    this.world.gravity.set(0,-9.82,0);
     //more GAMIFY
-    this.world.gravity.set(0,-35,0);
+    //this.world.gravity.set(0,-35,0);
     this.world.broadphase = new CANNON.NaiveBroadphase();
-    this.world.solver.iterations = 20;
+    this.world.solver.iterations = 10;
     this.world.defaultContactMaterial.friction = 0.1;
     this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
     this.world.defaultContactMaterial.contactEquationStiffness = 1e9;
@@ -134,7 +135,7 @@ Game.prototype.addGroundPlane = function(height) {
 	groundBody.collisionFilterMask = this.collisionGroups[0] | this.collisionGroups[1];
 	groundBody.position.set(0, height, 0);
 	this.world.add(groundBody);
-	this.groundBody = groundBody;
+    this.statics.push(groundBody);
 };
 Game.prototype.addCharacterPhysics = function(radius, mass, position) {
     var shape = new CANNON.Sphere( radius || 1.0 );
@@ -146,21 +147,18 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
     body.position.set(position[0], position[1], position[2]);
     body.collisionFilterGroup = this.collisionGroups[1];
     body.collisionFilterMask = this.collisionGroups[0];// | this.collisionGroups[1];
-    body.fixedRotation = true;
-    body.linearDamping = 0.000001;
+    //body.fixedRotation = true;
+    body.angularDamping = 1.0;
+    body.linearDamping = 0.1;
     body.updateMassProperties();
     this.world.add(body); // Step 3
 
-    /*var sphere = new THREE.Mesh( new THREE.SphereGeometry( radius, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
-     sphere.position.copy(body.position);
-     this.scene.add(sphere);
-     sphere.body = body;
-     sphere.update = function(dt) {
-     this.position.copy(this.body.position);
-     //this.mesh.quaternion.copy(this.body.quaternion);
-     }
-     counter++
-     this.characters['debugSphere'+counter] = sphere;*/
+    if(this.debugPhysics) {
+        var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
+        sphere.position.copy(body.position);
+        this.scene.add(sphere);
+        this.dynamics.push(new Dynamic(sphere, body));
+    }
 
     return body;
 };
@@ -196,8 +194,8 @@ Game.prototype.initRendering = function() {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.05, 1000);
-    this.camera.position.z = 15;
-    this.camera.position.y = 0.25;
+    this.camera.position.z = 4;
+    this.camera.position.y = -3;
     this.camera.position.x = 0;
     var cam = this.camera;
 
@@ -344,7 +342,32 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
         if(onComplete !== undefined) onComplete(skinnedMesh);
     });
 };
-Game.prototype.loadStaticObject = function(jsonFileName, parent, options, onComplete) {
+Game.prototype.loadStaticObject = function(jsonFileName, shape, position) {
+    var game = this;
+    this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
+        var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+        mesh.position.set(position[0], position[1], position[2]);
+        //game.setMaterialOptions(mesh, options);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        game.scene.add(mesh);
+        if(shape === 'box') {
+            mesh.geometry.computeBoundingBox();
+            var bboxmax = mesh.geometry.boundingBox.max;
+            var box = new CANNON.Box(new CANNON.Vec3().copy(bboxmax));
+            var groundBody = new CANNON.Body({mass: 0});
+            groundBody.addShape(box);
+            groundBody.collisionFilterGroup = game.collisionGroups[0];
+            groundBody.collisionFilterMask = game.collisionGroups[0] | game.collisionGroups[1];
+            groundBody.position.set(position[0], position[1], position[2]);
+            box.updateBoundingSphereRadius();
+            game.world.add(groundBody);
+        }
+        game.statics.push(groundBody);
+        if (onComplete !== undefined) onComplete(mesh);
+    });
+};
+Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onComplete) {
     options = options === undefined ? {} : options;
     var mass = options.mass || 10.0;
     var position = options.position || [0,1,0];
@@ -372,6 +395,7 @@ Game.prototype.loadStaticObject = function(jsonFileName, parent, options, onComp
 };
 Game.prototype.animate = function() {
     this.camera.position.x = this.characters['eve'].body.position.x;
+    this.camera.position.y = this.characters['eve'].body.position.y;
     var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
     var maxSubSteps = 3;
     this.world.step(1.0/60, delta, maxSubSteps);

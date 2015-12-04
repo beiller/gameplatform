@@ -6,8 +6,8 @@ function Controller(character, game) {
     this.blendAnimationDuration = 0.01;
     this.runBlendAnimationSpeed = 0.01;
 
-    this.movementForce = 2000;
-    this.jumpForce = 50000;
+    this.movementForce = 100;
+    this.jumpForce = 18000;
 
 }
 Controller.prototype.attack = function() {
@@ -31,7 +31,7 @@ Controller.prototype.attack = function() {
                     unitDist = 1;
                 }
                 var cont = game.characters[c].controllers[0];
-                game.characters[c].body.applyForce(new CANNON.Vec3(unitDist * cont.movementForce * 20.0, cont.movementForce * 5.0, 0), character.body.position);
+                game.characters[c].body.applyImpulse(new CANNON.Vec3(unitDist * cont.movementForce * 0.5, cont.movementForce * 0.5, 0), character.body.position);
                 game.characters[c].hit(character.characterStats);
             }
 
@@ -56,14 +56,14 @@ Controller.prototype.applyForces = function(delta) {
     var forceVec = new CANNON.Vec3().copy(this.character.movementDirection);
     forceVec.normalize();
     var vLen = Math.abs(this.character.body.velocity.x);
-    if (vLen < this.character.movementSpeed) {
-        this.character.body.applyForce(forceVec.scale(this.character.movementSpeed * this.movementForce), this.character.body.position);
-    } else if(vLen > this.character.movementSpeed) {
+    var f = forceVec.scale(this.movementForce);
+    this.character.body.applyImpulse(f, this.character.body.position);
+    if(vLen > this.character.characterStats.movementSpeed) {
         var v = this.character.body.velocity;
         if(this.character.body.velocity.x > 0) {
-            v.set(this.character.movementSpeed, v.y, v.z);
+            v.set(this.character.characterStats.movementSpeed, v.y, v.z);
         } else {
-            v.set(-this.character.movementSpeed, v.y, v.z);
+            v.set(-this.character.characterStats.movementSpeed, v.y, v.z);
         }
     }
 };

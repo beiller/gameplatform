@@ -248,44 +248,51 @@ var scene3 = function() {
             "models/neweve.json",
             {
                 name: 'eve',
-                scale: 3,
+                scale: 1,
                 sss: true,
                 diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
-                position: [0, 2, 0]
+                position: [0, 0, 0]
             }, function(character) {
                 game.loadClothing("models/neweve_hair.json", character.mesh, {reflectivity: 0.0001, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
                     game.loadClothing("models/neweve_eyes.json", character.mesh, {reflectivity: 0.25}, function() { objectCount+=1;} );
                     game.loadClothing("models/neweve_eyelash.json", character.mesh, {reflectivity: 0.05}, function() { objectCount+=1;} );
                     game.loadClothing("models/neweve_eyebrows.json", character.mesh, {reflectivity: 0.05}, function() { objectCount+=1;} );
                     game.loadClothing("models/neweve_mouth.json", character.mesh, {reflectivity: 0.15}, function() { objectCount+=1;} );
-                //    game.loadStaticObject("models/katana.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
+                    game.loadClothing("models/neweveunderwear.json", character.mesh, {reflectivity: 0.0001}, function() { objectCount+=1;} );
+                    game.loadClothing("models/neweve_outfit.json", character.mesh, {reflectivity: 0.0001, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
+                //    game.loadDynamicObject("models/katana.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
                 character.addController(new UserController(character, game));
             }
         );
 
         //TRY LOADING STATIC KATANA
-        /*game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadStaticObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });*/
+        /*game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
+        game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });*/
 
         game.loadCharacter(
-            "models/adam.json",
+            "models/neweve.json",
             {
                 name: 'monster',
-                scale: 3,
+                scale: 1,
                 sss: true,
-                diffusePath: "models/textures/young_darkskinned_male_diffuse.png",
+                diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
                 specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/normal_none.png",
-                position: [-18, 2, 0]
+                normalPath: "models/textures/newevenormal.png",
+                position: [-10, 0, 0]
             }, function(character) {
-                //game.loadClothing("models/underwear.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
-                //    game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
-                //    game.loadStaticObject("models/staff.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
+                game.loadClothing("models/neweve_hair.json", character.mesh, {reflectivity: 0.0001, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
+                game.loadClothing("models/neweve_eyes.json", character.mesh, {reflectivity: 0.25}, function() { objectCount+=1;} );
+                game.loadClothing("models/neweve_eyelash.json", character.mesh, {reflectivity: 0.05}, function() { objectCount+=1;} );
+                game.loadClothing("models/neweve_eyebrows.json", character.mesh, {reflectivity: 0.05}, function() { objectCount+=1;} );
+                game.loadClothing("models/neweve_mouth.json", character.mesh, {reflectivity: 0.15}, function() { objectCount+=1;} );
+                game.loadClothing("models/neweveunderwear.json", character.mesh, {reflectivity: 0.0001}, function() { objectCount+=1;} );
+                game.loadClothing("models/neweve_outfit.json", character.mesh, {reflectivity: 0.0001, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
+                //    game.loadDynamicObject("models/katana.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
                 character.addController(new AIController(character, game));
             }
         );
@@ -294,7 +301,7 @@ var scene3 = function() {
             "models/eve.json",
             {
                 name: 'monster2',
-                scale: 1,
+                scale: 0.3,
                 sss: true,
                 diffusePath: "models/textures/evediffuse.png",
                 specularPath: "models/textures/specular.png",
@@ -303,7 +310,7 @@ var scene3 = function() {
             }, function(character) {
                 game.loadClothing("models/eveoutfit.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
                 game.loadClothing("models/underwear.json", character.mesh, {reflectivity: 0.05, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
-                game.loadStaticObject("models/wooden-staff.json", find_bone(character.mesh, "Bip01 weapon"));
+                game.loadDynamicObject("models/wooden-staff.json", find_bone(character.mesh, "Bip01 weapon"));
                 character.addController(new AIController(character, game));
             }
         );
@@ -316,6 +323,21 @@ function animate() {
     if(objectCount > 2)
         game.animate();
 }
+var level = {
+    staticObjects: [
+        {model: 'models/cube.json', shape: 'box', position: [0,-4,0]}
+    ]
+};
+
+
+function loadLevel(level) {
+    for(var i in level.staticObjects) {
+        var object = level.staticObjects[i];
+        game.loadStaticObject(object.model, object.shape, object.position);
+    }
+}
+loadLevel(level);
+
 scene3();
 animate();
 </script>
