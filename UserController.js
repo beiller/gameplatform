@@ -13,7 +13,7 @@ function UserController(character, game) {
             '83': function() {  }, //S KEY
             '68': function() { mv.x += 1.0; }, //A KEY
             '65': function() { mv.x -= 1.0; },  //D KEY
-            '32': function() { controller.fsm.magic(); }
+            '32': function() { controller.fsm.sex(); }
         },
         'keyup':{
             '87': function() {  },
@@ -146,7 +146,7 @@ function UserController(character, game) {
             { name: 'jump',          from: 'onGround',                                  to: 'inAir' },
             { name: 'fall',          from: ['inAir', 'BLOCKING', 'waking'],             to: 'freeFall' },
             { name: 'attack',        from: ['onGround', 'freeFall'],                    to: 'attacking' },
-            { name: 'cooldown',      from: ['onGround', 'freeFall', 'attacking'],       to: 'attackcooldown'},
+            { name: 'cooldown',      from: ['onGround', 'freeFall', 'attacking','SEX'],       to: 'attackcooldown'},
             { name: 'finishAirAttack',      from: 'attackcooldown',                     to: 'freeFall'},
             { name: 'land',          from: 'freeFall',                                  to: 'onGround'},
             { name: 'hit',           from: ['attackcooldown', 'idle', 'onGround', 'inAir', 'freeFall', 'attacking', 'attackcooldown', 'STUNNED'], to: 'HIT'},
@@ -154,9 +154,18 @@ function UserController(character, game) {
             { name: 'block',         from: ['onGround', 'freeFall'],              to: 'BLOCKING'},
             { name: 'stun',          from: ['BLOCKING'],                          to: 'STUNNED'},
             { name: 'wake',          from: ['STUNNED', 'HIT'],                    to: 'waking'},
-            { name: 'magic',         from: ['onGround', 'freeFall'],              to: 'attackcooldown'}
+            { name: 'magic',         from: ['onGround', 'freeFall'],              to: 'attackcooldown'},
+            { name: 'sex',           from: ['onGround', 'freeFall'],              to: 'SEX'}
         ],
         callbacks: {
+            onenterSEX: function() {
+                character.playAnimation("fuckself_1_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                controller.updateFunction = controller.idle;
+                var fsm = this;
+                this.sexTimeout = setTimeout(function(){
+                    fsm.cooldown();
+                }, 20000);
+            },
             onenterDEAD: function() {
                 character.playAnimation("DE_Die", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
             },
@@ -164,6 +173,22 @@ function UserController(character, game) {
                 //alert('here');
                 game.explosion(character, new CANNON.Vec3(40000, 40000, 0));
                 return true;
+            },
+            onsex: function() {
+                for(var i in controller.game.characters) {
+                    var c = controller.game.characters[i];
+                    if(c === character) {
+                        continue;
+                    }
+                    var dst = new CANNON.Vec3().copy(c.body.position).distanceTo(character.body.position);
+                    if(dst <= 1.0) {
+                        c.controllers[0].fsm.sex();
+                        c.body.position.copy(character.body.position);
+                        c.mesh.quaternion.copy(character.mesh.quaternion);
+                        return true;
+                    }
+                }
+                return false;
             },
             onenterwaking: function() {
                 this.fall();

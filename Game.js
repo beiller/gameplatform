@@ -97,11 +97,11 @@ Game.prototype.displayText = function(position, text, timeout) {
     setTimeout(function() {
         var sprite = scope.makeTextSprite(text, {backgroundColor: { r:255, g:0, b:0, a:0.5 },borderColor:{ r:0, g:0, b:0, a:1.0 }});
         sprite.position.copy(position);
-        sprite.position.y = ((Math.sin(1.2) * 15) - 19) * 0.5;
+        sprite.position.y = ((Math.sin(1.2) * 15) - 21) * 0.5;
         scope.scene.add(sprite);
         var interval = setInterval(function() {
             var e = clock.getElapsedTime();
-            sprite.position.y = ((Math.sin((e*1.2)+1.2) * 15) - 19) * 0.5;
+            sprite.position.y = ((Math.sin((e*1.2)+1.2) * 15) - 21) * 0.5;
             sprite.position.x += 0.017;
         }, 1000 / 60);
         setTimeout(function(){
@@ -281,7 +281,9 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
                 //create Character object
                 var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, characterMass, position), null, sss.object);
                 game.characters[options.name] = character;
-                mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
+                if(options.scale) {
+                    mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
+                }
                 if(onComplete !== undefined) onComplete(character);
             });
         } else {
@@ -339,10 +341,10 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
         parent.add(skinnedMesh);
         options.skinning = true;
         game.setMaterialOptions(skinnedMesh, options);
-        if(onComplete !== undefined) onComplete(skinnedMesh);
+        if(onComplete) onComplete(skinnedMesh);
     });
 };
-Game.prototype.loadStaticObject = function(jsonFileName, shape, position) {
+Game.prototype.loadStaticObject = function(jsonFileName, shape, position, onComplete) {
     var game = this;
     this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
         var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
@@ -364,7 +366,7 @@ Game.prototype.loadStaticObject = function(jsonFileName, shape, position) {
             game.world.add(groundBody);
         }
         game.statics.push(groundBody);
-        if (onComplete !== undefined) onComplete(mesh);
+        if (onComplete) onComplete(mesh);
     });
 };
 Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onComplete) {
@@ -390,12 +392,16 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
         }
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        if (onComplete !== undefined) onComplete(mesh);
+        if (onComplete) onComplete(mesh);
     });
 };
 Game.prototype.animate = function() {
-    this.camera.position.x = this.characters['eve'].body.position.x;
-    this.camera.position.y = this.characters['eve'].body.position.y;
+    try {
+        this.camera.position.x = this.characters['eve'].body.position.x;
+        this.camera.position.y = this.characters['eve'].body.position.y;
+    } catch(e) {
+
+    }
     var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
     var maxSubSteps = 3;
     this.world.step(1.0/60, delta, maxSubSteps);

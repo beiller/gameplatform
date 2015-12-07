@@ -32,9 +32,18 @@ function AIController(character, game) {
             { name: 'dead',          from: '*',                                  to: 'DEAD'},
             { name: 'block',         from: ['approach', 'search'],               to: 'BLOCKING'},
             { name: 'stun',          from: ['BLOCKING'],                         to: 'STUNNED'},
-            { name: 'wake',          from: ['STUNNED', 'HIT'],                    to: 'waking'},
+            { name: 'wake',          from: ['STUNNED', 'HIT'],                   to: 'waking'},
+            { name: 'sex',           from: 'DEAD',                             to: 'SEX'}
         ],
         callbacks: {
+            onenterSEX: function() {
+                character.playAnimation("fuckself_2_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                controller.updateFunction = controller.idle;
+                var fsm = this;
+                this.hitTimeout = setTimeout(function(){
+                    fsm.dead();
+                }, 20000);
+            },
             onenterwaking: function() {
                 this.activate();
             },
@@ -81,6 +90,9 @@ function AIController(character, game) {
                 //search for enemy
                 controller.updateFunction = function() {
                     var enemy = game.characters[controller.target];
+                    if(!enemy) {
+                        return;
+                    }
                     if(enemy) {
                         var dist = enemy.mesh.position.x - character.mesh.position.x;
                         if(Math.abs(dist) < controller.viewDistance) {
@@ -97,24 +109,26 @@ function AIController(character, game) {
                 var fsm = this;
                 character.characterStats.movementSpeed = controller.attackMovementSpeed;
                 controller.updateFunction = function() {
-                    var dist = game.characters[controller.target].mesh.position.x - character.mesh.position.x;
-                    if(Math.abs(dist) <= character.characterStats.range) {
-                        var rand = Math.random();
-                        if(rand >= controller.blockChanceRatio) {
-                            fsm.attack();
-                        } else {
-                            fsm.block();
+                    if(game.characters[controller.target]) {
+                        var dist = game.characters[controller.target].mesh.position.x - character.mesh.position.x;
+                        if (Math.abs(dist) <= character.characterStats.range) {
+                            var rand = Math.random();
+                            if (rand >= controller.blockChanceRatio) {
+                                fsm.attack();
+                            } else {
+                                fsm.block();
+                            }
                         }
+                        if (Math.abs(dist) >= controller.viewDistance) {
+                            fsm.activate();
+                        }
+                        if (dist > 0) {
+                            dist = 1.0;
+                        } else {
+                            dist = -1.0;
+                        }
+                        character.movementDirection = new CANNON.Vec3(dist, 0, 0);
                     }
-                    if(Math.abs(dist) >= controller.viewDistance) {
-                        fsm.activate();
-                    }
-                    if(dist > 0) {
-                        dist = 1.0;
-                    } else {
-                        dist = -1.0;
-                    }
-                    character.movementDirection = new CANNON.Vec3(dist, 0, 0);
                     controller.applyForces();
                 };
             },
