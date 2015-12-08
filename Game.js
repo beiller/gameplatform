@@ -268,6 +268,53 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
         });
     });
 };
+Game.prototype.loadPhysBones = function(character) {
+
+    function createPhysBone(boneName, parentBoneName, character) {
+        //character.mesh.updateMatrixWorld();
+        var rootBone = character.findBone(parentBoneName);
+        var bone = character.findBone(boneName);
+        var radius = 0.075;
+        var shape = new CANNON.Sphere( radius );
+        var body = new CANNON.Body({
+            mass: 0.15
+        });
+        body.addShape(shape);
+        var pos = new THREE.Vector3().set(
+            bone.matrixWorld.elements[12],
+            bone.matrixWorld.elements[13],
+            bone.matrixWorld.elements[14]
+        );
+        body.position.copy(pos);
+        body.collisionFilterGroup = scope.collisionGroups[1];
+        body.collisionFilterMask = scope.collisionGroups[0];// | this.collisionGroups[1];
+        //body.fixedRotation = true;
+        body.angularDamping = 0.85;
+        body.linearDamping = 0.85;
+        body.updateMassProperties();
+        scope.world.add(body); // Step 3
+        var spring = new CANNON.Spring(body,character.body,{
+            localAnchorA: new CANNON.Vec3(0,0,0),
+            worldAnchorB: new CANNON.Vec3().copy(pos),
+            restLength : 0.0000001,
+            stiffness : 100,
+            damping : 10.0
+        });
+        scope.dynamics.push(new PhysBone(bone, body, rootBone, spring, scope.world, character.mesh));
+        /*if(true) {
+            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
+            sphere.position.copy(body.position);
+            scope.scene.add(sphere);
+            scope.dynamics.push(new Dynamic(sphere, body));
+        }*/
+    }
+    var scope = this;
+    createPhysBone("breast_R", "spine02", character);
+    createPhysBone("breast_L", "spine02", character);
+
+    return null;
+
+};
 Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
     var characterMass = 49.0; //50 KG
     var game = this;
@@ -279,11 +326,13 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
         if(options.sss) {
             game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
                 //create Character object
+                mesh.position.set(position[0], position[1], position[2]);
                 var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, characterMass, position), null, sss.object);
                 game.characters[options.name] = character;
                 if(options.scale) {
                     mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
                 }
+                game.loadPhysBones(character);
                 if(onComplete !== undefined) onComplete(character);
             });
         } else {

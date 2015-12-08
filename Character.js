@@ -22,6 +22,65 @@ Dynamic.prototype.findDynamic = function(game, mesh) {
     }
 };
 
+
+PhysBone.prototype = new Dynamic();
+PhysBone.prototype.constructor = PhysBone;
+function PhysBone(mesh, body, rootBone, spring, world, charObject) {
+    Dynamic.prototype.constructor.call(this, mesh, body);
+    this.rootBone = rootBone;
+    this.spring = spring;
+    this.charObject = charObject;
+    // Compute the force after each step
+    var scope = this;
+    /*world.addEventListener("postStep",function(event){
+        scope.update2();
+    });*/
+}
+PhysBone.prototype.update = function() {
+    //update physics components and copy to mesh position
+    //
+    //position.applyQuaternion(this.mesh.quaternion);
+    //this.mesh.position.copy(position);
+    //this.mesh.quaternion.copy(this.body.quaternion);
+    //this.mesh.position.set(0,0,0);
+    //this.mesh.quaternion.set(0,0,0,1);
+    //var p = new THREE.Vector3(0,0.2,-0.175);
+    this.charObject.updateMatrixWorld(true);
+    var vector = new THREE.Vector3().setFromMatrixPosition(this.mesh.matrixWorld);
+    //var pos = new CANNON.Vec3().copy(vector);
+    //pos.x -= 0.15;
+    //this.body.position.copy(pos);
+    //
+    //this.spring.setWorldAnchorA(pos);
+    this.spring.setWorldAnchorB(new CANNON.Vec3().copy(vector));
+    this.spring.applyForce();
+    //this.body.position.copy(vector);
+
+    //this.body.position.copy(pos);
+    //this.spring.setWorldAnchorB(pos);
+    var position = new THREE.Vector3().copy(this.body.position).sub(vector);
+    //position.y += 0.2;
+    //this.mesh.position.copy(position);
+    //this.charObject.updateMatrixWorld(true);
+    this.mesh.position.x = position.x * 0.15;
+    this.mesh.position.y = position.y * 0.15;
+    //this.mesh.position.z = position.z * 0.2 - 0.15;
+    /*this.mesh.position.set(0,0,0);
+     this.mesh.quaternion.set(0,0,0,1);
+     this.mesh.updateMatrixWorld();
+     */
+    //this.mesh.position.set(0,0,0);
+    //this.mesh.quaternion.set(0,0,0,1);
+    /*this.mesh.updateMatrixWorld();
+     var position = new THREE.Vector3().copy(this.body.position);
+     //position.y += 0.40;
+     //position.z -= 0.25;
+     position.applyMatrix4(new THREE.Matrix4().getInverse(this.mesh.matrixWorld));
+     //this.mesh.position.copy(position);
+     this.mesh.quaternion.y = (position.z - 0.3) * 0.35;*/
+};
+
+
 Character.prototype = new Dynamic();
 Character.prototype.constructor = Character;
 function Character(name, mesh, body, options, sssMesh, characterStats) {
