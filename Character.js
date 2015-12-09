@@ -42,28 +42,46 @@ PhysBone.prototype.update = function() {
     //position.applyQuaternion(this.mesh.quaternion);
     //this.mesh.position.copy(position);
     //this.mesh.quaternion.copy(this.body.quaternion);
-    //this.mesh.position.set(0,0,0);
-    //this.mesh.quaternion.set(0,0,0,1);
+    //this.mesh.position = new THREE.Vector3();
+    //this.mesh.quaternion = new THREE.Quaternion();
     //var p = new THREE.Vector3(0,0.2,-0.175);
-    this.charObject.updateMatrixWorld(true);
+    //this.charObject.updateMatrixWorld(true);
     var vector = new THREE.Vector3().setFromMatrixPosition(this.mesh.matrixWorld);
+
     //var pos = new CANNON.Vec3().copy(vector);
     //pos.x -= 0.15;
     //this.body.position.copy(pos);
     //
     //this.spring.setWorldAnchorA(pos);
-    this.spring.setWorldAnchorB(new CANNON.Vec3().copy(vector));
-    this.spring.applyForce();
+    //this.spring.setWorldAnchorB(new CANNON.Vec3().copy(vector));
+    //this.spring.applyForce();
     //this.body.position.copy(vector);
 
     //this.body.position.copy(pos);
     //this.spring.setWorldAnchorB(pos);
-    var position = new THREE.Vector3().copy(this.body.position).sub(vector);
+    var position = new THREE.Vector3().copy(vector).sub(this.body.position);
+    var dist = position.length();
+    position.normalize();
+    position.multiplyScalar(150 * dist);
+    var force = new CANNON.Vec3().copy(position);
+    this.body.applyLocalForce(force, new CANNON.Vec3(0,0,0));
     //position.y += 0.2;
-    //this.mesh.position.copy(position);
+    //this.mesh.position = position;
+    //this.mesh.updateMatrixWorld(true);
+
+
+    var p = new THREE.Vector3().copy(vector).sub(this.body.position);
     //this.charObject.updateMatrixWorld(true);
-    this.mesh.position.x = position.x * 0.15;
-    this.mesh.position.y = position.y * 0.15;
+    //this.mesh.updateMatrixWorld(true);
+
+    this.mesh.quaternion.x = p.y * 0.75;
+    this.mesh.quaternion.y = p.x * 0.35;
+
+
+
+
+    //this.mesh.position.x = position.x * 0.15;
+    //this.mesh.position.y = position.y * 0.15;
     //this.mesh.position.z = position.z * 0.2 - 0.15;
     /*this.mesh.position.set(0,0,0);
      this.mesh.quaternion.set(0,0,0,1);

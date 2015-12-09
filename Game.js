@@ -277,7 +277,7 @@ Game.prototype.loadPhysBones = function(character) {
         var radius = 0.075;
         var shape = new CANNON.Sphere( radius );
         var body = new CANNON.Body({
-            mass: 0.15
+            mass: 0.25
         });
         body.addShape(shape);
         var pos = new THREE.Vector3().set(
@@ -286,27 +286,27 @@ Game.prototype.loadPhysBones = function(character) {
             bone.matrixWorld.elements[14]
         );
         body.position.copy(pos);
-        body.collisionFilterGroup = scope.collisionGroups[1];
-        body.collisionFilterMask = scope.collisionGroups[0];// | this.collisionGroups[1];
+        body.collisionFilterGroup = scope.collisionGroups[3];
+        body.collisionFilterMask = scope.collisionGroups[2];// | this.collisionGroups[1];
         //body.fixedRotation = true;
-        body.angularDamping = 0.85;
-        body.linearDamping = 0.85;
+        body.angularDamping = 0.999;
+        body.linearDamping = 0.999;
         body.updateMassProperties();
         scope.world.add(body); // Step 3
-        var spring = new CANNON.Spring(body,character.body,{
+        /*var spring = new CANNON.Spring(body,character.body,{
             localAnchorA: new CANNON.Vec3(0,0,0),
             worldAnchorB: new CANNON.Vec3().copy(pos),
             restLength : 0.0000001,
             stiffness : 100,
             damping : 10.0
-        });
-        scope.dynamics.push(new PhysBone(bone, body, rootBone, spring, scope.world, character.mesh));
-        /*if(true) {
-            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
+        });*/
+        scope.dynamics.push(new PhysBone(bone, body, rootBone, null, scope.world, character.mesh));
+
+            /*var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
             sphere.position.copy(body.position);
             scope.scene.add(sphere);
-            scope.dynamics.push(new Dynamic(sphere, body));
-        }*/
+            scope.dynamics.push(new Dynamic(sphere, body));*/
+
     }
     var scope = this;
     createPhysBone("breast_R", "spine02", character);
