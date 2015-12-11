@@ -276,10 +276,7 @@ var scene3 = function() {
 
     });
 }; //end scene1 function
-function animate() {
-	requestAnimationFrame(animate);
-    game.animate();
-}
+
 var level = {
     staticObjects: [
         {model: 'models/cube.json', shape: 'box', position: [0,-4,0]}
@@ -357,10 +354,9 @@ function loadLevel(level) {
                 normalPath: player.normalPath,
                 position: level.player.position
             }, function(characterObject) {
-                for(var j in player.clothing) {
-                    var clothing = player.clothing[j];
+                player.clothing.forEach(function(clothing) {
                     game.loadClothing(clothing.model, characterObject.mesh, clothing.options);
-                }
+                });
                 characterObject.addController(new UserController(characterObject, game));
             }
     );
@@ -400,6 +396,21 @@ function loadLevel(level) {
 game.addGroundPlane(-4);
 game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {loadLevel(level);});
 
+var fps = 60;
+var now;
+var then = Date.now();
+var interval = 1000/fps;
+var delta;
+function animate() {
+    requestAnimationFrame(animate);
+    now = Date.now();
+    delta = now - then;
+
+    if (delta > interval) {
+        game.animate();
+        then = now - (delta % interval);
+    }
+}
 //scene3();
 animate();
 </script>

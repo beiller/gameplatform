@@ -4,8 +4,8 @@ function AIController(character, game) {
     Controller.prototype.constructor.call(this, character, game);
 
     this.target = 'eve';
-    this.attackMovementSpeed = this.character.movementSpeed * 1.25;
-    this.nomalMovementSpeed = this.character.movementSpeed;
+    this.attackMovementSpeed = this.character.characterStats.movementSpeed * 1.25;
+    this.normalMovementSpeed = this.character.characterStats.movementSpeed;
     this.idleTillAttackTime = 1200;
     this.idleAfterAttackTime = 1500;
     this.viewDistance = 10.0;
@@ -21,7 +21,7 @@ function AIController(character, game) {
     this.fsm = StateMachine.create({
         initial: 'idle',
         error: function(eventName, from, to, args, errorCode, errorMessage) {
-            //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+            console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
         },
         events: [
             { name: 'activate',      from: ['idle', 'approach', 'DEAD', 'BLOCKING', 'waking'],       to: 'search' },

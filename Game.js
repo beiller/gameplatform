@@ -21,6 +21,9 @@ function Game() {
 
     this.dynamics = [];
     this.statics = [];
+
+    this.meshCache = {};
+    this.textureCache = {};
 }
 Game.prototype.explosion = function(character, impulse) {
     if(this.world !== undefined) {
@@ -147,9 +150,9 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
     body.position.set(position[0], position[1], position[2]);
     body.collisionFilterGroup = this.collisionGroups[1];
     body.collisionFilterMask = this.collisionGroups[0];// | this.collisionGroups[1];
-    //body.fixedRotation = true;
-    body.angularDamping = 1.0;
-    body.linearDamping = 0.1;
+    body.fixedRotation = true;
+    //body.angularDamping = 0.9999999;
+    body.linearDamping = 0.2;
     body.updateMassProperties();
     this.world.add(body); // Step 3
 
@@ -253,11 +256,22 @@ Game.prototype.loadEnvironment = function(envMapPath, onComplete) {
         if(onComplete !== undefined) onComplete(mesh);
     });
 };
+Game.prototype.loadTextureFile = function(texturePath, callback) {
+    if(this.textureCache[texturePath] !== undefined) {
+        callback(this.textureCache[texturePath]);
+    } else {
+        var scope = this;
+        this.texloader.load(texturePath, function(texture) {
+            scope.textureCache[texturePath] = texture;
+            callback(texture);
+        });
+    }
+};
 Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, normalPath, onComplete) {
     var game = this;
-    this.texloader.load(diffusePath, function(diffuseTexture) {
-        game.texloader.load(specularPath, function(specularTexture) {
-            game.texloader.load(normalPath, function(normalTexture) {
+    this.loadTextureFile(diffusePath, function(diffuseTexture) {
+        game.loadTextureFile(specularPath, function(specularTexture) {
+            game.loadTextureFile(normalPath, function(normalTexture) {
                 var object = new THREE.SkinnedMesh( geometry );
                 var sss = new SkinShaderPass(game.renderer, game.camera, geometry, object, diffuseTexture, specularTexture, normalTexture);
                 object.material = sss.shader;
@@ -293,13 +307,6 @@ Game.prototype.loadPhysBones = function(character) {
         body.linearDamping = 0.999;
         body.updateMassProperties();
         scope.world.add(body); // Step 3
-        /*var spring = new CANNON.Spring(body,character.body,{
-            localAnchorA: new CANNON.Vec3(0,0,0),
-            worldAnchorB: new CANNON.Vec3().copy(pos),
-            restLength : 0.0000001,
-            stiffness : 100,
-            damping : 10.0
-        });*/
         scope.dynamics.push(new PhysBone(bone, body, rootBone, null, scope.world, character.mesh));
 
             /*var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
@@ -315,13 +322,15 @@ Game.prototype.loadPhysBones = function(character) {
     return null;
 
 };
-Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
+Game.prototype.loadCharacter = function(jsonFileName, options, onComplete) {
     var characterMass = 49.0; //50 KG
     var game = this;
     var position = options.position || [0,5,0];
     if(!options.name) return;
-    this.jsonloader.load(jsonPath, function( geometry, materials ) {
-        geometry.computeBoundingSphere();
+
+    this.loadJsonMesh(jsonFileName, function( geometry, materials ) {
+        if(!geometry.boundingSphere)
+            geometry.computeBoundingSphere();
         var radius = geometry.boundingSphere.radius;
         if(options.sss) {
             game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
@@ -352,7 +361,7 @@ Game.prototype.loadCharacter = function(jsonPath, options, onComplete) {
             mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale || 1.0;
             if(onComplete !== undefined) onComplete(character);
         }
-    } );
+    });
 };
 Game.prototype.setMaterialOptions = function(mesh, options) {
     if(options === undefined) {
@@ -378,10 +387,22 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
         _setopt(mesh.material, options);
     }
 };
+Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh) {
+    if(this.meshCache[jsonFileName] !== undefined) {
+        loadedMesh(this.meshCache[jsonFileName].geometry, this.meshCache[jsonFileName].materials);
+    } else {
+        var scope = this;
+        this.jsonloader.load(jsonFileName, function(geometry, materials) {
+            scope.meshCache[jsonFileName] = {geometry: geometry, materials: materials};
+            loadedMesh(geometry, materials);
+        });
+    }
+};
 Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete) {
     var game = this;
     if(options === undefined) options = {};
-    this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
+
+    var loadedMesh = function(geometry, materials) {
         var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
         skinnedMesh.frustumCulled = false;
         skinnedMesh.skeleton = parent.skeleton;
@@ -391,7 +412,8 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
         options.skinning = true;
         game.setMaterialOptions(skinnedMesh, options);
         if(onComplete) onComplete(skinnedMesh);
-    });
+    };
+    this.loadJsonMesh(jsonFileName, loadedMesh);
 };
 Game.prototype.loadStaticObject = function(jsonFileName, shape, position, onComplete) {
     var game = this;
@@ -452,14 +474,15 @@ Game.prototype.animate = function() {
 
     }
     var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
-    var maxSubSteps = 3;
-    this.world.step(1.0/60, delta, maxSubSteps);
+    //var maxSubSteps = 3;
+    //this.world.step(1.0/60, delta);
+    this.world.step(1/60);
     for(var i in this.characters) {
         this.characters[i].update(delta);
     }
-    for(var i in this.dynamics) {
-        this.dynamics[i].update();
-    }
+    this.dynamics.forEach(function(dynamic) {
+        dynamic.update();
+    });
 
     this.render();
 };

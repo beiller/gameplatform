@@ -9,6 +9,8 @@ function Controller(character, game) {
     this.movementForce = 100;
     this.jumpForce = 18000;
 
+    this.updateFunction = this.idle;
+
 }
 Controller.prototype.attack = function() {
     var scope = this;
@@ -50,15 +52,13 @@ Controller.prototype.update = function(delta) {
     }
 };
 Controller.prototype.idle = function(delta) {
-
 };
 Controller.prototype.applyForces = function(delta) {
     var forceVec = new CANNON.Vec3().copy(this.character.movementDirection);
     forceVec.normalize();
-    var vLen = Math.abs(this.character.body.velocity.x);
     var f = forceVec.scale(this.movementForce);
     this.character.body.applyImpulse(f, this.character.body.position);
-    if(vLen > this.character.characterStats.movementSpeed) {
+    if(Math.abs(this.character.body.velocity.x) > this.character.characterStats.movementSpeed) {
         var v = this.character.body.velocity;
         if(this.character.body.velocity.x > 0) {
             v.set(this.character.characterStats.movementSpeed, v.y, v.z);
