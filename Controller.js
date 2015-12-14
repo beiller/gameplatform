@@ -3,8 +3,8 @@
 function Controller(character, game) {
     this.character = character;
     this.game = game;
-    this.blendAnimationDuration = 0.1;
-    this.runBlendAnimationSpeed = 0.1;
+    this.blendAnimationDuration = 0.2;
+    this.runBlendAnimationSpeed = 0.2;
 
     this.movementForce = 100;
     this.jumpForce = 18000;

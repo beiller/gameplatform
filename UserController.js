@@ -268,7 +268,7 @@ function UserController(character, game) {
                 controller.updateFunction = controller.applyForces;
             },
             onenterattacking: function(event, from, to, msg) {
-                character.setAnimation("DE_Combatpunch", {timeScale: 2.0, loop: THREE.LoopOnce});
+                character.setAnimation(character.attackAnimation, {timeScale: 1.0, loop: THREE.LoopOnce});
                 controller.updateFunction = function() {
                     if (character.body.velocity.x > 0) {
                         character.body.velocity.x = Math.min(character.body.velocity.x, 4.0);
@@ -301,9 +301,10 @@ function UserController(character, game) {
 UserController.prototype.checkForGround = function(delta) {
     var r = this.character.mesh.geometry.boundingSphere.radius; //the half-radius to approximate my body not extending to the full sphere
     var body = this.character.body.position;
-    var ray1 = new CANNON.Ray(new CANNON.Vec3(body.x+r*0.75, body.y-r, body.z), new CANNON.Vec3(body.x+r*0.75, body.y-10.0, body.z));
-    var ray2 = new CANNON.Ray(new CANNON.Vec3(body.x-r*0.75, body.y-r, body.z), new CANNON.Vec3(body.x-r*0.75, body.y-10.0, body.z));
+    var ray1 = new CANNON.Ray(new CANNON.Vec3(body.x+r*0.75, body.y, body.z), new CANNON.Vec3(body.x+r*0.75, body.y-10.0, body.z));
+    var ray2 = new CANNON.Ray(new CANNON.Vec3(body.x-r*0.75, body.y, body.z), new CANNON.Vec3(body.x-r*0.75, body.y-10.0, body.z));
     //var ray3 = new CANNON.Ray(body, new CANNON.Vec3(body.x, body.y-1.0, body.z));
+    var r_Bias = 0.01;
 
     if(this.character.body.velocity.y < 0.0001) {
         var options = {
@@ -312,13 +313,13 @@ UserController.prototype.checkForGround = function(delta) {
             mode: CANNON.Ray.CLOSEST
         };
         if (ray1.intersectWorld(game.world, options)) {
-            if (ray1.result.distance <= 0.1) {
+            if (ray1.result.distance <= r+r_Bias) {
                 this.fsm.land();
                 return true;
             }
         }
         if (ray2.intersectWorld(game.world, options)) {
-            if (ray2.result.distance <= 0.1) {
+            if (ray2.result.distance <= r+r_Bias) {
                 this.fsm.land();
                 return true;
             }

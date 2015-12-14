@@ -41,7 +41,8 @@
 	</head>
 
 	<body oncontextmenu="return false;">
-		<script type='text/javascript' src='cannon.js'></script>
+        <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:200px;background-color:white;color:black">Test</div>
+		<script src="cannon.js"></script>
 		<script src="three.js/build/three.js"></script>
 		<script src="javascript-state-machine/state-machine.min.js"></script>
         <script src="gamecontroller.min.js"></script>
@@ -74,213 +75,30 @@
 var game = new Game();
 game.initRendering();
 game.initPhysics();
-
-var scene1 = function() {
-	game.addGroundPlane(-4);
-    /*var clothing = [
-        "princess-hair.json",
-        "princess-thong.json",
-        //"princess-pants.json",
-        //"princess-shirt.json",
-        "princess-boots.json",
-        "princess-top.json",
-        "princess-jewels.json"
-    ];*/
-    var clothing = [
-        {file: "princess-hair.json", options: {reflectivity: 0.0001, emissive: new THREE.Color(0x222222), transparency: true, opacity: 0.7} },
-        //{file: "princess-bodysuit.json", options: {reflectivity: 0.05}},
-        {file: "princess-gloves.json", options: {reflectivity: 0.05} },
-        {file:"princess-thong.json"},
-        {file:"princess-top.json"},
-        {file:"princess-boots.json"},
-        {file:"princess-jewels.json", options: {reflectivity: 0.8} }
-
-    ];
-
-    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
-        game.loadCharacter(
-            "princess.json",
-            {
-                name: 'princess',
-                scale: 1,
-                sss: true,
-                diffusePath: "textures/diffuse_low.png",
-                specularPath: "textures/specular_low.jpg",
-                normalPath: "textures/normal.png"
-            }, function(character) {
-                var loopArr = function(index, arr, callbackFunction) {
-                    game.loadClothing(arr[index].file, character.mesh, arr[index].options, function(clothingObject) {
-                        if(++index < arr.length) {
-                            loopArr(index, arr, callbackFunction);
-                        } else {
-                            if(callbackFunction !== undefined) { callbackFunction(); }
-                        }
-                    });
-                };
-                loopArr(0, clothing, function() {
-                    character.playAnimation('breathe');
-                    animate();
-                });
-            }
-        );
-    });
-}; //end scene1 function
-
-var scene2 = function() {
-	game.addGroundPlane(-4);
-    game.loadEnvironment("textures/tropical_beach.jpg", function(object) {
-        var sceneObjects = [
-            {
-                file: "models/eve_highres.json",
-                settings: {
-                    name: 'eve',
-                    scale: 0.3,
-                    sss: true,
-                    diffusePath: "models/textures/evediffuse.png",
-                    specularPath: "models/textures/specular.png",
-                    normalPath: "models/textures/evenormal.png"
-                }
-            },
-            {
-                file:  "models/alien.json",
-                settings: {
-                    name: 'monster',
-                    scale: 0.3,
-                    sss: true,
-                    diffusePath: "models/textures/Alien_Necromorph_D.png",
-                    specularPath: "models/textures/Alien_Necromorph_S.png",
-                    normalPath: "models/textures/Alien_Necromorph_N.png"
-                }
-            },
-            {
-                file: "models/drip.json",
-                settings: {
-                    name: 'drip',
-                    scale: 0.3,
-                    sss: false,
-                    emissive: new THREE.Color( 0xBBBBBB )
-                }
-            }
-        ];
-        game.loadCharacter(sceneObjects[0].file, sceneObjects[0].settings, function(charEve) {
-            game.loadCharacter(sceneObjects[1].file, sceneObjects[1].settings, function(charAlien) {
-                game.loadCharacter(sceneObjects[2].file, sceneObjects[2].settings, function(charDrip) {
-                    var anim_map = [
-                        {
-                            'eve': {name: 'DE_Charming', duration: 10000},
-                            'monster': {name: 'monster_fondle', duration: 10000},
-                            'drip': {name: 'drip_hide', duration: 10000}
-                        },
-                        {
-                            'eve': {name: 'fondleMonster', duration: 10000, crossFade: true},
-                            'monster': {name: 'monster_fondle', duration: 10000},
-                            'drip': {name: 'drip_hide', duration: 10000}
-                        },
-                        {
-                            'eve':  {name: 'titjob', duration: 10000, crossFade: true},
-                            'monster':  {name: 'monster_titjob', duration: 10000, crossFade: true},
-                            'drip':  {name: 'drip_hide', duration: 10000}
-                        },
-                        {
-                            'eve':  {name: 'titjob2', duration: 10000, crossFade: true},
-                            'monster':  {name: 'monster_titjob2', duration: 10000, crossFade: true},
-                            'drip':  {name: 'drip_hide', duration: 10000}
-                        },
-                        {
-                            'eve':  {name: 'titjob2', duration: 5000, timeScale: 1.5},
-                            'monster':  {name: 'monster_titjob2', duration: 5000, timeScale: 1.5},
-                            'drip':  {name: 'drip_hide', duration: 5000}
-                        },
-                        {
-                            'eve':  {name: 'fuck1', duration: 10000, crossFade: true},
-                            'monster':  {name: 'fuck1', duration: 10000, crossFade: true},
-                            'drip':  {name: 'drip_hide', duration: 10000}
-                        },
-                        {
-                            'eve':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
-                            'monster':  {name: 'fuck1', duration: 5000, timeScale: 1.5},
-                            'drip':  {name: 'drip_hide', duration: 5000}
-                        },
-                        {
-                            'eve':  {name: 'fuck1.finish', duration: 30000, loop: THREE.LoopPingPong},
-                            'monster':  {name: 'monster_fuck1.finish', duration: 30000, loop: THREE.LoopOnce},
-                            'drip':  {name: 'drip_out', duration: 30000, loop: THREE.LoopOnce}
-                        }
-                    ];
-
-                    var currentAnimation = 0;
-                    var changeAnimation = function() {
-                        var map = anim_map[currentAnimation];
-                        var duration = 10000;
-                        for(characterName in map) {
-                            duration = map[characterName].duration || duration;
-                            var animationName = map[characterName].name;
-                            var options = map[characterName];
-                            game.getCharacter(characterName).playAnimation(animationName, options);
-                            game.getCharacter(characterName).playingAnimation = true;
-                        }
-                        if(currentAnimation + 1 == anim_map.length) {
-                            currentAnimation = 0;
-                        } else {
-                            currentAnimation += 1;
-                        }
-                        setTimeout(changeAnimation, duration);
-                    };
-                    changeAnimation();
-                    animate();
-                });
-            });
-        });
-    });
-}; //end scene2 function
 var objectCount = 0;
-function find_bone(mesh, bone_name) {
-    for(var bone in mesh.skeleton.bones) {
-        if(mesh.skeleton.bones[bone].name === bone_name) {
-            return mesh.skeleton.bones[bone];
-        }
-    }
+var outfit2 = [
+    {
+        model: "models/neweve_hair.json",
+        options: {reflectivity: 0.0001, color: new THREE.Color(0x110000)}
+    },
+    {model: "models/neweve_eyes.json",options: {reflectivity: 0.25}},
+    {model: "models/neweve_eyelash.json"},
+    {model: "models/neweve_eyebrows.json"},
+    {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
+    {model: "models/neweve_fingernails.json",options: {reflectivity: 0.75, color: new THREE.Color(0x660000)}},
+    {model: "models/armor_armbands.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
+    {model: "models/armor_legbands.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
+    {model: "models/thighhigh.json",options: {reflectivity: 0.000001, color: new THREE.Color(0xeeeeee)}},
+    {model: "models/armor_boob.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
+    {model: "models/armor_thong.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
+];
+var bricks = [];
+for(var i = -10; i<10; i++) {
+    bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3,0]})
 }
-var scene3 = function() {
-	game.addGroundPlane(-4);
-    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
-		game.loadCharacter(
-            "models/neweve.json",
-            {
-                name: 'eve',
-                scale: 1,
-                sss: true,
-                diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
-                specularPath: "models/textures/specular.png",
-                normalPath: "models/textures/newevenormal.png",
-                position: [0, 0, 0]
-            }, function(character) {
-                game.loadClothing("models/neweve_hair.json", character.mesh, {reflectivity: 0.0001, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;});
-                    game.loadClothing("models/neweve_eyes.json", character.mesh, {reflectivity: 0.25}, function() { objectCount+=1;} );
-                    game.loadClothing("models/neweve_eyelash.json", character.mesh, {reflectivity: 0.05}, function() { objectCount+=1;} );
-                    game.loadClothing("models/neweve_eyebrows.json", character.mesh, {reflectivity: 0.05}, function() { objectCount+=1;} );
-                    game.loadClothing("models/neweve_mouth.json", character.mesh, {reflectivity: 0.15}, function() { objectCount+=1;} );
-                    game.loadClothing("models/neweveunderwear.json", character.mesh, {reflectivity: 0.0001}, function() { objectCount+=1;} );
-                    //game.loadClothing("models/neweve_outfit.json", character.mesh, {reflectivity: 0.0001, color: new THREE.Color(Math.random() * 0xffffff)}, function() { objectCount+=1;} );
-                //    game.loadDynamicObject("models/katana.json", find_bone(character.mesh, "Bip01 weapon"), {reflectivity: 0.5 });
-                character.addController(new UserController(character, game));
-            }
-        );
-
-        //TRY LOADING STATIC KATANA
-        /*game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });
-        game.loadDynamicObject("models/katana.json", null, { scale: 0.33333, position: [0,1,0], reflectivity: 0.5 });*/
-
-    });
-}; //end scene1 function
 
 var level = {
-    staticObjects: [
-        {model: 'models/cube.json', shape: 'box', position: [0,-4,0]}
-    ],
+    staticObjects: bricks,
     characters: {
         evil_eve: {
             model: "models/neweve.json",
@@ -288,21 +106,9 @@ var level = {
             diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
             specularPath: "models/textures/specular.png",
             normalPath: "models/textures/newevenormal.png",
-            clothing: [
-                {
-                    model: "models/neweve_hair.json",
-                    options: {reflectivity: 0.0001, color: new THREE.Color(0x110000)}
-                },
-                {model: "models/neweve_eyes.json",options: {reflectivity: 0.25}},
-                {model: "models/neweve_eyelash.json"},
-                {model: "models/neweve_eyebrows.json"},
-                {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
-                {model: "models/neweve_fingernails.json",options: {reflectivity: 0.75, color: new THREE.Color(0x660000)}},
-                {model: "models/neweve_outfit.json",options: {color: new THREE.Color(Math.random() * 0xffffff)}},
-                {
-                    model: "models/neweveunderwear.json",
-                    options: {reflectivity: 0.0001, color: new THREE.Color(Math.random() * 0xffffff)}
-                }
+            clothing: outfit2,
+            equipment: [
+                {model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.25, color: new THREE.Color(0xE7D2AA) }}
             ]
         },
         good_eve: {
@@ -311,27 +117,17 @@ var level = {
             diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
             specularPath: "models/textures/specular.png",
             normalPath: "models/textures/newevenormal.png",
-            clothing: [
-                {
-                    model: "models/neweve_hair.json",
-                    options: {reflectivity: 0.0001, color: new THREE.Color(0xFFA2FA)}
-                },
-                {model: "models/neweve_eyes.json",options: {reflectivity: 0.25}},
-                {model: "models/neweve_eyelash.json"},
-                {model: "models/neweve_eyebrows.json"},
-                {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
-                {model: "models/neweve_fingernails.json",options: {reflectivity: 0.75, color: new THREE.Color(0xFFA2FA)}},
-                {model: "models/neweve_outfit.json",options: {color: new THREE.Color(Math.random() * 0xffffff)}},
-                {
-                    model: "models/neweveunderwear.json",
-                    options: {reflectivity: 0.0001, color: new THREE.Color(Math.random() * 0xffffff)}
-                }
+            clothing: outfit2,
+            equipment: [
+                {model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.25, color: new THREE.Color(0xE7A488) }}
             ]
         }
     },
     npcs : [
         {character: 'evil_eve', position: [-20,0,0]},
-        {character: 'evil_eve', position: [20,0,0]}
+        {character: 'evil_eve', position: [20,0,0]},
+        {character: 'evil_eve', position: [-10,0,0]},
+        {character: 'evil_eve', position: [10,0,0]}
     ],
     player: {
         character: 'good_eve', position: [0,0,0]
@@ -355,7 +151,10 @@ function loadLevel(level) {
                 position: level.player.position
             }, function(characterObject) {
                 player.clothing.forEach(function(clothing) {
-                    game.loadClothing(clothing.model, characterObject.mesh, clothing.options);
+                    game.loadClothing(clothing.model, characterObject.mesh, clothing.options, function(mesh) {characterObject.updateClothingGeometry(mesh)});
+                });
+                player.equipment.forEach(function(item) {
+                    game.loadDynamicObject(item.model, characterObject.findBone(item.bone), item.options);
                 });
                 characterObject.addController(new UserController(characterObject, game));
             }
@@ -381,10 +180,12 @@ function loadLevel(level) {
                     normalPath: char.normalPath,
                     position: npc.position
                 }, function(characterObject) {
-                    for(var j in char.clothing) {
-                        var clothing = char.clothing[j];
+                    player.clothing.forEach(function(clothing) {
                         game.loadClothing(clothing.model, characterObject.mesh, clothing.options);
-                    }
+                    });
+                    player.equipment.forEach(function(item) {
+                        game.loadDynamicObject(item.model, characterObject.findBone(item.bone), item.options);
+                    });
                     characterObject.addController(new AIController(characterObject, game));
                 }
         );
@@ -397,22 +198,15 @@ game.addGroundPlane(-4);
 game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {loadLevel(level);});
 
 var fps = 60;
-var now;
-var then = Date.now();
 var interval = 1000/fps;
-var delta;
-function animate() {
-    requestAnimationFrame(animate);
-    now = Date.now();
-    delta = now - then;
 
-    if (delta > interval) {
-        game.animate();
-        then = now - (delta % interval);
-    }
+function draw() {
+    requestAnimationFrame(draw);
+    game.render();
 }
+var logicInterval = setInterval(function() { game.animate(); }, Math.ceil(interval));
 //scene3();
-animate();
+draw();
 </script>
 
 	</body>

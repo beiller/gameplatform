@@ -137,7 +137,7 @@ function AIController(character, game) {
                 controller.updateFunction = controller.idle;
             },
             onenterattacking:  function(event, from, to, msg) {
-                character.playAnimation("DE_Combatattack", {timeScale: 2.0});
+                character.playAnimation(character.attackAnimation, {timeScale: 1.0});
                 controller.attack();
             },
             onenterattackcooldown:  function(event, from, to, msg) {

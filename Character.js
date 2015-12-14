@@ -9,9 +9,6 @@ Dynamic.prototype.update = function() {
         this.body.position.z = 0.0;
         this.mesh.position.copy(this.body.position);
         this.mesh.quaternion.copy(this.body.quaternion);
-    } else {
-        this.mesh.position.set(0,0,0);
-        this.mesh.quaternion.set(0,0,0,1);
     }
 };
 Dynamic.prototype.findDynamic = function(game, mesh) {
@@ -21,6 +18,14 @@ Dynamic.prototype.findDynamic = function(game, mesh) {
         }
     }
 };
+
+Item.prototype = new Dynamic();
+Item.prototype.constructor = Item;
+function Item(mesh, body, game) {
+    Dynamic.prototype.constructor.call(this, mesh, body);
+    this.game = game;
+}
+
 
 
 PhysBone.prototype = new Dynamic();
@@ -114,6 +119,9 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.stunned = false;
     this.blocking = false;
 
+    //this.attackAnimation = "DE_Combatpunch";
+    this.attackAnimation = "DE_Combatattack";
+
 
     this.animations = {};
     this.animationMixer = new THREE.AnimationMixer(this.mesh);
@@ -126,7 +134,31 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
 
     this.characterStats = new CharacterStats();
     this.createHealthBar();
+
+    this.clothingMesh = null;
 }
+Character.prototype.updateClothingGeometry = function(mesh) {
+    /*if(this.clothingMesh === null) {
+        this.clothingMesh = new THREE.SkinnedMesh( mesh.geometry.clone(), mesh.material );
+        //this.clothingMesh.skeleton = this.mesh.skeleton;
+        if(!(this.clothingMesh.material instanceof THREE.MultiMaterial)) {
+            this.clothingMesh.material = new THREE.MultiMaterial( [this.clothingMesh.material] );
+        }
+        this.mesh.add(this.clothingMesh);
+    } else {
+        //get offset
+        var materialOffset = this.clothingMesh.material.materials.length;
+        //merge materials
+        if(mesh.material instanceof THREE.MultiMaterial) {
+            for (var i = 0; i < mesh.material.materials.length; i++) {
+                this.clothingMesh.material.materials.push(mesh.material.materials[i]);
+            }
+        } else {
+            this.clothingMesh.material.materials.push(mesh.material);
+        }
+        this.clothingMesh.geometry.merge(mesh.geometry, mesh.matrix, materialOffset);
+    }*/
+};
 Character.prototype.createHealthBar = function() {
     var sprite = new THREE.Sprite();
     var healthRatio = this.characterStats.health / this.characterStats.maxHealth;
@@ -180,14 +212,13 @@ Character.prototype.update = function(delta) {
         this.mesh.frustumCulled = false;
         if(this.sssMesh) {
             this.sssMesh.position.copy(this.body.position);
-            this.mesh.frustumCulled = false;
+            //this.mesh.frustumCulled = false;
         }
         //this.mesh.quaternion.copy(this.body.quaternion);
         //update controller?
-        if(this.controllers.length > 0) {
-            for(var i in this.controllers)
-                this.controllers[i].update(delta);
-        }
+        this.controllers.forEach(function(controller) {
+            controller.update(delta);
+        });
     }
 };
 Character.prototype.hit = function(enemyStats) {
@@ -197,7 +228,7 @@ Character.prototype.hit = function(enemyStats) {
     if(!this.blocking) {
         var damage = enemyStats.damage + Math.ceil(Math.random() * 2.0);
         console.log(this.name + ' takes ' + damage + ' damage.');
-        game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 4, 1.0), damage, 3000);
+        game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 9, 1.0), damage, 3000);
         this.characterStats.health = this.characterStats.health - damage;
         if (this.characterStats.health <= 0) {
             console.log(this.name + " has died.");
@@ -210,7 +241,7 @@ Character.prototype.hit = function(enemyStats) {
         }
     } else {
         console.log(this.name + " blocked an attack!");
-        game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 4, 1.0), "Blocked", 3000);
+        game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 9, 1.0), "Blocked", 3000);
         //determine chance to stun me
         var rand = Math.random();
         if(rand <= this.characterStats.stunWhileBlockingChance) {
@@ -218,7 +249,7 @@ Character.prototype.hit = function(enemyStats) {
             this.controllers[0].fsm.stun();
             var scope = this;
             setTimeout(function() {
-                game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y + 4, 1.0), "Stunned", 3000);
+                game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y + 9, 1.0), "Stunned", 3000);
             }, 100);
         }
     }

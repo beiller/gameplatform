@@ -413,7 +413,8 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
         game.setMaterialOptions(skinnedMesh, options);
         if(onComplete) onComplete(skinnedMesh);
     };
-    this.loadJsonMesh(jsonFileName, loadedMesh);
+    //this.loadJsonMesh(jsonFileName, loadedMesh);
+    this.jsonloader.load(jsonFileName, loadedMesh);
 };
 Game.prototype.loadStaticObject = function(jsonFileName, shape, position, onComplete) {
     var game = this;
@@ -445,7 +446,7 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
     var mass = options.mass || 10.0;
     var position = options.position || [0,1,0];
     var game = this;
-    this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
+    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
         var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
         position = [mesh.position.x, mesh.position.y, mesh.position.z];
         game.setMaterialOptions(mesh, options);
@@ -455,11 +456,12 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
         game.dynamics.push(dynamic);
         if(parent) {
             parent.add(mesh);
-            mesh.position.set(0,0,0);
+            mesh.position = new THREE.Vector3();
+            mesh.rotation = new THREE.Quaternion();
             dynamic.sleep = true;
         } else {
             game.scene.add(mesh);
-            mesh.scale.set(0.3333, 0.3333, 0.3333);
+            //mesh.scale.set(0.3333, 0.3333, 0.3333);
         }
         mesh.castShadow = true;
         mesh.receiveShadow = true;
@@ -469,7 +471,11 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
 Game.prototype.animate = function() {
     try {
         this.camera.position.x = this.characters['eve'].body.position.x;
-        this.camera.position.y = this.characters['eve'].body.position.y;
+        this.camera.position.y = this.characters['eve'].body.position.y + 0.2;
+        if(Math.abs(this.characters['eve'].movementDirection.x) > 0.1) {
+            var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -0.2 * this.characters['eve'].movementDirection.x);
+            this.camera.quaternion.slerp(qtarget, 0.25);
+        }
     } catch(e) {
 
     }
@@ -484,7 +490,7 @@ Game.prototype.animate = function() {
         dynamic.update();
     });
 
-    this.render();
+    //this.render();
 };
 Game.prototype.render = function() {
     if(!this.cubemapRendered) {
