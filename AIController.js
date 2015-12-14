@@ -155,9 +155,8 @@ function AIController(character, game) {
                         fsm.activate();
                         character.characterStats.health = 20;
                     }, 30000);*/
-                    var bone = character.findBone("Bip01 weapon");
+                    var bone = character.findBone("weapon");
                     var mesh = bone.children[0];
-                    mesh.scale.set(0.3333, 0.3333, 0.3333);
                     bone.remove(mesh);
                     var dynamic = new Dynamic().findDynamic(controller.game, mesh);
                     bone.localToWorld(mesh.position);
@@ -165,7 +164,7 @@ function AIController(character, game) {
                     dynamic.sleep = false;
                     controller.game.scene.add(mesh);
                 } catch(e) {
-                    console.log(e);
+                    console.log("Failed to detach weapon", e);
                 }
                 character.playAnimation("DE_Die", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
             },

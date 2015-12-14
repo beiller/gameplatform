@@ -97,6 +97,15 @@ for(var i = -10; i<10; i++) {
     bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3,0]})
 }
 
+var items = {
+    "firesword": {
+        model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.25, color: new THREE.Color(0xFF8888) }
+    },
+    "icesword": {
+        model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.25, color: new THREE.Color(0x8888FF) }
+    }
+}
+
 var level = {
     staticObjects: bricks,
     characters: {
@@ -107,9 +116,7 @@ var level = {
             specularPath: "models/textures/specular.png",
             normalPath: "models/textures/newevenormal.png",
             clothing: outfit2,
-            equipment: [
-                {model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.25, color: new THREE.Color(0xE7D2AA) }}
-            ]
+            equipment:  [ items.firesword ]
         },
         good_eve: {
             model: "models/neweve.json",
@@ -118,9 +125,7 @@ var level = {
             specularPath: "models/textures/specular.png",
             normalPath: "models/textures/newevenormal.png",
             clothing: outfit2,
-            equipment: [
-                {model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.25, color: new THREE.Color(0xE7A488) }}
-            ]
+            equipment: [ items.icesword ]
         }
     },
     npcs : [

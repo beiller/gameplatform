@@ -377,7 +377,8 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
         mat.transparency = options.transparency || true;
         mat.opacity  = options.opacity || 1.0;
         mat.side  = THREE.DoubleSide;
-        mat.color = options.color || mat.color;
+        mat.color = options.color || new THREE.Color( 0x888888 );
+        mat.needsUpdate = true;
     }
     if(mesh.material.type == "MultiMaterial") {
         for(var i in mesh.material.materials) {
@@ -418,7 +419,7 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
 };
 Game.prototype.loadStaticObject = function(jsonFileName, shape, position, onComplete) {
     var game = this;
-    this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
+    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
         var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
         mesh.position.set(position[0], position[1], position[2]);
         //game.setMaterialOptions(mesh, options);
@@ -447,7 +448,7 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
     var position = options.position || [0,1,0];
     var game = this;
     this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
-        var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+        var mesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
         position = [mesh.position.x, mesh.position.y, mesh.position.z];
         game.setMaterialOptions(mesh, options);
         var physEnabled = options.enabled !== undefined ? options.enabled : true;
