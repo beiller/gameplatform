@@ -390,7 +390,17 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
 };
 Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh) {
     if(this.meshCache[jsonFileName] !== undefined) {
-        loadedMesh(this.meshCache[jsonFileName].geometry, this.meshCache[jsonFileName].materials);
+        var geom = this.meshCache[jsonFileName].geometry;
+        var newGeom = geom.clone();
+        for ( var i = 0; i < geom.skinIndices.length; i ++ ) {
+            var skin = geom.skinIndices[ i ];
+            var skinCopy = skin.clone();
+            newGeom.skinIndices.push( skinCopy );
+            var weight = geom.skinWeights[ i ];
+            var weightCopy = weight.clone();
+            newGeom.skinWeights.push( weightCopy );
+        }
+        loadedMesh(newGeom, this.meshCache[jsonFileName].materials);
     } else {
         var scope = this;
         this.jsonloader.load(jsonFileName, function(geometry, materials) {
@@ -402,14 +412,13 @@ Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh) {
 Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete) {
     var game = this;
     if(options === undefined) options = {};
-
     var loadedMesh = function(geometry, materials) {
         var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-        skinnedMesh.frustumCulled = false;
+        //skinnedMesh.frustumCulled = false;
         skinnedMesh.skeleton = parent.skeleton;
         skinnedMesh.castShadow = true;
         skinnedMesh.receiveShadow = true;
-        parent.add(skinnedMesh);
+        //parent.add(skinnedMesh);
         options.skinning = true;
         game.setMaterialOptions(skinnedMesh, options);
         if(onComplete) onComplete(skinnedMesh);
@@ -447,7 +456,7 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
     var mass = options.mass || 10.0;
     var position = options.position || [0,1,0];
     var game = this;
-    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
+    this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
         var mesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
         position = [mesh.position.x, mesh.position.y, mesh.position.z];
         game.setMaterialOptions(mesh, options);
@@ -462,7 +471,6 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
             dynamic.sleep = true;
         } else {
             game.scene.add(mesh);
-            //mesh.scale.set(0.3333, 0.3333, 0.3333);
         }
         mesh.castShadow = true;
         mesh.receiveShadow = true;

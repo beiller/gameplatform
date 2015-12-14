@@ -41,7 +41,7 @@
 	</head>
 
 	<body oncontextmenu="return false;">
-        <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:200px;background-color:white;color:black">Test</div>
+        <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:50px;background-color:white;color:black">Test</div>
 		<script src="cannon.js"></script>
 		<script src="three.js/build/three.js"></script>
 		<script src="javascript-state-machine/state-machine.min.js"></script>
@@ -85,7 +85,7 @@ var outfit2 = [
     {model: "models/neweve_eyelash.json"},
     {model: "models/neweve_eyebrows.json"},
     {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
-    {model: "models/neweve_fingernails.json",options: {reflectivity: 0.75, color: new THREE.Color(0x660000)}},
+    {model: "models/neweve_fingernails.json",options: {reflectivity: 0.5, color: new THREE.Color(0x660000)}},
     {model: "models/armor_armbands.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
     {model: "models/armor_legbands.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
     {model: "models/thighhigh.json",options: {reflectivity: 0.000001, color: new THREE.Color(0xeeeeee)}},
@@ -131,15 +131,26 @@ var level = {
     npcs : [
         {character: 'evil_eve', position: [-20,0,0]},
         {character: 'evil_eve', position: [20,0,0]},
-        {character: 'evil_eve', position: [-10,0,0]},
-        {character: 'evil_eve', position: [10,0,0]}
+        {character: 'evil_eve', position: [-11,0,0]},
+        {character: 'evil_eve', position: [11,0,0]}
     ],
     player: {
         character: 'good_eve', position: [0,0,0]
     }
 };
 
-
+function loadClothingSeq(character, clothingArray, arrayIndex, onCompletionFunction) {
+    var clothing = clothingArray[arrayIndex];
+    game.loadClothing(clothing.model, character.mesh, clothing.options, function(mesh) {
+        character.updateClothingGeometry(mesh);
+        var onComplete = null;
+        if(arrayIndex < clothingArray.length-1) {
+            loadClothingSeq(character, clothingArray, arrayIndex+1, onCompletionFunction);
+        } else {
+            onCompletionFunction();
+        }
+    });
+}
 
 function loadLevel(level) {
     var id_counter = 0;
@@ -155,8 +166,8 @@ function loadLevel(level) {
                 normalPath: player.normalPath,
                 position: level.player.position
             }, function(characterObject) {
-                player.clothing.forEach(function(clothing) {
-                    game.loadClothing(clothing.model, characterObject.mesh, clothing.options, function(mesh) {characterObject.updateClothingGeometry(mesh)});
+                loadClothingSeq(characterObject, player.clothing, 0, function() {
+                    characterObject.mesh.add(characterObject.clothingMesh);
                 });
                 player.equipment.forEach(function(item) {
                     game.loadDynamicObject(item.model, characterObject.findBone(item.bone), item.options);
@@ -170,23 +181,23 @@ function loadLevel(level) {
     });
 
     level.npcs.forEach(function(npc) {
-        var char = level.characters[npc.character];
-        if(char === null) {
+        var player = level.characters[npc.character];
+        if(player === null) {
             console.log('no character by name: ', npc);
             return;
         }
         game.loadCharacter(
-                char.model,
+                player.model,
                 {
                     name: 'monster'+id_counter,
-                    sss: char.sss,
-                    diffusePath: char.diffusePath,
-                    specularPath: char.specularPath,
-                    normalPath: char.normalPath,
+                    sss: player.sss,
+                    diffusePath: player.diffusePath,
+                    specularPath: player.specularPath,
+                    normalPath: player.normalPath,
                     position: npc.position
                 }, function(characterObject) {
-                    player.clothing.forEach(function(clothing) {
-                        game.loadClothing(clothing.model, characterObject.mesh, clothing.options);
+                    loadClothingSeq(characterObject, player.clothing, 0, function() {
+                        characterObject.mesh.add(characterObject.clothingMesh);
                     });
                     player.equipment.forEach(function(item) {
                         game.loadDynamicObject(item.model, characterObject.findBone(item.bone), item.options);
@@ -204,12 +215,26 @@ game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {loadLevel(le
 
 var fps = 60;
 var interval = 1000/fps;
-
+var drawTime = null;
+var logicTime = null;
+var frameTimer = new THREE.Clock(true);
+var frameCount = 0;
+var logicCount = 0;
 function draw() {
     requestAnimationFrame(draw);
     game.render();
+	if(frameTimer.getElapsedTime() >= 1.0) {
+		document.getElementById("debugConsole").innerHTML = "drawFPS: " + frameCount + "<br/>logicFPS: " + logicCount;
+		frameCount = 0;
+		logicCount = 0;
+		frameTimer = new THREE.Clock(true);
+	}
+	frameCount++;
 }
-var logicInterval = setInterval(function() { game.animate(); }, Math.ceil(interval));
+var logicInterval = setInterval(function() {
+	game.animate();
+	logicCount++;
+}, Math.ceil(interval));
 //scene3();
 draw();
 </script>

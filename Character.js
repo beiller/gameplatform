@@ -88,28 +88,46 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.createHealthBar();
 
     this.clothingMesh = null;
+    this.clothingMeshes = [];
 }
 Character.prototype.updateClothingGeometry = function(mesh) {
-    /*if(this.clothingMesh === null) {
-        this.clothingMesh = new THREE.SkinnedMesh( mesh.geometry.clone(), mesh.material );
-        //this.clothingMesh.skeleton = this.mesh.skeleton;
-        if(!(this.clothingMesh.material instanceof THREE.MultiMaterial)) {
-            this.clothingMesh.material = new THREE.MultiMaterial( [this.clothingMesh.material] );
-        }
-        this.mesh.add(this.clothingMesh);
-    } else {
-        //get offset
-        var materialOffset = this.clothingMesh.material.materials.length;
-        //merge materials
-        if(mesh.material instanceof THREE.MultiMaterial) {
-            for (var i = 0; i < mesh.material.materials.length; i++) {
-                this.clothingMesh.material.materials.push(mesh.material.materials[i]);
+    this.clothingMeshes.push(mesh);
+    //this.mesh.add(mesh);
+    try {
+        if(this.clothingMesh === null) {
+            this.clothingMesh = new THREE.SkinnedMesh( mesh.geometry, mesh.material );
+            this.clothingMesh.skeleton = this.mesh.skeleton;
+            if(!(this.clothingMesh.material instanceof THREE.MultiMaterial)) {
+                this.clothingMesh.material = new THREE.MultiMaterial( [this.clothingMesh.material] );
             }
         } else {
-            this.clothingMesh.material.materials.push(mesh.material);
+            //get offset
+            var materialOffset = this.clothingMesh.material.materials.length;
+            //merge materials
+            if(mesh.material instanceof THREE.MultiMaterial) {
+                for (var i = 0; i < mesh.material.materials.length; i++) {
+                    this.clothingMesh.material.materials.push(mesh.material.materials[i]);
+                }
+            } else {
+                this.clothingMesh.material.materials.push(mesh.material);
+            }
+            this.clothingMesh.geometry.merge(mesh.geometry, undefined, materialOffset);
+            /*
+                Copy skin weights man!
+            */
+            var geom = mesh.geometry;
+            for ( var i = 0, il = geom.skinIndices.length; i < il; i ++ ) {
+                var skin = geom.skinIndices[ i ];
+                var skinCopy = skin.clone();
+                this.clothingMesh.geometry.skinIndices.push( skinCopy );
+                var weight = geom.skinWeights[ i ];
+                var weightCopy = weight.clone();
+                this.clothingMesh.geometry.skinWeights.push( weightCopy );
+            }
         }
-        this.clothingMesh.geometry.merge(mesh.geometry, mesh.matrix, materialOffset);
-    }*/
+    } catch(e) {
+
+    }
 };
 Character.prototype.createHealthBar = function() {
     var sprite = new THREE.Sprite();

@@ -41,26 +41,21 @@ function UserController(character, game) {
     };
     var onMouseDownFunction = function( event ) {
         //console.log(event);
+        event.preventDefault();
         if(event.buttons == 1) {
-            try {
-                controller.fsm.attack();
-            } catch (e) {
-            }
+            controller.fsm.attack();
         } else if(event.buttons == 2) {
-            try {
-                controller.fsm.block();
-            } catch (e) {
-            }
+            controller.fsm.block();
         }
+        return false;
     };
     var onMouseUpFunction = function( event ) {
         //console.log(event);
+        event.preventDefault();
         if(event.buttons == 2) {
-            try {
-                controller.fsm.fall();
-            } catch (e) {
-            }
+            controller.fsm.fall();
         }
+        return false;
     };
     window.addEventListener( 'keydown', onDocumentKeyDown, false );
     window.addEventListener( 'keyup', onDocumentKeyUp, false );
@@ -78,7 +73,7 @@ function UserController(character, game) {
         //this.container.addEventListener('touchmove', function(e) { console.log('touchmove', e); });
         //this.container.addEventListener('touchcancel', function(e) { console.log('touchcancel', e); });
     }
-    var control = new MobileControl();
+    //var control = new MobileControl();
 
 
     var mobileControlData = {
