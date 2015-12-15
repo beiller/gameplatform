@@ -72,177 +72,192 @@
 <script>
 
 
-var game = new Game();
-game.initRendering();
-game.initPhysics();
-var objectCount = 0;
-var outfit2 = [
+function loadJSON(path, success, error) {
+    var xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function()
     {
-        model: "models/neweve_hair.json",
-        options: {reflectivity: 0.0001, color: new THREE.Color(0x110000)}
-    },
-    {model: "models/neweve_eyes.json",options: {reflectivity: 0.15}},
-    {model: "models/neweve_eyelash.json"},
-    {model: "models/neweve_eyebrows.json"},
-    {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
-    {model: "models/neweve_fingernails.json",options: {reflectivity: 0.25, color: new THREE.Color(0x660000)}},
-    {model: "models/armor_armbands.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
-    {model: "models/armor_legbands.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
-    {model: "models/thighhigh.json",options: {reflectivity: 0.000001, color: new THREE.Color(0xeeeeee)}},
-    {model: "models/armor_boob.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
-    {model: "models/armor_thong.json",options: {reflectivity: 0.01, color: new THREE.Color(0x777777)}},
-    {model: "models/neweveunderwear.json",options: {reflectivity: 0.01, color: new THREE.Color(0xAA7777)}}
-];
-var bricks = [];
-for(var i = -10; i<10; i++) {
-    bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3,0]})
-}
-
-var items = {
-    "firesword": {
-        model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.5, color: new THREE.Color(0xFF7E7A) }
-    },
-    "icesword": {
-        model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.5, color: new THREE.Color(0x5D91FF) }
-    }
-};
-
-var level = {
-    staticObjects: bricks,
-    characters: {
-        evil_eve: {
-            model: "models/neweve.json",
-            sss: true,
-            diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
-            specularPath: "models/textures/specular.png",
-            normalPath: "models/textures/newevenormal.png",
-            clothing: outfit2,
-            equipment:  [ items.firesword ]
-        },
-        good_eve: {
-            model: "models/neweve.json",
-            sss: true,
-            diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
-            specularPath: "models/textures/specular.png",
-            normalPath: "models/textures/newevenormal.png",
-            clothing: outfit2,
-            equipment: [ items.icesword ]
-        }
-    },
-    npcs : [
-        {character: 'evil_eve', position: [-20,0,0]},
-        {character: 'evil_eve', position: [20,0,0]},
-        {character: 'evil_eve', position: [-11,0,0]},
-        {character: 'evil_eve', position: [11,0,0]}
-    ],
-    player: {
-        character: 'good_eve', position: [0,0,0]
-    }
-};
-
-function loadClothingSeq(character, clothingArray, arrayIndex, onCompletionFunction) {
-    var clothing = clothingArray[arrayIndex];
-    game.loadClothing(clothing.model, character.mesh, clothing.options, function(mesh) {
-        character.updateClothingGeometry(mesh);
-        var onComplete = null;
-        if(arrayIndex < clothingArray.length-1) {
-            loadClothingSeq(character, clothingArray, arrayIndex+1, onCompletionFunction);
-        } else {
-            onCompletionFunction();
-        }
-    });
-}
-
-function loadLevel(level) {
-    var id_counter = 0;
-    //load player
-    var player = level.characters[level.player.character];
-    game.loadCharacter(
-            player.model,
-            {
-                name: 'eve',
-                sss: player.sss,
-                diffusePath: player.diffusePath,
-                specularPath: player.specularPath,
-                normalPath: player.normalPath,
-                position: level.player.position
-            }, function(characterObject) {
-                loadClothingSeq(characterObject, player.clothing, 0, function() {
-                    game.updateCubeMap();
-                    characterObject.mesh.add(characterObject.clothingMesh);
-                });
-                player.equipment.forEach(function(item) {
-                    game.loadDynamicObject(item.model, characterObject.findBone(item.bone), item.options);
-                });
-                characterObject.addController(new UserController(characterObject, game));
+        if (xhr.readyState === XMLHttpRequest.DONE) {
+            if (xhr.status === 200) {
+                if (success)
+                    success(JSON.parse(xhr.responseText));
+            } else {
+                if (error)
+                    error(xhr);
             }
-    );
-
-    level.staticObjects.forEach(function(element) {
-        game.loadStaticObject(element.model, element.shape, element.position);
-    });
-
-    level.npcs.forEach(function(npc) {
-        var player = level.characters[npc.character];
-        if(player === null) {
-            console.log('no character by name: ', npc);
-            return;
         }
+    };
+    xhr.open("GET", path, true);
+    xhr.send();
+}
+
+function runGame(data) {
+    var items = data;
+    var game = new Game();
+    game.initRendering();
+    game.initPhysics();
+    var objectCount = 0;
+    var outfit2 = [
+        {
+            model: "models/neweve_hair.json",
+            options: {reflectivity: 0.0001, color: "0x110000"}
+        },
+        {model: "models/neweve_eyes.json",options: {reflectivity: 0.15}},
+        {model: "models/neweve_eyelash.json"},
+        {model: "models/neweve_eyebrows.json"},
+        {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
+        {model: "models/neweve_fingernails.json",options: {reflectivity: 0.25, color: "0x660000"}},
+        {model: "models/armor_armbands.json",options: {reflectivity: 0.2, color: "0x777777"}},
+        {model: "models/armor_legbands.json",options: {reflectivity: 0.2, color: "0x777777"}},
+        {model: "models/thighhigh.json",options: {reflectivity: 0.000001, color: "0xeeeeee"}},
+        {model: "models/armor_boob.json",options: {reflectivity: 0.2, color: "0x777777"}},
+        {model: "models/armor_thong.json",options: {reflectivity: 0.01, color: "0x777777"}},
+        {model: "models/neweveunderwear.json",options: {reflectivity: 0.01, color: "0xAA7777"}}
+    ];
+    var bricks = [];
+    for(var i = -10; i<10; i++) {
+        var randomHeight = (Math.random() - 0.5) * 0.1;
+        bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3+randomHeight,0]})
+    }
+
+    var level = {
+        staticObjects: bricks,
+        characters: {
+            evil_eve: {
+                model: "models/neweve.json",
+                sss: true,
+                diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
+                specularPath: "models/textures/specular.png",
+                normalPath: "models/textures/newevenormal.png",
+                clothing: outfit2,
+                equipment:  [ items.firesword ]
+            },
+            good_eve: {
+                model: "models/neweve.json",
+                sss: true,
+                diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
+                specularPath: "models/textures/specular.png",
+                normalPath: "models/textures/newevenormal.png",
+                clothing: outfit2,
+                equipment: [ items.icesword ]
+            }
+        },
+        npcs : [
+            {character: 'evil_eve', position: [-20,0,0]},
+            {character: 'evil_eve', position: [20,0,0]},
+            {character: 'evil_eve', position: [-11,0,0]},
+            {character: 'evil_eve', position: [11,0,0]}
+        ],
+        player: {
+            character: 'good_eve', position: [0,0,0]
+        }
+    };
+
+    function loadClothingSeq(character, clothingArray, arrayIndex, onCompletionFunction) {
+        var clothing = clothingArray[arrayIndex];
+        game.loadClothing(clothing.model, character.mesh, clothing.options, function(mesh) {
+            character.updateClothingGeometry(mesh);
+            var onComplete = null;
+            if(arrayIndex < clothingArray.length-1) {
+                loadClothingSeq(character, clothingArray, arrayIndex+1, onCompletionFunction);
+            } else {
+                onCompletionFunction();
+            }
+        });
+    }
+
+    function loadLevel(level) {
+        var id_counter = 0;
+        //load player
+        var player = level.characters[level.player.character];
         game.loadCharacter(
                 player.model,
                 {
-                    name: 'monster'+id_counter,
+                    name: 'eve',
                     sss: player.sss,
                     diffusePath: player.diffusePath,
                     specularPath: player.specularPath,
                     normalPath: player.normalPath,
-                    position: npc.position
+                    position: level.player.position
                 }, function(characterObject) {
                     loadClothingSeq(characterObject, player.clothing, 0, function() {
+                        game.updateCubeMap();
                         characterObject.mesh.add(characterObject.clothingMesh);
                     });
                     player.equipment.forEach(function(item) {
                         game.loadDynamicObject(item.model, characterObject.findBone(item.bone), item.options);
                     });
-                    characterObject.addController(new AIController(characterObject, game));
+                    characterObject.addController(new UserController(characterObject, game));
                 }
         );
-        id_counter+=1;
-    });
 
+        level.staticObjects.forEach(function(element) {
+            game.loadStaticObject(element.model, element.shape, element.position);
+        });
+
+        level.npcs.forEach(function(npc) {
+            var player = level.characters[npc.character];
+            if(player === null) {
+                console.log('no character by name: ', npc);
+                return;
+            }
+            game.loadCharacter(
+                    player.model,
+                    {
+                        name: 'monster'+id_counter,
+                        sss: player.sss,
+                        diffusePath: player.diffusePath,
+                        specularPath: player.specularPath,
+                        normalPath: player.normalPath,
+                        position: npc.position
+                    }, function(characterObject) {
+                        loadClothingSeq(characterObject, player.clothing, 0, function() {
+                            characterObject.mesh.add(characterObject.clothingMesh);
+                        });
+                        player.equipment.forEach(function(item) {
+                            game.loadDynamicObject(item.model, characterObject.findBone(item.bone), item.options);
+                        });
+                        characterObject.addController(new AIController(characterObject, game));
+                    }
+            );
+            id_counter+=1;
+        });
+
+    }
+
+    game.addGroundPlane(-4);
+    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {loadLevel(level);});
+    /*setInterval(function() {
+        game.updateCubeMap();
+    }, 1000);*/
+
+
+    var fps = 60;
+    var interval = 1000/fps;
+    var drawTime = null;
+    var logicTime = null;
+    var frameTimer = new THREE.Clock(true);
+    var frameCount = 0;
+    var logicCount = 0;
+    function draw() {
+        requestAnimationFrame(draw);
+        game.render();
+    	if(frameTimer.getElapsedTime() >= 1.0) {
+    		document.getElementById("debugConsole").innerHTML = "drawFPS: " + frameCount + "<br/>logicFPS: " + logicCount;
+    		frameCount = 0;
+    		logicCount = 0;
+    		frameTimer = new THREE.Clock(true);
+    	}
+    	frameCount++;
+    }
+    var logicInterval = setInterval(function() {
+    	game.animate();
+    	logicCount++;
+    }, Math.ceil(interval));
+
+    draw();
 }
 
-game.addGroundPlane(-4);
-game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {loadLevel(level);});
-setInterval(function() {
-    game.updateCubeMap();
-}, 1000);
-
-
-var fps = 60;
-var interval = 1000/fps;
-var drawTime = null;
-var logicTime = null;
-var frameTimer = new THREE.Clock(true);
-var frameCount = 0;
-var logicCount = 0;
-function draw() {
-    requestAnimationFrame(draw);
-    game.render();
-	if(frameTimer.getElapsedTime() >= 1.0) {
-		document.getElementById("debugConsole").innerHTML = "drawFPS: " + frameCount + "<br/>logicFPS: " + logicCount;
-		frameCount = 0;
-		logicCount = 0;
-		frameTimer = new THREE.Clock(true);
-	}
-	frameCount++;
-}
-var logicInterval = setInterval(function() {
-	game.animate();
-	logicCount++;
-}, Math.ceil(interval));
-//scene3();
-draw();
+loadJSON("items.json", runGame);
 </script>
 
 	</body>

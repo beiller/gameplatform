@@ -189,8 +189,8 @@ Game.prototype.addObjectPhysics = function(mesh, mass, position) {
 
     if(true) {
         var mbox = new THREE.Mesh(new THREE.BoxGeometry( sizex, sizey, sizez, 1, 1, 1 ), new THREE.MeshBasicMaterial({wireframe: true}));
-        game.scene.add(mbox);
-        game.dynamics.push(new Dynamic(mbox, body));
+        this.scene.add(mbox);
+        this.dynamics.push(new Dynamic(mbox, body));
     }
 
     return body;
@@ -367,9 +367,9 @@ Game.prototype.loadCharacter = function(jsonFileName, options, onComplete) {
         } else {
             var material = new THREE.MeshPhongMaterial({
                 skinning: true,
-                diffuse: options.diffuse || new THREE.Color( 0xDDDDDD ),
-                specular: options.specular || new THREE.Color( 0xDDDDDD ),
-                emissive: options.emissive || new THREE.Color( 0x000000 ),
+                diffuse: options.diffuse ? new THREE.Color(parseInt(options.diffuse)) : new THREE.Color( 0xDDDDDD ),
+                specular: options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0xDDDDDD ),
+                emissive: options.emissive ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x000000 ),
                 envMap: game.cubeCamera.renderTarget,
                 combine: options.combine || THREE.MixOperation,
                 reflectivity: options.reflectivity || 0.2
@@ -387,17 +387,17 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
     if(options === undefined) {
         return;
     }
-    var scope = game;
+    var scope = this;
     function _setopt(mat, options) {
         mat.envMap = scope.cubeCamera.renderTarget;
         mat.combine = options.combine || THREE.MixOperation;
         mat.reflectivity = options.reflectivity || 0.2;
-        mat.emissive  = options.emissive || new THREE.Color( 0x000000 );
+        mat.emissive  = options.emissive ? new THREE.Color(parseInt(options.emissive)) : new THREE.Color( 0x000000 );
         mat.skinning  = options.skinning || false;
         mat.transparency = options.transparency || true;
         mat.opacity  = options.opacity || 1.0;
         mat.side  = THREE.DoubleSide;
-        mat.color = options.color || new THREE.Color( 0x888888 );
+        mat.color = options.color ? new THREE.Color(parseInt(options.color)) : new THREE.Color( 0x888888 );
         mat.needsUpdate = true;
     }
     if(mesh.material.type == "MultiMaterial") {

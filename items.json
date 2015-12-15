@@ -1,0 +1,20 @@
+{
+    "firesword": {
+        "model": "models/gold_sword.json", 
+        "bone": "weapon", 
+        "options": {"reflectivity": 0.5, "color": "0xFF7E7A" },
+        "stats": {
+            "damage": 200,
+            "health": 200
+        }
+    },
+    "icesword": {
+        "model": "models/gold_sword.json", 
+        "bone": "weapon", 
+        "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
+        "stats": {
+            "damage": 200,
+            "health": 200
+        }
+    }
+}
