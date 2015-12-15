@@ -96,6 +96,7 @@ Character.prototype.updateClothingGeometry = function(mesh) {
     try {
         if(this.clothingMesh === null) {
             this.clothingMesh = new THREE.SkinnedMesh( mesh.geometry, mesh.material );
+            this.clothingMesh.frustumCulled = false;
             this.clothingMesh.skeleton = this.mesh.skeleton;
             if(!(this.clothingMesh.material instanceof THREE.MultiMaterial)) {
                 this.clothingMesh.material = new THREE.MultiMaterial( [this.clothingMesh.material] );

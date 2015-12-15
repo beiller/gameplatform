@@ -24,6 +24,8 @@ function Game() {
 
     this.meshCache = {};
     this.textureCache = {};
+
+    this.cubemapRendered = false;
 }
 Game.prototype.explosion = function(character, impulse) {
     if(this.world !== undefined) {
@@ -168,7 +170,11 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
 Game.prototype.addObjectPhysics = function(mesh, mass, position) {
     //var shape = new CANNON.Sphere( radius || 1.0 );
     mesh.geometry.computeBoundingBox();
-    var shape = new CANNON.Box(new CANNON.Vec3().copy(mesh.geometry.boundingBox.max).scale(0.3333));
+    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
+    var sizex = Math.abs(len.x);
+    var sizey = Math.abs(len.y);
+    var sizez = Math.abs(len.z);
+    var shape = new CANNON.Box(new CANNON.Vec3(sizex,sizey,sizez));
 
     var body = new CANNON.Body({
         mass: mass || 49.0
@@ -181,10 +187,11 @@ Game.prototype.addObjectPhysics = function(mesh, mass, position) {
     body.updateMassProperties();
     this.world.add(body); // Step 3
 
-    /*var sphere = new THREE.Mesh( new THREE.SphereGeometry( mesh.geometry.boundingBox.max.y * 0.3333, 12, 12 ), new THREE.MeshBasicMaterial({wireframe: true}) );
-    sphere.position.copy(body.position);
-    this.scene.add(sphere);
-    this.dynamics.push(new Dynamic(sphere, body));*/
+    if(true) {
+        var mbox = new THREE.Mesh(new THREE.BoxGeometry( sizex, sizey, sizez, 1, 1, 1 ), new THREE.MeshBasicMaterial({wireframe: true}));
+        game.scene.add(mbox);
+        game.dynamics.push(new Dynamic(mbox, body));
+    }
 
     return body;
 };
@@ -201,18 +208,31 @@ Game.prototype.initRendering = function() {
     this.camera.position.y = -3;
     this.camera.position.x = 0;
     var cam = this.camera;
+    var cameraRadius = 1.0;
 
     function displaywheel(e) {
         var evt=window.event || e; //equalize event object
         var delta=evt.detail? evt.detail*(-120) : evt.wheelDelta; //check for detail first so Opera uses that instead of wheelDelta
         //document.getElementById("wheelvalue").innerHTML=delta //delta returns +120 when wheel is scrolled up, -120 when down
         cam.position.z += (delta/120*0.1);
-        cam.position.y += (delta/120*0.005);
+        //cam.position.y += (delta/120*0.005);
+        cameraRadius += delta/120*0.1;
     }
     var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
-    document.addEventListener(mousewheelevt, displaywheel, false);
+    //document.addEventListener(mousewheelevt, displaywheel, false);
+    function mousemovement(e) {
+        var x = e.clientX;
+        var y = e.clientY;
+        var xr = ((x / window.innerWidth) - 0.5) * 2.0;
+        var yr = ((y / window.innerHeight) - 0.5) * 2.0;
+        var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, -1, 0), xr);
+        var qtarget2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-1, 0, 0), yr);
+        qtarget.multiply(qtarget2);
+        cam.quaternion.slerp(qtarget, 0.25);
+    }
+    //document.addEventListener("mousemove", mousemovement, false);
 
-    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 256 );
+    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 4 );
     //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
     this.scene.add( this.cubeCamera );
 
@@ -461,7 +481,8 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
         position = [mesh.position.x, mesh.position.y, mesh.position.z];
         game.setMaterialOptions(mesh, options);
         var physEnabled = options.enabled !== undefined ? options.enabled : true;
-        var dynamic = new Dynamic(mesh, game.addObjectPhysics(mesh, mass, position));
+        var body = game.addObjectPhysics(mesh, mass, position);
+        var dynamic = new Dynamic(mesh, body);
         dynamic.sleep = !physEnabled;
         game.dynamics.push(dynamic);
         if(parent) {
@@ -478,16 +499,19 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
     });
 };
 Game.prototype.animate = function() {
-    try {
-        this.camera.position.x = this.characters['eve'].body.position.x;
-        this.camera.position.y = this.characters['eve'].body.position.y + 0.2;
-        if(Math.abs(this.characters['eve'].movementDirection.x) > 0.1) {
-            var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), -0.2 * this.characters['eve'].movementDirection.x);
-            this.camera.quaternion.slerp(qtarget, 0.25);
-        }
-    } catch(e) {
+    if(this.cameraUpdateFunction === undefined) {
+        var scope = this;
+        this.cameraUpdateFunction = function () {
+            try {
+                scope.camera.position.x = scope.characters['eve'].body.position.x;
+                scope.camera.position.y = scope.characters['eve'].body.position.y + 0.2;
+            } catch (e) {
 
+            }
+        };
     }
+    this.cameraUpdateFunction();
+
     var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
     //var maxSubSteps = 3;
     //this.world.step(1.0/60, delta);
@@ -500,6 +524,10 @@ Game.prototype.animate = function() {
     });
 
     //this.render();
+};
+Game.prototype.updateCubeMap = function() {
+    this.cubeCamera.updateCubeMap( this.renderer, this.scene );
+    this.cubemapRendered = true;
 };
 Game.prototype.render = function() {
     if(!this.cubemapRendered) {

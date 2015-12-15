@@ -42,7 +42,7 @@ function AIController(character, game) {
                 var fsm = this;
                 this.hitTimeout = setTimeout(function(){
                     fsm.dead();
-                }, 20000);
+                }, 40000);
             },
             onenterwaking: function() {
                 this.activate();

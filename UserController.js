@@ -159,7 +159,7 @@ function UserController(character, game) {
                 var fsm = this;
                 this.sexTimeout = setTimeout(function(){
                     fsm.cooldown();
-                }, 20000);
+                }, 40000);
             },
             onenterDEAD: function() {
                 character.playAnimation("DE_Die", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
@@ -180,6 +180,26 @@ function UserController(character, game) {
                         c.controllers[0].fsm.sex();
                         c.body.position.copy(character.body.position);
                         c.mesh.quaternion.copy(character.mesh.quaternion);
+                        var oldFunction = game.cameraUpdateFunction;
+                        game.cameraUpdateFunction = function() {
+                            //game.camera.matrixWorld = character.findBone("camera").matrixWorld;
+                            var bone = character.findBone("threecamera");
+                            var t = new THREE.Vector3();
+                            var q = new THREE.Quaternion();
+                            var s = new THREE.Vector3();
+                            bone.matrixWorld.decompose(t, q, s);
+                            var q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,-1), 1.5708);
+                            q2.multiply(q);
+                            game.camera.position.copy(t);
+                            game.camera.quaternion.copy(q);
+                        };
+                        setTimeout(function(){
+                            game.cameraUpdateFunction = oldFunction;
+                            game.camera.quaternion.copy( new THREE.Quaternion() );
+                            game.camera.position.z = 4;
+                            game.camera.position.y = -3;
+                            game.camera.position.x = 0;
+                        }, 40000);
                         return true;
                     }
                 }

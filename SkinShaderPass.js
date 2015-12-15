@@ -3,7 +3,7 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
 
         OPTIONS
      */
-    this.disableSSSRenderFrame = true;
+    this.disableSSSRenderFrame = false;
 
 
     this.scene = new THREE.Scene();
@@ -29,8 +29,8 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
         OPTIONS
      */
 
-    var rtwidth = diffuseTexture.image.width / 8;
-    var rtheight = diffuseTexture.image.height / 8;
+    var rtwidth = diffuseTexture.image.width / 4;
+    var rtheight = diffuseTexture.image.height / 4;
     console.log("setting rendertarget size: ", [rtwidth, rtheight] );
     uniformsUV[ "uNormalScale" ].value = SSSparameters.normalScale || -1.5;
     uniformsUV[ "passID" ].value = 0;

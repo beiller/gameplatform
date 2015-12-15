@@ -81,16 +81,17 @@ var outfit2 = [
         model: "models/neweve_hair.json",
         options: {reflectivity: 0.0001, color: new THREE.Color(0x110000)}
     },
-    {model: "models/neweve_eyes.json",options: {reflectivity: 0.25}},
+    {model: "models/neweve_eyes.json",options: {reflectivity: 0.15}},
     {model: "models/neweve_eyelash.json"},
     {model: "models/neweve_eyebrows.json"},
     {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
-    {model: "models/neweve_fingernails.json",options: {reflectivity: 0.5, color: new THREE.Color(0x660000)}},
+    {model: "models/neweve_fingernails.json",options: {reflectivity: 0.25, color: new THREE.Color(0x660000)}},
     {model: "models/armor_armbands.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
     {model: "models/armor_legbands.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
     {model: "models/thighhigh.json",options: {reflectivity: 0.000001, color: new THREE.Color(0xeeeeee)}},
     {model: "models/armor_boob.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
-    {model: "models/armor_thong.json",options: {reflectivity: 0.2, color: new THREE.Color(0x777777)}},
+    {model: "models/armor_thong.json",options: {reflectivity: 0.01, color: new THREE.Color(0x777777)}},
+    {model: "models/neweveunderwear.json",options: {reflectivity: 0.01, color: new THREE.Color(0xAA7777)}}
 ];
 var bricks = [];
 for(var i = -10; i<10; i++) {
@@ -99,12 +100,12 @@ for(var i = -10; i<10; i++) {
 
 var items = {
     "firesword": {
-        model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.25, color: new THREE.Color(0xFF8888) }
+        model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.5, color: new THREE.Color(0xFF7E7A) }
     },
     "icesword": {
-        model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.25, color: new THREE.Color(0x8888FF) }
+        model: "models/gold_sword.json", bone: "weapon", options: {reflectivity: 0.5, color: new THREE.Color(0x5D91FF) }
     }
-}
+};
 
 var level = {
     staticObjects: bricks,
@@ -167,6 +168,7 @@ function loadLevel(level) {
                 position: level.player.position
             }, function(characterObject) {
                 loadClothingSeq(characterObject, player.clothing, 0, function() {
+                    game.updateCubeMap();
                     characterObject.mesh.add(characterObject.clothingMesh);
                 });
                 player.equipment.forEach(function(item) {
@@ -212,6 +214,10 @@ function loadLevel(level) {
 
 game.addGroundPlane(-4);
 game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {loadLevel(level);});
+setInterval(function() {
+    game.updateCubeMap();
+}, 1000);
+
 
 var fps = 60;
 var interval = 1000/fps;
