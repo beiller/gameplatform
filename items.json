@@ -1,19 +1,27 @@
 {
     "firesword": {
-        "model": "models/gold_sword.json", 
-        "bone": "weapon", 
+        "model": "models/gold_sword.json",
+        "slot": "weapon",
+        "bone": "weapon",
         "options": {"reflectivity": 0.5, "color": "0xFF7E7A" },
         "stats": {
             "damage": 200,
+            "magic_damage": {
+                "fire": 200
+            },
             "health": 200
         }
     },
     "icesword": {
         "model": "models/gold_sword.json", 
-        "bone": "weapon", 
+        "slot": "weapon",
+        "bone": "weapon",
         "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
         "stats": {
             "damage": 200,
+            "magic_damage": {
+                "water": 200
+            },
             "health": 200
         }
     }

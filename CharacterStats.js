@@ -20,4 +20,9 @@ function CharacterStats(params) {
     //chance to stun opponent while blocking
     this.stunWhileBlockingChance = params.stunWhileBlockingChance || 0.1;
 
+    this.strength = 10;
+    this.magic = 10;
+    this.endurance = 10;
+    this.magicResistance = 10;
+
 }

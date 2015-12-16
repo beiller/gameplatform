@@ -89,9 +89,11 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
 
     this.clothingMesh = null;
     this.clothingMeshes = [];
+    this.equipment = {};
+    this.equipmentMesh = {};
 }
 Character.prototype.updateClothingGeometry = function(mesh) {
-    this.clothingMeshes.push(mesh);
+    //this.clothingMeshes.push(mesh);
     //this.mesh.add(mesh);
     try {
         if(this.clothingMesh === null) {
@@ -192,14 +194,45 @@ Character.prototype.update = function(delta) {
         });
     }
 };
-Character.prototype.hit = function(enemyStats) {
+Character.prototype.equip = function(item, game, mesh, dynamic) {
+    this.equipment[item.slot] = item;
+    this.equipmentMesh[item.slot] = mesh;
+    game.scene.remove(mesh);
+    var bone = this.findBone(item.bone);
+    bone.add(mesh);
+    mesh.position = new THREE.Vector3(0,0,0);
+    mesh.rotation = new THREE.Quaternion();
+    dynamic.sleep = true;
+};
+Character.prototype.calculateEffect = function(characterStats, weaponStats) {
+    var magicDamage = 0;
+    magicDamage += characterStats.magic;
+    if(weaponStats && weaponStats.magic_damage) {
+        magicDamage += weaponStats.magic_damage.fire || 0;
+        magicDamage += weaponStats.magic_damage.water || 0;
+        magicDamage += weaponStats.magic_damage.earth || 0;
+        magicDamage += weaponStats.magic_damage.air || 0;
+        magicDamage += weaponStats.magic_damage.dark || 0;
+        magicDamage += weaponStats.magic_damage.holy || 0;
+    }
+    magicDamage -= this.characterStats.magicResistance;
+
+    var physicalDamage = 0;
+    physicalDamage += characterStats.strength;
+    physicalDamage += weaponStats.damage || 0;
+    physicalDamage -= this.characterStats.endurance;
+
+    return physicalDamage + magicDamage;
+};
+Character.prototype.hit = function(attackingCharacter) {
     if(this.dead) {
         return;
     }
     if(!this.blocking) {
-        var damage = enemyStats.damage + Math.ceil(Math.random() * 2.0);
+        //var damage = enemyStats.damage + Math.ceil(Math.random() * 2.0);
+        var damage = this.calculateEffect(attackingCharacter.characterStats, attackingCharacter.equipment.weapon.stats);
         console.log(this.name + ' takes ' + damage + ' damage.');
-        game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 9, 1.0), damage, 3000);
+        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 9, 1.0), damage, 3000);
         this.characterStats.health = this.characterStats.health - damage;
         if (this.characterStats.health <= 0) {
             console.log(this.name + " has died.");
@@ -212,7 +245,7 @@ Character.prototype.hit = function(enemyStats) {
         }
     } else {
         console.log(this.name + " blocked an attack!");
-        game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 9, 1.0), "Blocked", 3000);
+        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 9, 1.0), "Blocked", 3000);
         //determine chance to stun me
         var rand = Math.random();
         if(rand <= this.characterStats.stunWhileBlockingChance) {
@@ -220,7 +253,7 @@ Character.prototype.hit = function(enemyStats) {
             this.controllers[0].fsm.stun();
             var scope = this;
             setTimeout(function() {
-                game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y + 9, 1.0), "Stunned", 3000);
+                scope.controllers[0].game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y + 9, 1.0), "Stunned", 3000);
             }, 100);
         }
     }

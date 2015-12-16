@@ -3,11 +3,11 @@
 function Controller(character, game) {
     this.character = character;
     this.game = game;
-    this.blendAnimationDuration = 0.2;
-    this.runBlendAnimationSpeed = 0.2;
+    this.blendAnimationDuration = 0.1;
+    this.runBlendAnimationSpeed = 0.1;
 
-    this.movementForce = 100;
-    this.jumpForce = 18000;
+    this.movementForce = 90;
+    this.jumpForce = 16000;
 
     this.updateFunction = this.idle;
 
@@ -34,7 +34,7 @@ Controller.prototype.attack = function() {
                 }
                 var cont = game.characters[c].controllers[0];
                 game.characters[c].body.applyImpulse(new CANNON.Vec3(unitDist * cont.movementForce * 0.5, cont.movementForce * 0.5, 0), character.body.position);
-                game.characters[c].hit(character.characterStats);
+                game.characters[c].hit(character);
             }
 
         }

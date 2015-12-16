@@ -232,7 +232,7 @@ Game.prototype.initRendering = function() {
     }
     //document.addEventListener("mousemove", mousemovement, false);
 
-    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 4 );
+    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 32 );
     //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
     this.scene.add( this.cubeCamera );
 
@@ -251,7 +251,7 @@ Game.prototype.initRendering = function() {
     this.jsonloader = new THREE.JSONLoader();
 
 
-    this.renderer = new THREE.WebGLRenderer( { antialias: false } );
+    this.renderer = new THREE.WebGLRenderer( { antialias: true } );
     this.renderer.setClearColor( 0x050505 );
     this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -471,7 +471,7 @@ Game.prototype.loadStaticObject = function(jsonFileName, shape, position, onComp
         if (onComplete) onComplete(mesh);
     });
 };
-Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onComplete) {
+Game.prototype.loadDynamicObject = function(jsonFileName, options, onComplete) {
     options = options === undefined ? {} : options;
     var mass = options.mass || 10.0;
     var position = options.position || [0,1,0];
@@ -485,17 +485,10 @@ Game.prototype.loadDynamicObject = function(jsonFileName, parent, options, onCom
         var dynamic = new Dynamic(mesh, body);
         dynamic.sleep = !physEnabled;
         game.dynamics.push(dynamic);
-        if(parent) {
-            parent.add(mesh);
-            mesh.position = new THREE.Vector3();
-            mesh.rotation = new THREE.Quaternion();
-            dynamic.sleep = true;
-        } else {
-            game.scene.add(mesh);
-        }
+        game.scene.add(mesh);
         mesh.castShadow = true;
         mesh.receiveShadow = true;
-        if (onComplete) onComplete(mesh);
+        if (onComplete) onComplete(dynamic);
     });
 };
 Game.prototype.animate = function() {
@@ -515,7 +508,7 @@ Game.prototype.animate = function() {
     var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
     //var maxSubSteps = 3;
     //this.world.step(1.0/60, delta);
-    this.world.step(1/60);
+    this.world.step(1/50);
     for(var i in this.characters) {
         this.characters[i].update(delta);
     }

@@ -327,13 +327,13 @@ UserController.prototype.checkForGround = function(delta) {
             collisionFilterMask: this.game.collisionGroups[0],
             mode: CANNON.Ray.CLOSEST
         };
-        if (ray1.intersectWorld(game.world, options)) {
+        if (ray1.intersectWorld(this.game.world, options)) {
             if (ray1.result.distance <= r+r_Bias) {
                 this.fsm.land();
                 return true;
             }
         }
-        if (ray2.intersectWorld(game.world, options)) {
+        if (ray2.intersectWorld(this.game.world, options)) {
             if (ray2.result.distance <= r+r_Bias) {
                 this.fsm.land();
                 return true;
