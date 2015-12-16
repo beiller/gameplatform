@@ -88,9 +88,7 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.createHealthBar();
 
     this.clothingMesh = null;
-    this.clothingMeshes = [];
     this.equipment = {};
-    this.equipmentMesh = {};
 }
 Character.prototype.updateClothingGeometry = function(mesh) {
     //this.clothingMeshes.push(mesh);
@@ -195,6 +193,7 @@ Character.prototype.update = function(delta) {
     }
 };
 Character.prototype.equip = function(item) {
+	//TODO UNEQUIP??
 	var game = this.controllers[0].game;
     this.equipment[item.slot] = item;
     var scope = this;
@@ -216,7 +215,7 @@ Character.prototype.equip = function(item) {
 	        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
 				item.mesh = mesh;
 				scope.mesh.add(mesh);
-				//update character clothing mesh
+				//TODO update character clothing mesh
 				//....
 	        });
 		}

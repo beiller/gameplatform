@@ -133,7 +133,7 @@ function runGame(data) {
     var bricks = [];
     for(var i = -10; i<10; i++) {
         var randomHeight = (Math.random() - 0.5) * 0.5;
-        bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3+randomHeight,0]})
+        bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3+randomHeight,0]});
     }
 
     var level = {
@@ -146,7 +146,7 @@ function runGame(data) {
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
                 //clothing: outfit2,
-                equipment:  [ items.firesword, items.evilchestarmor, items.holyarms, items.holylegs ]
+                equipment:  [ items.firesword, items.evilchestarmor, items.holyarms, items.holylegs, items.holythong ]
             },
             good_eve: {
                 model: "models/neweve.json",
@@ -155,7 +155,7 @@ function runGame(data) {
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
                 //clothing: outfit1,
-                equipment: [ items.icesword, items.holychestarmor, items.holyarms, items.holylegs ]
+                equipment: [ items.icesword, items.holychestarmor, items.holyarms, items.holylegs, items.holythong ]
             }
         },
         npcs : [
@@ -222,7 +222,10 @@ function runGame(data) {
     }
 
     game.addGroundPlane(-4);
-    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {loadLevel(level);});
+    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+    	loadLevel(level);
+    });
+    
     /*setInterval(function() {
         game.updateCubeMap();
     }, 1000);*/

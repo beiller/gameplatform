@@ -13,6 +13,7 @@ function Game() {
 
     this.texloader = null;
     this.jsonloader = null;
+    this.loaderBusy = false;
 
     this.timescale = 1.0;
 
@@ -232,7 +233,7 @@ Game.prototype.initRendering = function() {
     }
     //document.addEventListener("mousemove", mousemovement, false);
 
-    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 32 );
+    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 128 );
     //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
     this.scene.add( this.cubeCamera );
 
@@ -411,19 +412,28 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
 Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh) {
     if(this.meshCache[jsonFileName] !== undefined) {
     	var newMaterials = [];
-    	var oldMaterals = this.meshCache[jsonFileName].materials;
-    	if(oldMaterials.length > 0) {
+    	if(!this.meshCache[jsonFileName].materials) {
+    		newMaterials = null;
+    	} else if(this.meshCache[jsonFileName].materials && !this.meshCache[jsonFileName].materials.clone) {
+    		var oldMaterials = this.meshCache[jsonFileName].materials;
     		oldMaterials.forEach(function(m) {
     			newMaterials.push(m.clone());
     		});
-    	} else {
-    		newMaterials = oldMaterials.clone();
+    	} else if(this.meshCache[jsonFileName].materials && this.meshCache[jsonFileName].materials.clone) {
+    		newMaterials = this.meshCache[jsonFileName].materials.clone();
     	}
         loadedMesh(this.meshCache[jsonFileName].geometry, newMaterials);
     } else {
-        var scope = this;
-        this.jsonloader.load(jsonFileName, function(geometry, materials) {
+    	//hack to implement sleep-wait
+    	var scope = this;
+    	if(scope.loaderBusy) {
+    		setTimeout(function() {scope.loadJsonMesh(jsonFileName, loadedMesh);}, 500);	
+    		return;
+    	}
+        scope.loaderBusy = true;
+        scope.jsonloader.load(jsonFileName, function(geometry, materials) {
             scope.meshCache[jsonFileName] = {geometry: geometry, materials: materials};
+            scope.loaderBusy = false;
             loadedMesh(geometry, materials);
         });
     }

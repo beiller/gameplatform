@@ -60,7 +60,19 @@
             },
             "health": 200
         }
-    },   
+    },  
+    "holythong": {
+        "model": "models/armor_thong.json", 
+        "slot": "pants",
+        "options": {"reflectivity": 0.3, "color": "0xEEEEEE"},
+        "stats": {
+            "defence": 200,
+            "magic_defence": {
+                "evil": 200
+            },
+            "health": 200
+        }
+    },  
     "evilchestarmor": {
         "model": "models/armor_boob.json", 
         "slot": "chest",
