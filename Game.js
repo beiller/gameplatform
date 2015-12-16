@@ -410,17 +410,16 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
 };
 Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh) {
     if(this.meshCache[jsonFileName] !== undefined) {
-        var geom = this.meshCache[jsonFileName].geometry;
-        var newGeom = geom.clone();
-        for ( var i = 0; i < geom.skinIndices.length; i ++ ) {
-            var skin = geom.skinIndices[ i ];
-            var skinCopy = skin.clone();
-            newGeom.skinIndices.push( skinCopy );
-            var weight = geom.skinWeights[ i ];
-            var weightCopy = weight.clone();
-            newGeom.skinWeights.push( weightCopy );
-        }
-        loadedMesh(newGeom, this.meshCache[jsonFileName].materials);
+    	var newMaterials = [];
+    	var oldMaterals = this.meshCache[jsonFileName].materials;
+    	if(oldMaterials.length > 0) {
+    		oldMaterials.forEach(function(m) {
+    			newMaterials.push(m.clone());
+    		});
+    	} else {
+    		newMaterials = oldMaterials.clone();
+    	}
+        loadedMesh(this.meshCache[jsonFileName].geometry, newMaterials);
     } else {
         var scope = this;
         this.jsonloader.load(jsonFileName, function(geometry, materials) {
@@ -443,8 +442,7 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
         game.setMaterialOptions(skinnedMesh, options);
         if(onComplete) onComplete(skinnedMesh);
     };
-    //this.loadJsonMesh(jsonFileName, loadedMesh);
-    this.jsonloader.load(jsonFileName, loadedMesh);
+    this.loadJsonMesh(jsonFileName, loadedMesh);
 };
 Game.prototype.loadStaticObject = function(jsonFileName, shape, position, onComplete) {
     var game = this;
@@ -476,7 +474,7 @@ Game.prototype.loadDynamicObject = function(jsonFileName, options, onComplete) {
     var mass = options.mass || 10.0;
     var position = options.position || [0,1,0];
     var game = this;
-    this.jsonloader.load( jsonFileName, function ( geometry, materials ) {
+    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
         var mesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
         position = [mesh.position.x, mesh.position.y, mesh.position.z];
         game.setMaterialOptions(mesh, options);

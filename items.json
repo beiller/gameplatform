@@ -24,5 +24,53 @@
             },
             "health": 200
         }
+    },
+    "holychestarmor": {
+        "model": "models/armor_boob.json", 
+        "slot": "chest",
+        "options": {"reflectivity": 0.3, "color": "0xEEEEEE"},
+        "stats": {
+            "defence": 200,
+            "magic_defence": {
+                "evil": 200
+            },
+            "health": 200
+        }
+    },
+    "holyarms": {
+        "model": "models/armor_armbands.json", 
+        "slot": "arms",
+        "options": {"reflectivity": 0.3, "color": "0xEEEEEE"},
+        "stats": {
+            "defence": 200,
+            "magic_defence": {
+                "evil": 200
+            },
+            "health": 200
+        }
+    },   
+    "holylegs": {
+        "model": "models/armor_legbands.json", 
+        "slot": "arms",
+        "options": {"reflectivity": 0.3, "color": "0xEEEEEE"},
+        "stats": {
+            "defence": 200,
+            "magic_defence": {
+                "evil": 200
+            },
+            "health": 200
+        }
+    },   
+    "evilchestarmor": {
+        "model": "models/armor_boob.json", 
+        "slot": "chest",
+        "options": {"reflectivity": 0.1, "color": "0x222222"},
+        "stats": {
+            "defence": 200,
+            "magic_defence": {
+                "holy": 200
+            },
+            "health": 200
+        }
     }
 }

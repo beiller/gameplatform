@@ -145,8 +145,8 @@ function runGame(data) {
                 diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
-                clothing: outfit2,
-                equipment:  [ items.firesword ]
+                //clothing: outfit2,
+                equipment:  [ items.firesword, items.evilchestarmor, items.holyarms, items.holylegs ]
             },
             good_eve: {
                 model: "models/neweve.json",
@@ -154,8 +154,8 @@ function runGame(data) {
                 diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
-                clothing: outfit1,
-                equipment: [ items.icesword ]
+                //clothing: outfit1,
+                equipment: [ items.icesword, items.holychestarmor, items.holyarms, items.holylegs ]
             }
         },
         npcs : [
@@ -168,19 +168,6 @@ function runGame(data) {
             character: 'good_eve', position: [0,0,0]
         }
     };
-
-    function loadClothingSeq(character, clothingArray, arrayIndex, onCompletionFunction) {
-        var clothing = clothingArray[arrayIndex];
-        game.loadClothing(clothing.model, character.mesh, clothing.options, function(mesh) {
-            character.updateClothingGeometry(mesh);
-            var onComplete = null;
-            if(arrayIndex < clothingArray.length-1) {
-                loadClothingSeq(character, clothingArray, arrayIndex+1, onCompletionFunction);
-            } else {
-                onCompletionFunction();
-            }
-        });
-    }
 
     function loadLevel(level) {
         var id_counter = 0;
@@ -196,16 +183,10 @@ function runGame(data) {
                     normalPath: player.normalPath,
                     position: level.player.position
                 }, function(characterObject) {
-                    loadClothingSeq(characterObject, player.clothing, 0, function() {
-                        game.updateCubeMap();
-                        characterObject.mesh.add(characterObject.clothingMesh);
-                    });
-                    player.equipment.forEach(function(item) {
-                        game.loadDynamicObject(item.model, item.options, function(equipmentDynamic) {
-                            characterObject.equip(item, game, equipmentDynamic.mesh, equipmentDynamic);
-                        });
-                    });
                     characterObject.addController(new UserController(characterObject, game));
+                    player.equipment.forEach(function(item) {
+                    	characterObject.equip(item);
+                    });
                 }
         );
 
@@ -229,15 +210,10 @@ function runGame(data) {
                         normalPath: player.normalPath,
                         position: npc.position
                     }, function(characterObject) {
-                        loadClothingSeq(characterObject, player.clothing, 0, function() {
-                            characterObject.mesh.add(characterObject.clothingMesh);
-                        });
-                        player.equipment.forEach(function(item) {
-                            game.loadDynamicObject(item.model, item.options, function(equipmentDynamic) {
-                                characterObject.equip(item, game, equipmentDynamic.mesh, equipmentDynamic);
-                            });
-                        });
-                        characterObject.addController(new AIController(characterObject, game));
+                    	characterObject.addController(new AIController(characterObject, game));
+	                    player.equipment.forEach(function(item) {
+	                    	characterObject.equip(item);
+	                    });
                     }
             );
             id_counter+=1;

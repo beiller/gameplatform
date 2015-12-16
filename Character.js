@@ -194,15 +194,33 @@ Character.prototype.update = function(delta) {
         });
     }
 };
-Character.prototype.equip = function(item, game, mesh, dynamic) {
+Character.prototype.equip = function(item) {
+	var game = this.controllers[0].game;
     this.equipment[item.slot] = item;
-    this.equipmentMesh[item.slot] = mesh;
-    game.scene.remove(mesh);
-    var bone = this.findBone(item.bone);
-    bone.add(mesh);
-    mesh.position = new THREE.Vector3(0,0,0);
-    mesh.rotation = new THREE.Quaternion();
-    dynamic.sleep = true;
+    var scope = this;
+	if(item.mesh) {
+		//already loaded
+	} else {
+		//load the mesh
+		if(item.bone) { //this item is static and attaches to bones
+	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
+	        	item.mesh = dynamic.mesh;
+	        	game.scene.remove(dynamic.mesh);
+		       	var bone = scope.findBone(item.bone);
+			    bone.add(dynamic.mesh);
+			    dynamic.mesh.position = new THREE.Vector3(0,0,0);
+			    dynamic.mesh.rotation = new THREE.Quaternion();
+			    dynamic.sleep = true;
+	        });
+		} else { //this item is not attached to bones but deformed by skeleton
+	        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
+				item.mesh = mesh;
+				scope.mesh.add(mesh);
+				//update character clothing mesh
+				//....
+	        });
+		}
+	}
 };
 Character.prototype.calculateEffect = function(characterStats, weaponStats) {
     var magicDamage = 0;
