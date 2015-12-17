@@ -28,7 +28,7 @@
     "holychestarmor": {
         "model": "models/armor_boob.json", 
         "slot": "chest",
-        "options": {"reflectivity": 0.3, "color": "0xEEEEEE"},
+        "options": {"reflectivity": 0.15, "color": "0xFFB7DD"},
         "stats": {
             "defence": 200,
             "magic_defence": {
@@ -37,52 +37,41 @@
             "health": 200
         }
     },
-    "holyarms": {
-        "model": "models/armor_armbands.json", 
-        "slot": "arms",
-        "options": {"reflectivity": 0.3, "color": "0xEEEEEE"},
-        "stats": {
-            "defence": 200,
-            "magic_defence": {
-                "evil": 200
-            },
-            "health": 200
-        }
+    "evilchestarmor": {"model": "models/armor_boob.json", "slot": "chest","options": {"reflectivity": 0.15, "color": "0x662222"},
+        "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
+    },
+    "holyarms": {"model": "models/armor_armbands.json", "slot": "arms","options": {"reflectivity": 0.15, "color": "0xFFB7DD"},
+        "stats": {"defence": 200,"magic_defence": {"evil": 200},"health": 200}
     },   
-    "holylegs": {
-        "model": "models/armor_legbands.json", 
-        "slot": "arms",
-        "options": {"reflectivity": 0.3, "color": "0xEEEEEE"},
-        "stats": {
-            "defence": 200,
-            "magic_defence": {
-                "evil": 200
-            },
-            "health": 200
-        }
+    "evilarms": { "model": "models/armor_armbands.json", "slot": "arms", "options": {"reflectivity": 0.15, "color": "0x662222"},
+        "stats": {"defence": 200, "magic_defence": { "holy": 200 }, "health": 200 }
+    },      
+    "holylegs": { "model": "models/armor_legbands.json", "slot": "legs", "options": {"reflectivity": 0.15, "color": "0xFFB7DD"},
+        "stats": {"defence": 200, "magic_defence": { "evil": 200 }, "health": 200 }
+    },  
+    "evillegs": { "model": "models/armor_legbands.json", "slot": "legs", "options": {"reflectivity": 0.15, "color": "0x662222"},
+        "stats": {"defence": 200, "magic_defence": { "holy": 200 }, "health": 200 }
     },  
     "holythong": {
-        "model": "models/armor_thong.json", 
-        "slot": "pants",
-        "options": {"reflectivity": 0.3, "color": "0xEEEEEE"},
-        "stats": {
-            "defence": 200,
-            "magic_defence": {
-                "evil": 200
-            },
-            "health": 200
-        }
-    },  
-    "evilchestarmor": {
-        "model": "models/armor_boob.json", 
-        "slot": "chest",
-        "options": {"reflectivity": 0.1, "color": "0x222222"},
-        "stats": {
-            "defence": 200,
-            "magic_defence": {
-                "holy": 200
-            },
-            "health": 200
-        }
-    }
+        "model": "models/armor_thong.json", "slot": "pants","options": {"reflectivity": 0.0001, "color": "0xFFB7DD"},
+        "stats": {"defence": 200,"magic_defence": {"evil": 200},"health": 200}
+    }, 
+    "evilthong": {
+        "model": "models/armor_thong.json", "slot": "pants","options": {"reflectivity": 0.0001, "color": "0x662222"},
+        "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
+    }, 
+    "holysocks": {
+        "model": "models/thighhigh.json", "slot": "socks","options": {"reflectivity": 0.1, "color": "0xFFB7DD"},
+        "stats": {"defence": 200,"magic_defence": {"evil": 200},"health": 200}
+    }, 
+    "evilsocks": {
+        "model": "models/thighhigh.json", "slot": "socks","options": {"reflectivity": 0.1, "color": "0x662222"},
+        "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
+    },     
+    "eyes": { "model": "models/neweve_eyes.json", "slot": "eyes1", "options": {"reflectivity": 0.15, "color": "0xEEEEEE"} },  
+    "eyelash": { "model": "models/neweve_eyelash.json", "slot": "eyes2", "options": {"reflectivity": 0.0001, "color": "0xEEEEEE"} },  
+    "eyebrows": { "model": "models/neweve_eyebrows.json", "slot": "eyes3", "options": {"reflectivity": 0.0001, "color": "0xEEEEEE"} },  
+    "mouth": { "model": "models/neweve_mouth.json", "slot": "eyes4", "options": {"reflectivity": 0.15, "color": "0xEEEEEE"} },  
+    "hairprincess": { "model": "models/neweve_hair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0xFFB7DD"} },  
+    "hairevil": { "model": "models/neweve_hair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0x662222"} }
 }

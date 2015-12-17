@@ -247,12 +247,17 @@ Game.prototype.initRendering = function() {
     directionalLight.position.set( -1, 0.5, -1 );
     this.scene.add( directionalLight );
 
+	directionalLight = new THREE.HemisphereLight( 0x0000ff, 0x00ff00, 0.25 ); 
+	directionalLight.color.setHSL( 0.6, 1, 0.6 );
+	directionalLight.groundColor.setHSL( 0.095, 1, 0.75 );
+	directionalLight.position.set( 0, 500, 0 );	
+	this.scene.add( directionalLight );
 
     this.texloader = new THREE.TextureLoader();
     this.jsonloader = new THREE.JSONLoader();
 
 
-    this.renderer = new THREE.WebGLRenderer( { antialias: true } );
+    this.renderer = new THREE.WebGLRenderer( { antialias: false } );
     this.renderer.setClearColor( 0x050505 );
     this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -409,7 +414,8 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
         _setopt(mesh.material, options);
     }
 };
-Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh) {
+Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh, normalGeometry) {
+	normalGeometry = normalGeometry === undefined ? false : normalGeometry;
     if(this.meshCache[jsonFileName] !== undefined) {
     	var newMaterials = [];
     	if(!this.meshCache[jsonFileName].materials) {
@@ -427,14 +433,24 @@ Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh) {
     	//hack to implement sleep-wait
     	var scope = this;
     	if(scope.loaderBusy) {
-    		setTimeout(function() {scope.loadJsonMesh(jsonFileName, loadedMesh);}, 500);	
+    		setTimeout(function() {scope.loadJsonMesh(jsonFileName, loadedMesh, normalGeometry);}, 500);	
     		return;
     	}
         scope.loaderBusy = true;
         scope.jsonloader.load(jsonFileName, function(geometry, materials) {
-            scope.meshCache[jsonFileName] = {geometry: geometry, materials: materials};
-            scope.loaderBusy = false;
-            loadedMesh(geometry, materials);
+        	if(!normalGeometry) {
+				var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
+				//THREE.js issue# 6869
+		    	bufferGeometry.animations = geometry.animations;
+		    	bufferGeometry.bones = geometry.bones;
+		        scope.meshCache[jsonFileName] = {geometry: bufferGeometry, materials: materials};
+		        geometry.dispose();
+		        loadedMesh(bufferGeometry, materials);
+			} else {
+				scope.meshCache[jsonFileName] = {geometry: geometry, materials: materials};
+				loadedMesh(geometry, materials);
+			} 
+			scope.loaderBusy = false;
         });
     }
 };
@@ -447,7 +463,7 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
         skinnedMesh.skeleton = parent.skeleton;
         skinnedMesh.castShadow = true;
         skinnedMesh.receiveShadow = true;
-        //parent.add(skinnedMesh);
+        parent.add(skinnedMesh);
         options.skinning = true;
         game.setMaterialOptions(skinnedMesh, options);
         if(onComplete) onComplete(skinnedMesh);
@@ -516,7 +532,7 @@ Game.prototype.animate = function() {
     var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
     //var maxSubSteps = 3;
     //this.world.step(1.0/60, delta);
-    this.world.step(1/50);
+    this.world.step(1/60);
     for(var i in this.characters) {
         this.characters[i].update(delta);
     }

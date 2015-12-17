@@ -43,8 +43,8 @@
 	<body oncontextmenu="return false;">
         <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:50px;background-color:white;color:black">Test</div>
 		<script src="cannon.js"></script>
-		<script src="three.js/build/three.js"></script>
-		<script src="javascript-state-machine/state-machine.min.js"></script>
+		<script src="three.mybuild.js"></script>
+		<script src="state-machine.min.js"></script>
         <script src="gamecontroller.min.js"></script>
 
 		<script src="shaders/ShaderSkinCustom.js"></script>
@@ -146,7 +146,19 @@ function runGame(data) {
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
                 //clothing: outfit2,
-                equipment:  [ items.firesword, items.evilchestarmor, items.holyarms, items.holylegs, items.holythong ]
+                equipment:  [ 
+                	items.firesword, 
+                	items.evilchestarmor, 
+                	items.evilarms, 
+                	items.evillegs, 
+                	items.evilthong,
+                	items.eyes,
+                	items.eyelash,
+                	items.eyebrows,
+                	items.mouth,
+                	items.hairevil,
+                	items.evilsocks
+                ]
             },
             good_eve: {
                 model: "models/neweve.json",
@@ -155,14 +167,26 @@ function runGame(data) {
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
                 //clothing: outfit1,
-                equipment: [ items.icesword, items.holychestarmor, items.holyarms, items.holylegs, items.holythong ]
+                equipment: [ 
+                	items.icesword, 
+                	items.holychestarmor, 
+                	items.holyarms, 
+                	items.holylegs, 
+                	items.holythong,
+                	items.eyes,
+                	items.eyelash,
+                	items.eyebrows,
+                	items.mouth,
+                	items.hairprincess,
+                	items.holysocks
+                ]
             }
         },
         npcs : [
             {character: 'evil_eve', position: [-20,0,0]},
-            {character: 'evil_eve', position: [20,0,0]},
-            {character: 'evil_eve', position: [-11,0,0]},
-            {character: 'evil_eve', position: [11,0,0]}
+            {character: 'evil_eve', position: [20,0,0]}
+            //{character: 'evil_eve', position: [-11,0,0]},
+            //{character: 'evil_eve', position: [11,0,0]}
         ],
         player: {
             character: 'good_eve', position: [0,0,0]
@@ -187,6 +211,7 @@ function runGame(data) {
                     player.equipment.forEach(function(item) {
                     	characterObject.equip(item);
                     });
+                    //setTimeout(function() {characterObject.updateClothingMesh();}, 10000);
                 }
         );
 
@@ -214,6 +239,7 @@ function runGame(data) {
 	                    player.equipment.forEach(function(item) {
 	                    	characterObject.equip(item);
 	                    });
+	                    //setTimeout(function() {characterObject.updateClothingMesh();}, 10000);
                     }
             );
             id_counter+=1;
@@ -223,6 +249,7 @@ function runGame(data) {
 
     game.addGroundPlane(-4);
     game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+    	game.updateCubeMap();
     	loadLevel(level);
     });
     
@@ -252,7 +279,7 @@ function runGame(data) {
     var logicInterval = setInterval(function() {
     	game.animate();
     	logicCount++;
-    }, 1000/30);
+    }, interval);
 
     draw();
 }

@@ -90,10 +90,14 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.clothingMesh = null;
     this.equipment = {};
 }
-Character.prototype.updateClothingGeometry = function(mesh) {
+Character.prototype.updateClothingMesh = function() {
     //this.clothingMeshes.push(mesh);
     //this.mesh.add(mesh);
-    try {
+    for(var slot in this.equipment) {
+    	var item = this.equipment[slot];
+    	var mesh = item.mesh;
+    	if(!mesh) continue;
+    	if(item.bone) continue;
         if(this.clothingMesh === null) {
             this.clothingMesh = new THREE.SkinnedMesh( mesh.geometry, mesh.material );
             this.clothingMesh.frustumCulled = false;
@@ -126,9 +130,8 @@ Character.prototype.updateClothingGeometry = function(mesh) {
                 this.clothingMesh.geometry.skinWeights.push( weightCopy );
             }
         }
-    } catch(e) {
-
     }
+    this.mesh.add(this.clothingMesh);
 };
 Character.prototype.createHealthBar = function() {
     var sprite = new THREE.Sprite();
@@ -180,7 +183,7 @@ Character.prototype.update = function(delta) {
     //update physics components and copy to mesh position
     if(this.body) {
         this.mesh.position.copy(this.body.position).y -= this.mesh.geometry.boundingSphere.radius;
-        this.mesh.frustumCulled = false;
+        //this.mesh.frustumCulled = false;
         if(this.sssMesh) {
             this.sssMesh.position.copy(this.body.position);
             //this.mesh.frustumCulled = false;
@@ -214,12 +217,14 @@ Character.prototype.equip = function(item) {
 		} else { //this item is not attached to bones but deformed by skeleton
 	        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
 				item.mesh = mesh;
-				scope.mesh.add(mesh);
+				//scope.mesh.add(mesh);
 				//TODO update character clothing mesh
 				//....
 	        });
 		}
 	}
+	//var scope = this;
+	//setTimeout(function(){ scope.updateClothingMesh();}, 3000 );
 };
 Character.prototype.calculateEffect = function(characterStats, weaponStats) {
     var magicDamage = 0;
