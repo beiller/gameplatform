@@ -128,7 +128,6 @@ function UserController(character, game) {
     };
     //GameController.init( mobileControlData );
 
-
     this.updateFunction = this.applyForces;
 
     this.fsm = StateMachine.create({
@@ -154,12 +153,18 @@ function UserController(character, game) {
         ],
         callbacks: {
             onenterSEX: function() {
+            	character.equipment['chest'].mesh.visible = false;
+            	character.equipment['pants'].mesh.visible = false;
                 character.playAnimation("fuckself_1_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 controller.updateFunction = controller.idle;
                 var fsm = this;
                 this.sexTimeout = setTimeout(function(){
                     fsm.cooldown();
                 }, 40000);
+            },
+            onleaveSEX: function() {
+            	character.equipment['chest'].mesh.visible = true;
+            	character.equipment['pants'].mesh.visible = true;
             },
             onenterDEAD: function() {
                 character.playAnimation("DE_Die", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
@@ -182,14 +187,11 @@ function UserController(character, game) {
                         c.mesh.quaternion.copy(character.mesh.quaternion);
                         var oldFunction = game.cameraUpdateFunction;
                         game.cameraUpdateFunction = function() {
-                            //game.camera.matrixWorld = character.findBone("camera").matrixWorld;
                             var bone = character.findBone("threecamera");
                             var t = new THREE.Vector3();
                             var q = new THREE.Quaternion();
                             var s = new THREE.Vector3();
                             bone.matrixWorld.decompose(t, q, s);
-                            var q2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,0,-1), 1.5708);
-                            q2.multiply(q);
                             game.camera.position.copy(t);
                             game.camera.quaternion.copy(q);
                         };
@@ -243,12 +245,15 @@ function UserController(character, game) {
             },
             onenteronGround:  function(event, from, to, msg) {
                 controller.updateFunction = function(delta) {
+                	var quaternion = new THREE.Quaternion();
                     if(character.movementDirection.x > 0.1) {
                         character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
-                        character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+                        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+                        character.mesh.quaternion.slerp(quaternion, 0.01);
                     } else if(character.movementDirection.x < -0.1) {
                         character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
-                        character.mesh.quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
+                        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
+                        character.mesh.quaternion.slerp(quaternion, 0.01);
                     } else {
                         character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
                     }

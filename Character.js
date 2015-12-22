@@ -1,59 +1,4 @@
-function Dynamic(mesh, body) {
-    this.mesh = mesh;
-    this.body = body;
-    this.sleep = false;
-}
-Dynamic.prototype.update = function() {
-    if(!this.sleep) {
-        //update physics components and copy to mesh position
-        this.body.position.z = 0.0;
-        this.mesh.position.copy(this.body.position);
-        this.mesh.quaternion.copy(this.body.quaternion);
-    }
-};
-Dynamic.prototype.findDynamic = function(game, mesh) {
-    for(var i in game.dynamics) {
-        if(game.dynamics[i].mesh === mesh) {
-            return game.dynamics[i];
-        }
-    }
-};
 
-Item.prototype = new Dynamic();
-Item.prototype.constructor = Item;
-function Item(mesh, body, game) {
-    Dynamic.prototype.constructor.call(this, mesh, body);
-    this.game = game;
-}
-
-
-
-PhysBone.prototype = new Dynamic();
-PhysBone.prototype.constructor = PhysBone;
-function PhysBone(mesh, body, rootBone, spring, world, charObject) {
-    Dynamic.prototype.constructor.call(this, mesh, body);
-    this.rootBone = rootBone;
-    this.spring = spring;
-    this.charObject = charObject;
-}
-PhysBone.prototype.update = function() {
-    //update physics components and copy to mesh position
-    var vector = new THREE.Vector3().setFromMatrixPosition(this.mesh.matrixWorld);
-
-    var position = new THREE.Vector3().copy(vector).sub(this.body.position);
-    var dist = position.length();
-    position.normalize();
-    position.multiplyScalar(150 * dist);
-    var force = new CANNON.Vec3().copy(position);
-    this.body.applyLocalForce(force, new CANNON.Vec3(0,0,0));
-
-    var p = new THREE.Vector3().copy(vector).sub(this.body.position);
-
-    //best attempt to copy to bone positioning
-    this.mesh.quaternion.x = p.y * 0.75;
-    this.mesh.quaternion.y = p.x * 0.35;
-
-};
 
 
 Character.prototype = new Dynamic();
@@ -90,49 +35,6 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.clothingMesh = null;
     this.equipment = {};
 }
-Character.prototype.updateClothingMesh = function() {
-    //this.clothingMeshes.push(mesh);
-    //this.mesh.add(mesh);
-    for(var slot in this.equipment) {
-    	var item = this.equipment[slot];
-    	var mesh = item.mesh;
-    	if(!mesh) continue;
-    	if(item.bone) continue;
-        if(this.clothingMesh === null) {
-            this.clothingMesh = new THREE.SkinnedMesh( mesh.geometry, mesh.material );
-            this.clothingMesh.frustumCulled = false;
-            this.clothingMesh.skeleton = this.mesh.skeleton;
-            if(!(this.clothingMesh.material instanceof THREE.MultiMaterial)) {
-                this.clothingMesh.material = new THREE.MultiMaterial( [this.clothingMesh.material] );
-            }
-        } else {
-            //get offset
-            var materialOffset = this.clothingMesh.material.materials.length;
-            //merge materials
-            if(mesh.material instanceof THREE.MultiMaterial) {
-                for (var i = 0; i < mesh.material.materials.length; i++) {
-                    this.clothingMesh.material.materials.push(mesh.material.materials[i]);
-                }
-            } else {
-                this.clothingMesh.material.materials.push(mesh.material);
-            }
-            this.clothingMesh.geometry.merge(mesh.geometry, undefined, materialOffset);
-            /*
-                Copy skin weights man!
-            */
-            var geom = mesh.geometry;
-            for ( var i = 0, il = geom.skinIndices.length; i < il; i ++ ) {
-                var skin = geom.skinIndices[ i ];
-                var skinCopy = skin.clone();
-                this.clothingMesh.geometry.skinIndices.push( skinCopy );
-                var weight = geom.skinWeights[ i ];
-                var weightCopy = weight.clone();
-                this.clothingMesh.geometry.skinWeights.push( weightCopy );
-            }
-        }
-    }
-    this.mesh.add(this.clothingMesh);
-};
 Character.prototype.createHealthBar = function() {
     var sprite = new THREE.Sprite();
     var healthRatio = this.characterStats.health / this.characterStats.maxHealth;
@@ -176,26 +78,33 @@ Character.prototype.addController = function(controller) {
 };
 Character.prototype.update = function(delta) {
     this.body.position.z = 0.0; //2d game here
-    //do update skeletal Animation
-    if(this.animationMixer && this.animationMixer.actions.length > 0) {
-        this.animationMixer.update(delta);
-    }
+
     //update physics components and copy to mesh position
     if(this.body) {
         this.mesh.position.copy(this.body.position).y -= this.mesh.geometry.boundingSphere.radius;
-        //this.mesh.frustumCulled = false;
         if(this.sssMesh) {
             this.sssMesh.position.copy(this.body.position);
-            //this.mesh.frustumCulled = false;
         }
         //this.mesh.quaternion.copy(this.body.quaternion);
         //update controller?
         this.controllers.forEach(function(controller) {
             controller.update(delta);
         });
+		if(this.body.debugMesh) {
+			this.body.debugMesh.position.copy(this.body.position);
+			this.body.debugMesh.quaternion.copy(this.body.quaternion);
+		}
+    }
+    //do update skeletal Animation
+    if(this.animationMixer && this.animationMixer.actions.length > 0) {
+        this.animationMixer.update(delta);
     }
 };
 Character.prototype.equip = function(item) {
+	if(item.stats && item.stats.health) {
+		this.characterStats.maxHealth += item.stats.health;
+		this.characterStats.health += item.stats.health;
+	}
 	//TODO UNEQUIP??
 	var game = this.controllers[0].game;
     this.equipment[item.slot] = item;
@@ -217,7 +126,7 @@ Character.prototype.equip = function(item) {
 		} else { //this item is not attached to bones but deformed by skeleton
 	        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
 				item.mesh = mesh;
-				//scope.mesh.add(mesh);
+				scope.mesh.add(mesh);
 				//TODO update character clothing mesh
 				//....
 	        });
@@ -228,21 +137,43 @@ Character.prototype.equip = function(item) {
 };
 Character.prototype.calculateEffect = function(characterStats, weaponStats) {
     var magicDamage = 0;
-    magicDamage += characterStats.magic;
+    armors = ['chest', 'arms', 'head', 'legs', 'pants', 'boots', 'gloves'];
+    effects = ['fire', 'water', 'earth', 'air', 'dark', 'holy'];
+    var damage = {};
+    var magicDefences = {};
+    var physicalDefences = 0;
+    var character = this;
+    armors.forEach(function(slot) {
+    	if(character.equipment[slot]) {
+    		var item = character.equipment[slot];
+    		var stats = item.stats;
+    		if(stats.magic_defence) {
+		    	effects.forEach(function(effect) {
+		    		if(stats.magic_defence[effect]) {
+		    			magicDefences[effect] = stats.magic_defence[effect];
+		    		}
+		    	});
+	    	}
+	    	if(stats.defence) {
+	    		physicalDefences += stats.defence;
+	    	}
+    	}
+    });
     if(weaponStats && weaponStats.magic_damage) {
-        magicDamage += weaponStats.magic_damage.fire || 0;
-        magicDamage += weaponStats.magic_damage.water || 0;
-        magicDamage += weaponStats.magic_damage.earth || 0;
-        magicDamage += weaponStats.magic_damage.air || 0;
-        magicDamage += weaponStats.magic_damage.dark || 0;
-        magicDamage += weaponStats.magic_damage.holy || 0;
+    	effects.forEach(function(effect) {
+    		if(weaponStats.magic_damage[effect]) {
+    			var defence = magicDefences[effect] !== undefined ? magicDefences[effect] : 0;
+    			magicDamage += weaponStats.magic_damage[effect] - defence;
+    		}
+    	});
     }
-    magicDamage -= this.characterStats.magicResistance;
-
+    
     var physicalDamage = 0;
     physicalDamage += characterStats.strength;
     physicalDamage += weaponStats.damage || 0;
     physicalDamage -= this.characterStats.endurance;
+    physicalDamage -= physicalDefences;
+    physicalDamage = Math.max(0, physicalDamage);
 
     return physicalDamage + magicDamage;
 };

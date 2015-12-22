@@ -61,6 +61,7 @@
 		<script src="three.js/examples/js/postprocessing/MaskPass.js"></script>
 		<script src="SkinShaderPass.js"></script>
         <script src="Game.js"></script>
+        <script src="PhysBone.js"></script>
         <script src="Character.js"></script>
         <script src="Controller.js"></script>
 		<script src="AIController.js"></script>
@@ -86,52 +87,23 @@ function loadJSON(path, success, error) {
             }
         }
     };
+    path += '?cache=' + new Date().getTime();
     xhr.open("GET", path, true);
     xhr.send();
 }
 
+var gameSettings = null;
+var game = null;
+
 function runGame(data) {
     var items = data;
-    var game = new Game();
+    game = new Game(gameSettings);
     game.initRendering();
     game.initPhysics();
     var objectCount = 0;
-    var outfit1 = [
-        {
-            model: "models/neweve_hair.json",
-            options: {reflectivity: 0.0001, color: "0xFFB7DD"}
-        },
-        {model: "models/neweve_eyes.json",options: {reflectivity: 0.15}},
-        {model: "models/neweve_eyelash.json"},
-        {model: "models/neweve_eyebrows.json"},
-        {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
-        {model: "models/neweve_fingernails.json",options: {reflectivity: 0.25, color: "0xFFB7DD"}},
-        {model: "models/armor_armbands.json",options: {reflectivity: 0.2, color: "0x777777"}},
-        {model: "models/armor_legbands.json",options: {reflectivity: 0.2, color: "0x777777"}},
-        {model: "models/thighhigh.json",options: {reflectivity: 0.000001, color: "0xFFB7DD"}},
-        {model: "models/armor_boob.json",options: {reflectivity: 0.2, color: "0x777777"}},
-        {model: "models/armor_thong.json",options: {reflectivity: 0.01, color: "0xFFB7DD"}},
-        {model: "models/neweveunderwear.json",options: {reflectivity: 0.01, color: "0xFFB7DD"}}
-    ];
-    var outfit2 = [
-        {
-            model: "models/neweve_hair.json",
-            options: {reflectivity: 0.0001, color: "0x110000"}
-        },
-        {model: "models/neweve_eyes.json",options: {reflectivity: 0.15}},
-        {model: "models/neweve_eyelash.json"},
-        {model: "models/neweve_eyebrows.json"},
-        {model: "models/neweve_mouth.json",options: {reflectivity: 0.05}},
-        {model: "models/neweve_fingernails.json",options: {reflectivity: 0.25, color: "0x660000"}},
-        {model: "models/armor_armbands.json",options: {reflectivity: 0.2, color: "0x222222"}},
-        {model: "models/armor_legbands.json",options: {reflectivity: 0.2, color: "0x222222"}},
-        {model: "models/thighhigh.json",options: {reflectivity: 0.000001, color: "0xeeeeee"}},
-        {model: "models/armor_boob.json",options: {reflectivity: 0.2, color: "0x222222"}},
-        {model: "models/armor_thong.json",options: {reflectivity: 0.01, color: "0x222222"}},
-        {model: "models/neweveunderwear.json",options: {reflectivity: 0.01, color: "0x222222"}}
-    ];
+
     var bricks = [];
-    for(var i = -10; i<10; i++) {
+    for(var i = -50; i<=50; i++) {
         var randomHeight = (Math.random() - 0.5) * 0.5;
         bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3+randomHeight,0]});
     }
@@ -192,9 +164,33 @@ function runGame(data) {
             character: 'good_eve', position: [0,0,0]
         }
     };
-
+    var id_counter = 0;
+	function spawn_npc(name, player, position, controllerConstructor) {
+            if(!player) {
+                console.log('no player specified');
+                return;
+            }
+            controllerConstructor = controllerConstructor ? controllerConstructor : AIController;
+            
+            game.loadCharacter(
+                    player.model,
+                    {
+                        name: name,
+                        sss: player.sss,
+                        diffusePath: player.diffusePath,
+                        specularPath: player.specularPath,
+                        normalPath: player.normalPath,
+                        position: position
+                    }, function(characterObject) {
+                    	characterObject.addController(new controllerConstructor(characterObject, game));
+	                    player.equipment.forEach(function(item) {
+	                    	characterObject.equip(item);
+	                    });
+                    }
+            );
+            
+	}
     function loadLevel(level) {
-        var id_counter = 0;
         //load player
         var player = level.characters[level.player.character];
         game.loadCharacter(
@@ -211,7 +207,6 @@ function runGame(data) {
                     player.equipment.forEach(function(item) {
                     	characterObject.equip(item);
                     });
-                    //setTimeout(function() {characterObject.updateClothingMesh();}, 10000);
                 }
         );
 
@@ -220,30 +215,14 @@ function runGame(data) {
         });
 
         level.npcs.forEach(function(npc) {
-            var player = level.characters[npc.character];
-            if(player === null) {
-                console.log('no character by name: ', npc);
-                return;
-            }
-            game.loadCharacter(
-                    player.model,
-                    {
-                        name: 'monster'+id_counter,
-                        sss: player.sss,
-                        diffusePath: player.diffusePath,
-                        specularPath: player.specularPath,
-                        normalPath: player.normalPath,
-                        position: npc.position
-                    }, function(characterObject) {
-                    	characterObject.addController(new AIController(characterObject, game));
-	                    player.equipment.forEach(function(item) {
-	                    	characterObject.equip(item);
-	                    });
-	                    //setTimeout(function() {characterObject.updateClothingMesh();}, 10000);
-                    }
-            );
+            spawn_npc('monster'+id_counter, level.characters[npc.character], npc.position);
             id_counter+=1;
         });
+        
+        setInterval(function() {
+    		spawn_npc('monster'+id_counter, level.characters.evil_eve, [Math.random() * 80 - 40,0,0]);
+    		id_counter+=1;
+    	}, 30000);
 
     }
 
@@ -283,8 +262,13 @@ function runGame(data) {
 
     draw();
 }
+function doSettings(jsonData) {
+	gameSettings = jsonData;
+	loadJSON("items.json", runGame);
+}
+loadJSON("settings.json", doSettings);
 
-loadJSON("items.json", runGame);
+
 </script>
 
 	</body>

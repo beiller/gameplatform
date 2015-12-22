@@ -1,9 +1,11 @@
 function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, specularTexture, normalTexture, SSSparameters) {
+	if(SSSparameters === undefined) SSSparameters = {};
+	
     /*
 
         OPTIONS
      */
-    this.disableSSSRenderFrame = false;
+    this.disableSSSRenderFrame = SSSparameters.disableSSSRenderFrame || false;
 
 
     this.scene = new THREE.Scene();
@@ -12,7 +14,7 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
     this.object.skeleton = object.skeleton;
     //this.object.frustumCulled = false;
     this.scene.add(this.object);
-    if(SSSparameters === undefined) SSSparameters = {};
+    
 
     var directionalLight = new THREE.DirectionalLight( 0xffeedd, 1.5 );
     directionalLight.position.set( 1, 0.5, 1 );

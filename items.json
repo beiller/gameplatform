@@ -5,9 +5,9 @@
         "bone": "weapon",
         "options": {"reflectivity": 0.5, "color": "0xFF7E7A" },
         "stats": {
-            "damage": 200,
+            "damage": 413,
             "magic_damage": {
-                "fire": 200
+                "fire": 400
             },
             "health": 200
         }
@@ -18,9 +18,9 @@
         "bone": "weapon",
         "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
         "stats": {
-            "damage": 200,
+            "damage": 412,
             "magic_damage": {
-                "water": 200
+                "water": 400
             },
             "health": 200
         }
@@ -53,11 +53,11 @@
         "stats": {"defence": 200, "magic_defence": { "holy": 200 }, "health": 200 }
     },  
     "holythong": {
-        "model": "models/armor_thong.json", "slot": "pants","options": {"reflectivity": 0.0001, "color": "0xFFB7DD"},
+        "model": "models/armor_thong.json", "slot": "pants","options": {"reflectivity": 0.0001},
         "stats": {"defence": 200,"magic_defence": {"evil": 200},"health": 200}
     }, 
     "evilthong": {
-        "model": "models/armor_thong.json", "slot": "pants","options": {"reflectivity": 0.0001, "color": "0x662222"},
+        "model": "models/armor_thong.json", "slot": "pants","options": {"reflectivity": 0.0001},
         "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
     }, 
     "holysocks": {

@@ -1,5 +1,9 @@
-function Game() {
+function Game(gameSettings) {
     if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+    if ( gameSettings === undefined ) gameSettings = {};
+    
+    this.disableCull = gameSettings.disableCull === true;
+	this.enableSSS = gameSettings.enableSSS === true;
 
     this.container = null;
 
@@ -27,6 +31,8 @@ function Game() {
     this.textureCache = {};
 
     this.cubemapRendered = false;
+    
+    //this.debugPhysics = true;
 }
 Game.prototype.explosion = function(character, impulse) {
     if(this.world !== undefined) {
@@ -163,7 +169,8 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
         var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
         sphere.position.copy(body.position);
         this.scene.add(sphere);
-        this.dynamics.push(new Dynamic(sphere, body));
+        //this.dynamics.push(new Dynamic(sphere, body));
+        body.debugMesh = sphere;
     }
 
     return body;
@@ -188,10 +195,11 @@ Game.prototype.addObjectPhysics = function(mesh, mass, position) {
     body.updateMassProperties();
     this.world.add(body); // Step 3
 
-    if(true) {
+    if(this.debugPhysics) {
         var mbox = new THREE.Mesh(new THREE.BoxGeometry( sizex, sizey, sizez, 1, 1, 1 ), new THREE.MeshBasicMaterial({wireframe: true}));
         this.scene.add(mbox);
-        this.dynamics.push(new Dynamic(mbox, body));
+        //this.dynamics.push(new Dynamic(mbox, body));
+        body.debugMesh = mbox;
     }
 
     return body;
@@ -299,8 +307,10 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
         game.loadTextureFile(specularPath, function(specularTexture) {
             game.loadTextureFile(normalPath, function(normalTexture) {
                 var object = new THREE.SkinnedMesh( geometry );
-                var sss = new SkinShaderPass(game.renderer, game.camera, geometry, object, diffuseTexture, specularTexture, normalTexture);
+                var options = {"disableSSSRenderFrame": !game.enableSSS};
+                var sss = new SkinShaderPass(game.renderer, game.camera, geometry, object, diffuseTexture, specularTexture, normalTexture, options);
                 object.material = sss.shader;
+                //object.visible = false;
                 game.scene.add(object);
                 game.skinshaders.push(sss);
                 if(onComplete !== undefined) onComplete(object, sss);
@@ -309,15 +319,14 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
     });
 };
 Game.prototype.loadPhysBones = function(character) {
-
+	var game = this;
     function createPhysBone(boneName, parentBoneName, character) {
-        //character.mesh.updateMatrixWorld();
         var rootBone = character.findBone(parentBoneName);
         var bone = character.findBone(boneName);
         var radius = 0.075;
         var shape = new CANNON.Sphere( radius );
         var body = new CANNON.Body({
-            mass: 0.25
+            mass: 2
         });
         body.addShape(shape);
         var pos = new THREE.Vector3().set(
@@ -329,16 +338,19 @@ Game.prototype.loadPhysBones = function(character) {
         body.collisionFilterGroup = scope.collisionGroups[3];
         body.collisionFilterMask = scope.collisionGroups[2];// | this.collisionGroups[1];
         //body.fixedRotation = true;
-        body.angularDamping = 0.999;
-        body.linearDamping = 0.999;
+        body.angularDamping = 0.99;
+        body.linearDamping = 0.99;
         body.updateMassProperties();
         scope.world.add(body); // Step 3
-        scope.dynamics.push(new PhysBone(bone, body, rootBone, null, scope.world, character.mesh));
+        scope.dynamics.push(new PhysBone(bone, body, rootBone, null, scope.world, character));
 
-            /*var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
+		if(game.debugPhysics) {
+            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
             sphere.position.copy(body.position);
             scope.scene.add(sphere);
-            scope.dynamics.push(new Dynamic(sphere, body));*/
+            //scope.dynamics.push(new Dynamic(sphere, body));
+            body.debugMesh = sphere;
+		}
 
     }
     var scope = this;
@@ -362,11 +374,22 @@ Game.prototype.loadCharacter = function(jsonFileName, options, onComplete) {
             game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
                 //create Character object
                 mesh.position.set(position[0], position[1], position[2]);
+                mesh.frustumCulled = !game.disableCull;
                 var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, characterMass, position), null, sss.object);
                 game.characters[options.name] = character;
                 if(options.scale) {
                     mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
                 }
+                var bones = [
+                	'spine05', 'spine04', 'spine03', 'spine02', 'spine01', 'head', 
+                	'upperarm01_R', 'upperarm02_R', 'lowerarm01_R', 'lowerarm02_R',
+                	'upperarm01_L', 'upperarm02_L', 'lowerarm01_L', 'lowerarm02_L',
+                	'upperleg01_R', 'upperleg02_R', 'lowerleg01_R', 'lowerleg02_R',
+                	'upperleg01_L', 'upperleg02_L', 'lowerleg01_L', 'lowerleg02_L',
+                ];
+           		bones.forEach(function(b) {
+           			game.dynamics.push(new PhysBone2(character.findBone(b), character.findBone("spine03"), character, game));
+           		});
                 game.loadPhysBones(character);
                 if(onComplete !== undefined) onComplete(character);
             });
@@ -437,7 +460,8 @@ Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh, normalGeometry)
     		return;
     	}
         scope.loaderBusy = true;
-        scope.jsonloader.load(jsonFileName, function(geometry, materials) {
+        jsonFileNameNoCache = jsonFileName + '?cache=' + new Date().getTime();
+        scope.jsonloader.load(jsonFileNameNoCache, function(geometry, materials) {
         	if(!normalGeometry) {
 				var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
 				//THREE.js issue# 6869
@@ -459,11 +483,10 @@ Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete
     if(options === undefined) options = {};
     var loadedMesh = function(geometry, materials) {
         var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-        //skinnedMesh.frustumCulled = false;
+        skinnedMesh.frustumCulled = !game.disableCull;
         skinnedMesh.skeleton = parent.skeleton;
         skinnedMesh.castShadow = true;
         skinnedMesh.receiveShadow = true;
-        parent.add(skinnedMesh);
         options.skinning = true;
         game.setMaterialOptions(skinnedMesh, options);
         if(onComplete) onComplete(skinnedMesh);
@@ -536,6 +559,7 @@ Game.prototype.animate = function() {
     for(var i in this.characters) {
         this.characters[i].update(delta);
     }
+
     this.dynamics.forEach(function(dynamic) {
         dynamic.update();
     });
@@ -553,6 +577,7 @@ Game.prototype.render = function() {
     }
     this.renderer.clear();
     for(var i in this.skinshaders) {
+    	this.skinshaders[i].disableSSSRenderFrame = !this.enableSSS;
         this.skinshaders[i].render();
     }
     this.renderer.render( this.scene, this.camera );

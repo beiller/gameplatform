@@ -37,12 +37,18 @@ function AIController(character, game) {
         ],
         callbacks: {
             onenterSEX: function() {
-                character.playAnimation("fuckself_2_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+            	controller.character.equipment['chest'].mesh.visible = false;
+            	controller.character.equipment['pants'].mesh.visible = false;
+                controller.character.playAnimation("fuckself_2_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 controller.updateFunction = controller.idle;
                 var fsm = this;
                 this.hitTimeout = setTimeout(function(){
                     fsm.dead();
                 }, 40000);
+            },
+            onleaveSEX: function() {
+            	controller.character.equipment['chest'].mesh.visible = true;
+            	controller.character.equipment['pants'].mesh.visible = true;
             },
             onenterwaking: function() {
                 this.activate();
