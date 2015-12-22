@@ -1,4 +1,4 @@
-var radius = 0.1;
+var radius = 0.05;
 var sphereGeometry = new THREE.SphereGeometry(radius, 6, 6);
 var sphereMaterial = new THREE.MeshBasicMaterial({wireframe: true});
 
@@ -26,13 +26,15 @@ function PhysBone2(boneFrom, boneTo, character, game) {
     spherebody.addShape(sphereShape);
     spherebody.position.copy(t);
     this.body = spherebody;
+    this.body.collisionFilterGroup = game.collisionGroups[4];
+    this.body.collisionFilterMask = game.collisionGroups[3];// | this.collisionGroups[1];
     game.world.add(spherebody);
-    //demo.addVisual(spherebody);
+    
     var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
     sphere.position.copy(spherebody.position);
-    //game.scene.add(sphere);
-    //game.dynamics.push(new Dynamic(sphere, spherebody));
-	//this.body.debugMesh = sphere;
+    game.scene.add(sphere);
+    
+	this.body.debugMesh = sphere;
 
 	
 	//this.body.sleep();

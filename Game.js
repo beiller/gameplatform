@@ -178,11 +178,27 @@ Game.prototype.addCharacterPhysics = function(radius, mass, position) {
 Game.prototype.addObjectPhysics = function(mesh, mass, position) {
     //var shape = new CANNON.Sphere( radius || 1.0 );
     mesh.geometry.computeBoundingBox();
-    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
-    var sizex = Math.abs(len.x);
-    var sizey = Math.abs(len.y);
-    var sizez = Math.abs(len.z);
-    var shape = new CANNON.Box(new CANNON.Vec3(sizex,sizey,sizez));
+    var bb = mesh.geometry.boundingBox;
+    var vertices = [
+    	new CANNON.Vec3(bb.max.x, bb.max.y, bb.max.z),
+    	new CANNON.Vec3(bb.max.x, bb.min.y, bb.max.z),
+    	new CANNON.Vec3(bb.min.x, bb.max.y, bb.max.z),
+    	new CANNON.Vec3(bb.min.x, bb.min.y, bb.max.z),
+    	new CANNON.Vec3(bb.max.x, bb.max.y, bb.min.z),
+    	new CANNON.Vec3(bb.max.x, bb.min.y, bb.min.z),
+    	new CANNON.Vec3(bb.min.x, bb.max.y, bb.min.z),
+    	new CANNON.Vec3(bb.min.x, bb.min.y, bb.min.z)
+    ];
+    var faces = [
+    	[6,2,0], [6,0,4],
+    	[6,4,7], [4,5,7],
+    	[2,0,3], [0,1,3],
+    	[7,1,3], [7,5,1],
+    	[4,0,5], [0,1,5],
+    	[6,3,2], [3,6,7]
+    ];
+    
+    var shape = new CANNON.ConvexPolyhedron(vertices, faces);
 
     var body = new CANNON.Body({
         mass: mass || 49.0
@@ -310,7 +326,7 @@ Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, n
                 var options = {"disableSSSRenderFrame": !game.enableSSS};
                 var sss = new SkinShaderPass(game.renderer, game.camera, geometry, object, diffuseTexture, specularTexture, normalTexture, options);
                 object.material = sss.shader;
-                //object.visible = false;
+                object.visible = false;
                 game.scene.add(object);
                 game.skinshaders.push(sss);
                 if(onComplete !== undefined) onComplete(object, sss);
