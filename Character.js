@@ -109,24 +109,41 @@ Character.prototype.equip = function(item) {
 	var game = this.controllers[0].game;
     this.equipment[item.slot] = item;
     var scope = this;
+    function addBone(item, dynamic) {
+		game.scene.remove(dynamic.mesh);
+		var bone = scope.findBone(item.bone);
+		bone.add(dynamic.mesh);
+		dynamic.mesh.position = new THREE.Vector3(0,0,0);
+		dynamic.mesh.rotation = new THREE.Quaternion();
+		dynamic.sleep = true;
+    }
+    function addClothing(item, mesh) {
+    	scope.mesh.add(mesh);
+    }
 	if(item.mesh) {
 		//already loaded
+		if(item.bone) { //this item is static and attaches to bones
+			var dynamic = new Dynamic().findDynamic(game, item.mesh);
+			game.scene.remove(dynamic.mesh);
+			var bone = scope.findBone(item.bone);
+			bone.add(dynamic.mesh);
+			dynamic.mesh.position = new THREE.Vector3(0,0,0);
+			dynamic.mesh.rotation = new THREE.Quaternion();
+			dynamic.sleep = true;
+		} else { //this item is not attached to bones but deformed by skeleton
+			this.add(item.mesh);
+		}
 	} else {
 		//load the mesh
 		if(item.bone) { //this item is static and attaches to bones
 	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
 	        	item.mesh = dynamic.mesh;
-	        	game.scene.remove(dynamic.mesh);
-		       	var bone = scope.findBone(item.bone);
-			    bone.add(dynamic.mesh);
-			    dynamic.mesh.position = new THREE.Vector3(0,0,0);
-			    dynamic.mesh.rotation = new THREE.Quaternion();
-			    dynamic.sleep = true;
+	        	addBone(item, dynamic);
 	        });
 		} else { //this item is not attached to bones but deformed by skeleton
 	        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
 				item.mesh = mesh;
-				scope.mesh.add(mesh);
+				addClothing(item, mesh);
 				//TODO update character clothing mesh
 				//....
 	        });
@@ -185,7 +202,7 @@ Character.prototype.hit = function(attackingCharacter) {
         //var damage = enemyStats.damage + Math.ceil(Math.random() * 2.0);
         var damage = this.calculateEffect(attackingCharacter.characterStats, attackingCharacter.equipment.weapon.stats);
         console.log(this.name + ' takes ' + damage + ' damage.');
-        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 9, 1.0), damage, 3000);
+        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
         this.characterStats.health = this.characterStats.health - damage;
         if (this.characterStats.health <= 0) {
             console.log(this.name + " has died.");
@@ -198,7 +215,7 @@ Character.prototype.hit = function(attackingCharacter) {
         }
     } else {
         console.log(this.name + " blocked an attack!");
-        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y + 9, 1.0), "Blocked", 3000);
+        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
         //determine chance to stun me
         var rand = Math.random();
         if(rand <= this.characterStats.stunWhileBlockingChance) {
@@ -206,7 +223,7 @@ Character.prototype.hit = function(attackingCharacter) {
             this.controllers[0].fsm.stun();
             var scope = this;
             setTimeout(function() {
-                scope.controllers[0].game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y + 9, 1.0), "Stunned", 3000);
+                scope.controllers[0].game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y, 1.0), "Stunned", 3000);
             }, 100);
         }
     }
