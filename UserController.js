@@ -153,8 +153,9 @@ function UserController(character, game) {
         ],
         callbacks: {
             onenterSEX: function() {
-            	character.equipment['chest'].mesh.visible = false;
-            	character.equipment['pants'].mesh.visible = false;
+            	var character = controller.character;
+            	if(character.meshes['chest']) character.meshes['chest'].visible = false;
+            	if(character.meshes['pants']) character.meshes['pants'].visible = false;
                 character.playAnimation("fuckself_1_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 controller.updateFunction = controller.idle;
                 var fsm = this;
@@ -163,8 +164,9 @@ function UserController(character, game) {
                 }, 40000);
             },
             onleaveSEX: function() {
-            	character.equipment['chest'].mesh.visible = true;
-            	character.equipment['pants'].mesh.visible = true;
+            	var character = controller.character;
+            	if(character.meshes['chest']) character.meshes['chest'].visible = true;
+            	if(character.meshes['pants']) character.meshes['pants'].visible = true;
             },
             onenterDEAD: function() {
                 character.playAnimation("DE_Die", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });

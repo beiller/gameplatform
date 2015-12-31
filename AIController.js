@@ -37,8 +37,9 @@ function AIController(character, game) {
         ],
         callbacks: {
             onenterSEX: function() {
-            	controller.character.equipment['chest'].mesh.visible = false;
-            	controller.character.equipment['pants'].mesh.visible = false;
+            	var character = controller.character;
+            	if(character.meshes['chest']) character.meshes['chest'].visible = false;
+            	if(character.meshes['pants']) character.meshes['pants'].visible = false;
                 controller.character.playAnimation("fuckself_2_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 controller.updateFunction = controller.idle;
                 var fsm = this;
@@ -47,8 +48,9 @@ function AIController(character, game) {
                 }, 40000);
             },
             onleaveSEX: function() {
-            	controller.character.equipment['chest'].mesh.visible = true;
-            	controller.character.equipment['pants'].mesh.visible = true;
+            	var character = controller.character;
+            	if(character.meshes['chest']) character.meshes['chest'].visible = true;
+            	if(character.meshes['pants']) character.meshes['pants'].visible = true;
             },
             onenterwaking: function() {
                 this.activate();

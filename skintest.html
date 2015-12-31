@@ -132,6 +132,17 @@ function runGame(data) {
                 	items.evilsocks
                 ]
             },
+            skeleton: {
+                model: "models/skeleton.json",
+                sss: false,
+                diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
+                specularPath: "models/textures/specular.png",
+                normalPath: "models/textures/normal_none.png",
+                //clothing: outfit2,
+                equipment:  [ 
+                	items.firesword
+                ]
+            },            
             good_eve: {
                 model: "models/neweve.json",
                 sss: true,
@@ -155,13 +166,13 @@ function runGame(data) {
             }
         },
         npcs : [
-            {character: 'evil_eve', position: [-20,0,0]},
-            {character: 'evil_eve', position: [20,0,0]}
+            {character: 'skeleton', position: [-20,0,0]},
+            {character: 'skeleton', position: [20,0,0]}
             //{character: 'evil_eve', position: [-11,0,0]},
             //{character: 'evil_eve', position: [11,0,0]}
         ],
         player: {
-            character: 'good_eve', position: [0,0,0]
+            character: 'skeleton', position: [0,0,0]
         }
     };
     var id_counter = 0;
@@ -220,7 +231,7 @@ function runGame(data) {
         });
         
         setInterval(function() {
-    		spawn_npc('monster'+id_counter, level.characters.evil_eve, [Math.random() * 80 - 40,0,0]);
+    		spawn_npc('monster'+id_counter, level.characters.skeleton, [Math.random() * 200 - 100,0,0]);
     		id_counter+=1;
     	}, 30000);
 

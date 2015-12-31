@@ -34,6 +34,7 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
 
     this.clothingMesh = null;
     this.equipment = {};
+    this.meshes = {};
 }
 Character.prototype.createHealthBar = function() {
     var sprite = new THREE.Sprite();
@@ -109,7 +110,7 @@ Character.prototype.equip = function(item) {
 	var game = this.controllers[0].game;
     this.equipment[item.slot] = item;
     var scope = this;
-    function addBone(item, dynamic) {
+    function addToBone(item, dynamic) {
 		game.scene.remove(dynamic.mesh);
 		var bone = scope.findBone(item.bone);
 		bone.add(dynamic.mesh);
@@ -117,40 +118,20 @@ Character.prototype.equip = function(item) {
 		dynamic.mesh.rotation = new THREE.Quaternion();
 		dynamic.sleep = true;
     }
-    function addClothing(item, mesh) {
-    	scope.mesh.add(mesh);
-    }
-	if(item.mesh) {
-		//already loaded
-		if(item.bone) { //this item is static and attaches to bones
-			var dynamic = new Dynamic().findDynamic(game, item.mesh);
-			game.scene.remove(dynamic.mesh);
-			var bone = scope.findBone(item.bone);
-			bone.add(dynamic.mesh);
-			dynamic.mesh.position = new THREE.Vector3(0,0,0);
-			dynamic.mesh.rotation = new THREE.Quaternion();
-			dynamic.sleep = true;
-		} else { //this item is not attached to bones but deformed by skeleton
-			this.add(item.mesh);
-		}
-	} else {
-		//load the mesh
-		if(item.bone) { //this item is static and attaches to bones
-	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
-	        	item.mesh = dynamic.mesh;
-	        	addBone(item, dynamic);
-	        });
-		} else { //this item is not attached to bones but deformed by skeleton
-	        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
-				item.mesh = mesh;
-				addClothing(item, mesh);
-				//TODO update character clothing mesh
-				//....
-	        });
-		}
+	//load the mesh
+	if(item.bone) { //this item is static and attaches to bones
+        game.loadDynamicObject(item.model, item.options, function(dynamic) {
+        	addToBone(item, dynamic);
+        	scope.meshes[item.slot] = dynamic.mesh;
+        });
+	} else { //this item is not attached to bones but deformed by skeleton
+        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
+			scope.mesh.add(mesh);
+			scope.meshes[item.slot] = mesh;
+			//TODO update character clothing mesh
+			//....
+        });
 	}
-	//var scope = this;
-	//setTimeout(function(){ scope.updateClothingMesh();}, 3000 );
 };
 Character.prototype.calculateEffect = function(characterStats, weaponStats) {
     var magicDamage = 0;

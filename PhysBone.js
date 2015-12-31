@@ -32,9 +32,9 @@ function PhysBone2(boneFrom, boneTo, character, game) {
     
     var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
     sphere.position.copy(spherebody.position);
-    game.scene.add(sphere);
+    //game.scene.add(sphere);
     
-	this.body.debugMesh = sphere;
+	//this.body.debugMesh = sphere;
 
 	
 	//this.body.sleep();

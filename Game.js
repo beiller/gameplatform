@@ -4,6 +4,7 @@ function Game(gameSettings) {
     
     this.disableCull = gameSettings.disableCull === true;
 	this.enableSSS = gameSettings.enableSSS === true;
+	this.settings = gameSettings;
 
     this.container = null;
 
@@ -266,7 +267,7 @@ Game.prototype.initRendering = function() {
     this.jsonloader = new THREE.JSONLoader();
 
 
-    this.renderer = new THREE.WebGLRenderer( { antialias: false } );
+    this.renderer = new THREE.WebGLRenderer( { antialias: this.settings.enableAA } );
     this.renderer.setClearColor( 0x050505 );
     this.renderer.setPixelRatio( window.devicePixelRatio );
     this.renderer.setSize( window.innerWidth, window.innerHeight );
