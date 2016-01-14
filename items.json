@@ -12,6 +12,15 @@
             "health": 200
         }
     },
+	"rustsword": {
+        "model": "models/gold_sword.json",
+        "slot": "weapon",
+        "bone": "weapon",
+        "options": {"reflectivity": 0.01, "color": "0x662121", "shininess": 20, "specular": "0x443333" },
+        "stats": {
+            "damage": 3
+        }
+    },
     "icesword": {
         "model": "models/gold_sword.json", 
         "slot": "weapon",

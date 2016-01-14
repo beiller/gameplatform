@@ -215,7 +215,7 @@ Game.prototype.initRendering = function() {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.05, 1000);
-    this.camera.position.z = 4;
+    this.camera.position.z = 6;
     this.camera.position.y = -3;
     this.camera.position.x = 0;
     var cam = this.camera;
@@ -424,11 +424,13 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
         mat.combine = options.combine || THREE.MixOperation;
         mat.reflectivity = options.reflectivity || 0.2;
         mat.emissive  = options.emissive ? new THREE.Color(parseInt(options.emissive)) : new THREE.Color( 0x000000 );
+        mat.specular  = options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x808080 );
         mat.skinning  = options.skinning || false;
         mat.transparency = options.transparency || true;
         mat.opacity  = options.opacity || 1.0;
+        mat.shininess = options.shininess || 30.0;
         mat.side  = THREE.DoubleSide;
-        mat.color = options.color ? new THREE.Color(parseInt(options.color)) : new THREE.Color( 0x888888 );
+        mat.color = options.color ? new THREE.Color(parseInt(options.color)) : new THREE.Color( 0xCCCCCC );
         mat.needsUpdate = true;
     }
     if(mesh.material.type == "MultiMaterial") {

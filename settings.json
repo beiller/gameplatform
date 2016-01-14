@@ -1,5 +1,5 @@
 {
-	"enableSSS": 	true, 
-	"disableCull": 	true,
+	"enableSSS": 	false, 
+	"disableCull": 	false,
 	"enableAA": true
 }
