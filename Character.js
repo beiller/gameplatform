@@ -34,6 +34,7 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
 
     this.clothingMesh = null;
     this.equipment = {};
+    this.inventory = [];
     this.meshes = {};
 }
 Character.prototype.createHealthBar = function() {
@@ -102,6 +103,13 @@ Character.prototype.update = function(delta) {
     }
 };
 Character.prototype.equip = function(item) {
+	var game = this.controllers[0].game;
+	if(this.equipment[item.slot]) {
+		this.inventory.push(this.equipment[item.slot]);
+		game.scene.remove(this.meshes[item.slot]);
+		this.meshes[item.slot] = null;
+		this.equipment[item.slot] = null;
+	}
 	if(item.stats && item.stats.health) {
 		this.characterStats.maxHealth += item.stats.health;
 		this.characterStats.health += item.stats.health;

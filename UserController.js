@@ -57,10 +57,13 @@ function UserController(character, game) {
         }
         return false;
     };
-    window.addEventListener( 'keydown', onDocumentKeyDown, false );
+    /*window.addEventListener( 'keydown', onDocumentKeyDown, false );
     window.addEventListener( 'keyup', onDocumentKeyUp, false );
     window.addEventListener( 'mousedown', onMouseDownFunction, false );
-    window.addEventListener( 'mouseup', onMouseUpFunction, false );
+    window.addEventListener( 'mouseup', onMouseUpFunction, false );*/
+    $(window).on('keydown', onDocumentKeyDown).on('keyup', onDocumentKeyUp);
+    $(game.container).on('mousedown', onMouseDownFunction);
+    $(game.container).on('mouseup', onMouseUpFunction);
 
     function MobileControl(onTouchStart, onTouchEnd) {
         //this.container = document.createElement( 'div' );

@@ -45,7 +45,6 @@
 		<script src="cannon.js"></script>
 		<script src="three.mybuild.js"></script>
 		<script src="state-machine.min.js"></script>
-        <script src="gamecontroller.min.js"></script>
 
 		<script src="shaders/ShaderSkinCustom.js"></script>
 
@@ -70,6 +69,51 @@
 
 		<script src="three.js/examples/js/controls/OrbitControls.js"></script>
 		<script src="three.js/examples/js/Detector.js"></script>
+		
+		<script src="zepto.js"></script>
+		<style>
+			.window {
+				position: absolute;
+			    border-radius: 5px;
+			    border: 2px solid #73AD21;
+			    padding: 20px;
+			    width: 200px;
+			    height: 150px;
+			    background-color: rgba(255, 255, 255, 0.5);
+			    z-index: 100;
+			}
+			.topright {
+				top: 0px;
+				right: 0px;
+				z-index: 100;
+			}
+			.paneright {
+				right: 200px;
+				top: 0px;
+				height: 100%;
+				z-index: 101;
+			}
+			.window-inventory {
+				visibility: hidden;
+			}
+			.button {
+			    border-radius: 5px;
+			    border: 2px solid #73AD21;
+			    display: block;
+			    height: 30px;
+			    line-height: 30px;
+			    padding-left: 10px;
+			    background-color: rgba(255, 255, 255, 1.0);
+			    color: #000000;
+			    text-decoration: none;
+			}
+		</style>
+		<div class="window topright">
+			<a href="#" class="button btn-openinventory">Toggle Inventory</a>
+		</div>
+		<div class="window paneright window-inventory">
+			
+		</div>
 <script>
 
 
@@ -92,6 +136,42 @@ function loadJSON(path, success, error) {
     xhr.send();
 }
 
+function HUD(game) {
+	this.init();
+	
+	this.inventoryVisible = false;
+	this.game = game;
+}
+HUD.prototype.init = function() {
+	var scope = this;
+	$(".btn-openinventory").on('click', function(e) {
+		scope.loadInventory();
+		e.stopPropagation();
+		var invWindow = $(".window-inventory");
+		if(invWindow.css('visibility') == 'hidden') {
+			invWindow.css('visibility', 'visible');
+		} else {
+			invWindow.css('visibility', 'hidden');
+		}
+		return false;
+	});
+};
+HUD.prototype.loadInventory = function() {
+	var character = game.characters['eve'];
+	var invWindow = $(".window-inventory");
+	invWindow.html("");
+	for(var i in character.inventory) {
+		var item = character.inventory[i];
+		var button = $("<a href='#' class='button'></a>");
+		button.html(item.model).on('click', function(e) {
+			e.stopPropagation();
+			character.equip(item);
+		});
+		invWindow.append(button);
+	}
+};
+
+
 var gameSettings = null;
 var game = null;
 
@@ -101,6 +181,8 @@ function runGame(data) {
     game.initRendering();
     game.initPhysics();
     var objectCount = 0;
+    
+    var hud = new HUD(game, items);
 
     var bricks = [];
     for(var i = -50; i<=50; i++) {
@@ -112,7 +194,7 @@ function runGame(data) {
         staticObjects: bricks,
         characters: {
             evil_eve: {
-                model: "models/neweve.json",
+                model: "models/neweve_highres.json",
                 sss: true,
                 diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
                 specularPath: "models/textures/specular.png",
@@ -121,15 +203,11 @@ function runGame(data) {
                 equipment:  [ 
                 	items.rustsword, 
                 	items.evilchestarmor, 
-                	items.evilarms, 
-                	items.evillegs, 
-                	items.evilthong,
-                	items.eyes,
-                	items.eyelash,
-                	items.eyebrows,
-                	items.mouth,
+                	//items.evilsocks,
+                	items.face,
                 	items.hairevil,
-                	items.evilsocks
+                	items.evilnails
+                	
                 ]
             },
             skeleton: {
@@ -144,24 +222,20 @@ function runGame(data) {
                 ]
             },            
             good_eve: {
-                model: "models/neweve.json",
+                model: "models/neweve_highres.json",
                 sss: true,
                 diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
                 //clothing: outfit1,
                 equipment: [ 
-                	items.rustsword, 
-                	items.holychestarmor, 
-                	items.holyarms, 
-                	items.holylegs, 
-                	items.holythong,
-                	items.eyes,
-                	items.eyelash,
-                	items.eyebrows,
-                	items.mouth,
+                	items.icesword, 
+                	items.holyunderwear, 
+                	//items.holychestarmor, 
+                	//items.holysocks,
+                	items.face,
                 	items.hairprincess,
-                	items.holysocks
+                	items.holynails
                 ]
             }
         },
@@ -218,6 +292,7 @@ function runGame(data) {
                     player.equipment.forEach(function(item) {
                     	characterObject.equip(item);
                     });
+                    characterObject.inventory.push(items.holychestarmor);
                 }
         );
 
@@ -281,6 +356,7 @@ loadJSON("settings.json", doSettings);
 
 
 </script>
+
 
 	</body>
 </html>
