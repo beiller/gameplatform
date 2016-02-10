@@ -145,7 +145,6 @@ function HUD(game) {
 HUD.prototype.init = function() {
 	var scope = this;
 	$(".btn-openinventory").on('click', function(e) {
-		scope.loadInventory();
 		e.stopPropagation();
 		var invWindow = $(".window-inventory");
 		if(invWindow.css('visibility') == 'hidden') {
@@ -153,19 +152,23 @@ HUD.prototype.init = function() {
 		} else {
 			invWindow.css('visibility', 'hidden');
 		}
+		scope.loadInventory();
 		return false;
 	});
 };
 HUD.prototype.loadInventory = function() {
 	var character = game.characters['eve'];
 	var invWindow = $(".window-inventory");
+	var scope = this;
 	invWindow.html("");
 	for(var i in character.inventory) {
 		var item = character.inventory[i];
 		var button = $("<a href='#' class='button'></a>");
+		var inventoryIndex = i;
 		button.html(item.model).on('click', function(e) {
 			e.stopPropagation();
 			character.equip(item);
+			scope.loadInventory();
 		});
 		invWindow.append(button);
 	}
@@ -231,22 +234,27 @@ function runGame(data) {
                 equipment: [ 
                 	items.icesword, 
                 	items.holyunderwear, 
-                	//items.holychestarmor, 
-                	//items.holysocks,
                 	items.face,
                 	items.hairprincess,
                 	items.holynails
+                ],
+                inventory: [
+                	items.holychestarmor,
+                	items.holysocks,
+                	items.firesword, 
+                	items.rustsword,
+                	items.evilchestarmor
                 ]
             }
         },
         npcs : [
-            {character: 'skeleton', position: [-20,0,0]},
-            {character: 'skeleton', position: [20,0,0]}
+            {character: 'evil_eve', position: [-20,0,0]},
+            {character: 'evil_eve', position: [20,0,0]}
             //{character: 'evil_eve', position: [-11,0,0]},
             //{character: 'evil_eve', position: [11,0,0]}
         ],
         player: {
-            character: 'skeleton', position: [0,0,0]
+            character: 'good_eve', position: [0,0,0]
         }
     };
     var id_counter = 0;
@@ -292,7 +300,10 @@ function runGame(data) {
                     player.equipment.forEach(function(item) {
                     	characterObject.equip(item);
                     });
-                    characterObject.inventory.push(items.holychestarmor);
+                    player.inventory.forEach(function(item) {
+                    	characterObject.inventory.push(item);
+                    });
+                    
                 }
         );
 
@@ -308,7 +319,7 @@ function runGame(data) {
         setInterval(function() {
     		spawn_npc('monster'+id_counter, level.characters.skeleton, [Math.random() * 200 - 100,0,0]);
     		id_counter+=1;
-    	}, 30000);
+    	}, 12000);
 
     }
 

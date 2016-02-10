@@ -102,13 +102,18 @@ Character.prototype.update = function(delta) {
         this.animationMixer.update(delta);
     }
 };
+Character.prototype.unequip = function(slot) {
+	if(this.equipment[slot]) {
+		this.inventory.push(this.equipment[slot]);
+		this.mesh.remove(this.meshes[slot]);
+		this.meshes[slot] = null;
+		this.equipment[slot] = null;
+	}
+};
 Character.prototype.equip = function(item) {
 	var game = this.controllers[0].game;
 	if(this.equipment[item.slot]) {
-		this.inventory.push(this.equipment[item.slot]);
-		game.scene.remove(this.meshes[item.slot]);
-		this.meshes[item.slot] = null;
-		this.equipment[item.slot] = null;
+		this.unequip(item.slot);
 	}
 	if(item.stats && item.stats.health) {
 		this.characterStats.maxHealth += item.stats.health;

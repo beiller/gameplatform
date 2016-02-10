@@ -52,7 +52,7 @@
     "evilunderwear": {"model": "models/neweveunderwear.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0x221111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1},"health": 5}
     },
-    "evilchestarmor": {"model": "models/armor_holy.json", "slot": "chest","options": {"reflectivity": 0.15, "color": "0x221111"},
+    "evilchestarmor": {"model": "models/armor_evil.json", "slot": "chest","options": {"reflectivity": 0.15, "color": "0x221111"},
         "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
     },
     "holyarms": {"model": "models/armor_armbands.json", "slot": "arms","options": {"reflectivity": 0.15, "color": "0xFFB7DD"},
