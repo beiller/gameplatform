@@ -104,11 +104,26 @@ Character.prototype.update = function(delta) {
 };
 Character.prototype.unequip = function(slot) {
 	if(this.equipment[slot]) {
-		this.inventory.push(this.equipment[slot]);
+		this.addItem(this.equipment[slot]);
 		this.mesh.remove(this.meshes[slot]);
 		this.meshes[slot] = null;
 		this.equipment[slot] = null;
 	}
+};
+Character.prototype.addItem = function(item) {
+	this.inventory.push(item);
+};
+Character.prototype.removeItem = function(item) {
+	var newInventory = [];
+	var found = false;
+	this.inventory.forEach(function(inventoryItem) {
+		if(inventoryItem == item && !found) {
+			found = true;
+		} else {
+			newInventory.push(inventoryItem);
+		}
+	});
+	this.inventory = newInventory;
 };
 Character.prototype.equip = function(item) {
 	var game = this.controllers[0].game;

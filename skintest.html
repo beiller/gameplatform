@@ -161,17 +161,17 @@ HUD.prototype.loadInventory = function() {
 	var invWindow = $(".window-inventory");
 	var scope = this;
 	invWindow.html("");
-	for(var i in character.inventory) {
-		var item = character.inventory[i];
+	character.inventory.forEach(function(inventoryItem) {
 		var button = $("<a href='#' class='button'></a>");
-		var inventoryIndex = i;
-		button.html(item.model).on('click', function(e) {
+		button.html(inventoryItem.name).on('click', function(e) {
+			alert("Equipping item " + inventoryItem.name);
 			e.stopPropagation();
-			character.equip(item);
+			character.removeItem(inventoryItem);
+			character.equip(inventoryItem);
 			scope.loadInventory();
 		});
 		invWindow.append(button);
-	}
+	});
 };
 
 
@@ -260,7 +260,7 @@ function runGame(data) {
     var id_counter = 0;
 	function spawn_npc(name, player, position, controllerConstructor) {
             if(!player) {
-                console.log('no player specified');
+                console.log('no player sp	var item = items[item_id];ecified');
                 return;
             }
             controllerConstructor = controllerConstructor ? controllerConstructor : AIController;
