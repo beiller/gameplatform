@@ -20,7 +20,7 @@
         "bone": "weapon",
         "options": {"reflectivity": 0.01, "color": "0x662121", "shininess": 20, "specular": "0x443333" },
         "stats": {
-            "damage": 3
+            "damage": 15
         }
     },
     "icesword": {
@@ -51,10 +51,10 @@
         }
     },
     "holyunderwear": {"name": "holyunderwear", "model": "models/neweveunderwear.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xEFD7ED", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
-        "stats": {"defence": 1,"magic_defence": {"holy": 1},"health": 5}
+        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     },
     "evilunderwear": {"name": "evilunderwear", "model": "models/neweveunderwear.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0x221111"},
-        "stats": {"defence": 1,"magic_defence": {"holy": 1},"health": 5}
+        "stats": {"defence": 1,"magic_defence": {"evil": 1}}
     },
     "evilchestarmor": {"name": "evilchestarmor", "model": "models/armor_evil.json", "slot": "chest","options": {"reflectivity": 0.15, "color": "0x221111"},
         "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
@@ -81,11 +81,11 @@
     }, 
     "holysocks": {
         "name": "holysocks", "model": "models/thighhigh.json", "slot": "socks","options": {"reflectivity": 0.1, "color": "0xFFB7DD"},
-        "stats": {"defence": 200,"magic_defence": {"evil": 200},"health": 200}
+        "stats": {"defence": 1,"magic_defence": {"evil": 1}}
     }, 
     "evilsocks": {
         "name": "evilsocks", "model": "models/thighhigh.json", "slot": "socks","options": {"reflectivity": 0.1, "color": "0x221111"},
-        "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
+        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     },     
     "face": {"name": "face",  "model": "models/neweve_face.json", "slot": "face", "options": {"reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC" } },  
     "hairprincess": {"name": "hairprincess",  "model": "models/neweve_hair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0xFFB7DD"} },  

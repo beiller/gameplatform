@@ -340,8 +340,8 @@ Game.prototype.loadPhysBones = function(character) {
         body.collisionFilterGroup = scope.collisionGroups[3];
         body.collisionFilterMask = scope.collisionGroups[2];// | this.collisionGroups[1];
         //body.fixedRotation = true;
-        body.angularDamping = 0.99;
-        body.linearDamping = 0.99;
+        body.angularDamping = 0.99999;
+        body.linearDamping = 0.99999;
         body.updateMassProperties();
         scope.world.add(body); // Step 3
         scope.dynamics.push(new PhysBone(bone, body, rootBone, null, scope.world, character));

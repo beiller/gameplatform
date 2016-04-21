@@ -121,6 +121,11 @@ Dynamic.prototype.findDynamic = function(game, mesh) {
         }
     }
 };
+Dynamic.prototype.getDistance = function(dynamic2) {
+	var p1 = new THREE.Vector3().copy(this.body.position);
+	var p2 = new THREE.Vector3().copy(dynamic2.body.position);
+	return p1.sub(p2).length();
+};
 
 Item.prototype = new Dynamic();
 Item.prototype.constructor = Item;

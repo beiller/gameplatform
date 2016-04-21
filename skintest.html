@@ -93,6 +93,12 @@
 				height: 100%;
 				z-index: 101;
 			}
+			.paneleft {
+				left: 0px;
+				top: 0px;
+				height: 100%;
+				z-index: 101;
+			}
 			.window-inventory {
 				visibility: hidden;
 			}
@@ -111,11 +117,13 @@
 		<div class="window topright">
 			<a href="#" class="button btn-openinventory">Toggle Inventory</a>
 		</div>
-		<div class="window paneright window-inventory">
+		<div class="window paneright window-inventory inventory-menu">
+			
+		</div>
+		<div class="window paneleft window-inventory loot-menu">
 			
 		</div>
 <script>
-
 
 function loadJSON(path, success, error) {
     var xhr = new XMLHttpRequest();
@@ -136,43 +144,122 @@ function loadJSON(path, success, error) {
     xhr.send();
 }
 
+var GAME = (function () {
+	var my = {},
+		privateVariable = 1;
+
+	function init() {
+		// ...
+	}
+
+	my.moduleProperty = 1;
+	my.moduleMethod = function () {
+		// ...
+	};
+
+	return my;
+}());
+
+
+
 function HUD(game) {
-	this.init();
-	
-	this.inventoryVisible = false;
 	this.game = game;
+	this.init();
 }
-HUD.prototype.init = function() {
-	var scope = this;
-	$(".btn-openinventory").on('click', function(e) {
-		e.stopPropagation();
-		var invWindow = $(".window-inventory");
-		if(invWindow.css('visibility') == 'hidden') {
-			invWindow.css('visibility', 'visible');
-		} else {
-			invWindow.css('visibility', 'hidden');
-		}
-		scope.loadInventory();
-		return false;
-	});
-};
-HUD.prototype.loadInventory = function() {
-	var character = game.characters['eve'];
-	var invWindow = $(".window-inventory");
-	var scope = this;
-	invWindow.html("");
-	character.inventory.forEach(function(inventoryItem) {
-		var button = $("<a href='#' class='button'></a>");
-		button.html(inventoryItem.name).on('click', function(e) {
-			alert("Equipping item " + inventoryItem.name);
-			e.stopPropagation();
-			character.removeItem(inventoryItem);
-			character.equip(inventoryItem);
-			scope.loadInventory();
+HUD.prototype = {
+	loadInventory: function() {
+		var character = game.characters['eve'];
+		var invWindow = $(".inventory-menu");
+		var scope = this;
+		invWindow.html("");
+		character.inventory.forEach(function(inventoryItem) {
+			var button = $("<a href='#' class='button'></a>");
+			button.html(inventoryItem.name).on('click', function(e) {
+				console.log("Equipping item " + inventoryItem.name);
+				e.stopPropagation();
+				character.removeItem(inventoryItem);
+				character.equip(inventoryItem);
+				scope.loadInventory();
+			});
+			invWindow.append(button);
 		});
-		invWindow.append(button);
-	});
+	},
+	
+	showLootMenu: function(container) {
+		var invWindow = $(".loot-menu");
+		var scope = this;
+		invWindow.html("<h1>LOOT!</h1>");
+		console.log(container);
+		container.inventory.forEach(function(inventoryItem) {
+			var button = $("<a href='#' class='button'></a>");
+			button.html(inventoryItem.name).on('click', function(e) {
+				console.log("Looted item " + inventoryItem.name);
+				e.stopPropagation();
+				container.removeItem(inventoryItem);
+				scope.game.characters['eve'].addItem(inventoryItem);
+				scope.showLootMenu(container);
+			});
+			invWindow.append(button);
+		});
+		if(container.equipment !== undefined) {
+			for(var slot in container.equipment) {
+				(function(inventoryItem){
+					var button = $("<a href='#' class='button'></a>");
+					button.html(inventoryItem.name).on('click', function(e) {
+						console.log("Looted item " + inventoryItem.name);
+						e.stopPropagation();
+						container.unequip(inventoryItem.slot);
+						container.removeItem(inventoryItem);
+						scope.game.characters['eve'].addItem(inventoryItem);
+						scope.showLootMenu(container);
+					});
+					invWindow.append(button);
+				})(container.equipment[slot]);
+			}
+		}
+		this.loadInventory();
+	},
+	
+	init: function() {
+		var scope = this;
+		$(".btn-openinventory").on('click', function(e) {
+			e.stopPropagation();
+			var invWindow = $(".inventory-menu");
+			if(invWindow.css('visibility') == 'hidden') {
+				invWindow.css('visibility', 'visible');
+			} else {
+				invWindow.css('visibility', 'hidden');
+			}
+			scope.loadInventory();
+			return false;
+		});
+		$(window).on('mousemove', function(e) {
+			var me = game.characters['eve'];
+			var found = null;
+			var best_dist = 100.0;
+			for(var char_id in game.characters) {
+				(function(character) {
+					if(character != me) {
+						var dist = character.getDistance(me);
+						if(dist < 1.0 && dist < best_dist) {
+							best_dist = dist;
+							found = character;
+						}
+					}
+				})(game.characters[char_id]);
+			}
+			if(found === null) {
+				$(".loot-menu").css('visibility', 'hidden');
+			} else {
+				$(".loot-menu").css('visibility', 'visible');
+				scope.showLootMenu(found);
+			}
+			return false;
+		});
+	}
 };
+
+
 
 
 var gameSettings = null;
@@ -185,7 +272,7 @@ function runGame(data) {
     game.initPhysics();
     var objectCount = 0;
     
-    var hud = new HUD(game, items);
+    var hud = new HUD(game);
 
     var bricks = [];
     for(var i = -50; i<=50; i++) {
@@ -202,11 +289,10 @@ function runGame(data) {
                 diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
-                //clothing: outfit2,
                 equipment:  [ 
                 	items.rustsword, 
-                	items.evilchestarmor, 
-                	//items.evilsocks,
+                	items.evilunderwear, 
+                	items.evilsocks,
                 	items.face,
                 	items.hairevil,
                 	items.evilnails
@@ -219,7 +305,6 @@ function runGame(data) {
                 diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/normal_none.png",
-                //clothing: outfit2,
                 equipment:  [ 
                 	items.rustsword
                 ]
@@ -230,20 +315,20 @@ function runGame(data) {
                 diffusePath: "models/textures/young_lightskinned_female_diffuse3.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
-                //clothing: outfit1,
                 equipment: [ 
-                	items.icesword, 
                 	items.holyunderwear, 
                 	items.face,
                 	items.hairprincess,
                 	items.holynails
                 ],
                 inventory: [
+                	items.rustsword, 
                 	items.holychestarmor,
                 	items.holysocks,
                 	items.firesword, 
                 	items.rustsword,
-                	items.evilchestarmor
+                	items.evilchestarmor,
+                	items.holylegs
                 ]
             }
         },

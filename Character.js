@@ -16,8 +16,8 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.stunned = false;
     this.blocking = false;
 
-    //this.attackAnimation = "DE_Combatpunch";
-    this.attackAnimation = "DE_Combatattack";
+    this.attackAnimation = "DE_Combatpunch";
+    //this.attackAnimation = "DE_Combatattack";
 
 
     this.animations = {};
@@ -103,11 +103,16 @@ Character.prototype.update = function(delta) {
     }
 };
 Character.prototype.unequip = function(slot) {
+	if(slot == "weapon") {
+		this.attackAnimation = "DE_Combatpunch";
+	}
 	if(this.equipment[slot]) {
 		this.addItem(this.equipment[slot]);
 		this.mesh.remove(this.meshes[slot]);
 		this.meshes[slot] = null;
+		//delete this.meshes[slot];
 		this.equipment[slot] = null;
+		delete this.equipment[slot];
 	}
 };
 Character.prototype.addItem = function(item) {
@@ -127,6 +132,9 @@ Character.prototype.removeItem = function(item) {
 };
 Character.prototype.equip = function(item) {
 	var game = this.controllers[0].game;
+	if(item.slot == "weapon") {
+	    this.attackAnimation = "DE_Combatattack";
+	}
 	if(this.equipment[item.slot]) {
 		this.unequip(item.slot);
 	}
@@ -134,7 +142,7 @@ Character.prototype.equip = function(item) {
 		this.characterStats.maxHealth += item.stats.health;
 		this.characterStats.health += item.stats.health;
 	}
-	//TODO UNEQUIP??
+
 	var game = this.controllers[0].game;
     this.equipment[item.slot] = item;
     var scope = this;
@@ -207,34 +215,34 @@ Character.prototype.hit = function(attackingCharacter) {
     if(this.dead) {
         return;
     }
-    if(!this.blocking) {
-        //var damage = enemyStats.damage + Math.ceil(Math.random() * 2.0);
-        var damage = this.calculateEffect(attackingCharacter.characterStats, attackingCharacter.equipment.weapon.stats);
-        console.log(this.name + ' takes ' + damage + ' damage.');
-        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
-        this.characterStats.health = this.characterStats.health - damage;
-        if (this.characterStats.health <= 0) {
-            console.log(this.name + " has died.");
-            this.dead = true;
-            this.controllers[0].fsm.dead();
-        }
-        if (this.healthBarMesh) {
-            var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
-            this.healthBarMesh.scale.x = healthRatio;
-        }
-    } else {
+    var wstats = attackingCharacter.equipment.weapon ? attackingCharacter.equipment.weapon.stats : { damage: this.characterStats.strength };
+    var damage = this.calculateEffect(attackingCharacter.characterStats, wstats);
+    if(this.blocking) {
         console.log(this.name + " blocked an attack!");
-        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
-        //determine chance to stun me
-        var rand = Math.random();
-        if(rand <= this.characterStats.stunWhileBlockingChance) {
-            console.log(this.name + " was stunned!");
-            this.controllers[0].fsm.stun();
-            var scope = this;
-            setTimeout(function() {
-                scope.controllers[0].game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y, 1.0), "Stunned", 3000);
-            }, 100);
-        }
+        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x-0.2, this.mesh.position.y, 1.0), "Blocked", 3000);
+        damage = Math.round(damage * 0.1);
+    }
+	console.log(this.name + ' takes ' + damage + ' damage.');
+    this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
+    this.characterStats.health = this.characterStats.health - damage;
+    if (this.characterStats.health <= 0) {
+        console.log(this.name + " has died.");
+        this.dead = true;
+        this.controllers[0].fsm.dead();
+    }
+    if (this.healthBarMesh) {
+        var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
+        this.healthBarMesh.scale.x = healthRatio;
+    }
+    //determine chance to stun me
+    var rand = Math.random();
+    if(rand <= this.characterStats.stunWhileBlockingChance) {
+        console.log(this.name + " was stunned!");
+        this.controllers[0].fsm.stun();
+        var scope = this;
+        setTimeout(function() {
+            scope.controllers[0].game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y, 1.0), "Stunned", 3000);
+        }, 100);
     }
 };
 Character.prototype.findBone = function(bone_name) {
