@@ -189,7 +189,6 @@ HUD.prototype = {
 		var invWindow = $(".loot-menu");
 		var scope = this;
 		invWindow.html("<h1>LOOT!</h1>");
-		console.log(container);
 		container.inventory.forEach(function(inventoryItem) {
 			var button = $("<a href='#' class='button'></a>");
 			button.html(inventoryItem.name).on('click', function(e) {
@@ -345,7 +344,7 @@ function runGame(data) {
     var id_counter = 0;
 	function spawn_npc(name, player, position, controllerConstructor) {
             if(!player) {
-                console.log('no player sp	var item = items[item_id];ecified');
+                console.log('no player specified');
                 return;
             }
             controllerConstructor = controllerConstructor ? controllerConstructor : AIController;
@@ -364,6 +363,11 @@ function runGame(data) {
 	                    player.equipment.forEach(function(item) {
 	                    	characterObject.equip(item);
 	                    });
+	                    if(player.inventory != undefined) {
+		                    player.inventory.forEach(function(item) {
+		                    	characterObject.inventory.push(item);
+		                    });
+	                    }
                     }
             );
             
@@ -388,7 +392,6 @@ function runGame(data) {
                     player.inventory.forEach(function(item) {
                     	characterObject.inventory.push(item);
                     });
-                    
                 }
         );
 

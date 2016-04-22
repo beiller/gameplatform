@@ -362,6 +362,20 @@ Game.prototype.loadPhysBones = function(character) {
     return null;
 
 };
+Game.prototype.removeCharacter = function(character) {
+	character.remove();
+	this.scene.remove(character.mesh);
+	var to_delete = null;
+	var scope = this;
+	Object.keys(this.characters).forEach(function(character_name) {
+		if(scope.characters[character_name] === character) {
+			to_delete = character_name;
+		}
+	});
+	if(to_delete) {
+		delete this.characters[to_delete];
+	}
+};
 Game.prototype.loadCharacter = function(jsonFileName, options, onComplete) {
     var characterMass = 49.0; //50 KG
     var game = this;

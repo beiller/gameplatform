@@ -151,30 +151,16 @@ function AIController(character, game) {
             onenterattackcooldown:  function(event, from, to, msg) {
                 character.playAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false });
                 var fsm = this;
-                this.cooldownTimeout = setTimeout(function() { fsm.foundEnemy();}, controller.idleAfterAttackTime);
+                this.cooldownTimeout = setTimeout(function() { fsm.foundEnemy();}, character.characterStats.attackCooldown);
             },
             onleaveattackcooldown:  function(event, from, to, msg) {
                 clearTimeout(this.cooldownTimeout);
             },
             onenterDEAD: function() {
-                try {
-                    var fsm = this;
-                    /*this.deadTimeout = setTimeout(function () {
-                        fsm.activate();
-                        character.characterStats.health = 20;
-                    }, 30000);*/
-                    var bone = character.findBone("weapon");
-                    var mesh = bone.children[0];
-                    bone.remove(mesh);
-                    var dynamic = new Dynamic().findDynamic(controller.game, mesh);
-                    bone.localToWorld(mesh.position);
-                    dynamic.body.position.copy(mesh.position);//.y = 10.0;
-                    dynamic.sleep = false;
-                    controller.game.scene.add(mesh);
-                } catch(e) {
-                    console.log("Failed to detach weapon", e);
-                }
                 character.playAnimation("DE_Die", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
+                setTimeout(function() {
+                	game.removeCharacter(character);
+                }, 10000);
             },
             onleaveDEAD: function() { clearTimeout(this.deadTimeout); }
         }

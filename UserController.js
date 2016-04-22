@@ -274,11 +274,6 @@ function UserController(character, game) {
             },
             onenterfreeFall: function(event, from, to, msg) {
                 controller.updateFunction = function() {
-                    /*if(character.body.velocity.x > 0) {
-                        character.body.velocity.x = Math.min(character.body.velocity.x, 4.0);
-                    } else {
-                        character.body.velocity.x = Math.max(character.body.velocity.x, -4.0);
-                    }*/
                     if(character.body.velocity.y > 0.01) {
                         character.setAnimation("DE_CombatJumpUp", { loop:THREE.LoopOnce });
                     } else if(character.body.velocity.y < -0.1) {
@@ -294,22 +289,32 @@ function UserController(character, game) {
             },
             onenterattacking: function(event, from, to, msg) {
                 character.setAnimation(character.attackAnimation, {timeScale: 1.0, loop: THREE.LoopOnce});
-                controller.updateFunction = function() {
-                    if (character.body.velocity.x > 0) {
-                        character.body.velocity.x = Math.min(character.body.velocity.x, 4.0);
-                    } else {
-                        character.body.velocity.x = Math.max(character.body.velocity.x, -4.0);
-                    }
-                    controller.applyForces();
-                };
+                var weaponAnimationDelay = 300;
+                setTimeout(function() {
+	                controller.updateFunction = function(delta) {
+	                	var quaternion = new THREE.Quaternion();
+	                    if(character.movementDirection.x > 0.1) {
+	                        character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
+	                        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+	                        character.mesh.quaternion.slerp(quaternion, 0.01);
+	                    } else if(character.movementDirection.x < -0.1) {
+	                        character.setAnimation("DE_CombatRun", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
+	                        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
+	                        character.mesh.quaternion.slerp(quaternion, 0.01);
+	                    } else {
+	                        character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
+	                    }
+	                    controller.applyForces(delta);
+	                };
+                }, weaponAnimationDelay);
                 controller.attack();
             },
-            onleaveattacking: function() {
+            /*onleaveattacking: function() {
                 clearTimeout(this.attackTimeout);
-            },
+            },*/
             onenterattackcooldown: function(event, from, to, msg) {
                 character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
-                controller.updateFunction = controller.idle;
+                //controller.updateFunction = controller.idle;
                 setTimeout(function() {
                     var FLOOR = -4.0;
                     if(character.body.position.y >= FLOOR + character.mesh.geometry.boundingSphere.radius + 0.01) {

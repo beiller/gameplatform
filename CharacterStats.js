@@ -1,13 +1,16 @@
 function CharacterStats(params) {
+	this.init(params);
+}
+CharacterStats.prototype.init = function(params) {
     if(params === undefined) params = {};
     this.maxHealth = params.maxHealth || 100;
     this.health = this.maxHealth;
     this.damage = params.damage || 10;
 
     //ATTACK cool down in MS
-    this.attackCooldown = params.attackCooldown || 200;
+    this.attackCooldown = params.attackCooldown || 0;
     //Stun duration after hit in MS
-    this.hitStunDuration = params.attackCooldown || 500;
+    this.hitStunDuration = params.hitStunDuration || 500;
     //force in some arbitrary unit (CANNON JS)
     this.jumpHeight = params.jumpHeight || 1;
     //chance to block
@@ -20,9 +23,8 @@ function CharacterStats(params) {
     //chance to stun opponent while blocking
     this.stunWhileBlockingChance = params.stunWhileBlockingChance || 0.1;
 
-    this.strength = 10;
-    this.magic = 10;
-    this.endurance = 10;
-    this.magicResistance = 10;
-
-}
+    this.strength = params.strength || 10;
+    this.magic = params.magic || 10;
+    this.endurance = params.endurance || 10;
+    this.magicResistance = params.magicResistance || 10;
+};

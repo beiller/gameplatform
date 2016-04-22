@@ -30,6 +30,7 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.currentAnimation = null;
 
     this.characterStats = new CharacterStats();
+    this.baseStats = new CharacterStats();
     this.createHealthBar();
 
     this.clothingMesh = null;
@@ -114,6 +115,7 @@ Character.prototype.unequip = function(slot) {
 		this.equipment[slot] = null;
 		delete this.equipment[slot];
 	}
+	this.updateCharacterStats();
 };
 Character.prototype.addItem = function(item) {
 	this.inventory.push(item);
@@ -130,6 +132,21 @@ Character.prototype.removeItem = function(item) {
 	});
 	this.inventory = newInventory;
 };
+Character.prototype.updateCharacterStats = function() {
+	var newStats = new CharacterStats(this.baseStats);
+	var scope = this;
+	Object.keys(this.equipment).forEach(function(slot) {
+		var item = scope.equipment[slot];
+		if(item.stats && item.stats.health) {
+			newStats.maxHealth += item.stats.health;
+			newStats.health += item.stats.health;
+		}
+		if(item.stats && item.stats.attackCooldown) {
+			newStats.attackCooldown += item.stats.attackCooldown;
+		}
+	});
+	this.characterStats.init(newStats);
+};
 Character.prototype.equip = function(item) {
 	var game = this.controllers[0].game;
 	if(item.slot == "weapon") {
@@ -138,13 +155,10 @@ Character.prototype.equip = function(item) {
 	if(this.equipment[item.slot]) {
 		this.unequip(item.slot);
 	}
-	if(item.stats && item.stats.health) {
-		this.characterStats.maxHealth += item.stats.health;
-		this.characterStats.health += item.stats.health;
-	}
+    this.equipment[item.slot] = item;
+	this.updateCharacterStats();
 
 	var game = this.controllers[0].game;
-    this.equipment[item.slot] = item;
     var scope = this;
     function addToBone(item, dynamic) {
 		game.scene.remove(dynamic.mesh);
@@ -252,4 +266,16 @@ Character.prototype.findBone = function(bone_name) {
         }
     }
     return null;
+};
+Character.prototype.remove = function() {
+	var scope = this;
+	Object.keys(this.equipment).forEach(function(slot) {
+		if(scope.equipment[slot]) {
+			scope.mesh.remove(scope.meshes[slot]);
+			scope.meshes[slot] = null;
+			delete scope.meshes[slot];
+			scope.equipment[slot] = null;
+			delete scope.equipment[slot];
+		}
+	});
 };

@@ -10,7 +10,8 @@
             "magic_damage": {
                 "fire": 400
             },
-            "health": 200
+            "health": 200,
+            "attackCooldown": 800
         }
     },
 	"rustsword": {
@@ -20,7 +21,8 @@
         "bone": "weapon",
         "options": {"reflectivity": 0.01, "color": "0x662121", "shininess": 20, "specular": "0x443333" },
         "stats": {
-            "damage": 15
+            "damage": 15,
+            "attackCooldown": 600
         }
     },
     "icesword": {
@@ -34,7 +36,8 @@
             "magic_damage": {
                 "water": 400
             },
-            "health": 200
+            "health": 200,
+            "attackCooldown": 800
         }
     },
     "holychestarmor": {
