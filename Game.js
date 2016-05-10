@@ -215,7 +215,7 @@ Game.prototype.initRendering = function() {
     this.scene = new THREE.Scene();
 
     this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.05, 1000);
-    this.camera.position.z = 3;
+    this.camera.position.z = 5;
     this.camera.position.y = -3;
     this.camera.position.x = 0;
     var cam = this.camera;

@@ -42,9 +42,9 @@ function UserController(character, game) {
     var onMouseDownFunction = function( event ) {
         //console.log(event);
         event.preventDefault();
-        if(event.buttons == 1) {
+        if(event.button == 0) {
             controller.fsm.attack();
-        } else if(event.buttons == 2) {
+        } else if(event.button == 2) {
             controller.fsm.block();
         }
         return false;
@@ -52,7 +52,7 @@ function UserController(character, game) {
     var onMouseUpFunction = function( event ) {
         //console.log(event);
         event.preventDefault();
-        if(event.buttons == 2) {
+        if(event.button == 2) {
             controller.fsm.fall();
         }
         return false;
@@ -203,7 +203,7 @@ function UserController(character, game) {
                         setTimeout(function(){
                             game.cameraUpdateFunction = oldFunction;
                             game.camera.quaternion.copy( new THREE.Quaternion() );
-                            game.camera.position.z = 4;
+                            game.camera.position.z = 5;
                             game.camera.position.y = -3;
                             game.camera.position.x = 0;
                         }, 40000);

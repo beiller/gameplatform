@@ -178,7 +178,7 @@ Character.prototype.equip = function(item) {
         game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
 			scope.mesh.add(mesh);
 			scope.meshes[item.slot] = mesh;
-			//TODO update character clothing mesh
+			//TODO optimize by update character clothing mesh (merge meshes?)
 			//....
         });
 	}
