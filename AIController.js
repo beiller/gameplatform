@@ -33,21 +33,21 @@ function AIController(character, game) {
             { name: 'block',         from: ['approach', 'search'],               to: 'BLOCKING'},
             { name: 'stun',          from: ['BLOCKING'],                         to: 'STUNNED'},
             { name: 'wake',          from: ['STUNNED', 'HIT'],                   to: 'waking'},
-            { name: 'sex',           from: 'DEAD',                             to: 'SEX'}
+            { name: 'animation',           from: 'DEAD',                             to: 'ANIMATION'}
         ],
         callbacks: {
-            onenterSEX: function() {
+            onenterANIMATION: function() {
             	var character = controller.character;
             	if(character.meshes['chest']) character.meshes['chest'].visible = false;
             	if(character.meshes['pants']) character.meshes['pants'].visible = false;
                 controller.character.playAnimation("fuckself_2_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 controller.updateFunction = controller.idle;
                 var fsm = this;
-                this.hitTimeout = setTimeout(function(){
+                this.animationTimeout = setTimeout(function(){
                     fsm.dead();
                 }, 40000);
             },
-            onleaveSEX: function() {
+            onleaveANIMATION: function() {
             	var character = controller.character;
             	if(character.meshes['chest']) character.meshes['chest'].visible = true;
             	if(character.meshes['pants']) character.meshes['pants'].visible = true;

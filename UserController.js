@@ -152,21 +152,21 @@ function UserController(character, game) {
             { name: 'stun',          from: ['BLOCKING'],                          to: 'STUNNED'},
             { name: 'wake',          from: ['STUNNED', 'HIT'],                    to: 'waking'},
             { name: 'magic',         from: ['onGround', 'freeFall'],              to: 'attackcooldown'},
-            { name: 'sex',           from: ['onGround', 'freeFall'],              to: 'SEX'}
+            { name: 'animation',           from: ['onGround', 'freeFall'],              to: 'ANIMATION'}
         ],
         callbacks: {
-            onenterSEX: function() {
+            onenterANIMATION: function() {
             	var character = controller.character;
             	if(character.meshes['chest']) character.meshes['chest'].visible = false;
             	if(character.meshes['pants']) character.meshes['pants'].visible = false;
                 character.playAnimation("fuckself_1_1", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
                 controller.updateFunction = controller.idle;
                 var fsm = this;
-                this.sexTimeout = setTimeout(function(){
+                this.animationTimeout = setTimeout(function(){
                     fsm.cooldown();
                 }, 40000);
             },
-            onleaveSEX: function() {
+            onleaveANIMATION: function() {
             	var character = controller.character;
             	if(character.meshes['chest']) character.meshes['chest'].visible = true;
             	if(character.meshes['pants']) character.meshes['pants'].visible = true;
@@ -179,7 +179,7 @@ function UserController(character, game) {
                 game.explosion(character, new CANNON.Vec3(40000, 40000, 0));
                 return true;
             },
-            onsex: function() {
+            onanimation: function() {
                 for(var i in controller.game.characters) {
                     var c = controller.game.characters[i];
                     if(c === character) {
