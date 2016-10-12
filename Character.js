@@ -23,9 +23,10 @@ function Character(name, mesh, body, options, sssMesh, characterStats) {
     this.animations = {};
     this.animationMixer = new THREE.AnimationMixer(this.mesh);
     for ( var i in this.mesh.geometry.animations ) {
-        this.animations[this.mesh.geometry.animations[ i ].name]  = this.mesh.geometry.animations[ i ];
+        //this.animations[this.mesh.geometry.animations[ i ].name]  = this.mesh.geometry.animations[ i ];
+        this.animations[this.mesh.geometry.animations[ i ].name] = this.animationMixer.clipAction(this.mesh.geometry.animations[ i ]);
     }
-    this.animationMixer.addAction( new THREE.AnimationAction( this.mesh.geometry.animations[0] ) );
+    //this.animationMixer.addAction( new THREE.AnimationAction( this.mesh.geometry.animations[0] ) );
     this.playingAnimation = false;
     this.currentAnimation = null;
 
@@ -58,10 +59,10 @@ Character.prototype.playAnimation = function(animationName, options) {
         options = {};
     }
     if(this.animations[animationName] !== undefined) {
-        var a = new THREE.AnimationAction( this.animations[animationName] );
+        var a = this.animations[animationName];
         a.loop = options.loop || THREE.LoopRepeat;
         a.timeScale = options.timeScale || 1.0;
-        if(options.crossFade && this.animationMixer !== undefined) {
+        if(options.crossFade && this.animationMixer !== undefined && false) {
             a.weight = 0.0;
             var crossFadeFrom = this.animationMixer.actions[this.animationMixer.actions.length - 1];
             //this.animationMixer = new THREE.AnimationMixer(this.mesh);
@@ -71,8 +72,8 @@ Character.prototype.playAnimation = function(animationName, options) {
             this.animationMixer.crossFade( crossFadeFrom, a, options.crossFadeDuration || 1.00, options.crossFadeWarp || false );
         } else {
             //this.animationMixer = new THREE.AnimationMixer(this.mesh);
-            this.animationMixer.removeAllActions();
-            this.animationMixer.play( a );
+            this.animationMixer.stopAllAction();
+            this.animations[animationName].play();
         }
     }
 };
@@ -99,7 +100,7 @@ Character.prototype.update = function(delta) {
 		}
     }
     //do update skeletal Animation
-    if(this.animationMixer && this.animationMixer.actions.length > 0) {
+    if(this.animationMixer) {
         this.animationMixer.update(delta);
     }
 };

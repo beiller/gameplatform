@@ -43,7 +43,7 @@
 	<body oncontextmenu="return false;">
         <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:50px;background-color:white;color:black">Test</div>
 		<script src="cannon.js"></script>
-		<script src="three.mybuild.js"></script>
+		<script src="three.min.js"></script>
 		<script src="state-machine.min.js"></script>
 
 		<script src="shaders/ShaderSkinCustom.js"></script>
@@ -284,7 +284,7 @@ function runGame(data) {
         characters: {
             evil_eve: {
                 model: "models/neweve_highres.json",
-                sss: true,
+                sss: false,
                 diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
@@ -295,7 +295,6 @@ function runGame(data) {
                 	items.face,
                 	items.hairevil,
                 	items.evilnails
-                	
                 ]
             },
             skeleton: {
@@ -307,10 +306,25 @@ function runGame(data) {
                 equipment:  [ 
                 	items.rustsword
                 ]
-            },            
+            },   
+            skeleton_main: {
+                model: "models/skeleton.json",
+                sss: false,
+                diffusePath: "models/textures/young_darkskinned_female_diffuse.png",
+                specularPath: "models/textures/specular.png",
+                normalPath: "models/textures/normal_none.png",
+                equipment:  [ 
+                	items.rustsword, 
+                	items.evilunderwear, 
+                	items.evilsocks,
+                	items.face,
+                	items.hairevil,
+                	items.evilnails
+                ]
+            },   
             good_eve: {
                 model: "models/neweve_highres.json",
-                sss: true,
+                sss: false,
                 diffusePath: "models/textures/eveskin.png",
                 specularPath: "models/textures/specular.png",
                 normalPath: "models/textures/newevenormal.png",
@@ -332,13 +346,13 @@ function runGame(data) {
             }
         },
         npcs : [
-            {character: 'evil_eve', position: [-20,0,0]},
-            {character: 'evil_eve', position: [20,0,0]}
+            {character: 'skeleton', position: [-20,0,0]},
+            {character: 'skeleton', position: [20,0,0]}
             //{character: 'evil_eve', position: [-11,0,0]},
             //{character: 'evil_eve', position: [11,0,0]}
         ],
         player: {
-            character: 'good_eve', position: [0,0,0]
+            character: 'skeleton_main', position: [0,0,0]
         }
     };
     var id_counter = 0;
@@ -389,9 +403,11 @@ function runGame(data) {
                     player.equipment.forEach(function(item) {
                     	characterObject.equip(item);
                     });
-                    player.inventory.forEach(function(item) {
-                    	characterObject.inventory.push(item);
-                    });
+                    if(player.inventory != undefined) {
+	                    player.inventory.forEach(function(item) {
+	                    	characterObject.inventory.push(item);
+	                    });
+                    }
                 }
         );
 

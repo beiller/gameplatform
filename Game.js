@@ -122,7 +122,6 @@ Game.prototype.displayText = function(position, text, timeout) {
             clearInterval(interval);
             scope.scene.remove(sprite);
             sprite.material.map.dispose();
-            sprite.geometry.dispose();
         }, timeout);
     }, 100);
 };
@@ -387,7 +386,7 @@ Game.prototype.loadCharacter = function(jsonFileName, options, onComplete) {
             geometry.computeBoundingSphere();
         var radius = geometry.boundingSphere.radius;
         if(options.sss) {
-            game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
+            /*game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
                 //create Character object
                 mesh.position.set(position[0], position[1], position[2]);
                 mesh.frustumCulled = !game.disableCull;
@@ -408,14 +407,14 @@ Game.prototype.loadCharacter = function(jsonFileName, options, onComplete) {
            		});
                 game.loadPhysBones(character);
                 if(onComplete !== undefined) onComplete(character);
-            });
+            });*/
         } else {
             var material = new THREE.MeshPhongMaterial({
                 skinning: true,
-                diffuse: options.diffuse ? new THREE.Color(parseInt(options.diffuse)) : new THREE.Color( 0xDDDDDD ),
+                //diffuse: options.diffuse ? new THREE.Color(parseInt(options.diffuse)) : new THREE.Color( 0xDDDDDD ),
                 specular: options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0xDDDDDD ),
                 emissive: options.emissive ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x000000 ),
-                envMap: game.cubeCamera.renderTarget,
+                envMap: game.cubeCamera.renderTarget.texture,
                 combine: options.combine || THREE.MixOperation,
                 reflectivity: options.reflectivity || 0.2
             });
@@ -434,7 +433,7 @@ Game.prototype.setMaterialOptions = function(mesh, options) {
     }
     var scope = this;
     function _setopt(mat, options) {
-        mat.envMap = scope.cubeCamera.renderTarget;
+        mat.envMap = scope.cubeCamera.renderTarget.texture;
         mat.combine = options.combine || THREE.MixOperation;
         mat.reflectivity = options.reflectivity || 0.2;
         mat.emissive  = options.emissive ? new THREE.Color(parseInt(options.emissive)) : new THREE.Color( 0x000000 );

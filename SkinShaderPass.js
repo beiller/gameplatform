@@ -104,11 +104,11 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
     this.composerBeckmann = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( rtwidth, rtheight, pars ) );
     this.composerBeckmann.addPass( this.effectBeckmann );
 
-    uniforms[ "tBlur1" ].value = this.composerScene.renderTarget2;
-    uniforms[ "tBlur2" ].value = this.composerUV1.renderTarget2;
-    uniforms[ "tBlur3" ].value = this.composerUV2.renderTarget2;
-    uniforms[ "tBlur4" ].value = this.composerUV3.renderTarget2;
-    uniforms[ "tBeckmann" ].value = this.composerBeckmann.renderTarget1;
+    uniforms[ "tBlur1" ].value = this.composerScene.renderTarget2.texture;
+    uniforms[ "tBlur2" ].value = this.composerUV1.renderTarget2.texture;
+    uniforms[ "tBlur3" ].value = this.composerUV2.renderTarget2.texture;
+    uniforms[ "tBlur4" ].value = this.composerUV3.renderTarget2.texture;
+    uniforms[ "tBeckmann" ].value = this.composerBeckmann.renderTarget1.texture;
 
     //clean up
     this.renderModelUV.overrideMaterial = this.shaderUV;
