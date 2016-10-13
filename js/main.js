@@ -8,13 +8,12 @@ requirejs.config({
 		'Controller': '../Controller',
 		'Dynamic': '../Dynamic',
 		'BaseStateMachine': '../BaseStateMachine',
+		'Game': '../Game',
+		'HUD': '../HUD'
 	},
     shim: {
         'zepto': {
             exports: '$'
-        },
-        'three': {
-            exports: 'THREE'
         },
         'cannon': {
             exports: 'CANNON'
@@ -43,7 +42,7 @@ function loadJSON(path, success, error) {
 
 
 // Start the main app logic.
-requirejs(['../Game', '../HUD', 'three', 'AIController', 'UserController'], 
+requirejs(['Game', 'HUD', 'three', 'AIController', 'UserController'], 
 function(Game, HUD, THREE, AIController, UserController) {
 	function runGame(gameSettings, levelData, itemData) {
 	    game = new Game(gameSettings);
@@ -56,7 +55,8 @@ function(Game, HUD, THREE, AIController, UserController) {
 	    var bricks = [];
 	    for(var i = -50; i<=50; i++) {
 			var randomHeight = (Math.random() - 0.5) * 0.5;
-			bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3+randomHeight,0]});
+			var slope = i * 0.25;
+			bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3+randomHeight+slope,0]});
 	    }
 	    levelData.staticObjects = bricks;
 	    var id_counter = 0;

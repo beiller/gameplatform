@@ -82,7 +82,7 @@
 	    }
 	],
 	"player": {
-	    "character": "good_eve", 
+	    "character": "skeleton_main", 
 	    "position": [0,0,0]
 	}
 }
