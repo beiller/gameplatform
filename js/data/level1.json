@@ -1,0 +1,81 @@
+{
+	"staticObjects": [],
+	"characters": {
+	    "evil_eve": {
+	        "model": "models/neweve_highres.json",
+	        "sss": false,
+	        "diffusePath": "models/textures/young_darkskinned_female_diffuse.png",
+	        "specularPath": "models/textures/specular.png",
+	        "normalPath": "models/textures/newevenormal.png",
+	        "equipment":  [ 
+	        	"rustsword", 
+	        	"evilunderwear", 
+	        	"evilsocks",
+	        	"face",
+	        	"hairevil",
+	        	"evilnails"
+	        ]
+	    },
+	    "skeleton": {
+	        "model": "models/skeleton.json",
+	        "sss": false,
+	        "diffusePath": "models/textures/young_darkskinned_female_diffuse.png",
+	        "specularPath": "models/textures/specular.png",
+	        "normalPath": "models/textures/normal_none.png",
+	        "equipment":  [ 
+	        	"rustsword"
+	        ]
+	    },   
+	    "skeleton_main": {
+	        "model": "models/skeleton.json",
+	        "sss": false,
+	        "diffusePath": "models/textures/young_darkskinned_female_diffuse.png",
+	        "specularPath": "models/textures/specular.png",
+	        "normalPath": "models/textures/normal_none.png",
+	        "equipment":  [ 
+	        	"rustsword", 
+	        	"evilunderwear", 
+	        	"evilsocks",
+	        	"face",
+	        	"hairevil",
+	        	"evilnails"
+	        ]
+	    },   
+	    "good_eve": {
+	        "model": "models/neweve_highres.json",
+	        "sss": false,
+	        "diffusePath": "models/textures/eveskin.png",
+	        "specularPath": "models/textures/specular.png",
+	        "normalPath": "models/textures/newevenormal.png",
+	        "equipment": [ 
+	        	"holyunderwear", 
+	        	"face",
+	        	"hairprincess",
+	        	"holynails"
+	        ],
+	        "inventory": [
+	        	"rustsword", 
+	        	"holychestarmor",
+	        	"holysocks",
+	        	"firesword", 
+	        	"rustsword",
+	        	"evilchestarmor",
+	        	"holylegs"
+	        ]
+	    }
+	},
+	"npcs" : [
+	    {
+	    	"character": "skeleton", 
+	    	"position": [-20,0,0]
+	    },
+	    {
+	    	"character": "skeleton", 
+	    	"position": [20,0,0]
+	    }
+	],
+	"player": {
+	    "character": "skeleton_main", 
+	    "position": [0,0,0]
+	}
+}

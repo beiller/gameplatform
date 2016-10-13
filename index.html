@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>mygame</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+            @font-face {
+                font-family: 'MainFont';
+                src: url('/fonts/riky-vampdator-normal.riky-vampdator-normal.ttf');
+            }
+			body {
+				background:#000;
+				color:#aaa;
+				padding:0;
+				margin:0;
+				font-weight: bold;
+				overflow:hidden;
+			}
+
+            html body {
+                -webkit-touch-callout:none;
+                -webkit-user-select:none;
+                -khtml-user-select:none;
+                -moz-user-select:none;
+                -ms-user-select:none;
+                user-select:none;
+                -webkit-tap-highlight-color:rgba(0,0,0,0);
+            }
+
+            div.button {
+                height: 100px;
+                width: 100px;
+                border: solid 1px #000000;
+                background-color: #ffffff;
+                position: absolute;
+                top: 0px;
+                left: 0px;
+            }
+		</style>
+	</head>
+
+	<body oncontextmenu="return false;">
+        <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:50px;background-color:white;color:black">Test</div>
+        
+        <script data-main="js/main.js" src="js/lib/require.js"></script>
+		<style>
+			.window {
+				position: absolute;
+			    border-radius: 5px;
+			    border: 2px solid #73AD21;
+			    padding: 20px;
+			    width: 200px;
+			    height: 150px;
+			    background-color: rgba(255, 255, 255, 0.5);
+			    z-index: 100;
+			}
+			.topright {
+				top: 0px;
+				right: 0px;
+				z-index: 100;
+			}
+			.paneright {
+				right: 200px;
+				top: 0px;
+				height: 100%;
+				z-index: 101;
+			}
+			.paneleft {
+				left: 0px;
+				top: 0px;
+				height: 100%;
+				z-index: 101;
+			}
+			.window-inventory {
+				visibility: hidden;
+			}
+			.button {
+			    border-radius: 5px;
+			    border: 2px solid #73AD21;
+			    display: block;
+			    height: 30px;
+			    line-height: 30px;
+			    padding-left: 10px;
+			    background-color: rgba(255, 255, 255, 1.0);
+			    color: #000000;
+			    text-decoration: none;
+			}
+		</style>
+		<div class="window topright">
+			<a href="#" class="button btn-openinventory">Toggle Inventory</a>
+		</div>
+		<div class="window paneright window-inventory inventory-menu">
+			
+		</div>
+		<div class="window paneleft window-inventory loot-menu">
+			
+		</div>
+
+
+	</body>
+</html>
