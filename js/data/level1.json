@@ -32,13 +32,20 @@
 	        "diffusePath": "models/textures/young_darkskinned_female_diffuse.png",
 	        "specularPath": "models/textures/specular.png",
 	        "normalPath": "models/textures/normal_none.png",
-	        "equipment":  [ 
-	        	"rustsword", 
-	        	"evilunderwear", 
-	        	"evilsocks",
+	        "equipment": [ 
+	        	"holyunderwear", 
 	        	"face",
-	        	"hairevil",
-	        	"evilnails"
+	        	"hairprincess",
+	        	"holynails"
+	        ],
+	        "inventory": [
+	        	"rustsword", 
+	        	"holychestarmor",
+	        	"holysocks",
+	        	"firesword", 
+	        	"rustsword",
+	        	"evilchestarmor",
+	        	"holylegs"
 	        ]
 	    },   
 	    "good_eve": {
@@ -75,7 +82,7 @@
 	    }
 	],
 	"player": {
-	    "character": "skeleton_main", 
+	    "character": "good_eve", 
 	    "position": [0,0,0]
 	}
 }
