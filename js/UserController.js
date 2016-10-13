@@ -1,5 +1,5 @@
-define(["state-machine", "Controller", "three", "cannon"], 
-function(StateMachine, Controller, THREE, CANNON) {
+define(["state-machine", "Controller", "BaseStateMachine", "three", "cannon"], 
+function(StateMachine, Controller, BaseStateMachine, THREE, CANNON) {
 	UserController.prototype = new Controller();
 	UserController.prototype.constructor = UserController;
 	function UserController(character, game) {
@@ -15,7 +15,7 @@ function(StateMachine, Controller, THREE, CANNON) {
 	            '83': function() {  }, //S KEY
 	            '68': function() { mv.x += 1.0; }, //A KEY
 	            '65': function() { mv.x -= 1.0; },  //D KEY
-	            '32': function() { controller.fsm.sex(); }
+	            '32': function() {  }  //SPACEBAR
 	        },
 	        'keyup':{
 	            '87': function() {  },
@@ -55,7 +55,7 @@ function(StateMachine, Controller, THREE, CANNON) {
 	        //console.log(event);
 	        event.preventDefault();
 	        if(event.button == 2) {
-	            controller.fsm.fall();
+	            //controller.fsm.fall();
 	        }
 	        return false;
 	    };
@@ -134,8 +134,10 @@ function(StateMachine, Controller, THREE, CANNON) {
 	    //GameController.init( mobileControlData );
 	
 	    this.updateFunction = this.applyForces;
+
+	    this.fsm = new BaseStateMachine(this.character, this.game);
 	
-	    this.fsm = StateMachine.create({
+	    /*StateMachine.create({
 	        initial: 'idle',
 	        error: function(eventName, from, to, args, errorCode, errorMessage) {
 	            //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
@@ -311,9 +313,6 @@ function(StateMachine, Controller, THREE, CANNON) {
 	                }, weaponAnimationDelay);
 	                controller.attack();
 	            },
-	            /*onleaveattacking: function() {
-	                clearTimeout(this.attackTimeout);
-	            },*/
 	            onenterattackcooldown: function(event, from, to, msg) {
 	                character.setAnimation("DE_Combatiddle", { crossFade: true, crossFadeDuration: controller.blendAnimationDuration, crossFadeWarp: false });
 	                //controller.updateFunction = controller.idle;
@@ -327,38 +326,8 @@ function(StateMachine, Controller, THREE, CANNON) {
 	                }, character.characterStats.attackCooldown);
 	            }
 	        }
-	    });
+	    });*/
 	}
-	
-	UserController.prototype.checkForGround = function(delta) {
-	    var r = this.character.mesh.geometry.boundingSphere.radius; //the half-radius to approximate my body not extending to the full sphere
-	    var body = this.character.body.position;
-	    var ray1 = new CANNON.Ray(new CANNON.Vec3(body.x+r*0.75, body.y, body.z), new CANNON.Vec3(body.x+r*0.75, body.y-10.0, body.z));
-	    var ray2 = new CANNON.Ray(new CANNON.Vec3(body.x-r*0.75, body.y, body.z), new CANNON.Vec3(body.x-r*0.75, body.y-10.0, body.z));
-	    //var ray3 = new CANNON.Ray(body, new CANNON.Vec3(body.x, body.y-1.0, body.z));
-	    var r_Bias = 0.01;
-	
-	    if(this.character.body.velocity.y < 0.0001) {
-	        var options = {
-	            collisionFilterGroup: this.game.collisionGroups[1],
-	            collisionFilterMask: this.game.collisionGroups[0],
-	            mode: CANNON.Ray.CLOSEST
-	        };
-	        if (ray1.intersectWorld(this.game.world, options)) {
-	            if (ray1.result.distance <= r+r_Bias) {
-	                this.fsm.land();
-	                return true;
-	            }
-	        }
-	        if (ray2.intersectWorld(this.game.world, options)) {
-	            if (ray2.result.distance <= r+r_Bias) {
-	                this.fsm.land();
-	                return true;
-	            }
-	        }
-	    }
-	    return false;
-	};
 	
 	return UserController;
 });

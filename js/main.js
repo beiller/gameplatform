@@ -7,6 +7,7 @@ requirejs.config({
 		'UserController': '../UserController',
 		'Controller': '../Controller',
 		'Dynamic': '../Dynamic',
+		'BaseStateMachine': '../BaseStateMachine',
 	},
     shim: {
         'zepto': {
@@ -17,9 +18,6 @@ requirejs.config({
         },
         'cannon': {
             exports: 'CANNON'
-        },
-        'state-machine': {
-            exports: 'StateMachine'
         }
     }
 });
