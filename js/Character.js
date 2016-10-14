@@ -1,10 +1,10 @@
 
-define(["CharacterStats", "Dynamic", "three", "cannon"], 
-function(CharacterStats, Dynamic, THREE, CANNON) {
-	Character.prototype = new Dynamic();
+define(["CharacterStats", "entity/DynamicEntity", "lib/three", "lib/cannon"], 
+function(CharacterStats, DynamicEntity, THREE, CANNON) {
+	Character.prototype = new DynamicEntity();
 	Character.prototype.constructor = Character;
 	function Character(name, mesh, body, options, sssMesh, characterStats) {
-	    Dynamic.prototype.constructor.call(this, mesh, body);
+	    DynamicEntity.prototype.constructor.call(this, mesh, body);
 	
 	    this.sssMesh = sssMesh;
 	    this.controllers = [];
@@ -18,7 +18,6 @@ function(CharacterStats, Dynamic, THREE, CANNON) {
 	
 	    this.attackAnimation = "DE_Combatpunch";
 	    //this.attackAnimation = "DE_Combatattack";
-	
 	
 	    this.animations = {};
 	    this.animationMixer = new THREE.AnimationMixer(this.mesh);

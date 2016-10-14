@@ -1,21 +1,10 @@
 requirejs.config({
-	baseUrl : 'js/lib',
-	paths: {
-		'Character': '../Character',
-		'CharacterStats': '../CharacterStats',
-		'AIController': '../AIController',
-		'UserController': '../UserController',
-		'Controller': '../Controller',
-		'Dynamic': '../Dynamic',
-		'BaseStateMachine': '../BaseStateMachine',
-		'Game': '../Game',
-		'HUD': '../HUD'
-	},
+	baseUrl : 'js',
     shim: {
-        'zepto': {
+        'lib/zepto': {
             exports: '$'
         },
-        'cannon': {
+        'lib/cannon': {
             exports: 'CANNON'
         }
     }
@@ -42,7 +31,10 @@ function loadJSON(path, success, error) {
 
 
 // Start the main app logic.
-requirejs(['Game', 'HUD', 'three', 'AIController', 'UserController'], 
+requirejs(
+	[
+	'Game', 'HUD', 'lib/three', 'AIController', 'UserController'
+	], 
 function(Game, HUD, THREE, AIController, UserController) {
 	function runGame(gameSettings, levelData, itemData) {
 	    game = new Game(gameSettings);
@@ -132,10 +124,12 @@ function(Game, HUD, THREE, AIController, UserController) {
 	    }
 	
 	    game.addGroundPlane(-4);
-	    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+	    /*game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
 	    	game.updateCubeMap();
 	    	loadLevel(levelData, itemData);
-	    });
+	    });*/
+	   
+	   loadLevel(levelData, itemData);
 	    
 	    /*setInterval(function() {
 		game.updateCubeMap();

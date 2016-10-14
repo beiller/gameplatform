@@ -12,6 +12,6 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
-		<nature>com.aptana.ide.project.nature.web</nature>
+		<nature>com.aptana.projects.webnature</nature>
 	</natures>
 </projectDescription>

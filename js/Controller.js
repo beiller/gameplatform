@@ -1,5 +1,4 @@
-
-define(["three", "cannon"], function(THREE, CANNON) {
+define(["lib/three", "lib/cannon"], function(THREE, CANNON) {
 	function Controller(character, game) {
 	    this.character = character;
 	    this.game = game;

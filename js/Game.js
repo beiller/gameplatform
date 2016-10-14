@@ -1,5 +1,5 @@
-define(["three", "zepto", "cannon", "Character", "Dynamic"], 
-function(THREE, $, CANNON, Character, Dynamic) {
+define(["lib/three", "lib/zepto", "lib/cannon", "Character", "entity/DynamicEntity"], 
+function(THREE, $, CANNON, Character, DynamicEntity) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
 	    
@@ -171,7 +171,7 @@ function(THREE, $, CANNON, Character, Dynamic) {
 	        var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
 	        sphere.position.copy(body.position);
 	        this.scene.add(sphere);
-	        //this.dynamics.push(new Dynamic(sphere, body));
+	        //this.dynamics.push(new DynamicEntity(sphere, body));
 	        body.debugMesh = sphere;
 	    }
 	
@@ -200,7 +200,7 @@ function(THREE, $, CANNON, Character, Dynamic) {
 	    if(this.debugPhysics) {
 	        var mbox = new THREE.Mesh(new THREE.BoxGeometry( sizex, sizey, sizez, 1, 1, 1 ), new THREE.MeshBasicMaterial({wireframe: true}));
 	        this.scene.add(mbox);
-	        //this.dynamics.push(new Dynamic(mbox, body));
+	        //this.dynamics.push(new DynamicEntity(mbox, body));
 	        body.debugMesh = mbox;
 	    }
 	
@@ -350,7 +350,7 @@ function(THREE, $, CANNON, Character, Dynamic) {
 	            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
 	            sphere.position.copy(body.position);
 	            scope.scene.add(sphere);
-	            //scope.dynamics.push(new Dynamic(sphere, body));
+	            //scope.dynamics.push(new DynamicEntity(sphere, body));
 	            body.debugMesh = sphere;
 			}
 	
@@ -412,7 +412,6 @@ function(THREE, $, CANNON, Character, Dynamic) {
 	        } else {
 	            var material = new THREE.MeshPhongMaterial({
 	                skinning: true,
-	                //diffuse: options.diffuse ? new THREE.Color(parseInt(options.diffuse)) : new THREE.Color( 0xDDDDDD ),
 	                specular: options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0xDDDDDD ),
 	                emissive: options.emissive ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x000000 ),
 	                envMap: game.cubeCamera.renderTarget.texture,
@@ -420,7 +419,8 @@ function(THREE, $, CANNON, Character, Dynamic) {
 	                reflectivity: options.reflectivity || 0.2
 	            });
 	            var mesh = new THREE.SkinnedMesh( geometry, material );
-	            var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, characterMass, position));
+	            var body = game.addCharacterPhysics(radius, characterMass, position);
+	            var character = new Character(options.name, mesh, body);
 	            game.characters[options.name] = character;
 	            game.scene.add( mesh );
 	            mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale || 1.0;
@@ -548,7 +548,7 @@ function(THREE, $, CANNON, Character, Dynamic) {
 	        var physEnabled = options.enabled !== undefined ? options.enabled : true;
 	        var body = game.addObjectPhysics(mesh, mass, position);
 		    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
-	        var dynamic = new Dynamic(mesh, body);
+	        var dynamic = new DynamicEntity(mesh, body);
 	        dynamic.meshOffset = [len.x/2.0, len.y/2.0, len.z/2.0];
 	        dynamic.sleep = !physEnabled;
 	        game.dynamics.push(dynamic);

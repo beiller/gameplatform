@@ -1,4 +1,4 @@
-define(["state-machine", "Controller", "three", "cannon"], 
+define(["lib/state-machine", "Controller", "lib/three", "lib/cannon"], 
 function(StateMachine, Controller, THREE, CANNON) {
 	AIController.prototype = new Controller();
 	AIController.prototype.constructor = AIController;

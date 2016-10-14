@@ -1,4 +1,4 @@
-define(["state-machine", "Controller", "BaseStateMachine", "three", "cannon"], 
+define(["lib/state-machine", "Controller", "BaseStateMachine", "lib/three", "lib/cannon"], 
 function(StateMachine, Controller, BaseStateMachine, THREE, CANNON) {
 	UserController.prototype = new Controller();
 	UserController.prototype.constructor = UserController;
@@ -133,7 +133,11 @@ function(StateMachine, Controller, BaseStateMachine, THREE, CANNON) {
 	    };
 	    //GameController.init( mobileControlData );
 	
-	    this.updateFunction = this.applyForces;
+		var scope = this;
+	    this.updateFunction = function() {
+	    	scope.fsm.update();
+			scope.applyForces();
+		};
 
 	    this.fsm = new BaseStateMachine(this.character, this.game);
 	

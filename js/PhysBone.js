@@ -1,4 +1,4 @@
-define(["three"], function(THREE) {
+define(["lib/three"], function(THREE) {
 		
 	function PhysBone2(boneFrom, boneTo, character, game) {
 	

@@ -1,4 +1,4 @@
-define(["three", "zepto"], function(THREE, $) {
+define(["lib/three", "lib/zepto"], function(THREE, $) {
 	function HUD(game) {
 		this.game = game;
 		this.init();
