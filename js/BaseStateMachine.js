@@ -133,43 +133,39 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 		} else {
 			this.fall();
 		}
-		
+		if(Math.abs(this.character.body.velocity.x) > 0.5) {
+			this.character.setAnimation("DE_CombatRun");
+		} else {
+			//console.log("Setting idle animation");
+			this.character.setAnimation("DE_Combatiddle");
+		}
 	};
 	
 	BaseStateMachine.prototype.checkForGround = function() {
 	    var r = this.character.mesh.geometry.boundingSphere.radius; //the half-radius to approximate my body not extending to the full sphere
 	    var body = this.character.body.position;
+	    var from = new CANNON.Vec3(body.x, body.y, body.z);
+	    var to = new CANNON.Vec3(body.x, body.y-10.0, body.z);
 	    //var ray1 = new CANNON.Ray(new CANNON.Vec3(body.x+r*0.75, body.y, body.z), new CANNON.Vec3(body.x+r*0.75, body.y-10.0, body.z));
 	    //var ray2 = new CANNON.Ray(new CANNON.Vec3(body.x-r*0.75, body.y, body.z), new CANNON.Vec3(body.x-r*0.75, body.y-10.0, body.z));
-	    var ray3 = new CANNON.Ray(new CANNON.Vec3(body.x, body.y+10, body.z), new CANNON.Vec3(body.x, body.y-10.0, body.z));
-	    var r_Bias = 10.1;
+	    var ray3 = new CANNON.Ray(from, to);
+	    var r_Bias = 0.25;
 	
-	    if(this.character.body.velocity.y < 0.0001) {
+	    if(Math.abs(this.character.body.velocity.y) < 0.5) {
 	        var options = {
 	            collisionFilterGroup: this.game.collisionGroups[1],
 	            collisionFilterMask: this.game.collisionGroups[0],
+	            skipBackfaces: false,
 	            mode: CANNON.Ray.CLOSEST
 	        };
-	        /*if (ray1.intersectWorld(this.game.world, options)) {
-	            if (ray1.result.distance-0.01 <= r+r_Bias) {
-	            	console.log('onground ', ray1.result.distance, r+r_Bias);
-	                return true;
-	            }
-	        }
-	        if (ray2.intersectWorld(this.game.world, options)) {
-	            if (ray2.result.distance-0.01 <= r+r_Bias) {
-	            	console.log('onground ', ray2.result.distance, r+r_Bias);
-	                return true;
-	            }
-	        }*/
-	        if (ray3.intersectWorld(this.game.world, options)) {
-	            if (ray3.result.distance <= r+r_Bias) {
-	            	console.log('onground ', ray3.result.distance, r+r_Bias);
-	                return true;
-	            }
-	        }
+	      	var raycastResult = new CANNON.RaycastResult();
+			if(this.game.world.raycastClosest(from, to, options, raycastResult) === true) {
+				if (raycastResult.distance <= r+r_Bias) {
+					return true;
+				}
+			}
 	    }
-	    console.log('falling ', ray3.result.distance, r+r_Bias);
+	    //console.log('falling ', ray3.result.distance, r+r_Bias);
 	    return false;
 	};
 

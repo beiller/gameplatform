@@ -67,7 +67,8 @@ function(Game, HUD, THREE, AIController, UserController) {
 		                diffusePath: player.diffusePath,
 		                specularPath: player.specularPath,
 		                normalPath: player.normalPath,
-		                position: position
+		                position: position,
+		                scale: player.scale
 		            }, function(characterObject) {
 		            	characterObject.addController(new controllerConstructor(characterObject, game));
 			            player.equipment.forEach(function(itemName) {
@@ -93,7 +94,8 @@ function(Game, HUD, THREE, AIController, UserController) {
 			            diffusePath: player.diffusePath,
 			            specularPath: player.specularPath,
 			            normalPath: player.normalPath,
-			            position: levelData.player.position
+			            position: levelData.player.position,
+		                scale: player.scale
 			        }, function(characterObject) {
 			            characterObject.addController(new UserController(characterObject, game));
 			            player.equipment.forEach(function(itemName) {

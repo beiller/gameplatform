@@ -418,12 +418,14 @@ function(THREE, $, CANNON, Character, DynamicEntity) {
 	                combine: options.combine || THREE.MixOperation,
 	                reflectivity: options.reflectivity || 0.2
 	            });
+	            var scale = (options.scale || 1.0);
 	            var mesh = new THREE.SkinnedMesh( geometry, material );
-	            var body = game.addCharacterPhysics(radius, characterMass, position);
+	            mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
+	            var body = game.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
 	            var character = new Character(options.name, mesh, body);
 	            game.characters[options.name] = character;
 	            game.scene.add( mesh );
-	            mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale || 1.0;
+	            
 	            if(onComplete !== undefined) onComplete(character);
 	        }
 	    });

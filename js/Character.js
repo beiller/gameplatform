@@ -171,7 +171,11 @@ function(CharacterStats, DynamicEntity, THREE, CANNON) {
 		//load the mesh
 		if(item.bone) { //this item is static and attaches to bones
 	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
-	        	addToBone(item, dynamic);
+	        	try {
+	        		addToBone(item, dynamic);
+	        	} catch(e) {
+	        		console.log('Could not attach item to bone: '+item.bone, item, e);
+	        	}
 	        	scope.meshes[item.slot] = dynamic.mesh;
 	        });
 		} else { //this item is not attached to bones but deformed by skeleton

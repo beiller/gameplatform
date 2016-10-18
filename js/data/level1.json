@@ -26,6 +26,16 @@
 	        	"rustsword"
 	        ]
 	    },   
+	    "defender": {
+	        "model": "models/DefenderLingerie00.json",
+	        "sss": false,
+	        "diffusePath": "models/textures/diffuse.png",
+	        "specularPath": "models/textures/specular.png",
+	        "normalPath": "models/textures/normal_none.png",
+	        "equipment":  [ 
+	        	"rustsword"
+	        ]
+	    },   
 	    "skeleton_main": {
 	        "model": "models/skeleton.json",
 	        "sss": false,
