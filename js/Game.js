@@ -1,5 +1,5 @@
-define(["lib/three", "lib/zepto", "lib/cannon", "Character", "entity/DynamicEntity"], 
-function(THREE, $, CANNON, Character, DynamicEntity) {
+define(["lib/three", "lib/zepto", "lib/cannon", "Character", "entity/DynamicEntity", "PhysBone"], 
+function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
 	    
@@ -171,7 +171,7 @@ function(THREE, $, CANNON, Character, DynamicEntity) {
 	        var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
 	        sphere.position.copy(body.position);
 	        this.scene.add(sphere);
-	        //this.dynamics.push(new DynamicEntity(sphere, body));
+	        //this.dynamics.push(new DynamicEntity(sphere, this, body));
 	        body.debugMesh = sphere;
 	    }
 	
@@ -200,7 +200,7 @@ function(THREE, $, CANNON, Character, DynamicEntity) {
 	    if(this.debugPhysics) {
 	        var mbox = new THREE.Mesh(new THREE.BoxGeometry( sizex, sizey, sizez, 1, 1, 1 ), new THREE.MeshBasicMaterial({wireframe: true}));
 	        this.scene.add(mbox);
-	        //this.dynamics.push(new DynamicEntity(mbox, body));
+	        //this.dynamics.push(new DynamicEntity(mbox, this, body));
 	        body.debugMesh = mbox;
 	    }
 	
@@ -344,13 +344,13 @@ function(THREE, $, CANNON, Character, DynamicEntity) {
 	        body.linearDamping = 0.99999;
 	        body.updateMassProperties();
 	        scope.world.add(body); // Step 3
-	        scope.dynamics.push(new PhysBone(bone, body, rootBone, null, scope.world, character));
+	        scope.dynamics.push(new PhysBone(bone, game, body, rootBone, null, scope.world, character));
 	
 			if(game.debugPhysics) {
 	            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
 	            sphere.position.copy(body.position);
 	            scope.scene.add(sphere);
-	            //scope.dynamics.push(new DynamicEntity(sphere, body));
+	            //scope.dynamics.push(new DynamicEntity(sphere, this, body));
 	            body.debugMesh = sphere;
 			}
 	
@@ -391,7 +391,7 @@ function(THREE, $, CANNON, Character, DynamicEntity) {
 	                //create Character object
 	                mesh.position.set(position[0], position[1], position[2]);
 	                mesh.frustumCulled = !game.disableCull;
-	                var character = new Character(options.name, mesh, game.addCharacterPhysics(radius, characterMass, position), null, sss.object);
+	                var character = new Character(mesh, game, game.addCharacterPhysics(radius, characterMass, position), options.name, null, sss.object);
 	                game.characters[options.name] = character;
 	                if(options.scale) {
 	                    mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
@@ -422,10 +422,10 @@ function(THREE, $, CANNON, Character, DynamicEntity) {
 	            var mesh = new THREE.SkinnedMesh( geometry, material );
 	            mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
 	            var body = game.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
-	            var character = new Character(options.name, mesh, body);
+	            var character = new Character(mesh, game, body, options.name);
 	            game.characters[options.name] = character;
 	            game.scene.add( mesh );
-	            
+	            game.loadPhysBones(character);
 	            if(onComplete !== undefined) onComplete(character);
 	        }
 	    });
@@ -550,7 +550,7 @@ function(THREE, $, CANNON, Character, DynamicEntity) {
 	        var physEnabled = options.enabled !== undefined ? options.enabled : true;
 	        var body = game.addObjectPhysics(mesh, mass, position);
 		    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
-	        var dynamic = new DynamicEntity(mesh, body);
+	        var dynamic = new DynamicEntity(mesh, game, body);
 	        dynamic.meshOffset = [len.x/2.0, len.y/2.0, len.z/2.0];
 	        dynamic.sleep = !physEnabled;
 	        game.dynamics.push(dynamic);

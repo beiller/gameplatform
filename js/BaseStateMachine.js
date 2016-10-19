@@ -1,4 +1,4 @@
-define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
+define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, CANNON, THREE) {
 	var BaseStateMachine = function(character, game) {
 		this.character = character;
 		this.game = game;
@@ -6,9 +6,11 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 	    this.runBlendAnimationSpeed = 0.05;
 	    this.movementForce = 90;
 	    this.jumpForce = 16000;
+	    
+	    this.attackCoolDown = 0;
 		
 		var error = function(eventName, from, to, args, errorCode, errorMessage) {
-		    console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+		    //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
 		};
 		var initial = 'NONE';
 		var events = [
@@ -18,8 +20,13 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 				to: 'IDLE'
 			},
 			{ 
+				name: 'endattack',
+				from: ['ATTACK', 'AIRATTACK'],
+				to: 'IDLE'
+			},
+			{ 
 				name: 'idle',
-				from: ['ATTACK', 'BLOCK', 'HIT', 'RUN'],
+				from: ['RUN'],
 				to: 'IDLE'
 			},
 { 
@@ -58,8 +65,18 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 				to: 'BLOCK'
 			},
 			{ 
+				name: 'unblock',
+				from: ['BLOCK'],
+				to: 'IDLE'
+			},
+			{ 
 				name: 'hit',
-				from: ['IDLE', 'INAIR', 'ATTACK', 'BLOCK', 'HIT'],
+				from: ['IDLE', 'INAIR', 'ATTACK', 'HIT', 'AIRATTACK'],
+				to: 'HIT'
+			},
+			{ 
+				name: 'stun',
+				from: ['IDLE', 'INAIR', 'ATTACK', 'HIT', 'BLOCK', 'AIRATTACK'],
 				to: 'HIT'
 			},
 			{ 
@@ -75,6 +92,9 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 					this.run();
 					return false;
 				}
+				this.character.setAnimation("DE_Combatiddle");
+			},
+			onendattack: function() {
 				this.character.setAnimation("DE_Combatiddle");
 			},
 			onfall: function() {
@@ -93,20 +113,23 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 				this.character.body.applyForce(new CANNON.Vec3(0, this.jumpForce * this.character.characterStats.jumpHeight, 0), this.character.body.position);
 			},
 			onhit: function(event, from, to, msg) {
-		        /*this.character.playAnimation("DE_Hit", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false, loop: THREE.LoopOnce });
-		        this.hitTimeout = setTimeout(function(){
-		            controller.fsm.wake();
-		        }, this.character.characterStats.hitStunDuration);*/
-		       console.log(event, from, to, msg);
+				console.log(event, from, to, msg);
+				this.character.setAnimation("DE_Hit");
+				var scope = this;
+				this.hitTimeout = setTimeout(function(){
+				    scope.idle();
+				}, this.character.characterStats.hitStunDuration);
 			},
 		    onblock: function(event, from, to, msg) {
-		        /*this.character.blocking = true;
-		        this.character.playAnimation("DE_Combatblock", { crossFade: true, crossFadeDuration: controller.runBlendAnimationSpeed, crossFadeWarp: false });
-		        */
-		       console.log(event, from, to, msg);
+		        this.character.setAnimation("DE_Combatblock");
 		    },
 		    onattack: function(event, from, to, msg) {
-		    	console.log("ATTACKING!");
+		    	if(this.attackCoolDown > 0) {
+		    		console.log("Can't attack, cooldown in effect");
+		    		return false;
+		    	}
+		    	//console.log("ATTACKING!");
+		    	this.attackCoolDown = this.character.characterStats.attackCooldown;
 		    	this.character.setAnimation("DE_Combatattack");
 		    	var scope = this;
 			    this.attackTimeout = setTimeout(function() {
@@ -120,19 +143,18 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 			                facingDist *= -1.0;
 			            }
 			            if(Math.abs(verticalDist) < 2.0 && Math.abs(dist) <= range && facingDist > 0.0 && scope.game.characters[c] !== character) {
-			                scope.game.characters[c].controllers[0].fsm.hit();
+			                scope.game.characters[c].stateMachine.hit();
 			                var unitDist = -1;
 			                if(dist > 0) {
 			                    unitDist = 1;
 			                }
-			                var cont = scope.game.characters[c].controllers[0];
-			                scope.game.characters[c].body.applyImpulse(new CANNON.Vec3(unitDist * cont.movementForce * 0.5, cont.movementForce * 0.5, 0), character.body.position);
+			                scope.game.characters[c].body.applyImpulse(new CANNON.Vec3(unitDist * scope.movementForce * 0.5, scope.movementForce * 0.5, 0), character.body.position);
 			                scope.game.characters[c].hit(character);
 			            }
 			
 			        }
 			        scope.attackTimeout = setTimeout(function() {
-			        	scope.idle();
+			        	scope.endattack();
 			        }, scope.character.characterStats.attackCooldown);
 			    }, 100);
 		    }
@@ -155,9 +177,22 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 		if(!onGround && this.current != 'RUN' && this.current != 'IDLE') {
 			this.fall();
 		}
-		if(onGround) {
+		if(this.current == 'RUN') {
 			this.applyForces(delta);
 		}
+		this.attackCoolDown -= (delta * 1000.0);
+		this.pointCharacter();
+	};
+	
+	BaseStateMachine.prototype.pointCharacter = function() {
+	    var quaternion = new THREE.Quaternion();
+	    if(this.character.movementDirection.x > 0.01) {
+	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+			this.character.mesh.quaternion.slerp(quaternion, 0.5);
+	    } else if(this.character.movementDirection.x < -0.01) {
+	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
+	        this.character.mesh.quaternion.slerp(quaternion, 0.5);
+	    }
 	};
 	
 	BaseStateMachine.prototype.applyForces = function(delta) {

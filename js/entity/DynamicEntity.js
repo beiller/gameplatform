@@ -2,8 +2,8 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	DynamicEntity.prototype = new Entity();
 	DynamicEntity.prototype.constructor = DynamicEntity;
 		
-	function DynamicEntity(mesh, body) {
-		Entity.prototype.constructor.call(this, mesh);
+	function DynamicEntity(mesh, game, body) {
+		Entity.prototype.constructor.call(this, mesh, game);
 	    this.body = body;
 	    this.sleep = false;
 	    this.meshOffset = [0,0,0];
@@ -26,7 +26,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	    	this.body.debugMesh.quaternion.copy(this.body.quaternion);
 	    }
 	};
-	DynamicEntity.prototype.findDynamic = function(game, mesh) {
+	DynamicEntity.prototype.findDynamic = function(mesh) {
 	    for(var i in game.dynamics) {
 	        if(game.dynamics[i].mesh === mesh) {
 	            return game.dynamics[i];

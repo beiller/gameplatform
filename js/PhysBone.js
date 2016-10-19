@@ -1,4 +1,4 @@
-define(["lib/three"], function(THREE) {
+define(["lib/three", "entity/DynamicEntity"], function(THREE, DynamicEntity) {
 		
 	function PhysBone2(boneFrom, boneTo, character, game) {
 	
@@ -96,21 +96,10 @@ define(["lib/three"], function(THREE) {
 	};
 	
 	
-
-	
-	Item.prototype = new Dynamic();
-	Item.prototype.constructor = Item;
-	function Item(mesh, body, game) {
-	    Dynamic.prototype.constructor.call(this, mesh, body);
-	    this.game = game;
-	}
-	
-	
-	
-	PhysBone.prototype = new Dynamic();
+	PhysBone.prototype = new DynamicEntity();
 	PhysBone.prototype.constructor = PhysBone;
-	function PhysBone(mesh, body, rootBone, spring, world, charObject) {
-	    Dynamic.prototype.constructor.call(this, mesh, body);
+	function PhysBone(mesh, game, body, rootBone, spring, world, charObject) {
+	    DynamicEntity.prototype.constructor.call(this, mesh, game, body);
 	    this.rootBone = rootBone;
 	    this.spring = spring;
 	    this.charObject = charObject;
@@ -151,5 +140,5 @@ define(["lib/three"], function(THREE) {
 	    }
 	};
 	
-	return {PhysBone: PhysBone, Dynamic: Dynamic, PhysBone2: PhysBone2};
+	return PhysBone;
 });

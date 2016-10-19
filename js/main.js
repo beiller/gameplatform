@@ -33,7 +33,7 @@ function loadJSON(path, success, error) {
 // Start the main app logic.
 requirejs(
 	[
-	'Game', 'HUD', 'lib/three', 'AIController', 'UserController'
+	'Game', 'HUD', 'lib/three', 'controller/AIController', 'controller/UserController'
 	], 
 function(Game, HUD, THREE, AIController, UserController) {
 	function runGame(gameSettings, levelData, itemData) {

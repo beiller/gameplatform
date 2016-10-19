@@ -40,6 +40,36 @@
             "attackCooldown": 800
         }
     },
+    "icestaff": {
+    	"name": "Glacial Staff of Magic",
+        "model": "models/staff.json", 
+        "slot": "weapon",
+        "bone": "weapon",
+        "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
+        "stats": {
+            "damage": 12,
+            "magic_damage": {
+                "water": 10000
+            },
+            "health": 200,
+            "attackCooldown": 800
+        }
+    },
+    "icekatana": {
+    	"name": "Glacial Katana",
+        "model": "models/katana.json", 
+        "slot": "weapon",
+        "bone": "weapon",
+        "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
+        "stats": {
+            "damage": 9000,
+            "magic_damage": {
+                "water": 255
+            },
+            "health": 200,
+            "attackCooldown": 1000
+        }
+    },
     "holychestarmor": {
     	"name": "holychestarmor",
         "model": "models/armor_holy.json", 

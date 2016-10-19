@@ -1,10 +1,10 @@
 
-define(["CharacterStats", "entity/DynamicEntity", "lib/three", "lib/cannon"], 
-function(CharacterStats, DynamicEntity, THREE, CANNON) {
+define(["CharacterStats", "entity/DynamicEntity", "lib/three", "lib/cannon", "BaseStateMachine"], 
+function(CharacterStats, DynamicEntity, THREE, CANNON, BaseStateMachine) {
 	Character.prototype = new DynamicEntity();
 	Character.prototype.constructor = Character;
-	function Character(name, mesh, body, options, sssMesh, characterStats) {
-	    DynamicEntity.prototype.constructor.call(this, mesh, body);
+	function Character(mesh, game, body, name, options, sssMesh, characterStats) {
+	    DynamicEntity.prototype.constructor.call(this, mesh, game, body);
 	
 	    this.sssMesh = sssMesh;
 	    this.controllers = [];
@@ -37,6 +37,8 @@ function(CharacterStats, DynamicEntity, THREE, CANNON) {
 	    this.equipment = {};
 	    this.inventory = [];
 	    this.meshes = {};
+	    
+	    this.stateMachine = new BaseStateMachine(this, game);
 	}
 	Character.prototype.createHealthBar = function() {
 	    var sprite = new THREE.Sprite();
@@ -80,6 +82,8 @@ function(CharacterStats, DynamicEntity, THREE, CANNON) {
 	    this.controllers.push(controller);
 	};
 	Character.prototype.update = function(delta) {
+		this.stateMachine.update(delta);
+		
 	    this.body.position.z = 0.0; //2d game here
 	
 	    //update physics components and copy to mesh position
@@ -235,7 +239,7 @@ function(CharacterStats, DynamicEntity, THREE, CANNON) {
 	    }
 	    var wstats = attackingCharacter.equipment.weapon ? attackingCharacter.equipment.weapon.stats : { damage: this.characterStats.strength };
 	    var damage = this.calculateEffect(attackingCharacter.characterStats, wstats);
-	    if(this.blocking) {
+	    if(this.blocking || this.stateMachine.current == 'BLOCK') {
 	        console.log(this.name + " blocked an attack!");
 	        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x-0.2, this.mesh.position.y, 1.0), "Blocked", 3000);
 	        damage = Math.round(damage * 0.1);
@@ -246,7 +250,7 @@ function(CharacterStats, DynamicEntity, THREE, CANNON) {
 	    if (this.characterStats.health <= 0) {
 	        console.log(this.name + " has died.");
 	        this.dead = true;
-	        this.controllers[0].fsm.dead();
+	        this.stateMachine.dead();
 	    }
 	    if (this.healthBarMesh) {
 	        var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);
@@ -256,7 +260,7 @@ function(CharacterStats, DynamicEntity, THREE, CANNON) {
 	    var rand = Math.random();
 	    if(rand <= this.characterStats.stunWhileBlockingChance) {
 	        console.log(this.name + " was stunned!");
-	        this.controllers[0].fsm.stun();
+	        this.stateMachine.stun();
 	        var scope = this;
 	        setTimeout(function() {
 	            scope.controllers[0].game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y, 1.0), "Stunned", 3000);
