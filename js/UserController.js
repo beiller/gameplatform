@@ -13,15 +13,15 @@ function(StateMachine, Controller, BaseStateMachine, THREE, CANNON) {
 	        'keydown': {
 	            '87': function() { try {controller.fsm.jump();} catch(e) {} }, //W KEY
 	            '83': function() {  }, //S KEY
-	            '68': function() { mv.x += 1.0; }, //A KEY
-	            '65': function() { mv.x -= 1.0; },  //D KEY
+	            '68': function() { mv.x += 1.0; controller.fsm.run(); }, //A KEY
+	            '65': function() { mv.x -= 1.0; controller.fsm.run(); },  //D KEY
 	            '32': function() {  }  //SPACEBAR
 	        },
 	        'keyup':{
 	            '87': function() {  },
 	            '83': function() {  },
-	            '68': function() { mv.x -= 1.0; },
-	            '65': function() { mv.x += 1.0; },
+	            '68': function() { mv.x -= 1.0; controller.fsm.idle(); },
+	            '65': function() { mv.x += 1.0; controller.fsm.idle(); },
 	            '32': function() {  }
 	        }
 	    };
@@ -134,9 +134,8 @@ function(StateMachine, Controller, BaseStateMachine, THREE, CANNON) {
 	    //GameController.init( mobileControlData );
 	
 		var scope = this;
-	    this.updateFunction = function() {
-	    	scope.fsm.update();
-			scope.applyForces();
+	    this.updateFunction = function(dt) {
+	    	scope.fsm.update(dt);
 		};
 
 	    this.fsm = new BaseStateMachine(this.character, this.game);

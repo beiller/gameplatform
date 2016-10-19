@@ -8,7 +8,7 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 	    this.jumpForce = 16000;
 		
 		var error = function(eventName, from, to, args, errorCode, errorMessage) {
-		    //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+		    console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
 		};
 		var initial = 'NONE';
 		var events = [
@@ -19,12 +19,17 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 			},
 			{ 
 				name: 'idle',
-				from: ['ATTACK', 'BLOCK', 'HIT'],
+				from: ['ATTACK', 'BLOCK', 'HIT', 'RUN'],
 				to: 'IDLE'
+			},
+{ 
+				name: 'run',
+				from: ['IDLE'],
+				to: 'RUN'
 			},
 			{ 
 				name: 'jump',
-				from: 'IDLE',
+				from: ['IDLE', 'RUN'],
 				to: 'INAIR'
 			},
 			{ 
@@ -34,13 +39,18 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 			},
 			{ 
 				name: 'fall',
-				from: ['IDLE', 'ATTACK', 'BLOCK', 'HIT'],
+				from: ['IDLE', 'ATTACK', 'BLOCK', 'HIT', 'AIRATTACK', 'RUN'],
 				to: 'INAIR'
 			},
 			{ 
 				name: 'attack',
 				from: ['IDLE'],
 				to: 'ATTACK'
+			},
+			{ 
+				name: 'attack',
+				from: ['INAIR'],
+				to: 'AIRATTACK'
 			},
 			{ 
 				name: 'block',
@@ -60,13 +70,23 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 		];
 		var callbacks = {
 			onland: function() {
-				//console.log('landed');
+				console.log('landing');
+				if(Math.abs(this.character.movementDirection.x) > 0.1) {
+					this.run();
+					return false;
+				}
+				this.character.setAnimation("DE_Combatiddle");
 			},
 			onfall: function() {
-				//console.log('falling');
+				console.log('falling');
 			},
 			onidle: function(event, from, to, msg) {
-		        console.log(event, from, to, msg);
+				console.log('idle');
+		        this.character.setAnimation("DE_Combatiddle");
+			},
+			onrun: function(event, from, to, msg) {
+				console.log('run');
+				this.character.setAnimation("DE_CombatRun");
 			},
 			onjump: function(event, from, to, msg) {
 				console.log(event, from, to, msg);
@@ -87,6 +107,7 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 		    },
 		    onattack: function(event, from, to, msg) {
 		    	console.log("ATTACKING!");
+		    	this.character.setAnimation("DE_Combatattack");
 		    	var scope = this;
 			    this.attackTimeout = setTimeout(function() {
 			        var range = scope.character.characterStats.range;
@@ -111,8 +132,8 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 			
 			        }
 			        scope.attackTimeout = setTimeout(function() {
-			            scope.idle();
-			        }, 100);
+			        	scope.idle();
+			        }, scope.character.characterStats.attackCooldown);
 			    }, 100);
 		    }
 		};
@@ -126,30 +147,43 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 		this.startup();
 	};
 	
-	BaseStateMachine.prototype.update = function() {
+	BaseStateMachine.prototype.update = function(delta) {
 		var onGround = this.checkForGround();
-		if(onGround) {
+		if(onGround && this.current == 'INAIR') {
 			this.land();
-		} else {
+		} 
+		if(!onGround && this.current != 'RUN' && this.current != 'IDLE') {
 			this.fall();
 		}
-		if(Math.abs(this.character.body.velocity.x) > 0.5) {
-			this.character.setAnimation("DE_CombatRun");
-		} else {
-			//console.log("Setting idle animation");
-			this.character.setAnimation("DE_Combatiddle");
+		if(onGround) {
+			this.applyForces(delta);
 		}
+	};
+	
+	BaseStateMachine.prototype.applyForces = function(delta) {
+	    var forceVec = new CANNON.Vec3().copy(this.character.movementDirection);
+	    forceVec.normalize();
+	    var f = forceVec.scale(this.movementForce);
+	    this.character.body.applyImpulse(f, this.character.body.position);
+	    if(Math.abs(this.character.body.velocity.x) > this.character.characterStats.movementSpeed) {
+	        var v = this.character.body.velocity;
+	        if(this.character.body.velocity.x > 0) {
+	            v.set(this.character.characterStats.movementSpeed, v.y, v.z);
+	        } else {
+	            v.set(-this.character.characterStats.movementSpeed, v.y, v.z);
+	        }
+	    }
 	};
 	
 	BaseStateMachine.prototype.checkForGround = function() {
 	    var r = this.character.mesh.geometry.boundingSphere.radius; //the half-radius to approximate my body not extending to the full sphere
 	    var body = this.character.body.position;
-	    var from = new CANNON.Vec3(body.x, body.y, body.z);
-	    var to = new CANNON.Vec3(body.x, body.y-10.0, body.z);
-	    //var ray1 = new CANNON.Ray(new CANNON.Vec3(body.x+r*0.75, body.y, body.z), new CANNON.Vec3(body.x+r*0.75, body.y-10.0, body.z));
-	    //var ray2 = new CANNON.Ray(new CANNON.Vec3(body.x-r*0.75, body.y, body.z), new CANNON.Vec3(body.x-r*0.75, body.y-10.0, body.z));
+	    var testList = [
+	    	[new CANNON.Vec3(body.x+r*0.75, body.y, body.z), new CANNON.Vec3(body.x+r*0.75, body.y-10.0, body.z)],
+	    	[new CANNON.Vec3(body.x-r*0.75, body.y, body.z), new CANNON.Vec3(body.x-r*0.75, body.y-10.0, body.z)],
+	    ];
 	    var ray3 = new CANNON.Ray(from, to);
-	    var r_Bias = 0.25;
+	    var r_Bias = 0.5;
 	
 	    if(Math.abs(this.character.body.velocity.y) < 0.5) {
 	        var options = {
@@ -159,13 +193,16 @@ define(['lib/state-machine', 'lib/cannon'], function(StateMachine, CANNON) {
 	            mode: CANNON.Ray.CLOSEST
 	        };
 	      	var raycastResult = new CANNON.RaycastResult();
-			if(this.game.world.raycastClosest(from, to, options, raycastResult) === true) {
-				if (raycastResult.distance <= r+r_Bias) {
-					return true;
+	      	for(var testRayIndex in testList) {
+	      		var from = testList[testRayIndex][0];
+	      		var to = testList[testRayIndex][1];
+				if(this.game.world.raycastClosest(from, to, options, raycastResult) === true) {
+					if (raycastResult.distance <= r+r_Bias) {
+						return true;
+					}
 				}
 			}
 	    }
-	    //console.log('falling ', ray3.result.distance, r+r_Bias);
 	    return false;
 	};
 

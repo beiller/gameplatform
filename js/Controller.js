@@ -43,7 +43,7 @@ define(["lib/three", "lib/cannon"], function(THREE, CANNON) {
 	    }, 100);
 	};
 	Controller.prototype.update = function(delta) {
-	    this.updateFunction();
+	    this.updateFunction(delta);
 	    var quaternion = new THREE.Quaternion();
 	    if(this.character.movementDirection.x > 0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
