@@ -5,7 +5,7 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 		this.blendAnimationDuration = 0.05;
 	    this.runBlendAnimationSpeed = 0.05;
 	    this.movementForce = 90;
-	    this.jumpForce = 16000;
+	    this.jumpForce = 13000;
 	    
 	    this.attackCoolDown = 0;
 		
@@ -188,10 +188,10 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 	    var quaternion = new THREE.Quaternion();
 	    if(this.character.movementDirection.x > 0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-			this.character.mesh.quaternion.slerp(quaternion, 0.5);
+			this.character.mesh.quaternion.slerp(quaternion, 0.1);
 	    } else if(this.character.movementDirection.x < -0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
-	        this.character.mesh.quaternion.slerp(quaternion, 0.5);
+	        this.character.mesh.quaternion.slerp(quaternion, 0.1);
 	    }
 	};
 	

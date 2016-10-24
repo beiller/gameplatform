@@ -1,5 +1,8 @@
-define(["lib/three", "lib/zepto", "lib/cannon", "Character", "entity/DynamicEntity", "PhysBone"], 
-function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
+define([
+	"lib/three", "lib/zepto", "lib/cannon", "Character", 
+	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge"
+], 
+function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist, PhysBoneHinge) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
 	    
@@ -230,38 +233,53 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
 	        cameraRadius += delta/120*0.1;
 	    }
 	    var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
-	    //document.addEventListener(mousewheelevt, displaywheel, false);
+	    document.addEventListener(mousewheelevt, displaywheel, false);
 	    function mousemovement(e) {
 	        var x = e.clientX;
 	        var y = e.clientY;
 	        var xr = ((x / window.innerWidth) - 0.5) * 2.0;
 	        var yr = ((y / window.innerHeight) - 0.5) * 2.0;
-	        var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, -1, 0), xr);
-	        var qtarget2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-1, 0, 0), yr);
+	        var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, -.1, 0), xr);
+	        var qtarget2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-.1, 0, 0), yr);
 	        qtarget.multiply(qtarget2);
 	        cam.quaternion.slerp(qtarget, 0.25);
 	    }
-	    //document.addEventListener("mousemove", mousemovement, false);
+	    document.addEventListener("mousemove", mousemovement, false);
 	
 	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 128 );
 	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
 	    this.scene.add( this.cubeCamera );
 	
-	    // LIGHTS
-	
-	    var directionalLight = new THREE.DirectionalLight( 0xffeedd, 1.5 );
-	    directionalLight.position.set( 1, 0.5, 1 );
-	    this.scene.add( directionalLight );
-	
-	    directionalLight = new THREE.DirectionalLight( 0xddddff, 0.5 );
-	    directionalLight.position.set( -1, 0.5, -1 );
-	    this.scene.add( directionalLight );
-	
-		directionalLight = new THREE.HemisphereLight( 0x0000ff, 0x00ff00, 0.25 ); 
-		directionalLight.color.setHSL( 0.6, 1, 0.6 );
-		directionalLight.groundColor.setHSL( 0.095, 1, 0.75 );
-		directionalLight.position.set( 0, 500, 0 );	
-		this.scene.add( directionalLight );
+		// LIGHTS
+		hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+		hemiLight.color.setHSL( 0.6, 1, 0.6 );
+		hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+		hemiLight.position.set( 0, 500, 0 );
+		this.scene.add( hemiLight );
+
+		//
+
+		dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+		dirLight.color.setHSL( 0.1, 1, 0.95 );
+		dirLight.position.set( 0, 1.75, 1 );
+		dirLight.position.multiplyScalar( 50 );
+		this.scene.add( dirLight );
+
+		dirLight.castShadow = true;
+
+		dirLight.shadowMapWidth = 2048;
+		dirLight.shadowMapHeight = 2048;
+
+		var d = 50;
+
+		dirLight.shadowCameraLeft = -d;
+		dirLight.shadowCameraRight = d;
+		dirLight.shadowCameraTop = d;
+		dirLight.shadowCameraBottom = -d;
+
+		dirLight.shadowCameraFar = 3500;
+		dirLight.shadowBias = -0.0001;
+		dirLight.shadowCameraVisible = true;
 	
 	    this.texloader = new THREE.TextureLoader();
 	    this.jsonloader = new THREE.JSONLoader();
@@ -322,13 +340,13 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
 	};
 	Game.prototype.loadPhysBones = function(character) {
 		var game = this;
-	    function createPhysBone(boneName, parentBoneName, character) {
+	    function createPhysBone(boneName, parentBoneName, character, physBoneType) {
 	        var rootBone = character.findBone(parentBoneName);
 	        var bone = character.findBone(boneName);
 	        var radius = 0.075;
 	        var shape = new CANNON.Sphere( radius );
 	        var body = new CANNON.Body({
-	            mass: 2
+	            mass: 1.2  //weight of a boob is 1.2 kg?
 	        });
 	        body.addShape(shape);
 	        var pos = new THREE.Vector3().set(
@@ -340,11 +358,40 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
 	        body.collisionFilterGroup = scope.collisionGroups[3];
 	        body.collisionFilterMask = scope.collisionGroups[2];// | this.collisionGroups[1];
 	        //body.fixedRotation = true;
-	        body.angularDamping = 0.99999;
-	        body.linearDamping = 0.99999;
-	        body.updateMassProperties();
 	        scope.world.add(body); // Step 3
-	        scope.dynamics.push(new PhysBone(bone, game, body, rootBone, null, scope.world, character));
+	        //scope.dynamics.push(new PhysBone(bone, game, body, rootBone, scope.world, character));
+	        scope.dynamics.push(new physBoneType(parentBoneName, boneName, bone, body, scope.world, character));
+	
+			if(game.debugPhysics) {
+	            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
+	            sphere.position.copy(body.position);
+	            scope.scene.add(sphere);
+	            //scope.dynamics.push(new DynamicEntity(sphere, this, body));
+	            body.debugMesh = sphere;
+			}
+	
+	    }
+	    function createPhysBoneRag(boneName, parentBoneName, character, physBoneType) {
+	        var rootBone = character.findBone(parentBoneName);
+	        var bone = character.findBone(boneName);
+	        var radius = 0.075;
+	        var shape = new CANNON.Sphere( radius );
+	        var body = new CANNON.Body({
+	            mass: 1.2  //weight of a boob is 1.2 kg?
+	        });
+	        body.addShape(shape);
+	        var pos = new THREE.Vector3().set(
+	            bone.matrixWorld.elements[12],
+	            bone.matrixWorld.elements[13],
+	            bone.matrixWorld.elements[14]
+	        );
+	        body.position.copy(pos);
+	        body.collisionFilterGroup = scope.collisionGroups[3];
+	        body.collisionFilterMask = scope.collisionGroups[2];// | this.collisionGroups[1];
+	        //body.fixedRotation = true;
+	        scope.world.add(body); // Step 3
+	        //scope.dynamics.push(new PhysBone(bone, game, body, rootBone, scope.world, character));
+	        scope.dynamics.push(new physBoneType(parentBoneName, boneName, bone, body, scope.world, character));
 	
 			if(game.debugPhysics) {
 	            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
@@ -356,8 +403,11 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
 	
 	    }
 	    var scope = this;
-	    createPhysBone("breast_R", "spine02", character);
-	    createPhysBone("breast_L", "spine02", character);
+	    createPhysBone("breast_R", "spine02", character, PhysBone);
+	    createPhysBone("breast_L", "spine02", character, PhysBone);
+	    
+	    //createPhysBone("lowerarm01_R", "upperarm02_R", character, PhysBoneHinge);
+	    createPhysBone("upperarm01_R", "shoulder01_R", character, PhysBoneConeTwist);
 	
 	    return null;
 	
@@ -410,23 +460,30 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
 	                if(onComplete !== undefined) onComplete(character);
 	            });*/
 	        } else {
-	            var material = new THREE.MeshPhongMaterial({
-	                skinning: true,
-	                specular: options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0xDDDDDD ),
-	                emissive: options.emissive ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x000000 ),
-	                envMap: game.cubeCamera.renderTarget.texture,
-	                combine: options.combine || THREE.MixOperation,
-	                reflectivity: options.reflectivity || 0.2
-	            });
-	            var scale = (options.scale || 1.0);
-	            var mesh = new THREE.SkinnedMesh( geometry, material );
-	            mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
-	            var body = game.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
-	            var character = new Character(mesh, game, body, options.name);
-	            game.characters[options.name] = character;
-	            game.scene.add( mesh );
-	            game.loadPhysBones(character);
-	            if(onComplete !== undefined) onComplete(character);
+				game.loadTextureFile(options.diffusePath, function(diffuseTexture) {
+		        	var materialOptions = {
+		                skinning: true,
+		                //specular: options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x222222 ),
+		                //emissive: options.emissive ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x000000 ),
+		                //envMap: game.cubeCamera.renderTarget.texture,
+		                //combine: options.combine || THREE.MixOperation,
+		                //reflectivity: options.reflectivity || 0.1,
+		                emissive: options.emissive || new THREE.Color( 0x0A0302 ),
+		                roughness: options.roughness || 0.60,
+		                metalness: options.metalness || 0.05,
+		                map: diffuseTexture
+					};
+					var material = new THREE.MeshStandardMaterial(materialOptions);
+					var scale = (options.scale || 1.0);
+					var mesh = new THREE.SkinnedMesh( geometry, material );
+					mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
+					var body = game.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
+					var character = new Character(mesh, game, body, options.name);
+					game.characters[options.name] = character;
+					game.scene.add( mesh );
+					game.loadPhysBones(character);
+					if(onComplete !== undefined) onComplete(character);
+				});
 	        }
 	    });
 	};
@@ -434,9 +491,9 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
 	    if(options === undefined) {
 	        return;
 	    }
-	    var scope = this;
-	    function _setopt(mat, options) {
-	        mat.envMap = scope.cubeCamera.renderTarget.texture;
+	    var cubeCamera = this.cubeCamera;
+	    function _setopt(mat, options, materialIndex) {
+	        mat.envMap = cubeCamera.renderTarget.texture;
 	        mat.combine = options.combine || THREE.MixOperation;
 	        mat.reflectivity = options.reflectivity || 0.2;
 	        mat.emissive  = options.emissive ? new THREE.Color(parseInt(options.emissive)) : new THREE.Color( 0x000000 );
@@ -450,11 +507,11 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone) {
 	        mat.needsUpdate = true;
 	    }
 	    if(mesh.material.type == "MultiMaterial") {
-	        for(var i in mesh.material.materials) {
-	            _setopt(mesh.material.materials[i], options);
-	        }
+			mesh.material.materials.forEach(function(_material, materialIndex) {
+			   	_setopt(_material, options, materialIndex);
+			});
 	    } else {
-	        _setopt(mesh.material, options);
+	        _setopt(mesh.material, options, 0);
 	    }
 	};
 	Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh, normalGeometry) {

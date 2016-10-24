@@ -2,14 +2,14 @@
 	"staticObjects": [],
 	"characters": {
 	    "evil_eve": {
-	        "model": "models/neweve_highres.json",
+	        "model": "models/neweve.json",
 	        "sss": false,
 	        "diffusePath": "models/textures/young_darkskinned_female_diffuse.png",
 	        "specularPath": "models/textures/specular.png",
 	        "normalPath": "models/textures/newevenormal.png",
 	        "equipment":  [ 
 	        	"rustsword", 
-	        	"evilunderwear", 
+	        	"evillingerie", 
 	        	"evilsocks",
 	        	"face",
 	        	"hairevil",
@@ -25,55 +25,23 @@
 	        "equipment":  [ 
 	        	"rustsword"
 	        ]
-	    },   
-	    "defender": {
-	        "model": "models/DefenderLingerie00.json",
-	        "sss": false,
-	        "diffusePath": "models/textures/diffuse.png",
-	        "specularPath": "models/textures/specular.png",
-	        "normalPath": "models/textures/normal_none.png",
-	        "equipment":  [ 
-	        	"rustsword"
-	        ]
-	    },   
-	    "skeleton_main": {
-	        "model": "models/skeleton.json",
-	        "sss": false,
-	        "diffusePath": "models/textures/young_darkskinned_female_diffuse.png",
-	        "specularPath": "models/textures/specular.png",
-	        "normalPath": "models/textures/normal_none.png",
-	        "equipment": [ 
-	        	"holyunderwear", 
-	        	"face",
-	        	"hairprincess",
-	        	"holynails"
-	        ],
-	        "inventory": [
-	        	"rustsword", 
-	        	"holychestarmor",
-	        	"holysocks",
-	        	"firesword", 
-	        	"rustsword",
-	        	"evilchestarmor",
-	        	"holylegs"
-	        ]
-	    },   
+	    },    
 	    "good_eve": {
 	        "model": "models/neweve.json",
 	        "sss": false,
-	        "diffusePath": "models/textures/eveskin.png",
+	        "diffusePath": "models/textures/young_lightskinned_female_diffuse3.png",
 	        "specularPath": "models/textures/specular.png",
 	        "normalPath": "models/textures/newevenormal.png",
 	        "equipment": [ 
-	        	"holyunderwear", 
 	        	"face",
 	        	"hairprincess",
-	        	"holynails"
+	        	"holynails",
+	        	"holylingerie",
+	        	"holysocks"
 	        ],
-	        "inventory": [
+	        "inventory": [	        	
 	        	"rustsword", 
 	        	"holychestarmor",
-	        	"holysocks",
 	        	"firesword", 
 	        	"rustsword",
 	        	"evilchestarmor",

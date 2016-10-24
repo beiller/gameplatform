@@ -86,6 +86,12 @@
     "holyunderwear": {"name": "holyunderwear", "model": "models/neweveunderwear.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xEFD7ED", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     },
+    "holylingerie": {"name": "holylingerie", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
+        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
+    },
+    "evillingerie": {"name": "evillingerie", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0x221111", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
+        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
+    },
     "evilunderwear": {"name": "evilunderwear", "model": "models/neweveunderwear.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0x221111"},
         "stats": {"defence": 1,"magic_defence": {"evil": 1}}
     },
@@ -120,9 +126,11 @@
         "name": "evilsocks", "model": "models/thighhigh.json", "slot": "socks","options": {"reflectivity": 0.1, "color": "0x221111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     },     
-    "face": {"name": "face",  "model": "models/neweve_face.json", "slot": "face", "options": {"reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC" } },  
-    "hairprincess": {"name": "hairprincess",  "model": "models/neweve_hair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0xFFB7DD"} },  
-    "hairevil": {"name": "hairevil",  "model": "models/neweve_hair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0x221111"} },
+    "face": {"name": "face",  "model": "models/neweve_face.json", "slot": "face", "options": 
+    	{"reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC"}
+    },  
+    "hairprincess": {"name": "hairprincess",  "model": "models/princesshair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "shininess": 8, "specular": "0x222222"} },  
+    "hairevil": {"name": "hairevil",  "model": "models/shorthair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0x221111", "shininess": 8, "specular": "0x222222"} },
     "evilnails": {"name": "evilnails",  "model": "models/neweve_fingernails.json", "slot": "eyes6", "options": {"reflectivity": 0.005, "color": "0x000000"} },
     "holynails": {"name": "holynails",  "model": "models/neweve_fingernails.json", "slot": "eyes6", "options": {"reflectivity": 0.005, "color": "0xFFB7DD"} }
 }

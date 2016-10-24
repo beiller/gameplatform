@@ -46,9 +46,11 @@ function(Game, HUD, THREE, AIController, UserController) {
 		
 	    var bricks = [];
 	    for(var i = -50; i<=50; i++) {
-			var randomHeight = (Math.random() - 0.5) * 0.5;
-			var slope = i * 0.25;
+			var randomHeight = (Math.random() - 0.5) * 0.25;
+			var slope = i*0.05;
 			bricks.push({model: 'models/big_brick.json', shape: 'box', position: [2*i,-3+randomHeight+slope,0]});
+			bricks.push({model: 'models/stone_wall1.json', shape: 'box', position: [2*i,-3+randomHeight+slope,-2]});
+			bricks.push({model: 'models/stone_pillar.json', shape: 'box', position: [2*i,-3+randomHeight+slope,-1.6]});
 	    }
 	    levelData.staticObjects = bricks;
 	    var id_counter = 0;
@@ -126,12 +128,12 @@ function(Game, HUD, THREE, AIController, UserController) {
 	    }
 	
 	    game.addGroundPlane(-4);
-	    /*game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+	    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
 	    	game.updateCubeMap();
 	    	loadLevel(levelData, itemData);
-	    });*/
+	    });
 	   
-	   loadLevel(levelData, itemData);
+	   //loadLevel(levelData, itemData);
 	    
 	    /*setInterval(function() {
 		game.updateCubeMap();
