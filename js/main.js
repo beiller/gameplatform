@@ -120,20 +120,20 @@ function(Game, HUD, THREE, AIController, UserController) {
 			    id_counter+=1;
 			});
 			
-			setInterval(function() {
+			/*setInterval(function() {
 	    		spawn_npc('monster'+id_counter, levelData.characters.skeleton, [Math.random() * 200 - 100,0,0]);
 	    		id_counter+=1;
-	    	}, 12000);
+	    	}, 12000);*/
 	
 	    }
 	
 	    game.addGroundPlane(-4);
-	    game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+	    /*game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
 	    	game.updateCubeMap();
 	    	loadLevel(levelData, itemData);
-	    });
+	    });*/
 	   
-	   //loadLevel(levelData, itemData);
+	    loadLevel(levelData, itemData);
 	    
 	    /*setInterval(function() {
 		game.updateCubeMap();

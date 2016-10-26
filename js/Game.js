@@ -137,7 +137,7 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	    //more GAMIFY
 	    //this.world.gravity.set(0,-35,0);
 	    this.world.broadphase = new CANNON.NaiveBroadphase();
-	    this.world.solver.iterations = 10;
+	    this.world.solver.iterations = 100;
 	    this.world.defaultContactMaterial.friction = 0.1;
 	    this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
 	    this.world.defaultContactMaterial.contactEquationStiffness = 1e9;
@@ -372,43 +372,43 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	
 	    }
 	    function createPhysBoneRag(boneName, parentBoneName, character, physBoneType) {
-	        var rootBone = character.findBone(parentBoneName);
-	        var bone = character.findBone(boneName);
-	        var radius = 0.075;
-	        var shape = new CANNON.Sphere( radius );
-	        var body = new CANNON.Body({
-	            mass: 1.2  //weight of a boob is 1.2 kg?
-	        });
-	        body.addShape(shape);
-	        var pos = new THREE.Vector3().set(
-	            bone.matrixWorld.elements[12],
-	            bone.matrixWorld.elements[13],
-	            bone.matrixWorld.elements[14]
-	        );
-	        body.position.copy(pos);
-	        body.collisionFilterGroup = scope.collisionGroups[3];
-	        body.collisionFilterMask = scope.collisionGroups[2];// | this.collisionGroups[1];
-	        //body.fixedRotation = true;
-	        scope.world.add(body); // Step 3
-	        //scope.dynamics.push(new PhysBone(bone, game, body, rootBone, scope.world, character));
-	        scope.dynamics.push(new physBoneType(parentBoneName, boneName, bone, body, scope.world, character));
-	
-			if(game.debugPhysics) {
-	            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
-	            sphere.position.copy(body.position);
-	            scope.scene.add(sphere);
-	            //scope.dynamics.push(new DynamicEntity(sphere, this, body));
-	            body.debugMesh = sphere;
-			}
-	
+			var constraint = 
+	        scope.dynamics.push(constraint);
+	        return constraint;
 	    }
 	    var scope = this;
 	    createPhysBone("breast_R", "spine02", character, PhysBone);
 	    createPhysBone("breast_L", "spine02", character, PhysBone);
 	    
-	    //createPhysBone("lowerarm01_R", "upperarm02_R", character, PhysBoneHinge);
-	    createPhysBone("upperarm01_R", "shoulder01_R", character, PhysBoneConeTwist);
-	
+	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
+	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
+		var c3 = new PhysBoneConeTwist("spine03", "spine02", this, character, c2);
+		this.dynamics.push(c1);
+		this.dynamics.push(c2);
+		this.dynamics.push(c3);
+		*/
+		var c0 = new PhysBoneConeTwist("clavicle_R", "shoulder01_R", this, character);
+		var c1 = new PhysBoneConeTwist("shoulder01_R", "upperarm01_R", this, character, c0);
+	    var c2 = new PhysBoneConeTwist("upperarm01_R", "upperarm02_R", this, character, c1);
+		var c3 = new PhysBoneConeTwist("upperarm02_R", "lowerarm01_R", this, character, c2);
+		var c4 = new PhysBoneConeTwist("lowerarm01_R", "lowerarm02_R", this, character, c3);
+		this.dynamics.push(c0);
+		this.dynamics.push(c1);
+		this.dynamics.push(c2);
+		this.dynamics.push(c3);
+		this.dynamics.push(c4);
+		
+		//var d0 = new PhysBoneConeTwist("clavicle_L", "shoulder01_L", this, character);
+		//var d1 = new PhysBoneConeTwist("shoulder01_L", "upperarm01_L", this, character, d0);
+	    //var d2 = new PhysBoneConeTwist("upperarm01_L", "upperarm02_L", this, character, d1);
+		var d3 = new PhysBoneConeTwist("upperarm02_L", "lowerarm01_L", this, character);
+		var d4 = new PhysBoneConeTwist("lowerarm01_L", "lowerarm02_L", this, character, d3);
+		//this.dynamics.push(d0);
+		//this.dynamics.push(d1);
+		//this.dynamics.push(d2);
+		this.dynamics.push(d3);
+		this.dynamics.push(d4);
+
 	    return null;
 	
 	};

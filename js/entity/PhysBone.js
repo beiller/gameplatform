@@ -13,29 +13,31 @@ define(["lib/three"], function(THREE) {
 	    this.attachBoneBody.position.copy(
 	    	this.boneMesh.position
 	    );
-		this.constraint = new CANNON.DistanceConstraint(this.boneBody, this.attachBoneBody, 0.01, 1);
+	    this.attachBoneMesh = character.findBone(attachBoneName);
+	    var distance = 0.01;
+	    var max_force = 1.0;
+		this.constraint = new CANNON.DistanceConstraint(this.boneBody, this.attachBoneBody, distance, max_force);
 		this.constraint.collideConnected = false;
 		world.addConstraint(this.constraint);	
 		this.character = character;
+		
+		/*var radius = 0.15;
+		var geom = new THREE.SphereGeometry(radius);
+		var mat = new THREE.MeshBasicMaterial({wireframe: true});
+		this.debugMesh = new THREE.Mesh(geom, mat);
+		character.game.scene.add(this.debugMesh);*/
 	}
 	PhysBone.prototype.setBoneFromBody = function() {
-		var vector = new THREE.Vector3().setFromMatrixPosition(this.boneMesh.matrixWorld);
-		var invMatrix = new THREE.Matrix4().getInverse(new THREE.Matrix4().extractRotation(this.boneMesh.matrixWorld));
-		var v1 = new THREE.Vector3().copy(vector);
-		var v2 = new THREE.Vector3().copy(this.boneBody.position);
-		v1.applyMatrix4(invMatrix);
-		v2.applyMatrix4(invMatrix);
-	    var p = new THREE.Vector3().copy(v2).sub(v1);
-	    p.multiplyScalar(this.effectScale);
-	    p.add(this.restPosition);
-	    this.boneMesh.position.copy(p);
+		var pos = new THREE.Vector3().copy(this.boneBody.position);
+		var invMatrix = new THREE.Matrix4().getInverse(this.attachBoneMesh.matrixWorld);
+		pos.applyMatrix4(invMatrix);
+	    this.boneMesh.position.copy(pos);
 	};
 	PhysBone.prototype.update = function() {
-        //this is how we update the fake body
+		//this is how we update the fake body
 	    this.boneMesh.position.copy(this.restPosition);
 	    this.boneMesh.updateMatrixWorld(true);
-	    var vector = new THREE.Vector3().setFromMatrixPosition(this.boneMesh.matrixWorld);
-	    this.attachBoneBody.position.copy(vector);
+	    this.attachBoneBody.position.copy(new THREE.Vector3().setFromMatrixPosition(this.boneMesh.matrixWorld));
 	    this.setBoneFromBody();
 	    if(this.debugMesh) {
 	    	this.debugMesh.position.copy(this.boneBody.position);
