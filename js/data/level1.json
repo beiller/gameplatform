@@ -36,11 +36,15 @@
 	        	"face",
 	        	"hairprincess",
 	        	"holynails",
-	        	"holylingerie",
-	        	"holysocks"
+	        	"holylingerie3"
 	        ],
-	        "inventory": [	        	
+	        "inventory": [	        
+	        	"unholychestarmor",
+	        	"holyunderwear",
+	        	"holylingerie2",	
+	        	"holylingerie",	
 	        	"rustsword", 
+	        	"holysocks",
 	        	"holychestarmor",
 	        	"firesword", 
 	        	"rustsword",

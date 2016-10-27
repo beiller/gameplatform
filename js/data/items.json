@@ -83,10 +83,28 @@
             "health": 200
         }
     },
+    "unholychestarmor": {
+    	"name": "unholychestarmor",
+        "model": "models/teraskull.json", 
+        "slot": "chest",
+        "stats": {
+            "defence": 200,
+            "magic_defence": {
+                "holy": 200
+            },
+            "health": 200
+        }
+    },
     "holyunderwear": {"name": "holyunderwear", "model": "models/neweveunderwear.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xEFD7ED", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     },
-    "holylingerie": {"name": "holylingerie", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
+    "holylingerie": {"name": "Holy Lingerie #1", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
+        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
+    },
+    "holylingerie2": {"name": "Holy Lingerie #2", "model": "models/lingerie2.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
+        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
+    },
+    "holylingerie3": {"name": "Holy Lingerie #3", "model": "models/lingerie3.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     },
     "evillingerie": {"name": "evillingerie", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0x221111", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},

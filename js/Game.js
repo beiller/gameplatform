@@ -386,7 +386,7 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 		this.dynamics.push(c1);
 		this.dynamics.push(c2);
 		this.dynamics.push(c3);
-		*/
+
 		var c0 = new PhysBoneConeTwist("clavicle_R", "shoulder01_R", this, character);
 		var c1 = new PhysBoneConeTwist("shoulder01_R", "upperarm01_R", this, character, c0);
 	    var c2 = new PhysBoneConeTwist("upperarm01_R", "upperarm02_R", this, character, c1);
@@ -397,17 +397,7 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 		this.dynamics.push(c2);
 		this.dynamics.push(c3);
 		this.dynamics.push(c4);
-		
-		//var d0 = new PhysBoneConeTwist("clavicle_L", "shoulder01_L", this, character);
-		//var d1 = new PhysBoneConeTwist("shoulder01_L", "upperarm01_L", this, character, d0);
-	    //var d2 = new PhysBoneConeTwist("upperarm01_L", "upperarm02_L", this, character, d1);
-		var d3 = new PhysBoneConeTwist("upperarm02_L", "lowerarm01_L", this, character);
-		var d4 = new PhysBoneConeTwist("lowerarm01_L", "lowerarm02_L", this, character, d3);
-		//this.dynamics.push(d0);
-		//this.dynamics.push(d1);
-		//this.dynamics.push(d2);
-		this.dynamics.push(d3);
-		this.dynamics.push(d4);
+		*/
 
 	    return null;
 	
