@@ -1,8 +1,8 @@
 define([
-	"lib/three", "lib/zepto", "lib/cannon", "Character", 
+	"lib/three", "lib/zepto", "Character", "physics/CannonPhysics",
 	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge"
 ], 
-function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist, PhysBoneHinge) {
+function(THREE, $, Character, Physics, DynamicEntity, PhysBone, PhysBoneConeTwist, PhysBoneHinge) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
 	    
@@ -30,7 +30,6 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	    this.skinshaders = [];
 	
 	    this.dynamics = [];
-	    this.statics = [];
 	
 	    this.meshCache = {};
 	    this.textureCache = {};
@@ -38,29 +37,9 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	    this.cubemapRendered = false;
 	    
 	    this.debugPhysics = false;
+	    
+	    this.physicsWorld = new Physics();
 	}
-	Game.prototype.explosion = function(character, impulse) {
-	    if(this.world !== undefined) {
-	        for(var body in this.world.bodies) {
-	            if(this.world.bodies[body] !== character.body) {
-	                var dist = new CANNON.Vec3().copy(this.world.bodies[body].position).vsub(character.body.position);
-	                var range = 5.0;
-	                var dlen = (dist.x + dist.y) / 2.0;
-	                var attenuation;
-	                if(dlen > range || dlen < -range) {
-	                    attenuation = 0;
-	                } else {
-	                    if(dlen <= 0)
-	                        attenuation = -1;
-	                    if(dlen > 0)
-	                        attenuation = 1;
-	                }
-	                var fImpulse = new CANNON.Vec3(impulse.x * attenuation, impulse.y * Math.pow(attenuation, 2), 0.0);
-	                this.world.bodies[body].applyForce(fImpulse, character.body.position);
-	            }
-	        }
-	    }
-	};
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
 	    var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "MainFont";
@@ -128,86 +107,6 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	            sprite.material.map.dispose();
 	        }, timeout);
 	    }, 100);
-	};
-	Game.prototype.initPhysics = function() {
-	    this.collisionGroups = [1,2,4,8,16,32];
-	
-	    this.world = new CANNON.World();
-	    this.world.gravity.set(0,-9.82,0);
-	    //more GAMIFY
-	    //this.world.gravity.set(0,-35,0);
-	    this.world.broadphase = new CANNON.NaiveBroadphase();
-	    this.world.solver.iterations = 100;
-	    this.world.defaultContactMaterial.friction = 0.1;
-	    this.world.defaultContactMaterial.contactEquationRegularizationTime = 10;
-	    this.world.defaultContactMaterial.contactEquationStiffness = 1e9;
-	    this.world.defaultContactMaterial.contactEquationRelaxation = 3;
-	};
-	Game.prototype.addGroundPlane = function(height) {
-	    var groundShape = new CANNON.Plane();
-		var groundBody = new CANNON.Body({mass: 0});
-		groundBody.addShape(groundShape);
-		groundBody.quaternion.setFromAxisAngle(new CANNON.Vec3(-1,0,0), 90 * (Math.PI / 180));
-		groundBody.collisionFilterGroup = this.collisionGroups[0];
-		groundBody.collisionFilterMask = this.collisionGroups[0] | this.collisionGroups[1];
-		groundBody.position.set(0, height, 0);
-		this.world.add(groundBody);
-	    this.statics.push(groundBody);
-	};
-	Game.prototype.addCharacterPhysics = function(radius, mass, position) {
-	    var shape = new CANNON.Sphere( radius || 1.0 );
-	    var body = new CANNON.Body({
-	        mass: mass || 49.0
-	    });
-	    if(position === undefined) position = [0,0,0];
-	    body.addShape(shape);
-	    body.position.set(position[0], position[1], position[2]);
-	    body.collisionFilterGroup = this.collisionGroups[1];
-	    body.collisionFilterMask = this.collisionGroups[0];// | this.collisionGroups[1];
-	    body.fixedRotation = true;
-	    //body.angularDamping = 0.9999999;
-	    body.linearDamping = 0.2;
-	    body.updateMassProperties();
-	    this.world.add(body); // Step 3
-	
-	    if(this.debugPhysics) {
-	        var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
-	        sphere.position.copy(body.position);
-	        this.scene.add(sphere);
-	        //this.dynamics.push(new DynamicEntity(sphere, this, body));
-	        body.debugMesh = sphere;
-	    }
-	
-	    return body;
-	};
-	Game.prototype.addObjectPhysics = function(mesh, mass, position) {
-	    //var shape = new CANNON.Sphere( radius || 1.0 );
-	    mesh.geometry.computeBoundingBox();
-	    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
-	    var sizex = Math.abs(len.x);
-	    var sizey = Math.abs(len.y);
-	    var sizez = Math.abs(len.z);
-	    var shape = new CANNON.Box(new CANNON.Vec3(sizex,sizey,sizez));
-	
-	    var body = new CANNON.Body({
-	        mass: mass || 49.0
-	    });
-	    if(position === undefined) position = [0,0,0];
-	    body.addShape(shape);
-	    body.position.set(position[0], position[1], position[2]);
-	    body.collisionFilterGroup = this.collisionGroups[0];
-	    body.collisionFilterMask = this.collisionGroups[0];
-	    body.updateMassProperties();
-	    this.world.add(body); // Step 3
-	
-	    if(this.debugPhysics) {
-	        var mbox = new THREE.Mesh(new THREE.BoxGeometry( sizex, sizey, sizez, 1, 1, 1 ), new THREE.MeshBasicMaterial({wireframe: true}));
-	        this.scene.add(mbox);
-	        //this.dynamics.push(new DynamicEntity(mbox, this, body));
-	        body.debugMesh = mbox;
-	    }
-	
-	    return body;
 	};
 	Game.prototype.initRendering = function() {
 	    this.clock = new THREE.Clock;
@@ -339,46 +238,13 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	    });
 	};
 	Game.prototype.loadPhysBones = function(character) {
-		var game = this;
-	    function createPhysBone(boneName, parentBoneName, character, physBoneType) {
-	        var rootBone = character.findBone(parentBoneName);
-	        var bone = character.findBone(boneName);
-	        var radius = 0.075;
-	        var shape = new CANNON.Sphere( radius );
-	        var body = new CANNON.Body({
-	            mass: 1.2  //weight of a boob is 1.2 kg?
-	        });
-	        body.addShape(shape);
-	        var pos = new THREE.Vector3().set(
-	            bone.matrixWorld.elements[12],
-	            bone.matrixWorld.elements[13],
-	            bone.matrixWorld.elements[14]
-	        );
-	        body.position.copy(pos);
-	        body.collisionFilterGroup = scope.collisionGroups[3];
-	        body.collisionFilterMask = scope.collisionGroups[2];// | this.collisionGroups[1];
-	        //body.fixedRotation = true;
-	        scope.world.add(body); // Step 3
-	        //scope.dynamics.push(new PhysBone(bone, game, body, rootBone, scope.world, character));
-	        scope.dynamics.push(new physBoneType(parentBoneName, boneName, bone, body, scope.world, character));
-	
-			if(game.debugPhysics) {
-	            var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
-	            sphere.position.copy(body.position);
-	            scope.scene.add(sphere);
-	            //scope.dynamics.push(new DynamicEntity(sphere, this, body));
-	            body.debugMesh = sphere;
-			}
-	
-	    }
-	    function createPhysBoneRag(boneName, parentBoneName, character, physBoneType) {
-			var constraint = 
-	        scope.dynamics.push(constraint);
-	        return constraint;
-	    }
-	    var scope = this;
-	    createPhysBone("breast_R", "spine02", character, PhysBone);
-	    createPhysBone("breast_L", "spine02", character, PhysBone);
+
+	    this.dynamics.push(
+	    	this.physicsWorld.createPhysBone("breast_R", "spine02", character, PhysBone)
+	    );
+	    this.dynamics.push(
+	    	this.physicsWorld.createPhysBone("breast_L", "spine02", character, PhysBone)
+	    );
 	    
 	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
 	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
@@ -467,7 +333,7 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 					var scale = (options.scale || 1.0);
 					var mesh = new THREE.SkinnedMesh( geometry, material );
 					mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
-					var body = game.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
+					var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
 					var character = new Character(mesh, game, body, options.name);
 					game.characters[options.name] = character;
 					game.scene.add( mesh );
@@ -569,19 +435,7 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	        mesh.castShadow = true;
 	        mesh.receiveShadow = true;
 	        game.scene.add(mesh);
-	        if(shape === 'box') {
-	            mesh.geometry.computeBoundingBox();
-	            var bboxmax = mesh.geometry.boundingBox.max;
-	            var box = new CANNON.Box(new CANNON.Vec3().copy(bboxmax));
-	            var groundBody = new CANNON.Body({mass: 0});
-	            groundBody.addShape(box);
-	            groundBody.collisionFilterGroup = game.collisionGroups[0];
-	            groundBody.collisionFilterMask = game.collisionGroups[0] | game.collisionGroups[1];
-	            groundBody.position.set(position[0], position[1], position[2]);
-	            box.updateBoundingSphereRadius();
-	            game.world.add(groundBody);
-	        }
-	        game.statics.push(groundBody);
+	        game.physicsWorld.addStaticPhysics(shape, mesh, position);
 	        if (onComplete) onComplete(mesh);
 	    });
 	};
@@ -595,7 +449,7 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	        position = [mesh.position.x, mesh.position.y, mesh.position.z];
 	        game.setMaterialOptions(mesh, options);
 	        var physEnabled = options.enabled !== undefined ? options.enabled : true;
-	        var body = game.addObjectPhysics(mesh, mass, position);
+	        var body = game.physicsWorld.addObjectPhysics(mesh, mass, position);
 		    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
 	        var dynamic = new DynamicEntity(mesh, game, body);
 	        dynamic.meshOffset = [len.x/2.0, len.y/2.0, len.z/2.0];
@@ -622,9 +476,9 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	    this.cameraUpdateFunction();
 	
 	    var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
-	    //var maxSubSteps = 3;
-	    //this.world.step(1.0/60, delta);
-	    this.world.step(1/60);
+
+		this.physicsWorld.step();
+
 	    for(var i in this.characters) {
 	        this.characters[i].update(delta);
 	    }

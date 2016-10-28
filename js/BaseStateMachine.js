@@ -170,7 +170,7 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 	};
 	
 	BaseStateMachine.prototype.update = function(delta) {
-		var onGround = this.checkForGround();
+		var onGround = this.game.physicsWorld.checkForGround(this.character);
 		if(onGround && this.current == 'INAIR') {
 			this.land();
 		} 
@@ -208,37 +208,6 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 	            v.set(-this.character.characterStats.movementSpeed, v.y, v.z);
 	        }
 	    }
-	};
-	
-	BaseStateMachine.prototype.checkForGround = function() {
-	    var r = this.character.mesh.geometry.boundingSphere.radius; //the half-radius to approximate my body not extending to the full sphere
-	    var body = this.character.body.position;
-	    var testList = [
-	    	[new CANNON.Vec3(body.x+r*0.75, body.y, body.z), new CANNON.Vec3(body.x+r*0.75, body.y-10.0, body.z)],
-	    	[new CANNON.Vec3(body.x-r*0.75, body.y, body.z), new CANNON.Vec3(body.x-r*0.75, body.y-10.0, body.z)],
-	    ];
-	    var ray3 = new CANNON.Ray(from, to);
-	    var r_Bias = 0.5;
-	
-	    if(Math.abs(this.character.body.velocity.y) < 0.5) {
-	        var options = {
-	            collisionFilterGroup: this.game.collisionGroups[1],
-	            collisionFilterMask: this.game.collisionGroups[0],
-	            skipBackfaces: false,
-	            mode: CANNON.Ray.CLOSEST
-	        };
-	      	var raycastResult = new CANNON.RaycastResult();
-	      	for(var testRayIndex in testList) {
-	      		var from = testList[testRayIndex][0];
-	      		var to = testList[testRayIndex][1];
-				if(this.game.world.raycastClosest(from, to, options, raycastResult) === true) {
-					if (raycastResult.distance <= r+r_Bias) {
-						return true;
-					}
-				}
-			}
-	    }
-	    return false;
 	};
 
 	return BaseStateMachine;

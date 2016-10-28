@@ -39,7 +39,6 @@ function(Game, HUD, THREE, AIController, UserController) {
 	function runGame(gameSettings, levelData, itemData) {
 	    game = new Game(gameSettings);
 	    game.initRendering();
-	    game.initPhysics();
 	    var objectCount = 0;
 	    
 	    var hud = new HUD(game);
@@ -127,7 +126,6 @@ function(Game, HUD, THREE, AIController, UserController) {
 	
 	    }
 	
-	    game.addGroundPlane(-4);
 	    /*game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
 	    	game.updateCubeMap();
 	    	loadLevel(levelData, itemData);

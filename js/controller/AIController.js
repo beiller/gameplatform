@@ -1,5 +1,5 @@
-define(["lib/state-machine", "controller/Controller", "lib/three", "lib/cannon"], 
-function(StateMachine, Controller, THREE, CANNON) {
+define(["lib/state-machine", "controller/Controller"], 
+function(StateMachine, Controller) {
 	AIController.prototype = new Controller();
 	AIController.prototype.constructor = AIController;
 	function AIController(character, game) {
