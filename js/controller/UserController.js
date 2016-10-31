@@ -1,5 +1,5 @@
-define(["lib/state-machine", "controller/Controller", "lib/three", "lib/cannon"], 
-function(StateMachine, Controller, THREE, CANNON) {
+define(["lib/state-machine", "controller/Controller"], 
+function(StateMachine, Controller) {
 	UserController.prototype = new Controller();
 	UserController.prototype.constructor = UserController;
 	function UserController(character, game) {
