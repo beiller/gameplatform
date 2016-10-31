@@ -251,45 +251,49 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	    this.scene.add( this.cubeCamera );
 	
 		// LIGHTS
-		hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
-		hemiLight.color.setHSL( 0.6, 1, 0.6 );
-		hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
+		hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1.2 );
+        hemiLight.color.setHSL( 0.6, 0.75, 0.5 );
+        hemiLight.groundColor.setHSL( 0.095, 0.5, 0.5 );
 		hemiLight.position.set( 0, 500, 0 );
 		this.scene.add( hemiLight );
 
-		//
-
-		dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
+		dirLight = new THREE.DirectionalLight( 0xffffff );
 		dirLight.color.setHSL( 0.1, 1, 0.95 );
-		dirLight.position.set( 0, 1.75, 1 );
-		dirLight.position.multiplyScalar( 50 );
+		dirLight.position.set( 0.0, 1.0, 10.0 );
+		dirLight.target.position.set( 0.0, -1.0, 0.0 );
+		dirLight.target.updateMatrixWorld();
 		this.scene.add( dirLight );
 
-		dirLight.castShadow = true;
+		dirLight.castShadow = this.settings.enableShadows;
 
-		dirLight.shadowMapWidth = 2048;
-		dirLight.shadowMapHeight = 2048;
+		dirLight.shadow.mapSize.width = 4096;
+		dirLight.shadow.mapSize.height = 4096;
 
-		var d = 50;
+		var d = 7.0;
 
-		dirLight.shadowCameraLeft = -d;
-		dirLight.shadowCameraRight = d;
-		dirLight.shadowCameraTop = d;
-		dirLight.shadowCameraBottom = -d;
+		dirLight.shadow.camera.left = -d;
+		dirLight.shadow.camera.right = d;
+		dirLight.shadow.camera.top = d;
+		dirLight.shadow.camera.bottom = -d;
 
-		dirLight.shadowCameraFar = 3500;
-		dirLight.shadowBias = -0.0001;
-		dirLight.shadowCameraVisible = true;
+		dirLight.shadow.camera.near = 0.01;
+		dirLight.shadow.camera.far = 100.0;
+		//dirLight.shadow.camera.fov = 100.0;
+		//dirLight.shadow.camera.bias = 0.0001;
+		this.dirLight = dirLight;
+		var helper = new THREE.DirectionalLightHelper(dirLight);
+		this.scene.add(helper);
 	
 	    this.texloader = new THREE.TextureLoader();
 	    this.jsonloader = new THREE.JSONLoader();
-	
 	
 	    this.renderer = new THREE.WebGLRenderer( { antialias: this.settings.enableAA } );
 	    this.renderer.setClearColor( 0x050505 );
 	    this.renderer.setPixelRatio( window.devicePixelRatio );
 	    this.renderer.setSize( window.innerWidth, window.innerHeight );
 	    this.renderer.autoClear = false;
+	    this.renderer.shadowMap.enabled = this.settings.enableShadows;
+	    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	
 	    this.container.appendChild( this.renderer.domElement );
 	
@@ -466,6 +470,8 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 					var material = new THREE.MeshStandardMaterial(materialOptions);
 					var scale = (options.scale || 1.0);
 					var mesh = new THREE.SkinnedMesh( geometry, material );
+			        mesh.castShadow = game.settings.enableShadows;
+			        mesh.receiveShadow = game.settings.enableShadows;
 					mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
 					var body = game.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
 					var character = new Character(mesh, game, body, options.name);
@@ -552,8 +558,8 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	        var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
 	        skinnedMesh.frustumCulled = !game.disableCull;
 	        skinnedMesh.skeleton = parent.skeleton;
-	        skinnedMesh.castShadow = true;
-	        skinnedMesh.receiveShadow = true;
+	        skinnedMesh.castShadow = game.settings.enableShadows;
+	        skinnedMesh.receiveShadow = game.settings.enableShadows;
 	        options.skinning = true;
 	        game.setMaterialOptions(skinnedMesh, options);
 	        if(onComplete) onComplete(skinnedMesh);
@@ -566,8 +572,8 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	        var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
 	        mesh.position.set(position[0], position[1], position[2]);
 	        //game.setMaterialOptions(mesh, options);
-	        mesh.castShadow = true;
-	        mesh.receiveShadow = true;
+	        mesh.castShadow = game.settings.enableShadows;
+	        mesh.receiveShadow = game.settings.enableShadows;
 	        game.scene.add(mesh);
 	        if(shape === 'box') {
 	            mesh.geometry.computeBoundingBox();
@@ -602,8 +608,8 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	        dynamic.sleep = !physEnabled;
 	        game.dynamics.push(dynamic);
 	        game.scene.add(mesh);
-	        mesh.castShadow = true;
-	        mesh.receiveShadow = true;
+	        mesh.castShadow = game.settings.enableShadows;
+	        mesh.receiveShadow = game.settings.enableShadows;
 	        if (onComplete) onComplete(dynamic);
 	    });
 	};
@@ -614,6 +620,9 @@ function(THREE, $, CANNON, Character, DynamicEntity, PhysBone, PhysBoneConeTwist
 	            try {
 	                scope.camera.position.x = scope.characters['eve'].body.position.x;
 	                scope.camera.position.y = scope.characters['eve'].body.position.y + 0.2;
+	                scope.dirLight.position.x = scope.characters['eve'].body.position.x + 0.5;
+	                scope.dirLight.target.position.x = scope.characters['eve'].body.position.x;
+	                scope.dirLight.target.updateMatrixWorld();
 	            } catch (e) {
 	
 	            }
