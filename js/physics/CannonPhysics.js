@@ -2,9 +2,9 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	
 	function Body(mybody) {
 		this.body = mybody;
-		this.position = mybody.position;
-		this.quaternion = mybody.quaternion;
-		this.velocity = mybody.velocity;
+		//this.position = mybody.position;
+		//this.quaternion = mybody.quaternion;
+		//this.velocity = mybody.velocity;
 	}
 	Body.prototype.getPosition = function() {
 		return [this.body.position.x, this.body.position.y, this.body.position.z];
@@ -15,6 +15,10 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	
 	Body.prototype.applyImpulse = function(f, p) {
 		this.body.applyImpulse(new CANNON.Vec3(f[0], f[1], f[2]), new CANNON.Vec3(p[0], p[1], p[2]));
+	};
+	
+	Body.prototype.getVelocity = function() {
+		return [this.body.velocity.x, this.body.velocity.y, this.body.velocity.z]; 
 	};
 	 
 	Body.prototype.getQuaternion = function() {
