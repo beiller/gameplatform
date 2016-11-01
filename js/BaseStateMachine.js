@@ -5,7 +5,7 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 		this.blendAnimationDuration = 0.05;
 	    this.runBlendAnimationSpeed = 0.05;
 	    this.movementForce = 90;
-	    this.jumpForce = 13000;
+	    this.jumpForce = 200;
 	    
 	    this.attackCoolDown = 0;
 		
@@ -110,7 +110,7 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 			},
 			onjump: function(event, from, to, msg) {
 				console.log(event, from, to, msg);
-				this.character.body.applyForce(new CANNON.Vec3(0, this.jumpForce * this.character.characterStats.jumpHeight, 0), this.character.body.position);
+				this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
 			},
 			onhit: function(event, from, to, msg) {
 				console.log(event, from, to, msg);
@@ -136,9 +136,9 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 			        var range = scope.character.characterStats.range;
 			        for(var c in scope.game.characters) {
 			            var myQuaternion = scope.character.mesh.quaternion;
-			            var dist = scope.game.characters[c].body.position.x - character.body.position.x;
+			            var dist = scope.game.characters[c].body.getPositionX() - character.body.getPositionX();
 			            var facingDist = dist;
-			            var verticalDist = scope.game.characters[c].body.position.y - character.body.position.y;
+			            var verticalDist = scope.game.characters[c].body.getPositionY() - character.body.getPositionY();
 			            if(myQuaternion.y < 0.0) {
 			                facingDist *= -1.0;
 			            }
