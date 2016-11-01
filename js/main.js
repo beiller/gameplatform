@@ -6,6 +6,9 @@ requirejs.config({
         },
         'lib/cannon': {
             exports: 'CANNON'
+        },
+        'lib/ammo': {
+            exports: 'Ammo'
         }
     }
 });
@@ -126,7 +129,7 @@ function(Game, HUD, THREE, AIController, UserController) {
 	
 	    }
 	
-	    game.addGroundPlane(-4);
+	    //game.addGroundPlane(-4);
 	    /*game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
 	    	game.updateCubeMap();
 	    	loadLevel(levelData, itemData);

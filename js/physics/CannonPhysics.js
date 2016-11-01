@@ -1,9 +1,25 @@
 define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	
-	function Body() {
-		this.position = null;
-		this.quaternion = null;
+	function Body(mybody) {
+		this.body = mybody;
+		this.position = mybody.position;
+		this.quaternion = mybody.quaternion;
+		this.velocity = mybody.velocity;
 	}
+	Body.prototype.getPosition = function() {
+		return [this.body.position.x, this.body.position.y, this.body.position.z];
+	};
+	Body.prototype.getPositionX = function() { return this.body.position.x; };
+	Body.prototype.getPositionY = function() { return this.body.position.y; };
+	Body.prototype.getPositionZ = function() { return this.body.position.z; };
+	
+	Body.prototype.applyImpulse = function(f, p) {
+		this.body.applyImpulse(new CANNON.Vec3(f[0], f[1], f[2]), new CANNON.Vec3(p[0], p[1], p[2]));
+	};
+	 
+	Body.prototype.getQuaternion = function() {
+		return [this.body.quaternion.x, this.body.quaternion.y, this.body.quaternion.z, this.body.quaternion.w];
+	};	
 	
 	function CannonPhysics() {
 		this.initPhysics();
@@ -83,7 +99,7 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	        body.debugMesh = sphere;
 	    }*/
 	
-	    return body;
+	    return new Body(body);
 	};
 	CannonPhysics.prototype.addStaticPhysics = function(shape, mesh, position) {
         if(shape === 'box') {
@@ -97,7 +113,7 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
             body.position.set(position[0], position[1], position[2]);
             box.updateBoundingSphereRadius();
             this.world.add(body);
-            return body;
+            return new Body(body);
         }
 	};
 	CannonPhysics.prototype.addObjectPhysics = function(mesh, mass, position) {
@@ -127,7 +143,7 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	        body.debugMesh = mbox;
 	    }*/
 	
-	    return body;
+	    return new Body(body);
 	};
 	CannonPhysics.prototype.createPhysBone = function(boneName, parentBoneName, character, physBoneType) {
 	    var rootBone = character.findBone(parentBoneName);
@@ -168,7 +184,7 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	    var ray3 = new CANNON.Ray(from, to);
 	    var r_Bias = 0.5;
 	
-	    if(Math.abs(character.body.velocity.y) < 0.5) {
+	    if(Math.abs(character.body.body.velocity.y) < 0.5) {
 	        var options = {
 	            collisionFilterGroup: this.collisionGroups[1],
 	            collisionFilterMask: this.collisionGroups[0],

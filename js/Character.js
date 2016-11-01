@@ -84,7 +84,7 @@ function(CharacterStats, DynamicEntity, THREE, CANNON, BaseStateMachine) {
 	Character.prototype.update = function(delta) {
 		this.stateMachine.update(delta);
 		
-	    this.body.position.z = 0.0; //2d game here
+	    //this.body.position.z = 0.0; //2d game here
 	
 	    //update physics components and copy to mesh position
 	    if(this.body) {

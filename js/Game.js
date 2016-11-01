@@ -1,8 +1,8 @@
 define([
-	"lib/three", "lib/zepto", "Character", "physics/CannonPhysics",
+	"lib/three", "lib/zepto", "Character", "physics/CannonPhysics", "physics/AmmoPhysics",
 	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge"
 ], 
-function(THREE, $, Character, Physics, DynamicEntity, PhysBone, PhysBoneConeTwist, PhysBoneHinge) {
+function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, PhysBoneConeTwist, PhysBoneHinge) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
 	    
@@ -39,6 +39,7 @@ function(THREE, $, Character, Physics, DynamicEntity, PhysBone, PhysBoneConeTwis
 	    this.debugPhysics = false;
 	    
 	    this.physicsWorld = new Physics();
+	    this.ammoWorld = new AmmoPhysics();
 	}
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};

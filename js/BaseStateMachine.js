@@ -148,7 +148,7 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 			                if(dist > 0) {
 			                    unitDist = 1;
 			                }
-			                scope.game.characters[c].body.applyImpulse(new CANNON.Vec3(unitDist * scope.movementForce * 0.5, scope.movementForce * 0.5, 0), character.body.position);
+			                scope.game.characters[c].body.applyImpulse([unitDist * scope.movementForce * 0.5, scope.movementForce * 0.5, 0], character.body.getPosition());
 			                scope.game.characters[c].hit(character);
 			            }
 			
@@ -196,10 +196,10 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 	};
 	
 	BaseStateMachine.prototype.applyForces = function(delta) {
-	    var forceVec = new CANNON.Vec3().copy(this.character.movementDirection);
-	    forceVec.normalize();
-	    var f = forceVec.scale(this.movementForce);
-	    this.character.body.applyImpulse(f, this.character.body.position);
+	    var forceVec = new THREE.Vector3().copy(this.character.movementDirection);
+	    forceVec = forceVec.normalize();
+	    var f = forceVec.multiplyScalar(this.movementForce);
+	    this.character.body.applyImpulse([f.x, f.y, f.z], this.character.body.getPosition());
 	    if(Math.abs(this.character.body.velocity.x) > this.character.characterStats.movementSpeed) {
 	        var v = this.character.body.velocity;
 	        if(this.character.body.velocity.x > 0) {
