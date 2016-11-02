@@ -12,7 +12,7 @@ define(function() {
 	    this.attackCooldown = params.attackCooldown || 500;
 	    //Stun duration after hit in MS
 	    this.hitStunDuration = params.hitStunDuration || 500;
-	    //force in some arbitrary unit (CANNON JS)
+	    //force in some arbitrary unit
 	    this.jumpHeight = params.jumpHeight || 1;
 	    //chance to block
 	    this.blockRatio = params.blockRatio || 0.2;

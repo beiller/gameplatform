@@ -14,9 +14,9 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		var l = this.body.getLinearVelocity();
 		return [l.x(), l.y(), l.z()];
 	};
-	Body.prototype.getVelocityX = function() { this.body.getLinearVelocity().x(); };
-	Body.prototype.getVelocityY = function() { this.body.getLinearVelocity().y(); };
-	Body.prototype.getVelocityZ = function() { this.body.getLinearVelocity().z(); };
+	Body.prototype.getVelocityX = function() { return this.body.getLinearVelocity().x(); };
+	Body.prototype.getVelocityY = function() { return this.body.getLinearVelocity().y(); };
+	Body.prototype.getVelocityZ = function() { return this.body.getLinearVelocity().z(); };
 	
 	Body.prototype.getQuaternion = function() {
 		var q = this.body.getWorldTransform().getRotation();
@@ -28,11 +28,11 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 	Body.prototype.getQuaternionW = function() { return this.body.getWorldTransform().getRotation().w(); };	
 	
 	Body.prototype.applyImpulse = function(f, p) {
-		this.body.applyImpulse(new Ammo.btVector3(f[0], f[1], f[2]), new Ammo.btVector3(p[0], p[1], p[2]));
+		console.log(f);
+		this.body.applyImpulse(new Ammo.btVector3(f[0], f[1], f[2]));
 	};
 
 	function AmmoPhysics() {
-		this.tempVector3 = new Ammo.btVector3(0, 0, 0);
 		this.initPhysics();
 	}
 	AmmoPhysics.prototype.step = function() {
@@ -42,12 +42,32 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 	};
 	
 	AmmoPhysics.prototype.checkForGround = function(character) {
-		return true;
-	};
+		var r_Bias = 0.25;
+		var r = character.mesh.geometry.boundingSphere.radius;
+		var body = {x: character.body.getPositionX(), y: character.body.getPositionY(), z: character.body.getPositionZ()};
+		
+	    var testList = [
+	    	[new Ammo.btVector3(body.x+r*0.75, body.y, body.z), new Ammo.btVector3(body.x+r*0.75, body.y-100.0, body.z)],
+	    	[new Ammo.btVector3(body.x-r*0.75, body.y, body.z), new Ammo.btVector3(body.x-r*0.75, body.y-100.0, body.z)],
+	    ];
+	    var gOldPickingDist = 1000.0;
+		if (Math.abs(character.body.getVelocityY()) < 0.5) {
+			for(var testRayIndex in testList) {
+				var rayCallback = new Ammo.ClosestRayResultCallback(testList[testRayIndex][0], testList[testRayIndex][1]);
+				this.m_dynamicsWorld.rayTest(testList[testRayIndex][0], testList[testRayIndex][1], rayCallback);
+				if (rayCallback.hasHit()) {
+					var btBody = rayCallback.get_m_collisionObject();
+					var pickPos = rayCallback.get_m_hitPointWorld();
+					gOldPickingDist  = (pickPos.op_sub(testList[testRayIndex][0])).length();
+					if(gOldPickingDist <= r+r_Bias) {
+						return true;
+					}
+				}
+			}
+		}
+		return false;
 
-	AmmoPhysics.prototype.tVec = function(x, y, z) {
-		this.tempVector3.setValue(x, y, z);
-		return this.tempVector3;
+
 	};
 
 	/**
@@ -76,9 +96,6 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
 		this.m_dynamicsWorld.addRigidBody(btBody);
-		//this.m_shapeDrawer.add(body,shape,options);
-		//this.m_bodies.push(body);
-		//this.m_startMotionStates.push(myMotionState);
 		return btBody;
 	};
 
@@ -91,19 +108,17 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		var solver = new Ammo.btSequentialImpulseConstraintSolver();
 		this.m_dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
 		//this.m_dynamicsWorld.getSolverInfo().set_m_numIterations(10);
-		this.m_dynamicsWorld.setGravity(this.tVec(0, -9.82, 0));
+		this.m_dynamicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
 		
 		this.addGroundPlane(-4);
 	};
 	AmmoPhysics.prototype.addGroundPlane = function(height) {
 		// Create infinite ground plane
-		var aabbShape = new Ammo.btStaticPlaneShape(this.tVec(0, 1, 0), -1.5);
+		var aabbShape = new Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), -1.5);
 		var aabbTransform = new Ammo.btTransform();
 		aabbTransform.setIdentity();
-		aabbTransform.setOrigin(this.tVec(0, height, 0));
+		aabbTransform.setOrigin(new Ammo.btVector3(0, height, 0));
 		var body = new Body(this.localCreateRigidBody(0, aabbTransform, aabbShape));	
-		
-		console.log(body.getVelocity());	
 	};
 	AmmoPhysics.prototype.addCharacterPhysics = function(radius, mass, position) {
 		// Create character body
@@ -111,9 +126,12 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		var shape = new Ammo.btSphereShape(radius || 1.0);
 		var transform = new Ammo.btTransform();
 		transform.setIdentity();
-		transform.setOrigin(this.tVec(position[0], position[1], position[2]));
+		transform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
+		var btBody = this.localCreateRigidBody(mass || 49.0, transform, shape);
+		btBody.setAngularFactor(new Ammo.btVector3(0, 0, 0));
+		btBody.setDamping(0.5, 1.0);
 		return new Body(
-			this.localCreateRigidBody(mass || 49.0, transform, shape)
+			btBody
 		);
 	};
 	AmmoPhysics.prototype.addStaticPhysics = function(shape, mesh, position) {
@@ -121,10 +139,10 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 			if(position === undefined) position = [0,0,0];
 			mesh.geometry.computeBoundingBox();
 			var bboxmax = mesh.geometry.boundingBox.max;
-			var boxShape = new Ammo.btBoxShape(this.tVec(bboxmax.x, bboxmax.y, bboxmax.z));
+			var boxShape = new Ammo.btBoxShape(new Ammo.btVector3(bboxmax.x, bboxmax.y, bboxmax.z));
 			var boxTransform = new Ammo.btTransform();
 			boxTransform.setIdentity();
-			boxTransform.setOrigin(this.tVec(position[0], position[1], position[2]));
+			boxTransform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
 			return new Body(
 				this.localCreateRigidBody(0, boxTransform, boxShape)
 			);
@@ -138,10 +156,10 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		var sizez = Math.abs(len.z);
 		if (position === undefined)
 			position = [0, 0, 0];
-		var boxShape = new Ammo.btBoxShape(this.tVec(sizex, sizey, sizez));
+		var boxShape = new Ammo.btBoxShape(new Ammo.btVector3(sizex, sizey, sizez));
 		var boxTransform = new Ammo.btTransform();
 		boxTransform.setIdentity();
-		boxTransform.setOrigin(this.tVec(position[0], position[1], position[2]));
+		boxTransform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
 		return new Body(
 			this.localCreateRigidBody(mass || 49.0, boxTransform, boxShape)
 		);

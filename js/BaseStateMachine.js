@@ -1,4 +1,4 @@
-define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, CANNON, THREE) {
+define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	var BaseStateMachine = function(character, game) {
 		this.character = character;
 		this.game = game;
@@ -10,7 +10,7 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 	    this.attackCoolDown = 0;
 		
 		var error = function(eventName, from, to, args, errorCode, errorMessage) {
-		    //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+		    console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
 		};
 		var initial = 'NONE';
 		var events = [
@@ -109,7 +109,7 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 				this.character.setAnimation("DE_CombatRun");
 			},
 			onjump: function(event, from, to, msg) {
-				console.log(event, from, to, msg);
+				console.log('Applying Impulse!', event, from, to, msg);
 				this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
 			},
 			onhit: function(event, from, to, msg) {
@@ -124,15 +124,15 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 		        this.character.setAnimation("DE_Combatblock");
 		    },
 		    onattack: function(event, from, to, msg) {
-		    	if(this.attackCoolDown > 0) {
-		    		console.log("Can't attack, cooldown in effect");
+		    	if(this.attackCoolDown > 0.0) {
+		    		console.log("Can't attack, cooldown in effect", this.attackCoolDown);
 		    		return false;
 		    	}
-		    	//console.log("ATTACKING!");
+		    	console.log("ATTACKING!", event, from, to, msg);
 		    	this.attackCoolDown = this.character.characterStats.attackCooldown;
 		    	this.character.setAnimation("DE_Combatattack");
 		    	var scope = this;
-			    this.attackTimeout = setTimeout(function() {
+			    setTimeout(function() {
 			        var range = scope.character.characterStats.range;
 			        for(var c in scope.game.characters) {
 			            var myQuaternion = scope.character.mesh.quaternion;
@@ -153,10 +153,10 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 			            }
 			
 			        }
-			        scope.attackTimeout = setTimeout(function() {
-			        	scope.endattack();
-			        }, scope.character.characterStats.attackCooldown);
 			    }, 100);
+		        setTimeout(function() {
+		        	scope.endattack();
+		        }, 500);
 		    }
 		};
 		var fsm = StateMachine.create({

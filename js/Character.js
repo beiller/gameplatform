@@ -1,6 +1,6 @@
 
-define(["CharacterStats", "entity/DynamicEntity", "lib/three", "lib/cannon", "BaseStateMachine"], 
-function(CharacterStats, DynamicEntity, THREE, CANNON, BaseStateMachine) {
+define(["CharacterStats", "entity/DynamicEntity", "lib/three", "BaseStateMachine"], 
+function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	Character.prototype = new DynamicEntity();
 	Character.prototype.constructor = Character;
 	function Character(mesh, game, body, name, options, sssMesh, characterStats) {
@@ -11,7 +11,7 @@ function(CharacterStats, DynamicEntity, THREE, CANNON, BaseStateMachine) {
 	    this.name = name;
 	    if(!options || options === undefined) options = {};
 	
-	    this.movementDirection = new CANNON.Vec3(0,0,0);
+	    this.movementDirection = new THREE.Vector3(0,0,0);
 	
 	    this.stunned = false;
 	    this.blocking = false;

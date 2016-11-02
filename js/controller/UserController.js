@@ -14,7 +14,7 @@ function(StateMachine, Controller) {
 
 	    var keymap = {
 	        'keydown': {
-	            '87': function() { try {stateMachine.jump();} catch(e) {} }, //W KEY
+	            '87': function() { stateMachine.jump(); }, //W KEY
 	            '83': function() {  }, //S KEY
 	            '68': function() { mv.x += 1.0; stateMachine.run(); }, //A KEY
 	            '65': function() { mv.x -= 1.0; stateMachine.run(); },  //D KEY
