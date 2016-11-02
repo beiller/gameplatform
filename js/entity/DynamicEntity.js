@@ -7,23 +7,16 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	    this.body = body;
 	    this.sleep = false;
 	    this.meshOffset = [0,0,0];
-	    
-	  	this.movementForce = 90;
-	    this.jumpForce = 16000;
 	}
 	DynamicEntity.prototype.update = function() {
 	    if(!this.sleep) {
 	        //update physics components and copy to mesh position
-	        //this.body.position.z = 0.0;
-	        this.mesh.position.copy(this.body.position);
-	        //this.mesh.position.x += this.meshOffset[0];
-	        //this.mesh.position.y += this.meshOffset[1];
-	        //this.mesh.position.z += Math.abs(this.meshOffset[2]) / 2.0;
-	        this.mesh.quaternion.copy(this.body.quaternion);
+	        this.mesh.position.fromArray(this.body.getPosition());
+	        this.mesh.quaternion.fromArray(this.body.getQuaternion());
 	    }
 	    if(this.body.debugMesh) {
-	    	this.body.debugMesh.position.copy(this.body.position);
-	    	this.body.debugMesh.quaternion.copy(this.body.quaternion);
+	    	this.body.debugMesh.fromArray(this.body.getPosition());
+	    	this.body.debugMesh.fromArray(this.body.getQuaternion());
 	    }
 	};
 	DynamicEntity.prototype.findDynamic = function(mesh) {
@@ -34,8 +27,8 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	    }
 	};
 	DynamicEntity.prototype.getDistance = function(dynamic2) {
-		var p1 = new THREE.Vector3().copy(this.body.position);
-		var p2 = new THREE.Vector3().copy(dynamic2.body.position);
+		var p1 = new THREE.Vector3().fromArray(this.body.getPosition());
+		var p2 = new THREE.Vector3().fromArray(dynamic2.body.getPosition());
 		return p1.sub(p2).length();
 	};
 	return DynamicEntity;

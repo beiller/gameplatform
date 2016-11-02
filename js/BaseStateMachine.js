@@ -4,8 +4,8 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 		this.game = game;
 		this.blendAnimationDuration = 0.05;
 	    this.runBlendAnimationSpeed = 0.05;
-	    this.movementForce = 90;
-	    this.jumpForce = 200;
+	    this.movementForce = 60.0;
+	    this.jumpForce = 220.0;
 	    
 	    this.attackCoolDown = 0;
 		
@@ -196,18 +196,12 @@ define(['lib/state-machine', 'lib/cannon', 'lib/three'], function(StateMachine, 
 	};
 	
 	BaseStateMachine.prototype.applyForces = function(delta) {
-	    var forceVec = new THREE.Vector3().copy(this.character.movementDirection);
-	    forceVec = forceVec.normalize();
-	    var f = forceVec.multiplyScalar(this.movementForce);
-	    this.character.body.applyImpulse([f.x, f.y, f.z], this.character.body.getPosition());
-	    /*if(Math.abs(this.character.body.getVelocityX()) > this.character.characterStats.movementSpeed) {
-	        var v = this.character.body.velocity;
-	        if(this.character.body.velocity.x > 0) {
-	            v.set(this.character.characterStats.movementSpeed, v.y, v.z);
-	        } else {
-	            v.set(-this.character.characterStats.movementSpeed, v.y, v.z);
-	        }
-	    }*/
+	    if(Math.abs(this.character.body.getVelocityX()) < this.character.characterStats.movementSpeed) {
+		    var forceVec = new THREE.Vector3().copy(this.character.movementDirection);
+		    forceVec = forceVec.normalize();
+		    var f = forceVec.multiplyScalar(this.movementForce);
+		    this.character.body.applyImpulse([f.x, f.y, f.z], this.character.body.getPosition());
+	    }
 	};
 
 	return BaseStateMachine;

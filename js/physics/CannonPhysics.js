@@ -20,6 +20,9 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	Body.prototype.getVelocity = function() {
 		return [this.body.velocity.x, this.body.velocity.y, this.body.velocity.z]; 
 	};
+	Body.prototype.getVelocityX = function() { return this.body.velocity.x; };
+	Body.prototype.getVelocityY = function() { return this.body.velocity.y; };
+	Body.prototype.getVelocityZ = function() { return this.body.velocity.z; };
 	 
 	Body.prototype.getQuaternion = function() {
 		return [this.body.quaternion.x, this.body.quaternion.y, this.body.quaternion.z, this.body.quaternion.w];
@@ -33,7 +36,7 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	    //this.world.step(1.0/60, delta);
 	    this.world.step(1/60);
 	};
-	CannonPhysics.prototype.explosion = function(character, impulse) {
+	/*CannonPhysics.prototype.explosion = function(character, impulse) {
         for(var body in this.world.bodies) {
             if(this.world.bodies[body] !== character.body) {
                 var dist = new CANNON.Vec3().copy(this.world.bodies[body].position).vsub(character.body.position);
@@ -52,7 +55,7 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
                 this.world.bodies[body].applyForce(fImpulse, character.body.position);
             }
         }
-	};
+	};*/
 	CannonPhysics.prototype.initPhysics = function() {
 	    this.collisionGroups = [1,2,4,8,16,32];
 	
@@ -180,7 +183,7 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	};
 	CannonPhysics.prototype.checkForGround = function(character) {
 	    var r = character.mesh.geometry.boundingSphere.radius; //the half-radius to approximate my body not extending to the full sphere
-	    var body = character.body.position;
+	    var body = character.body.body.position;
 	    var testList = [
 	    	[new CANNON.Vec3(body.x+r*0.75, body.y, body.z), new CANNON.Vec3(body.x+r*0.75, body.y-10.0, body.z)],
 	    	[new CANNON.Vec3(body.x-r*0.75, body.y, body.z), new CANNON.Vec3(body.x-r*0.75, body.y-10.0, body.z)],

@@ -38,8 +38,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    
 	    this.debugPhysics = false;
 	    
-	    this.physicsWorld = new Physics();
-	    this.ammoWorld = new AmmoPhysics();
+	    //this.physicsWorld = new Physics();
+	    this.physicsWorld = new AmmoPhysics();
 	}
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
@@ -244,12 +244,12 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	};
 	Game.prototype.loadPhysBones = function(character) {
 
-	    this.dynamics.push(
+	    /*this.dynamics.push(
 	    	this.physicsWorld.createPhysBone("breast_R", "spine02", character, PhysBone)
 	    );
 	    this.dynamics.push(
 	    	this.physicsWorld.createPhysBone("breast_L", "spine02", character, PhysBone)
-	    );
+	    );*/
 	    
 	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
 	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
@@ -473,10 +473,10 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        var scope = this;
 	        this.cameraUpdateFunction = function () {
 	            try {
-	                scope.camera.position.x = scope.characters['eve'].body.position.x;
-	                scope.camera.position.y = scope.characters['eve'].body.position.y + 0.2;
-	                scope.dirLight.position.x = scope.characters['eve'].body.position.x + 0.5;
-	                scope.dirLight.target.position.x = scope.characters['eve'].body.position.x;
+	                scope.camera.position.x = scope.characters['eve'].body.getPositionX();
+	                scope.camera.position.y = scope.characters['eve'].body.getPositionY() + 0.2;
+	                scope.dirLight.position.x = scope.characters['eve'].body.getPositionX() + 0.5;
+	                scope.dirLight.target.position.x = scope.characters['eve'].body.getPositionX();
 	                scope.dirLight.target.updateMatrixWorld();
 	            } catch (e) {
 	

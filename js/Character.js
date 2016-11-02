@@ -88,18 +88,18 @@ function(CharacterStats, DynamicEntity, THREE, CANNON, BaseStateMachine) {
 	
 	    //update physics components and copy to mesh position
 	    if(this.body) {
-	        this.mesh.position.copy(this.body.position).y -= this.mesh.geometry.boundingSphere.radius;
+	    	var position = this.body.getPosition();
+	        this.mesh.position.fromArray(position);
+	        this.mesh.position.y -= this.mesh.geometry.boundingSphere.radius;
 	        if(this.sssMesh) {
-	            this.sssMesh.position.copy(this.body.position);
+	            this.sssMesh.position.fromArray(position);
 	        }
-	        //this.mesh.quaternion.copy(this.body.quaternion);
-	        //update controller?
 	        this.controllers.forEach(function(controller) {
 	            controller.update(delta);
 	        });
 			if(this.body.debugMesh) {
-				this.body.debugMesh.position.copy(this.body.position);
-				this.body.debugMesh.quaternion.copy(this.body.quaternion);
+				this.body.debugMesh.position.fromArray(this.body.getPosition());
+				this.body.debugMesh.quaternion.fromArray(this.body.getQuaternion());
 			}
 	    }
 	    //do update skeletal Animation
