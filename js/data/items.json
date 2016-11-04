@@ -3,7 +3,7 @@
     	"name": "Ember Blade", 
         "model": "models/gold_sword.json",
         "slot": "weapon",
-        "bone": "weapon",
+        "bone": "weapon1",
         "options": {"reflectivity": 0.5, "color": "0xFF7E7A" },
         "stats": {
             "damage": 413,
@@ -18,7 +18,7 @@
 		"name": "Rusted Steel",
         "model": "models/gold_sword.json",
         "slot": "weapon",
-        "bone": "weapon",
+        "bone": "weapon1",
         "options": {"reflectivity": 0.01, "color": "0x662121", "shininess": 20, "specular": "0x443333" },
         "stats": {
             "damage": 15,
@@ -29,7 +29,7 @@
     	"name": "Glacial Edge",
         "model": "models/gold_sword.json", 
         "slot": "weapon",
-        "bone": "weapon",
+        "bone": "weapon1",
         "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
         "stats": {
             "damage": 412,
@@ -44,7 +44,7 @@
     	"name": "Glacial Staff of Magic",
         "model": "models/staff.json", 
         "slot": "weapon",
-        "bone": "weapon",
+        "bone": "weapon1",
         "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
         "stats": {
             "damage": 12,
@@ -59,7 +59,7 @@
     	"name": "Glacial Katana",
         "model": "models/katana.json", 
         "slot": "weapon",
-        "bone": "weapon",
+        "bone": "weapon1",
         "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
         "stats": {
             "damage": 9000,
@@ -144,7 +144,7 @@
         "name": "evilsocks", "model": "models/thighhigh.json", "slot": "socks","options": {"reflectivity": 0.1, "color": "0x221111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     },     
-    "face": {"name": "face",  "model": "models/neweve_face.json", "slot": "face", "options": 
+    "face": {"name": "face",  "model": "models/face.json", "slot": "face", "options": 
     	{"reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC"}
     },  
     "hairprincess": {"name": "hairprincess",  "model": "models/princesshair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "shininess": 8, "specular": "0x222222"} },  

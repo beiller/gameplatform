@@ -38,8 +38,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    
 	    this.debugPhysics = false;
 	    
-	    //this.physicsWorld = new Physics();
-	    this.physicsWorld = new AmmoPhysics();
+	    this.physicsWorld = new Physics();
+	    //this.physicsWorld = new AmmoPhysics();
 	}
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
@@ -321,7 +321,25 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	                if(onComplete !== undefined) onComplete(character);
 	            });*/
 	        } else {
-				game.loadTextureFile(options.diffusePath, function(diffuseTexture) {
+		        var mesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+				if(mesh.material.type == "MultiMaterial") {
+					mesh.material.materials.forEach(function(_material, materialIndex) {
+					   	_material.skinning = true;
+					});
+			    } else {
+			        mesh.material.skinning = true;
+			    }
+		        //mesh.frustumCulled = !game.disableCull;
+		        mesh.castShadow = game.settings.enableShadows;
+		        mesh.receiveShadow = game.settings.enableShadows;
+		        //game.setMaterialOptions(mesh, { skinning: true });
+				var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
+				var character = new Character(mesh, game, body, options.name);
+				game.characters[options.name] = character;
+				game.scene.add( mesh );
+				game.loadPhysBones(character);
+				if(onComplete !== undefined) onComplete(character);
+				/*game.loadTextureFile(options.diffusePath, function(diffuseTexture) {
 		        	var materialOptions = {
 		                skinning: true,
 		                //specular: options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x222222 ),
@@ -332,6 +350,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 		                emissive: options.emissive || new THREE.Color( 0x0A0302 ),
 		                roughness: options.roughness || 0.60,
 		                metalness: options.metalness || 0.05,
+		                transparency: options.transparency || true,
 		                map: diffuseTexture
 					};
 					var material = new THREE.MeshStandardMaterial(materialOptions);
@@ -346,7 +365,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 					game.scene.add( mesh );
 					game.loadPhysBones(character);
 					if(onComplete !== undefined) onComplete(character);
-				});
+				});*/
 	        }
 	    });
 	};
@@ -472,15 +491,11 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    if(this.cameraUpdateFunction === undefined) {
 	        var scope = this;
 	        this.cameraUpdateFunction = function () {
-	            try {
-	                scope.camera.position.x = scope.characters['eve'].body.getPositionX();
-	                scope.camera.position.y = scope.characters['eve'].body.getPositionY() + 0.2;
-	                scope.dirLight.position.x = scope.characters['eve'].body.getPositionX() + 0.5;
-	                scope.dirLight.target.position.x = scope.characters['eve'].body.getPositionX();
-	                scope.dirLight.target.updateMatrixWorld();
-	            } catch (e) {
-	
-	            }
+                scope.camera.position.x = scope.characters['eve'].body.getPositionX();
+                scope.camera.position.y = scope.characters['eve'].body.getPositionY() + 0.2;
+                scope.dirLight.position.x = scope.characters['eve'].body.getPositionX() + 0.5;
+                scope.dirLight.target.position.x = scope.characters['eve'].body.getPositionX();
+                scope.dirLight.target.updateMatrixWorld();
 	        };
 	    }
 	    this.cameraUpdateFunction();
