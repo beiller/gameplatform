@@ -114,7 +114,6 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 				this.body.debugMesh.quaternion.fromArray(this.body.getQuaternion());
 			}
 	    }
-	    this.mesh.updateMatrixWorld(true);
 	    //do update skeletal Animation
 	    if(this.animationMixer) {
 	        this.animationMixer.update(delta);
