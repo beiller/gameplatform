@@ -9,8 +9,9 @@
 	        "normalPath": "models/textures/newevenormal.png",
 	        "equipment":  [ 
 	        	"rustsword", 
-	        	"evillingerie", 
-	        	"evilsocks",
+	        	"panty4", 
+	        	"top4",
+	        	"stockings4",
 	        	"face",
 	        	"hairevil"
 	        ]
@@ -34,20 +35,31 @@
 	        "equipment": [ 
 	        	"hairprincess",
 	        	"face",
-	        	"holylingerie3"
+	        	"panty1",
+	        	"boots"
 	        ],
-	        "inventory": [	        
+	        "inventory": [	  
+			    "panty1",
+			    "panty2",
+			    "panty3",
+			    "panty3.1",
+			    "panty4",
+			    "top3",
+			    "top4",
+			    "dragonsteel",
+			    "witchhat",
+			    "stockings1",
+			    "stockings2",
+			    "stockings4",
+			    "boots",
+	        	"panty2",
+	        	"panty3",
+	        	"top3",
+	        	"witchwig",
+	        	"dragonsteel",
 	        	"unholychestarmor",
-	        	"holyunderwear",
-	        	"holylingerie2",	
-	        	"holylingerie",	
-	        	"rustsword", 
-	        	"holysocks",
-	        	"holychestarmor",
 	        	"firesword", 
 	        	"rustsword",
-	        	"evilchestarmor",
-	        	"holylegs",
 	        	"icestaff",
 	        	"icekatana"
 	        ]

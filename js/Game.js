@@ -151,15 +151,23 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    this.scene.add( this.cubeCamera );
 	
 		// LIGHTS
-		hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 1.2 );
-        hemiLight.color.setHSL( 0.6, 0.75, 0.5 );
-        hemiLight.groundColor.setHSL( 0.095, 0.5, 0.5 );
-		hemiLight.position.set( 0, 500, 0 );
+		hemiLight = new THREE.HemisphereLight( 0xFFFFFF, 0x001122, 1 );
+        //hemiLight.color.setHSL( 0.6, 0.75, 0.5 );
+        //hemiLight.groundColor.setHSL( 0.095, 0.5, 0.5 );
+		//hemiLight.position.set( 0, 5, 0 );
 		this.scene.add( hemiLight );
+		
+		// LIGHTS
+		//pointLight = new THREE.PointLight( 0xCCD7FF );
+        //hemiLight.color.setHSL( 0.6, 0.75, 0.5 );
+        //hemiLight.groundColor.setHSL( 0.095, 0.5, 0.5 );
+		//pointLight.position.set( 0, 5, 2 );
+		//this.scene.add( pointLight );
+		//this.scene.add( new THREE.PointLightHelper(pointLight, 3.0));
 
-		dirLight = new THREE.DirectionalLight( 0xffffff );
-		dirLight.color.setHSL( 0.1, 1, 0.95 );
-		dirLight.position.set( 0.0, 1.0, 10.0 );
+		dirLight = new THREE.DirectionalLight( 0xffffff, 1.0, 200.0, 1.0, 0.5 );
+		//dirLight.color.setHSL( 0.1, 1, 0.95 );
+		dirLight.position.set( 0.0, -1.0, 3.0 );
 		dirLight.target.position.set( 0.0, -1.0, 0.0 );
 		dirLight.target.updateMatrixWorld();
 		this.scene.add( dirLight );
@@ -169,7 +177,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 		dirLight.shadow.mapSize.width = 4096;
 		dirLight.shadow.mapSize.height = 4096;
 
-		var d = 7.0;
+		var d = 4.0;
 
 		dirLight.shadow.camera.left = -d;
 		dirLight.shadow.camera.right = d;
@@ -181,7 +189,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 		//dirLight.shadow.camera.fov = 100.0;
 		//dirLight.shadow.camera.bias = 0.0001;
 		this.dirLight = dirLight;
-		var helper = new THREE.DirectionalLightHelper(dirLight);
+		var helper = new THREE.SpotLightHelper(dirLight);
 		this.scene.add(helper);
 	
 	    this.texloader = new THREE.TextureLoader();
@@ -375,8 +383,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    }
 	    var cubeCamera = this.cubeCamera;
 	    function _setopt(mat, options, materialIndex) {
-	        mat.envMap = cubeCamera.renderTarget.texture;
-	        mat.combine = options.combine || THREE.MixOperation;
+	        //mat.envMap = cubeCamera.renderTarget.texture;
+	        //mat.combine = options.combine || THREE.MixOperation;
 	        mat.reflectivity = options.reflectivity || 0.2;
 	        mat.emissive  = options.emissive ? new THREE.Color(parseInt(options.emissive)) : new THREE.Color( 0x000000 );
 	        mat.specular  = options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x808080 );
@@ -492,10 +500,11 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        var scope = this;
 	        this.cameraUpdateFunction = function () {
                 scope.camera.position.x = scope.characters['eve'].body.getPositionX();
-                scope.camera.position.y = scope.characters['eve'].body.getPositionY() + 0.2;
-                scope.dirLight.position.x = scope.characters['eve'].body.getPositionX() + 0.5;
+                scope.camera.position.y = scope.characters['eve'].body.getPositionY();
+                /*scope.dirLight.position.x = scope.characters['eve'].body.getPositionX() + 0.5;
                 scope.dirLight.target.position.x = scope.characters['eve'].body.getPositionX();
                 scope.dirLight.target.updateMatrixWorld();
+                scope.dirLight.updateMatrixWorld();*/
 	        };
 	    }
 	    this.cameraUpdateFunction();

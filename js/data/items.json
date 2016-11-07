@@ -70,19 +70,6 @@
             "attackCooldown": 1000
         }
     },
-    "holychestarmor": {
-    	"name": "holychestarmor",
-        "model": "models/armor_holy.json", 
-        "slot": "chest",
-        "options": {"reflectivity": 0.35, "color": "0xFFB7DD"},
-        "stats": {
-            "defence": 200,
-            "magic_defence": {
-                "evil": 200
-            },
-            "health": 200
-        }
-    },
     "unholychestarmor": {
     	"name": "unholychestarmor",
         "model": "models/teraskull.json", 
@@ -95,60 +82,31 @@
             "health": 200
         }
     },
-    "holyunderwear": {"name": "holyunderwear", "model": "models/neweveunderwear.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xEFD7ED", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
-        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
-    },
+    "panty1": {"name": "panty1", "model": "models/panty1.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "panty2": {"name": "panty2", "model": "models/panty2.json", "slot": "underwear", "stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "panty3": {"name": "panty3", "model": "models/panty3.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "panty3.1": {"name": "panty3.1", "model": "models/panty3.1.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "panty4": {"name": "panty4", "model": "models/panty4.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "top3": {"name": "top3", "model": "models/top3.json", "slot": "chest","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "top4": {"name": "top4", "model": "models/top4.json", "slot": "chest","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "dragonsteel": {"name": "dragonsteel", "model": "models/dragonsteel.json", "slot": "misc","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "witchhat": {"name": "Witch's Hat", "model": "models/witch_hat.json", "slot": "hat","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "witchwig": {"name": "Witch's Wig", "model": "models/witch_wig.json", "slot": "wig","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "stockings1": {"name": "Witch's Socks", "model": "models/stockings1.json", "slot": "sock","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "stockings2": {"name": "stockings2", "model": "models/stockings2.json", "slot": "sock","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "stockings4": {"name": "stockings3", "model": "models/stockings4.json", "slot": "sock","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "boots": {"name": "Witch's Boots", "model": "models/boots.json", "slot": "foot","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    
+    
     "holylingerie": {"name": "Holy Lingerie #1", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
-        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
-    },
-    "holylingerie2": {"name": "Holy Lingerie #2", "model": "models/lingerie2.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
-        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
-    },
-    "holylingerie3": {"name": "Holy Lingerie #3", "model": "models/lingerie3.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     },
     "evillingerie": {"name": "evillingerie", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0x221111", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
-    },
-    "evilunderwear": {"name": "evilunderwear", "model": "models/neweveunderwear.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0x221111"},
-        "stats": {"defence": 1,"magic_defence": {"evil": 1}}
-    },
-    "evilchestarmor": {"name": "evilchestarmor", "model": "models/armor_evil.json", "slot": "chest","options": {"reflectivity": 0.15, "color": "0x221111"},
-        "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
-    },
-    "holyarms": {"name": "holyarms", "model": "models/armor_armbands.json", "slot": "arms","options": {"reflectivity": 0.15, "color": "0xFFB7DD"},
-        "stats": {"defence": 200,"magic_defence": {"evil": 200},"health": 200}
-    },   
-    "evilarms": {"name": "evilarms", "model": "models/armor_armbands.json", "slot": "arms", "options": {"reflectivity": 0.15, "color": "0x221111"},
-        "stats": {"defence": 200, "magic_defence": { "holy": 200 }, "health": 200 }
-    },      
-    "holylegs": {"name": "holylegs",  "model": "models/armor_legbands.json", "slot": "legs", "options": {"reflectivity": 0.15, "color": "0xFFB7DD"},
-        "stats": {"defence": 200, "magic_defence": { "evil": 200 }, "health": 200 }
-    },  
-    "evillegs": {"name": "evillegs", "model": "models/armor_legbands.json", "slot": "legs", "options": {"reflectivity": 0.15, "color": "0x221111"},
-        "stats": {"defence": 200, "magic_defence": { "holy": 200 }, "health": 200 }
-    },  
-    "holythong": {
-        "name": "holythong", "model": "models/armor_thong.json", "slot": "pants","options": {"reflectivity": 0.0001},
-        "stats": {"defence": 200,"magic_defence": {"evil": 200},"health": 200}
     }, 
-    "evilthong": {
-        "model": "models/armor_thong.json", "slot": "pants","options": {"reflectivity": 0.0001},
-        "stats": {"defence": 200,"magic_defence": {"holy": 200},"health": 200}
-    }, 
-    "holysocks": {
-        "name": "holysocks", "model": "models/thighhigh.json", "slot": "socks","options": {"reflectivity": 0.1, "color": "0xFFB7DD"},
-        "stats": {"defence": 1,"magic_defence": {"evil": 1}}
-    }, 
-    "evilsocks": {
-        "name": "evilsocks", "model": "models/thighhigh.json", "slot": "socks","options": {"reflectivity": 0.1, "color": "0x221111"},
-        "stats": {"defence": 1,"magic_defence": {"holy": 1}}
-    },     
     "face": {"name": "face",  "model": "models/face.json", "slot": "face", "options": 
     	{"reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC"}
     },  
     "hairprincess": {"name": "hairprincess",  "model": "models/princesshair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "shininess": 8, "specular": "0x222222"} },  
-    "hairevil": {"name": "hairevil",  "model": "models/shorthair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0x221111", "shininess": 8, "specular": "0x222222"} },
-    "evilnails": {"name": "evilnails",  "model": "models/neweve_fingernails.json", "slot": "eyes6", "options": {"reflectivity": 0.005, "color": "0x000000"} },
-    "holynails": {"name": "holynails",  "model": "models/neweve_fingernails.json", "slot": "eyes6", "options": {"reflectivity": 0.005, "color": "0xFFB7DD"} }
+    "hairevil": {"name": "hairevil",  "model": "models/shorthair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0x221111", "shininess": 8, "specular": "0x222222"} }
 }

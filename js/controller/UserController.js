@@ -11,6 +11,10 @@ function(StateMachine, Controller) {
 	    this.keyModifier = {};
 	    this.buttonModifier = {};
 	    var scope = this;
+	    var animationIndex = 0;
+	    var animations = [
+	    	"idle2", "pose_masturbate", "sd1", "sd2"
+	    ];
 
 	    var keymap = {
 	        'keydown': {
@@ -18,7 +22,7 @@ function(StateMachine, Controller) {
 	            '83': function() {  }, //S KEY
 	            '68': function() { mv.x += 1.0; stateMachine.run(); }, //A KEY
 	            '65': function() { mv.x -= 1.0; stateMachine.run(); },  //D KEY
-	            '32': function() {  }  //SPACEBAR
+	            '32': function() { stateMachine.playAnimation(animations[animationIndex % animations.length]); animationIndex += 1; }  //SPACEBAR
 	        },
 	        'keyup':{
 	            '87': function() {  },

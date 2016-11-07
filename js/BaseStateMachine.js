@@ -14,6 +14,11 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		};
 		var initial = 'NONE';
 		var events = [
+			{
+				name: 'playAnimation',
+				from: '*',
+				to: 'PLAYANIMATION'
+			},
 			{ 
 				name: 'startup',
 				from: ['NONE'],
@@ -26,7 +31,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			{ 
 				name: 'idle',
-				from: ['RUN'],
+				from: ['RUN', 'PLAYANIMATION'],
 				to: 'IDLE'
 			},
 { 
@@ -86,6 +91,12 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			}
 		];
 		var callbacks = {
+			onplayAnimation: function(event, from, to, msg) {
+				console.log("Playing animation " + msg);
+				this.character.setAnimation(msg);
+				var scope = this;
+				setTimeout(function() { scope.idle(); }, 5000);
+			},
 			onland: function() {
 				console.log('landing');
 				if(Math.abs(this.character.movementDirection.x) > 0.1) {
@@ -181,20 +192,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			this.applyForces(delta);
 		}
 		this.attackCoolDown -= (delta * 1000.0);
-		this.pointCharacter();
-	};
-	
-	BaseStateMachine.prototype.pointCharacter = function() {
-	    var quaternion = new THREE.Quaternion();
-	    if(this.character.movementDirection.x > 0.01) {
-	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-			this.character.mesh.quaternion.slerp(quaternion, 0.1);
-	    } else if(this.character.movementDirection.x < -0.01) {
-	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
-	        this.character.mesh.quaternion.slerp(quaternion, 0.1);
-	    }
-	};
-	
+	};	
 	BaseStateMachine.prototype.applyForces = function(delta) {
 	    if(Math.abs(this.character.body.getVelocityX()) < this.character.characterStats.movementSpeed) {
 		    var forceVec = new THREE.Vector3().copy(this.character.movementDirection);

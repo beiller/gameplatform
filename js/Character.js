@@ -81,19 +81,31 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	Character.prototype.addController = function(controller) {
 	    this.controllers.push(controller);
 	};
+	Character.prototype.pointCharacter = function() {
+	    var quaternion = new THREE.Quaternion();
+	    if(this.movementDirection.x > 0.01) {
+	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
+	        this.mesh.quaternion.slerp(quaternion, 0.1);
+	    } else if(this.movementDirection.x < -0.01) {
+	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
+	        this.mesh.quaternion.slerp(quaternion, 0.1);
+	    }
+	};
 	Character.prototype.update = function(delta) {
 		this.stateMachine.update(delta);
 		
 	    //this.body.position.z = 0.0; //2d game here
-	
+
+	    this.pointCharacter();
 	    //update physics components and copy to mesh position
 	    if(this.body) {
 	    	var position = this.body.getPosition();
-	        this.mesh.position.fromArray(position);
-	        this.mesh.position.y -= this.mesh.geometry.boundingSphere.radius;
-	        if(this.sssMesh) {
+	    	var bone = this.mesh;
+	        bone.position.fromArray(position);
+	        bone.position.y -= this.mesh.geometry.boundingSphere.radius;
+	        /*if(this.sssMesh) {
 	            this.sssMesh.position.fromArray(position);
-	        }
+	        }*/
 	        this.controllers.forEach(function(controller) {
 	            controller.update(delta);
 	        });
@@ -102,10 +114,12 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 				this.body.debugMesh.quaternion.fromArray(this.body.getQuaternion());
 			}
 	    }
+	    this.mesh.updateMatrixWorld(true);
 	    //do update skeletal Animation
 	    if(this.animationMixer) {
 	        this.animationMixer.update(delta);
 	    }
+
 	};
 	Character.prototype.unequip = function(slot) {
 		if(slot == "weapon") {
