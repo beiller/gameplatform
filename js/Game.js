@@ -109,6 +109,58 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        }, timeout);
 	    }, 100);
 	};
+	Game.prototype.setupLighting = function() {
+			// ref for lumens: http://www.power-sure.com/lumens.htm
+			var bulbLuminousPowers = {
+				"110000 lm (1000W)": 110000,
+				"3500 lm (300W)": 3500,
+				"1700 lm (100W)": 1700,
+				"800 lm (60W)": 800,
+				"400 lm (40W)": 400,
+				"180 lm (25W)": 180,
+				"20 lm (4W)": 20,
+				"Off": 0
+			};
+			// ref for solar irradiances: https://en.wikipedia.org/wiki/Lux
+			var hemiLuminousIrradiances = {
+				"0.0001 lx (Moonless Night)": 0.0001,
+				"0.002 lx (Night Airglow)": 0.002,
+				"0.5 lx (Full Moon)": 0.5,
+				"3.4 lx (City Twilight)": 3.4,
+				"50 lx (Living Room)": 50,
+				"100 lx (Very Overcast)": 100,
+				"350 lx (Office Room)": 350,
+				"400 lx (Sunrise/Sunset)": 400,
+				"1000 lx (Overcast)": 1000,
+				"18000 lx (Daylight)": 18000,
+				"50000 lx (Direct Sun)": 50000,
+			};
+			
+			var params = {
+				shadows: true,
+				exposure: 0.68,
+				bulbPower: Object.keys( bulbLuminousPowers )[ 4 ],
+				hemiIrradiance: Object.keys( hemiLuminousIrradiances )[0]
+			};
+			
+			var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
+			bulbLight = new THREE.PointLight( 0xffee88, 1, 100, 2 );
+			bulbLight.intensity = 110000;
+			bulbMat = new THREE.MeshStandardMaterial( {
+				emissive: 0xffffee,
+				emissiveIntensity: 1,
+				color: 0x000000
+			});
+			bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
+			bulbLight.position.set( 0, 0, 0 );
+			bulbLight.castShadow = true;
+			this.scene.add( bulbLight );
+			
+			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
+			hemiLight.intensity = 1000;
+			this.scene.add( hemiLight );
+
+	};
 	Game.prototype.initRendering = function() {
 	    this.clock = new THREE.Clock;
 	
@@ -150,52 +202,18 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
 	    this.scene.add( this.cubeCamera );
 	
-		// LIGHTS
-		hemiLight = new THREE.HemisphereLight( 0xFFFFFF, 0x001122, 1 );
-        //hemiLight.color.setHSL( 0.6, 0.75, 0.5 );
-        //hemiLight.groundColor.setHSL( 0.095, 0.5, 0.5 );
-		//hemiLight.position.set( 0, 5, 0 );
-		this.scene.add( hemiLight );
-		
-		// LIGHTS
-		//pointLight = new THREE.PointLight( 0xCCD7FF );
-        //hemiLight.color.setHSL( 0.6, 0.75, 0.5 );
-        //hemiLight.groundColor.setHSL( 0.095, 0.5, 0.5 );
-		//pointLight.position.set( 0, 5, 2 );
-		//this.scene.add( pointLight );
-		//this.scene.add( new THREE.PointLightHelper(pointLight, 3.0));
-
-		dirLight = new THREE.DirectionalLight( 0xffffff, 1.0, 200.0, 1.0, 0.5 );
-		//dirLight.color.setHSL( 0.1, 1, 0.95 );
-		dirLight.position.set( 0.0, -1.0, 3.0 );
-		dirLight.target.position.set( 0.0, -1.0, 0.0 );
-		dirLight.target.updateMatrixWorld();
-		this.scene.add( dirLight );
-
-		dirLight.castShadow = this.settings.enableShadows;
-
-		dirLight.shadow.mapSize.width = 4096;
-		dirLight.shadow.mapSize.height = 4096;
-
-		var d = 4.0;
-
-		dirLight.shadow.camera.left = -d;
-		dirLight.shadow.camera.right = d;
-		dirLight.shadow.camera.top = d;
-		dirLight.shadow.camera.bottom = -d;
-
-		dirLight.shadow.camera.near = 0.01;
-		dirLight.shadow.camera.far = 100.0;
-		//dirLight.shadow.camera.fov = 100.0;
-		//dirLight.shadow.camera.bias = 0.0001;
-		this.dirLight = dirLight;
-		var helper = new THREE.SpotLightHelper(dirLight);
-		this.scene.add(helper);
+		this.setupLighting();
 	
 	    this.texloader = new THREE.TextureLoader();
 	    this.jsonloader = new THREE.JSONLoader();
 	
 	    this.renderer = new THREE.WebGLRenderer( { antialias: this.settings.enableAA } );
+		this.renderer.physicallyCorrectLights = true;
+		this.renderer.toneMappingExposure = Math.pow( 0.31, 5.0 );
+		this.renderer.gammaInput = true;
+		this.renderer.gammaOutput = true;
+		this.renderer.shadowMap.enabled = true;
+		this.renderer.toneMapping = THREE.ReinhardToneMapping;
 	    this.renderer.setClearColor( 0x050505 );
 	    this.renderer.setPixelRatio( window.devicePixelRatio );
 	    this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -330,6 +348,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	            });*/
 	        } else {
 		        var mesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+		        mesh.bindMode = "attached";
 				if(mesh.material.type == "MultiMaterial") {
 					mesh.material.materials.forEach(function(_material, materialIndex) {
 					   	_material.skinning = true;

@@ -118,6 +118,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    if(this.animationMixer) {
 	        this.animationMixer.update(delta);
 	    }
+	    //this.mesh.updateMatrixWorld(true);
+	    //this.mesh.geometry.computeFaceNormals();
+	    //this.mesh.geometry.computeVertexNormals();
 
 	};
 	Character.prototype.unequip = function(slot) {

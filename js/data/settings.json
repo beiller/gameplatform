@@ -1,7 +1,7 @@
 {
 	"enableSSS": 	true, 
 	"disableCull": 	false,
-	"enableAA": true,
-	"enableShadows": true
+	"enableAA": false,
+	"enableShadows": false
 }
 
