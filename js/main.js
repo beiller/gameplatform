@@ -130,12 +130,12 @@ function(Game, HUD, THREE, AIController, UserController) {
 	    }
 	
 	    //game.addGroundPlane(-4);
-	    /*game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+	    game.loadEnvironment("models/textures/hdrmaps_com_free_079.jpg", function(mesh) {
 	    	game.updateCubeMap();
 	    	loadLevel(levelData, itemData);
-	    });*/
+	    });
 	   
-	    loadLevel(levelData, itemData);
+	    //loadLevel(levelData, itemData);
 	    
 	    /*setInterval(function() {
 		game.updateCubeMap();

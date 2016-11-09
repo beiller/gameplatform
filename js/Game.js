@@ -138,26 +138,28 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 			
 			var params = {
 				shadows: true,
-				exposure: 0.68,
+				exposure: 0.60,
 				bulbPower: Object.keys( bulbLuminousPowers )[ 4 ],
 				hemiIrradiance: Object.keys( hemiLuminousIrradiances )[0]
 			};
 			
 			var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
-			bulbLight = new THREE.PointLight( 0xffee88, 1, 100, 2 );
-			bulbLight.intensity = 110000;
+			bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
+			bulbLight.intensity = 3500;
 			bulbMat = new THREE.MeshStandardMaterial( {
 				emissive: 0xffffee,
 				emissiveIntensity: 1,
 				color: 0x000000
 			});
 			bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
-			bulbLight.position.set( 0, 0, 0 );
+			bulbLight.position.set( 0, -1.0, 2 );
 			bulbLight.castShadow = true;
+			bulbLight.shadow.mapSize = new THREE.Vector2(4096, 4096);
 			this.scene.add( bulbLight );
+			this.bulbLight = bulbLight;
 			
 			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
-			hemiLight.intensity = 1000;
+			hemiLight.intensity = 400;
 			this.scene.add( hemiLight );
 
 	};
@@ -169,20 +171,22 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	
 	    this.scene = new THREE.Scene();
 	
-	    this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.05, 1000);
+	    this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.3, 100);
 	    this.camera.position.z = 5;
 	    this.camera.position.y = -3;
 	    this.camera.position.x = 0;
+	    this.camera.targetQuaternion = new THREE.Quaternion();
 	    var cam = this.camera;
-	    var cameraRadius = 1.0;
+	    var cameraZoom = 35.0;
 	
 	    function displaywheel(e) {
 	        var evt=window.event || e; //equalize event object
 	        var delta=evt.detail? evt.detail*(-120) : evt.wheelDelta; //check for detail first so Opera uses that instead of wheelDelta
 	        //document.getElementById("wheelvalue").innerHTML=delta //delta returns +120 when wheel is scrolled up, -120 when down
-	        cam.position.z += (delta/120*0.1);
+	        //cam.position.z += (delta/120*0.1);
 	        //cam.position.y += (delta/120*0.005);
-	        cameraRadius += delta/120*0.1;
+	        cameraZoom += delta*0.01;
+	        cam.setFocalLength(cameraZoom);
 	    }
 	    var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
 	    document.addEventListener(mousewheelevt, displaywheel, false);
@@ -194,7 +198,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, -.1, 0), xr);
 	        var qtarget2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-.1, 0, 0), yr);
 	        qtarget.multiply(qtarget2);
-	        cam.quaternion.slerp(qtarget, 0.25);
+	        //cam.quaternion.slerp(qtarget, 0.25);
+	        cam.targetQuaternion.copy(qtarget);
 	    }
 	    document.addEventListener("mousemove", mousemovement, false);
 	
@@ -270,12 +275,12 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	};
 	Game.prototype.loadPhysBones = function(character) {
 
-	    /*this.dynamics.push(
+	    this.dynamics.push(
 	    	this.physicsWorld.createPhysBone("breast_R", "spine02", character, PhysBone)
 	    );
 	    this.dynamics.push(
 	    	this.physicsWorld.createPhysBone("breast_L", "spine02", character, PhysBone)
-	    );*/
+	    );
 	    
 	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
 	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
@@ -365,6 +370,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 				game.characters[options.name] = character;
 				game.scene.add( mesh );
 				game.loadPhysBones(character);
+				game.materialPostProcess(mesh.material);
 				if(onComplete !== undefined) onComplete(character);
 				/*game.loadTextureFile(options.diffusePath, function(diffuseTexture) {
 		        	var materialOptions = {
@@ -395,6 +401,15 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 				});*/
 	        }
 	    });
+	};
+	Game.prototype.materialPostProcess = function(material) {
+		var scope = this;
+		if(material.type == "MultiMaterial") {
+			material.materials.forEach(function(_material, materialIndex) {
+			   	scope.materialPostProcess(_material);
+			});
+		}
+		material.side = THREE.FrontSide;
 	};
 	Game.prototype.setMaterialOptions = function(mesh, options) {
 	    if(options === undefined) {
@@ -520,10 +535,10 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        this.cameraUpdateFunction = function () {
                 scope.camera.position.x = scope.characters['eve'].body.getPositionX();
                 scope.camera.position.y = scope.characters['eve'].body.getPositionY();
-                /*scope.dirLight.position.x = scope.characters['eve'].body.getPositionX() + 0.5;
-                scope.dirLight.target.position.x = scope.characters['eve'].body.getPositionX();
-                scope.dirLight.target.updateMatrixWorld();
-                scope.dirLight.updateMatrixWorld();*/
+                scope.bulbLight.position.x = scope.characters['eve'].body.getPositionX() + 2.5;
+                scope.bulbLight.target.position.x = scope.characters['eve'].body.getPositionX();
+                scope.bulbLight.target.updateMatrixWorld();
+                scope.bulbLight.updateMatrixWorld();
 	        };
 	    }
 	    this.cameraUpdateFunction();

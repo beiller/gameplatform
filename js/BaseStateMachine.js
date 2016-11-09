@@ -95,7 +95,38 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				console.log("Playing animation " + msg);
 				this.character.setAnimation(msg);
 				var scope = this;
-				setTimeout(function() { scope.idle(); }, 5000);
+				if(this.animationTimeout) {
+					cancelTimeout(this.animationTimeout);
+				}
+				this.animationTimeout = setTimeout(function() { scope.idle(); }, 20000);
+				var game = this.game;
+				var character = this.character;
+		        game.cameraUpdateFunction = function () {
+	                //game.camera.position.x = scope.characters['eve'].body.getPositionX();
+	                //game.camera.position.y = scope.characters['eve'].body.getPositionY();
+	                //bulbLight.position.x = scope.characters['eve'].body.getPositionX() + 2.5;
+	                //bulbLight.target.position.x = scope.characters['eve'].body.getPositionX();
+	                //bulbLight.target.updateMatrixWorld();
+	                //bulbLight.updateMatrixWorld();
+	                var bone = character.findBone('camera');
+	                var position = new THREE.Vector3();
+	                var rotation = new THREE.Quaternion();
+	                var rotation2 = new THREE.Quaternion();
+	                var scale = new THREE.Vector3();
+	                bone.matrixWorld.decompose(position, rotation, scale);
+	                game.camera.position.copy(position);
+
+	                //character.mesh.matrixWorld.decompose(position, rotation2, scale);
+	                game.camera.quaternion.copy(rotation);
+	                if(game.camera.targetQuaternion) {
+	                	game.camera.quaternion.slerp(game.camera.targetQuaternion, 0.25);
+	                }
+	                game.bulbLight.position.x = game.characters['eve'].body.getPositionX() + 2.5;
+	                game.bulbLight.target.position.x = game.characters['eve'].body.getPositionX();
+	                game.bulbLight.target.updateMatrixWorld();
+	                game.bulbLight.updateMatrixWorld();
+	                
+		        };
 			},
 			onland: function() {
 				console.log('landing');

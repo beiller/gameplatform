@@ -85,10 +85,12 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    var quaternion = new THREE.Quaternion();
 	    if(this.movementDirection.x > 0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-	        this.mesh.quaternion.slerp(quaternion, 0.1);
+	        quaternion.slerp(this.mesh.quaternion, 0.9);
+	        this.mesh.quaternion.copy(quaternion);
 	    } else if(this.movementDirection.x < -0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
-	        this.mesh.quaternion.slerp(quaternion, 0.1);
+	        quaternion.slerp(this.mesh.quaternion, 0.9);
+	        this.mesh.quaternion.copy(quaternion);
 	    }
 	};
 	Character.prototype.update = function(delta) {
@@ -119,9 +121,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        this.animationMixer.update(delta);
 	    }
 	    //this.mesh.updateMatrixWorld(true);
-	    //this.mesh.geometry.computeFaceNormals();
+	    this.mesh.geometry.computeFaceNormals();
 	    //this.mesh.geometry.computeVertexNormals();
-
 	};
 	Character.prototype.unequip = function(slot) {
 		if(slot == "weapon") {

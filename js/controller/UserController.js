@@ -13,7 +13,7 @@ function(StateMachine, Controller) {
 	    var scope = this;
 	    var animationIndex = 0;
 	    var animations = [
-	    	"idle2", "sd1", "sd2"
+	    	"idle2", "sd1", "y3", "pm1", "y2"
 	    ];
 
 	    var keymap = {
@@ -22,7 +22,10 @@ function(StateMachine, Controller) {
 	            '83': function() {  }, //S KEY
 	            '68': function() { mv.x += 1.0; stateMachine.run(); }, //A KEY
 	            '65': function() { mv.x -= 1.0; stateMachine.run(); },  //D KEY
-	            '32': function() { stateMachine.playAnimation(animations[animationIndex % animations.length]); animationIndex += 1; }  //SPACEBAR
+	            '32': function() { 
+	            	stateMachine.playAnimation(animations[animationIndex % animations.length]); 
+	            	animationIndex += 1; 
+	            }  //SPACEBAR
 	        },
 	        'keyup':{
 	            '87': function() {  },
