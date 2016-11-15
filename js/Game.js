@@ -38,8 +38,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    
 	    this.debugPhysics = false;
 	    
-	    this.physicsWorld = new Physics();
-	    //this.physicsWorld = new AmmoPhysics();
+	    //this.physicsWorld = new Physics();
+	    this.physicsWorld = new AmmoPhysics();
 	}
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
@@ -163,6 +163,31 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 			this.scene.add( hemiLight );
 
 	};
+	Game.prototype.defaultMouseMoveFunction = function(e) {
+	    var x = e.clientX;
+	    var y = e.clientY;
+	    var xr = ((x / window.innerWidth) - 0.5) * 2.0;
+	    var yr = ((y / window.innerHeight) - 0.5) * 2.0;
+	    var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, -.1, 0), xr);
+	    var qtarget2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-.1, 0, 0), yr);
+	    qtarget.multiply(qtarget2);
+	    //cam.quaternion.slerp(qtarget, 0.25);
+	    if(this.camera.targetQuaternion) {
+	    	this.camera.targetQuaternion.copy(qtarget);
+	    }  
+	    this.camera.offset = yr;
+	};
+	Game.prototype.defaultCameraUpdateFunction = function () {
+            this.camera.position.x = this.characters['eve'].body.getPositionX();
+            this.camera.position.y = this.characters['eve'].body.getPositionY();
+            /*if(this.camera.offset) {
+            	this.camera.position.y += this.camera.offset;
+            }*/
+            this.bulbLight.position.x = this.characters['eve'].body.getPositionX() + 2.5;
+            this.bulbLight.target.position.x = this.characters['eve'].body.getPositionX();
+            this.bulbLight.target.updateMatrixWorld();
+            this.bulbLight.updateMatrixWorld();
+        };
 	Game.prototype.initRendering = function() {
 	    this.clock = new THREE.Clock;
 	
@@ -190,18 +215,9 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    }
 	    var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
 	    document.addEventListener(mousewheelevt, displaywheel, false);
-	    function mousemovement(e) {
-	        var x = e.clientX;
-	        var y = e.clientY;
-	        var xr = ((x / window.innerWidth) - 0.5) * 2.0;
-	        var yr = ((y / window.innerHeight) - 0.5) * 2.0;
-	        var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, -.1, 0), xr);
-	        var qtarget2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-.1, 0, 0), yr);
-	        qtarget.multiply(qtarget2);
-	        //cam.quaternion.slerp(qtarget, 0.25);
-	        cam.targetQuaternion.copy(qtarget);
-	    }
-	    document.addEventListener("mousemove", mousemovement, false);
+
+		var scope = this;
+	    document.addEventListener("mousemove", function(e) { scope.defaultMouseMoveFunction(e); }, false);
 	
 	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 128 );
 	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
@@ -275,12 +291,12 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	};
 	Game.prototype.loadPhysBones = function(character) {
 
-	    this.dynamics.push(
+	    /*this.dynamics.push(
 	    	this.physicsWorld.createPhysBone("breast_R", "spine02", character, PhysBone)
 	    );
 	    this.dynamics.push(
 	    	this.physicsWorld.createPhysBone("breast_L", "spine02", character, PhysBone)
-	    );
+	    );*/
 	    
 	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
 	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
@@ -532,14 +548,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	Game.prototype.animate = function() {
 	    if(this.cameraUpdateFunction === undefined) {
 	        var scope = this;
-	        this.cameraUpdateFunction = function () {
-                scope.camera.position.x = scope.characters['eve'].body.getPositionX();
-                scope.camera.position.y = scope.characters['eve'].body.getPositionY();
-                scope.bulbLight.position.x = scope.characters['eve'].body.getPositionX() + 2.5;
-                scope.bulbLight.target.position.x = scope.characters['eve'].body.getPositionX();
-                scope.bulbLight.target.updateMatrixWorld();
-                scope.bulbLight.updateMatrixWorld();
-	        };
+	        this.cameraUpdateFunction = this.defaultCameraUpdateFunction;
 	    }
 	    this.cameraUpdateFunction();
 	

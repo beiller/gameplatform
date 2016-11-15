@@ -26,7 +26,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			{ 
 				name: 'endattack',
-				from: ['ATTACK', 'AIRATTACK'],
+				from: ['ATTACK'],
 				to: 'IDLE'
 			},
 			{ 
@@ -51,18 +51,13 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			{ 
 				name: 'fall',
-				from: ['IDLE', 'ATTACK', 'BLOCK', 'HIT', 'AIRATTACK', 'RUN'],
+				from: ['IDLE', 'ATTACK', 'BLOCK', 'HIT', 'RUN'],
 				to: 'INAIR'
 			},
 			{ 
 				name: 'attack',
 				from: ['IDLE'],
 				to: 'ATTACK'
-			},
-			{ 
-				name: 'attack',
-				from: ['INAIR'],
-				to: 'AIRATTACK'
 			},
 			{ 
 				name: 'block',
@@ -76,12 +71,12 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			{ 
 				name: 'hit',
-				from: ['IDLE', 'INAIR', 'ATTACK', 'HIT', 'AIRATTACK'],
+				from: ['IDLE', 'INAIR', 'ATTACK', 'HIT'],
 				to: 'HIT'
 			},
 			{ 
 				name: 'stun',
-				from: ['IDLE', 'INAIR', 'ATTACK', 'HIT', 'BLOCK', 'AIRATTACK'],
+				from: ['IDLE', 'INAIR', 'ATTACK', 'HIT', 'BLOCK'],
 				to: 'HIT'
 			},
 			{ 
@@ -102,6 +97,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				var game = this.game;
 				var character = this.character;
 		        game.cameraUpdateFunction = function () {
+		        	
 	                //game.camera.position.x = scope.characters['eve'].body.getPositionX();
 	                //game.camera.position.y = scope.characters['eve'].body.getPositionY();
 	                //bulbLight.position.x = scope.characters['eve'].body.getPositionX() + 2.5;
@@ -120,11 +116,14 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	                game.camera.quaternion.copy(rotation);
 	                if(game.camera.targetQuaternion) {
 	                	game.camera.quaternion.slerp(game.camera.targetQuaternion, 0.25);
-	                }
+	                };
 	                game.bulbLight.position.x = game.characters['eve'].body.getPositionX() + 2.5;
 	                game.bulbLight.target.position.x = game.characters['eve'].body.getPositionX();
 	                game.bulbLight.target.updateMatrixWorld();
 	                game.bulbLight.updateMatrixWorld();
+		            if(game.camera.offset) {
+		            	game.camera.position.y += game.camera.offset;
+		            }
 	                
 		        };
 			},
@@ -166,10 +165,10 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		        this.character.setAnimation("DE_Combatblock");
 		    },
 		    onattack: function(event, from, to, msg) {
-		    	if(this.attackCoolDown > 0.0) {
+		    	/*if(this.attackCoolDown > 0.0) {
 		    		console.log("Can't attack, cooldown in effect", this.attackCoolDown);
 		    		return false;
-		    	}
+		    	}*/
 		    	console.log("ATTACKING!", event, from, to, msg);
 		    	this.attackCoolDown = this.character.characterStats.attackCooldown;
 		    	this.character.setAnimation("DE_Combatattack");

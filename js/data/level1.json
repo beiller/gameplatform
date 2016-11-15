@@ -2,7 +2,7 @@
 	"staticObjects": [],
 	"characters": {
 	    "evil_eve": {
-	        "model": "models/eve.json",
+	        "model": "textures/miku.json",
 	        "sss": false,
 	        "diffusePath": "models/textures/young_darkskinned_female_diffuse.png",
 	        "specularPath": "models/textures/specular.png",
@@ -27,7 +27,7 @@
 	        ]
 	    },    
 	    "good_eve": {
-	        "model": "models/eve.json",
+	        "model": "textures/miku.json",
 	        "sss": false,
 	        "diffusePath": "models/textures/young_lightskinned_female_diffuse3.png",
 	        "specularPath": "models/textures/specular.png",
@@ -36,7 +36,9 @@
 	        	"hairprincess",
 	        	"face",
 	        	"panty1",
-	        	"boots"
+	        	"boots",
+			    "witchhat",
+	        	"top3"
 	        ],
 	        "inventory": [	  
 			    "panty1",
@@ -44,10 +46,8 @@
 			    "panty3",
 			    "panty3.1",
 			    "panty4",
-			    "top3",
 			    "top4",
 			    "dragonsteel",
-			    "witchhat",
 			    "stockings1",
 			    "stockings2",
 			    "stockings4",

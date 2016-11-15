@@ -13,7 +13,7 @@ function(StateMachine, Controller) {
 	    var scope = this;
 	    var animationIndex = 0;
 	    var animations = [
-	    	"idle2", "sd1", "y3", "pm1", "y2"
+	    	"idle2", "sd1", "y3", "pm1", "y2", "horiz1"
 	    ];
 
 	    var keymap = {

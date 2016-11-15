@@ -29,6 +29,7 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 	
 	Body.prototype.applyImpulse = function(f, p) {
 		console.log(f);
+		this.body.activate();
 		this.body.applyImpulse(new Ammo.btVector3(f[0], f[1], f[2]));
 	};
 
@@ -91,7 +92,10 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 
 		var myMotionState = new Ammo.btDefaultMotionState(startTransform);
 		var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
+		//cInfo.friction = 5.0;
 		var btBody = new Ammo.btRigidBody(cInfo);
+		//btBody.setActivationState(4);
+		btBody.setFriction(0.9);
 		btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 		btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
@@ -129,7 +133,7 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		transform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
 		var btBody = this.localCreateRigidBody(mass || 49.0, transform, shape);
 		btBody.setAngularFactor(new Ammo.btVector3(0, 0, 0));
-		btBody.setDamping(0.5, 1.0);
+		//btBody.setDamping(0.9, 1.0);
 		return new Body(
 			btBody
 		);
