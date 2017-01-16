@@ -9,6 +9,9 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 	Body.prototype.getPositionX = function() { return this.body.getWorldTransform().getOrigin().x(); };
 	Body.prototype.getPositionY = function() { return this.body.getWorldTransform().getOrigin().y(); };
 	Body.prototype.getPositionZ = function() { return this.body.getWorldTransform().getOrigin().z(); };
+	Body.prototype.setPosition = function(positionArray) {
+		this.body.setWorldTransform(new Ammo.btVector3(positionArray[0], positionArray[1], positionArray[2]));
+	};
 	
 	Body.prototype.getVelocity = function() {
 		var l = this.body.getLinearVelocity();
@@ -32,13 +35,27 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		this.body.activate();
 		this.body.applyImpulse(new Ammo.btVector3(f[0], f[1], f[2]));
 	};
+	
+	Body.prototype.setDamping = function(linearDamping, angularDamping) {
+		this.body.setDamping(linearDamping, angularDamping);
+	};
 
 	function AmmoPhysics() {
 		this.initPhysics();
+		this.collisionLayers = {
+			PLAYER: 1,
+			WORLD: 2,
+			OTHER: 4,
+			NOTHING: 8
+		};
 	}
 	AmmoPhysics.prototype.step = function() {
+		var numIterations = 100;
+		var dt = 1/60;
 		if(this.m_dynamicsWorld) {
-    		this.m_dynamicsWorld.stepSimulation(1/60);
+			for(var i = 0; i < numIterations; i++) {
+	    		this.m_dynamicsWorld.stepSimulation(dt / numIterations);
+	    	}
     	}
 	};
 	
@@ -70,6 +87,33 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 
 
 	};
+	
+	AmmoPhysics.prototype.createSpring = function(body1, body2, distance, max_force) {
+		//btGeneric6DofSpringConstraint (btRigidBody &rbB, const btTransform &frameInB, bool useLinearReferenceFrameB)
+		//void btPoint2PointConstraint([Ref] btRigidBody rbA, [Ref] btRigidBody rbB, [Ref] btVector3 pivotInA, [Ref] btVector3 pivotInB);
+ 		//var constraint = new Ammo.btPoint2PointConstraint(body1, body2, new Ammo.btVector3(0,0.15,0), new Ammo.btVector3(0,-0.15,0), true);
+ 		//addConstraint (btTypedConstraint *constraint, bool disableCollisionsBetweenLinkedBodies=false)
+		var localA = new Ammo.btTransform();
+		var localB = new Ammo.btTransform();
+		localA.setIdentity(); localB.setIdentity();
+		var b1 = body1.getPosition();
+		localA.setOrigin(new Ammo.btVector3(0., 0.1, 0.));
+		localB.setOrigin(new Ammo.btVector3(b1[0], 0.4, b1[2]));
+		var constraint = new Ammo.btConeTwistConstraint(body1.body, body2.body, localA, localB);
+		constraint.setLimit(Math.PI/16, Math.PI/16, Math.PI/16);
+		this.m_dynamicsWorld.addConstraint(constraint, true);
+
+		//var constraint = new CANNON.DistanceConstraint(body1.body, body2.body, distance, max_force);
+		//constraint.collideConnected = false;
+		//this.world.addConstraint(constraint);
+		//return constraint;
+		return {
+			body1: body1,
+			body2: body2,
+			constraint: constraint,
+			updateSpringPosition: function(positionArray) {  }
+		};
+	};
 
 	/**
 	 * Spawns a rigid body into the demo scene
@@ -79,9 +123,15 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 	 * @tparam Object options
 	 * @treturn btRigidBody
 	 */
-	AmmoPhysics.prototype.localCreateRigidBody = function(mass, startTransform, shape, options) {
+	AmmoPhysics.prototype.localCreateRigidBody = function(mass, startTransform, shape, options, layers, mask) {
 		if (!shape)
 			return null;
+		if(!layers) {
+			layers = this.collisionLayers.WORLD;
+		}
+		if(!mask) {
+			mask = this.collisionLayers.WORLD | this.collisionLayers.PLAYER;
+		}
 
 		// rigidbody is dynamic if and only if mass is non zero, otherwise static
 		var isDynamic = (mass != 0.0);
@@ -99,11 +149,12 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 		btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
-		this.m_dynamicsWorld.addRigidBody(btBody);
+		this.m_dynamicsWorld.addRigidBody(btBody, layers, mask);
 		return btBody;
 	};
 
 	AmmoPhysics.prototype.initPhysics = function() {
+		this.collisionLayers = [1, 2, 4, 8, 16, 32, 64, 128];
 		// Bullet-interfacing code
 		var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
 		var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
@@ -111,7 +162,10 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		//var overlappingPairCache = new Ammo.btAxisSweep3(new Ammo.btVector3(-10,-10,-10),new Ammo.btVector3(10,10,10));
 		var solver = new Ammo.btSequentialImpulseConstraintSolver();
 		this.m_dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
-		//this.m_dynamicsWorld.getSolverInfo().set_m_numIterations(10);
+		var solver = this.m_dynamicsWorld.getSolverInfo();
+		/*console.log(solver);
+		solver.m_numIterations = 1000;
+		console.log(solver);*/
 		this.m_dynamicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
 		
 		this.addGroundPlane(-4);
@@ -131,7 +185,7 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		var transform = new Ammo.btTransform();
 		transform.setIdentity();
 		transform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
-		var btBody = this.localCreateRigidBody(mass || 49.0, transform, shape);
+		var btBody = this.localCreateRigidBody(mass || 49.0, transform, shape, null, this.collisionLayers.PLAYER, this.collisionLayers.WORLD);
 		btBody.setAngularFactor(new Ammo.btVector3(0, 0, 0));
 		//btBody.setDamping(0.9, 1.0);
 		return new Body(
@@ -167,6 +221,30 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		return new Body(
 			this.localCreateRigidBody(mass || 49.0, boxTransform, boxShape)
 		);
+	};
+	
+	AmmoPhysics.prototype.createPhysBone = function(boneName, parentBoneName, character, physBoneType) {
+	    var rootBone = character.findBone(parentBoneName);
+	    var bone = character.findBone(boneName);
+	    var radius = 0.075;
+	    var mass = 1.2;
+	    
+	    var position = [bone.matrixWorld.elements[12], bone.matrixWorld.elements[13], bone.matrixWorld.elements[14]];
+		var shape = new Ammo.btSphereShape(radius);
+		var transform = new Ammo.btTransform();
+		transform.setIdentity();
+		transform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
+		var btBody = this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.CHARACTER, this.collisionLayers.WORLD);
+		
+	    return new physBoneType(parentBoneName, boneName, bone, new Body(btBody), this, character);
+	
+		/*if(game.debugPhysics) {
+	        var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
+	        sphere.position.copy(body.position);
+	        scope.scene.add(sphere);
+	        //scope.dynamics.push(new DynamicEntity(sphere, this, body));
+	            body.debugMesh = sphere;
+			}*/
 	};
 
 	return AmmoPhysics;

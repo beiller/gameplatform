@@ -5,7 +5,7 @@ define(["lib/three", "lib/zepto"], function(THREE, $) {
 	}
 	HUD.prototype = {
 		loadInventory: function() {
-			var character = this.game.characters['eve'];
+			var character = this.game.characters.eve;
 			var invWindow = $(".inventory-menu");
 			var scope = this;
 			invWindow.html("");
@@ -20,8 +20,19 @@ define(["lib/three", "lib/zepto"], function(THREE, $) {
 				});
 				invWindow.append(button);
 			});
+			invWindow.append($("<hr />"));
+			Object.keys(character.equipment).forEach(function(key, index) {
+				var button = $("<a href='#' class='button'></a>");
+				button.html(character.equipment[key].name).on('click', function(e) {
+					console.log("Equipping item " + character.equipment[key].name);
+					e.stopPropagation();
+					character.unequip(key);
+					scope.loadInventory();
+				});
+				invWindow.append(button);
+			}, character.equipment);
 		},
-	
+
 		showLootMenu: function(container) {
 			var invWindow = $(".loot-menu");
 			var scope = this;
@@ -32,36 +43,39 @@ define(["lib/three", "lib/zepto"], function(THREE, $) {
 					console.log("Looted item " + inventoryItem.name);
 					e.stopPropagation();
 					container.removeItem(inventoryItem);
-					scope.game.characters['eve'].addItem(inventoryItem);
+					scope.game.characters.eve.addItem(inventoryItem);
 					scope.showLootMenu(container);
 				});
 				invWindow.append(button);
 			});
-			if(container.equipment !== undefined) {
-				for(var slot in container.equipment) {
-					(function(inventoryItem){
+			if (container.equipment !== undefined) {
+				for (var slot in container.equipment) {
+					(function(inventoryItem) {
 						var button = $("<a href='#' class='button'></a>");
 						button.html(inventoryItem.name).on('click', function(e) {
 							console.log("Looted item " + inventoryItem.name);
 							e.stopPropagation();
 							container.unequip(inventoryItem.slot);
 							container.removeItem(inventoryItem);
-							scope.game.characters['eve'].addItem(inventoryItem);
+							scope.game.characters.eve.addItem(inventoryItem);
 							scope.showLootMenu(container);
 						});
 						invWindow.append(button);
 					})(container.equipment[slot]);
 				}
 			}
+
 			this.loadInventory();
 		},
-	
+
 		init: function() {
 			var scope = this;
-			$(".btn-openinventory").on('click', function(e) {
+			var uiWindow = $(".topright");
+			var toggleInventory = $('<a href="#" class="button btn-openinventory">Toggle Inventory</a>');
+			toggleInventory.on('click', function(e) {
 				e.stopPropagation();
 				var invWindow = $(".inventory-menu");
-				if(invWindow.css('visibility') == 'hidden') {
+				if (invWindow.css('visibility') == 'hidden') {
 					invWindow.css('visibility', 'visible');
 				} else {
 					invWindow.css('visibility', 'hidden');
@@ -69,22 +83,52 @@ define(["lib/three", "lib/zepto"], function(THREE, $) {
 				scope.loadInventory();
 				return false;
 			});
+			uiWindow.append(toggleInventory);
+
+			var exposureControl = $('<input id="intNumber" type="range" min="1" max="20" step="0.1" />').on('change', function(e) {
+				e.stopPropagation();
+				console.log("Setting exposure: " + this.valueAsNumber);
+				game.renderer.toneMappingExposure = Math.pow(0.31, 1.0 * this.valueAsNumber);
+				return false;
+			});
+			uiWindow.append(exposureControl);
+
+			function createSliderControl(min, max, step, materialPropertyName) {
+				uiWindow.append($('<h3>' + materialPropertyName + '</h3>'));
+				var control = $('<input type="range" min="' + min + '" max="' + max + '" step="' + step + '" />').on('change', function(e) {
+					e.stopPropagation();
+					console.log("Setting exposure: " + this.valueAsNumber);
+					game.characters.eve.mesh.material.materials[0][materialPropertyName] = this.valueAsNumber;
+					game.characters.eve.mesh.material.materials[0].needsUpdate = true;
+					return false;
+				});
+				uiWindow.append(control);
+			}
+			createSliderControl(0, 1, 0.05, 'metalness');
+			createSliderControl(0, 1, 0.05, 'roughness');
+
+			var updateCubeMap = $('<a href="#" class="button">Update Cube</a>').on('click', function(e) {
+				e.stopPropagation();
+				game.updateCubeMap();
+				return false;
+			});
+			uiWindow.append(updateCubeMap);
 			$(window).on('mousemove', function(e) {
-				var me = game.characters['eve'];
+				var me = game.characters.eve;
 				var found = null;
 				var best_dist = 100.0;
-				for(var char_id in game.characters) {
+				for (var char_id in game.characters) {
 					(function(character) {
-						if(character != me) {
+						if (character != me) {
 							var dist = character.getDistance(me);
-							if(dist < 1.0 && dist < best_dist) {
+							if (dist < 1.0 && dist < best_dist) {
 								best_dist = dist;
 								found = character;
 							}
 						}
 					})(game.characters[char_id]);
 				}
-				if(found === null) {
+				if (found === null) {
 					$(".loot-menu").css('visibility', 'hidden');
 				} else {
 					$(".loot-menu").css('visibility', 'visible');

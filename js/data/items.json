@@ -87,8 +87,10 @@
     "panty3": {"name": "panty3", "model": "models/panty3.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
     "panty3.1": {"name": "panty3.1", "model": "models/panty3.1.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
     "panty4": {"name": "panty4", "model": "models/panty4.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "panty5": {"name": "Schoolgirl Panty", "model": "models/panty5.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 3}}},
     "top3": {"name": "top3", "model": "models/top3.json", "slot": "chest","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
     "top4": {"name": "top4", "model": "models/top4.json", "slot": "chest","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "bra": {"name": "Bra", "model": "models/bra.json", "slot": "chest","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
     "dragonsteel": {"name": "dragonsteel", "model": "models/dragonsteel.json", "slot": "misc","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
     "witchhat": {"name": "Witch's Hat", "model": "models/witch_hat.json", "slot": "hat","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
     "witchwig": {"name": "Witch's Wig", "model": "models/witch_wig.json", "slot": "wig","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
@@ -97,6 +99,11 @@
     "stockings4": {"name": "stockings3", "model": "models/stockings4.json", "slot": "sock","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
     "boots": {"name": "Witch's Boots", "model": "models/boots.json", "slot": "foot","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
     
+    "cross_earrings": {"name": "Unholy Earrings", "model": "models/cross_earrings.json", "slot": "ear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "school_shirt": {"name": "School Girl Shirt", "model": "models/school_uniform_shirt.json", "slot": "top","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    "school_skirt": {"name": "School Girl Skirt", "model": "models/school_uniform_skirt.json", "slot": "hip","stats": {"defence": 1,"magic_defence": {"holy": 1}}},
+    
+    "ponytail": {"name": "ponytail",  "model": "models/ponytail.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0x221111", "shininess": 8, "specular": "0x222222"} },
     
     "holylingerie": {"name": "Holy Lingerie #1", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
@@ -109,4 +116,5 @@
     },  
     "hairprincess": {"name": "hairprincess",  "model": "models/princesshair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "shininess": 8, "specular": "0x222222"} },  
     "hairevil": {"name": "hairevil",  "model": "models/shorthair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0x221111", "shininess": 8, "specular": "0x222222"} }
+    
 }

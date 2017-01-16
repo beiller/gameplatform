@@ -2,7 +2,7 @@
 	"staticObjects": [],
 	"characters": {
 	    "evil_eve": {
-	        "model": "textures/miku.json",
+	        "model": "models/eve.json",
 	        "sss": false,
 	        "diffusePath": "models/textures/young_darkskinned_female_diffuse.png",
 	        "specularPath": "models/textures/specular.png",
@@ -27,7 +27,7 @@
 	        ]
 	    },    
 	    "good_eve": {
-	        "model": "textures/miku.json",
+	        "model": "models/evev2.json",
 	        "sss": false,
 	        "diffusePath": "models/textures/young_lightskinned_female_diffuse3.png",
 	        "specularPath": "models/textures/specular.png",
@@ -35,10 +35,10 @@
 	        "equipment": [ 
 	        	"hairprincess",
 	        	"face",
-	        	"panty1",
+	        	"panty5",
 	        	"boots",
-			    "witchhat",
-	        	"top3"
+	        	"stockings2",
+	        	"bra"
 	        ],
 	        "inventory": [	  
 			    "panty1",
@@ -47,21 +47,21 @@
 			    "panty3.1",
 			    "panty4",
 			    "top4",
+			    "top3",
 			    "dragonsteel",
 			    "stockings1",
-			    "stockings2",
 			    "stockings4",
-			    "boots",
-	        	"panty2",
-	        	"panty3",
-	        	"top3",
 	        	"witchwig",
-	        	"dragonsteel",
+	        	"witchhat",
 	        	"unholychestarmor",
 	        	"firesword", 
 	        	"rustsword",
 	        	"icestaff",
-	        	"icekatana"
+	        	"icekatana",
+	        	"cross_earrings",
+	        	"school_shirt",
+	        	"school_skirt",
+	        	"ponytail"
 	        ]
 	    }
 	},

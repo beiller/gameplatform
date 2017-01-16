@@ -12,6 +12,11 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	Body.prototype.getPositionX = function() { return this.body.position.x; };
 	Body.prototype.getPositionY = function() { return this.body.position.y; };
 	Body.prototype.getPositionZ = function() { return this.body.position.z; };
+	Body.prototype.setPosition = function(positionArray) {
+		this.body.position.x = positionArray[0];
+		this.body.position.y = positionArray[1];
+		this.body.position.z = positionArray[2];
+	};
 	
 	Body.prototype.applyImpulse = function(f, p) {
 		this.body.applyImpulse(new CANNON.Vec3(f[0], f[1], f[2]), new CANNON.Vec3(p[0], p[1], p[2]));
@@ -27,6 +32,11 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	Body.prototype.getQuaternion = function() {
 		return [this.body.quaternion.x, this.body.quaternion.y, this.body.quaternion.z, this.body.quaternion.w];
 	};	
+	
+	Body.prototype.setDamping = function(linearDamping, angularDamping) {
+		this.body.angularDamping = linearDamping;
+        this.body.linearDamping = angularDamping;
+	};
 	
 	function CannonPhysics() {
 		this.initPhysics();
@@ -71,6 +81,26 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	    this.world.defaultContactMaterial.contactEquationRelaxation = 3;
 	    
 	    this.addGroundPlane(-4);
+	};
+	CannonPhysics.prototype._createBody = function(mass) {
+		var body = new CANNON.Body({
+            mass: mass || 1.0
+        });
+        return new Body(body);
+	};
+	CannonPhysics.prototype.createSpring = function(body1, body2, distance, max_force, worldPosition) {
+		body2 = this._createBody(0);
+		body2.setPosition(worldPosition);
+
+		var constraint = new CANNON.DistanceConstraint(body1.body, body2.body, distance, max_force);
+		constraint.collideConnected = false;
+		this.world.addConstraint(constraint);
+		return {
+			body1: body1,
+			body2: body2,
+			constraint: constraint,
+			updateSpringPosition: function(positionArray) { body2.setPosition(positionArray); }
+		};
 	};
 	CannonPhysics.prototype.addGroundPlane = function(height) {
 	    var groundShape = new CANNON.Plane();
@@ -171,7 +201,7 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	    body.collisionFilterMask = this.collisionGroups[2];// | this.collisionGroups[1];
 	    //body.fixedRotation = true;
 	    this.world.add(body); // Step 3
-	    return new physBoneType(parentBoneName, boneName, bone, body, this.world, character);
+	    return new physBoneType(parentBoneName, boneName, bone, new Body(body), this, character);
 	
 		/*if(game.debugPhysics) {
 	        var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));

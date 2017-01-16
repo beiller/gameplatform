@@ -30,17 +30,17 @@ define(["lib/three"], function(THREE) {
         this.boneLength = new THREE.Vector3().copy(boneStart).sub(boneEnd).length();
         
         //Create physical bodies
-		var radius = 0.075;
+		var radius = this.boneLength/2.0;
         var shape = new CANNON.Sphere( radius );
         var boneBody = new CANNON.Body({
             mass: 1
         });
         boneBody.addShape(shape);
-        boneBody.collisionFilterGroup = game.collisionGroups[3];
-        boneBody.collisionFilterMask = game.collisionGroups[2] | game.collisionGroups[1];
+        boneBody.collisionFilterGroup = game.physicsWorld.collisionGroups[3];
+        boneBody.collisionFilterMask = game.physicsWorld.collisionGroups[2] | game.physicsWorld.collisionGroups[1];
         boneBody.angularDamping = 0.99999999;
         boneBody.linearDamping = 0.99;
-        game.world.add(boneBody); // Step 3
+        game.physicsWorld.world.add(boneBody); // Step 3
         
 		this.boneBody = boneBody;
 		if(attachPrevJoint) {
@@ -61,7 +61,7 @@ define(["lib/three"], function(THREE) {
         };
         this.constraint = new CANNON.ConeTwistConstraint(this.boneBody, this.attachBoneBody, jointOptions);		
 		this.constraint.collideConnected = false;
-		game.world.addConstraint(this.constraint);	
+		game.physicsWorld.world.addConstraint(this.constraint);	
 		this.character = character;
 		
 		/*

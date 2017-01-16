@@ -38,8 +38,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    
 	    this.debugPhysics = false;
 	    
-	    //this.physicsWorld = new Physics();
-	    this.physicsWorld = new AmmoPhysics();
+	    this.physicsWorld = new Physics();
+	    //this.physicsWorld = new AmmoPhysics();
 	}
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
@@ -136,16 +136,9 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 				"50000 lx (Direct Sun)": 50000,
 			};
 			
-			var params = {
-				shadows: true,
-				exposure: 0.60,
-				bulbPower: Object.keys( bulbLuminousPowers )[ 4 ],
-				hemiIrradiance: Object.keys( hemiLuminousIrradiances )[0]
-			};
-			
 			var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
 			bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
-			bulbLight.intensity = 3500;
+			bulbLight.intensity = bulbLuminousPowers["1700 lm (100W)"];
 			bulbMat = new THREE.MeshStandardMaterial( {
 				emissive: 0xffffee,
 				emissiveIntensity: 1,
@@ -159,7 +152,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 			this.bulbLight = bulbLight;
 			
 			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
-			hemiLight.intensity = 400;
+			hemiLight.intensity = hemiLuminousIrradiances["1000 lx (Overcast)"];
 			this.scene.add( hemiLight );
 
 	};
@@ -218,31 +211,32 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 
 		var scope = this;
 	    document.addEventListener("mousemove", function(e) { scope.defaultMouseMoveFunction(e); }, false);
-	
-	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 128 );
-	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
-	    this.scene.add( this.cubeCamera );
-	
-		this.setupLighting();
+	    
+	    this.setupLighting();
 	
 	    this.texloader = new THREE.TextureLoader();
 	    this.jsonloader = new THREE.JSONLoader();
 	
 	    this.renderer = new THREE.WebGLRenderer( { antialias: this.settings.enableAA } );
 		this.renderer.physicallyCorrectLights = true;
-		this.renderer.toneMappingExposure = Math.pow( 0.31, 5.0 );
+		
 		this.renderer.gammaInput = true;
 		this.renderer.gammaOutput = true;
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.toneMapping = THREE.ReinhardToneMapping;
+		this.exposureSetting = 8.0;
 	    this.renderer.setClearColor( 0x050505 );
 	    this.renderer.setPixelRatio( window.devicePixelRatio );
 	    this.renderer.setSize( window.innerWidth, window.innerHeight );
 	    this.renderer.autoClear = false;
 	    this.renderer.shadowMap.enabled = this.settings.enableShadows;
-	    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	    //this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	
 	    this.container.appendChild( this.renderer.domElement );
+	    
+	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 128 );
+	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
+	    this.scene.add( this.cubeCamera );
 	
 	    var game = this;
 	    var onWindowResize = function() {
@@ -255,8 +249,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	Game.prototype.loadEnvironment = function(envMapPath, onComplete) {
 	    var game = this;
 	    this.texloader.load(envMapPath, function(texture) {
-	        var mesh = new THREE.Mesh(new THREE.SphereGeometry(500, 60, 40), new THREE.MeshBasicMaterial({map: texture}));
-	        mesh.scale.x = -1;
+	        var mesh = new THREE.Mesh(new THREE.SphereGeometry(50, 60, 40), new THREE.MeshBasicMaterial({map: texture}));
+	        mesh.scale.x = -1.0;
 	        game.scene.add(mesh);
 	        if(onComplete !== undefined) onComplete(mesh);
 	    });
@@ -291,12 +285,12 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	};
 	Game.prototype.loadPhysBones = function(character) {
 
-	    /*this.dynamics.push(
+	    this.dynamics.push(
 	    	this.physicsWorld.createPhysBone("breast_R", "spine02", character, PhysBone)
 	    );
 	    this.dynamics.push(
 	    	this.physicsWorld.createPhysBone("breast_L", "spine02", character, PhysBone)
-	    );*/
+	    );
 	    
 	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
 	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
@@ -304,7 +298,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 		this.dynamics.push(c1);
 		this.dynamics.push(c2);
 		this.dynamics.push(c3);
-
+		
+		
 		var c0 = new PhysBoneConeTwist("clavicle_R", "shoulder01_R", this, character);
 		var c1 = new PhysBoneConeTwist("shoulder01_R", "upperarm01_R", this, character, c0);
 	    var c2 = new PhysBoneConeTwist("upperarm01_R", "upperarm02_R", this, character, c1);
@@ -370,13 +365,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        } else {
 		        var mesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
 		        mesh.bindMode = "attached";
-				if(mesh.material.type == "MultiMaterial") {
-					mesh.material.materials.forEach(function(_material, materialIndex) {
-					   	_material.skinning = true;
-					});
-			    } else {
-			        mesh.material.skinning = true;
-			    }
+
 		        //mesh.frustumCulled = !game.disableCull;
 		        mesh.castShadow = game.settings.enableShadows;
 		        mesh.receiveShadow = game.settings.enableShadows;
@@ -386,39 +375,44 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 				game.characters[options.name] = character;
 				game.scene.add( mesh );
 				game.loadPhysBones(character);
-				game.materialPostProcess(mesh.material);
+				game.meshPostProcess(mesh);
+				game.materialPostProcess(mesh.material, true);
 				if(onComplete !== undefined) onComplete(character);
-				/*game.loadTextureFile(options.diffusePath, function(diffuseTexture) {
-		        	var materialOptions = {
-		                skinning: true,
-		                //specular: options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x222222 ),
-		                //emissive: options.emissive ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x000000 ),
-		                //envMap: game.cubeCamera.renderTarget.texture,
-		                //combine: options.combine || THREE.MixOperation,
-		                //reflectivity: options.reflectivity || 0.1,
-		                emissive: options.emissive || new THREE.Color( 0x0A0302 ),
-		                roughness: options.roughness || 0.60,
-		                metalness: options.metalness || 0.05,
-		                transparency: options.transparency || true,
-		                map: diffuseTexture
-					};
-					var material = new THREE.MeshStandardMaterial(materialOptions);
-					var scale = (options.scale || 1.0);
-					var mesh = new THREE.SkinnedMesh( geometry, material );
-			        mesh.castShadow = game.settings.enableShadows;
-			        mesh.receiveShadow = game.settings.enableShadows;
-					mesh.scale.x = mesh.scale.y = mesh.scale.z = scale;
-					var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
-					var character = new Character(mesh, game, body, options.name);
-					game.characters[options.name] = character;
-					game.scene.add( mesh );
-					game.loadPhysBones(character);
-					if(onComplete !== undefined) onComplete(character);
-				});*/
 	        }
 	    });
 	};
-	Game.prototype.materialPostProcess = function(material) {
+	Game.prototype.meshPostProcess = function(mesh) {
+		var scope = this;
+		var convert_material = function(material) {
+			console.log(material);
+			var map = {
+				'map': material.map,
+				'color': new THREE.Color( 0xFFFFFF ),
+				'transparent': material.transparent === null ? false : material.transparent,
+				'opacity': material.opacity || 1.0,
+				'alphaMap': material.alphaMap,
+				'metalness': 0.5,
+				'envMap': scope.cubeCamera.renderTarget.texture,
+				'roughness': 0.5
+			};
+			if(material['specularMap']) {
+				//map['roughnessMap'] = material.specularMap;
+			}
+			if(material['normalMap']) {
+				map['normalMap'] = material['normalMap'];
+				map['normalScale'] = THREE.Vector2(5.0, 5.0);
+			}
+			return map;
+		};
+		if(mesh.material.type == "MultiMaterial") {
+			for(var i in mesh.material.materials) {
+				mesh.material.materials[i] = new THREE.MeshStandardMaterial(convert_material(mesh.material.materials[i]));
+			}
+		} else {
+			mesh.material = new THREE.MeshStandardMaterial(convert_material(mesh.material));
+		}
+	};
+	Game.prototype.materialPostProcess = function(material, enableSkinning) {
 		var scope = this;
 		if(material.type == "MultiMaterial") {
 			material.materials.forEach(function(_material, materialIndex) {
@@ -426,6 +420,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 			});
 		}
 		material.side = THREE.FrontSide;
+		material.skinning = true;
 	};
 	Game.prototype.setMaterialOptions = function(mesh, options) {
 	    if(options === undefined) {
@@ -504,8 +499,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        skinnedMesh.skeleton = parent.skeleton;
 	        skinnedMesh.castShadow = game.settings.enableShadows;
 	        skinnedMesh.receiveShadow = game.settings.enableShadows;
-	        options.skinning = true;
-	        game.setMaterialOptions(skinnedMesh, options);
+	        game.meshPostProcess(skinnedMesh);
+	        game.materialPostProcess(skinnedMesh.material);
 	        if(onComplete) onComplete(skinnedMesh);
 	    };
 	    this.loadJsonMesh(jsonFileName, loadedMesh);
@@ -513,11 +508,13 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	Game.prototype.loadStaticObject = function(jsonFileName, shape, position, onComplete) {
 	    var game = this;
 	    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
-	        var mesh = new THREE.Mesh(geometry, new THREE.MeshFaceMaterial(materials));
+	        var mesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
 	        mesh.position.set(position[0], position[1], position[2]);
 	        //game.setMaterialOptions(mesh, options);
 	        mesh.castShadow = game.settings.enableShadows;
 	        mesh.receiveShadow = game.settings.enableShadows;
+	        //game.meshPostProcess(mesh);
+	        //game.materialPostProcess(mesh.material);
 	        game.scene.add(mesh);
 	        game.physicsWorld.addStaticPhysics(shape, mesh, position);
 	        if (onComplete) onComplete(mesh);
@@ -531,7 +528,6 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
 	        var mesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
 	        position = [mesh.position.x, mesh.position.y, mesh.position.z];
-	        game.setMaterialOptions(mesh, options);
 	        var physEnabled = options.enabled !== undefined ? options.enabled : true;
 	        var body = game.physicsWorld.addObjectPhysics(mesh, mass, position);
 		    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
@@ -539,9 +535,11 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        dynamic.meshOffset = [len.x/2.0, len.y/2.0, len.z/2.0];
 	        dynamic.sleep = !physEnabled;
 	        game.dynamics.push(dynamic);
-	        game.scene.add(mesh);
+	        //game.meshPostProcess(mesh);
+	        //game.materialPostProcess(mesh.material);
 	        mesh.castShadow = game.settings.enableShadows;
 	        mesh.receiveShadow = game.settings.enableShadows;
+	        game.scene.add(mesh);
 	        if (onComplete) onComplete(dynamic);
 	    });
 	};
@@ -567,19 +565,19 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    //this.render();
 	};
 	Game.prototype.updateCubeMap = function() {
+	    for(var i in this.characters) {
+	        this.characters[i].mesh.visible=false;//(delta);
+	    }
+		this.renderer.clear();
 	    this.cubeCamera.updateCubeMap( this.renderer, this.scene );
 	    this.cubemapRendered = true;
+	    //this.renderer.toneMappingExposure = Math.pow( 0.31, this.exposureSetting );
+	    for(var i in this.characters) {
+	        this.characters[i].mesh.visible=true;//(delta);
+	    }
 	};
 	Game.prototype.render = function() {
-	    if(!this.cubemapRendered) {
-	        this.cubeCamera.updateCubeMap( this.renderer, this.scene );
-	        this.cubemapRendered = true;
-	    }
 	    this.renderer.clear();
-	    for(var i in this.skinshaders) {
-	    	this.skinshaders[i].disableSSSRenderFrame = !this.enableSSS;
-	        this.skinshaders[i].render();
-	    }
 	    this.renderer.render( this.scene, this.camera );
 	};
 	Game.prototype.getCharacter = function(characterName) {
