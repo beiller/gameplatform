@@ -422,7 +422,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 		material.side = THREE.FrontSide;
 		material.skinning = true;
 	};
-	Game.prototype. = function(mesh, options) {
+	Game.prototype.setMaterialOptions = function(mesh, options) {
 	    if(options === undefined) {
 	        return;
 	    }
