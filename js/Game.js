@@ -391,13 +391,13 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 				'transparent': material.transparent === null ? false : material.transparent,
 				'opacity': material.opacity || 1.0,
 				'alphaMap': material.alphaMap,
-				'metalness': 0.5,
+				'metalness': 0.05,
 				'envMap': scope.cubeCamera.renderTarget.texture,
-				'roughness': 0.5
+				'roughness': 0.25
 			};
-			if(material['specularMap']) {
-				//map['roughnessMap'] = material.specularMap;
-			}
+			/*if(material['specularMap']) {
+				map['roughnessMap'] = material.specularMap;
+			}*/
 			if(material['normalMap']) {
 				map['normalMap'] = material['normalMap'];
 				map['normalScale'] = THREE.Vector2(5.0, 5.0);
@@ -422,7 +422,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 		material.side = THREE.FrontSide;
 		material.skinning = true;
 	};
-	Game.prototype.setMaterialOptions = function(mesh, options) {
+	Game.prototype. = function(mesh, options) {
 	    if(options === undefined) {
 	        return;
 	    }
