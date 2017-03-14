@@ -5,7 +5,7 @@
 	        "model": "models/evev2.json",
 	        "sss": false,
 	        "diffusePath": "models/neweveskin.jpg",
-	        "specularPath": "models/neweveskin_specular.jpg",
+	        "specularPath": "models/neweveskin_specular_2.jpg",
 	        "normalPath": "models/neweveskin_normal.jpg",
 	        "equipment":  [ 
 	        	"rustsword", 
@@ -20,7 +20,7 @@
 	        "model": "models/skeleton.json",
 	        "sss": false,
 	        "diffusePath": "models/neweveskin.jpg",
-	        "specularPath": "models/neweveskin_specular.jpg",
+	        "specularPath": "models/neweveskin_specular_2.jpg",
 	        "normalPath": "models/neweveskin_normal.jpg",
 	        "equipment":  [ 
 	        	"rustsword"
@@ -30,7 +30,7 @@
 	        "model": "models/evev2.json",
 	        "sss": false,
 	        "diffusePath": "models/neweveskin.jpg",
-	        "specularPath": "models/neweveskin_specular.jpg",
+	        "specularPath": "models/neweveskin_specular_2.jpg",
 	        "normalPath": "models/neweveskin_normal.jpg",
 	        "equipment": [ 
 	        	"hairprincess",

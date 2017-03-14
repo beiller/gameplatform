@@ -3,12 +3,12 @@ define(["lib/three"], function(THREE) {
 		this.boneBody = boneBody;
 		this.boneMesh = boneMesh;
 		this.effectScale = 1;
-		this.boneBody.setDamping(0.9, 0.9);		
+		this.boneBody.setDamping(0.99999, 0.99999);		
 
         this.restPosition = new THREE.Vector3().copy(this.boneMesh.position);
 	    this.attachBoneMesh = character.findBone(attachBoneName);
-	    var distance = 0.01;
-	    var max_force = 1.0;
+	    var distance = 0.001;
+	    var max_force = 100.0;
 	    var worldPosition = [this.boneMesh.position.x, this.boneMesh.position.y, this.boneMesh.position.z];
 		this.constraint = physEngine.createSpring(this.boneBody, character.body, distance, max_force, worldPosition);
 		this.character = character;

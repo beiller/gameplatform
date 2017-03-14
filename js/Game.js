@@ -1,8 +1,8 @@
 define([
 	"lib/three", "lib/zepto", "Character", "physics/CannonPhysics", "physics/AmmoPhysics",
-	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge"
+	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge", "entity/Camera"
 ], 
-function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, PhysBoneConeTwist, PhysBoneHinge) {
+function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, PhysBoneConeTwist, PhysBoneHinge, Camera) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
 	    
@@ -156,31 +156,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 			this.scene.add( hemiLight );
 
 	};
-	Game.prototype.defaultMouseMoveFunction = function(e) {
-	    var x = e.clientX;
-	    var y = e.clientY;
-	    var xr = ((x / window.innerWidth) - 0.5) * 2.0;
-	    var yr = ((y / window.innerHeight) - 0.5) * 2.0;
-	    var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, -.1, 0), xr);
-	    var qtarget2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-.1, 0, 0), yr);
-	    qtarget.multiply(qtarget2);
-	    //cam.quaternion.slerp(qtarget, 0.25);
-	    if(this.camera.targetQuaternion) {
-	    	this.camera.targetQuaternion.copy(qtarget);
-	    }  
-	    this.camera.offset = yr;
-	};
-	Game.prototype.defaultCameraUpdateFunction = function () {
-            this.camera.position.x = this.characters['eve'].body.getPositionX();
-            this.camera.position.y = this.characters['eve'].body.getPositionY();
-            /*if(this.camera.offset) {
-            	this.camera.position.y += this.camera.offset;
-            }*/
-            this.bulbLight.position.x = this.characters['eve'].body.getPositionX() + 2.5;
-            this.bulbLight.target.position.x = this.characters['eve'].body.getPositionX();
-            this.bulbLight.target.updateMatrixWorld();
-            this.bulbLight.updateMatrixWorld();
-        };
+
+
 	Game.prototype.initRendering = function() {
 	    this.clock = new THREE.Clock;
 	
@@ -188,30 +165,9 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    document.body.appendChild( this.container );
 	
 	    this.scene = new THREE.Scene();
-	
-	    this.camera = new THREE.PerspectiveCamera(37.8, window.innerWidth/window.innerHeight, 0.3, 100);
-	    this.camera.position.z = 5;
-	    this.camera.position.y = -3;
-	    this.camera.position.x = 0;
-	    this.camera.targetQuaternion = new THREE.Quaternion();
-	    var cam = this.camera;
-	    var cameraZoom = 35.0;
-	
-	    function displaywheel(e) {
-	        var evt=window.event || e; //equalize event object
-	        var delta=evt.detail? evt.detail*(-120) : evt.wheelDelta; //check for detail first so Opera uses that instead of wheelDelta
-	        //document.getElementById("wheelvalue").innerHTML=delta //delta returns +120 when wheel is scrolled up, -120 when down
-	        //cam.position.z += (delta/120*0.1);
-	        //cam.position.y += (delta/120*0.005);
-	        cameraZoom += delta*0.01;
-	        cam.setFocalLength(cameraZoom);
-	    }
-	    var mousewheelevt=(/Firefox/i.test(navigator.userAgent))? "DOMMouseScroll" : "mousewheel"; //FF doesn't recognize mousewheel as of FF3.x
-	    document.addEventListener(mousewheelevt, displaywheel, false);
 
-		var scope = this;
-	    document.addEventListener("mousemove", function(e) { scope.defaultMouseMoveFunction(e); }, false);
-	    
+	    this.camera = new Camera(null, this, 37.8, window.innerWidth/window.innerHeight, 0.3, 100);
+
 	    this.setupLighting();
 	
 	    this.texloader = new THREE.TextureLoader();
@@ -234,7 +190,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	
 	    this.container.appendChild( this.renderer.domElement );
 	    
-	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 128 );
+	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 32 );
 	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
 	    this.scene.add( this.cubeCamera );
 	
@@ -391,25 +347,27 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 				'transparent': material.transparent === null ? false : material.transparent,
 				'opacity': material.opacity || 1.0,
 				'alphaMap': material.alphaMap,
-				'metalness': 0.05,
-				'envMap': scope.cubeCamera.renderTarget.texture,
-				'roughness': 0.25
+				'shininess': 80,
+				'specular': new THREE.Color( 0x666666 ),
+				//'metalness': 0.05,
+				//'envMap': scope.cubeCamera.renderTarget.texture,
+				//'roughness': 0.25
 			};
-			/*if(material['specularMap']) {
-				map['roughnessMap'] = material.specularMap;
-			}*/
+			if(material['specularMap']) {
+				map['specularMap'] = material['specularMap'];
+			}
 			if(material['normalMap']) {
 				map['normalMap'] = material['normalMap'];
-				map['normalScale'] = THREE.Vector2(5.0, 5.0);
+				map['normalScale'] = THREE.Vector2(10.0, 10.0);
 			}
 			return map;
 		};
 		if(mesh.material.type == "MultiMaterial") {
 			for(var i in mesh.material.materials) {
-				mesh.material.materials[i] = new THREE.MeshStandardMaterial(convert_material(mesh.material.materials[i]));
+				mesh.material.materials[i] = new THREE.MeshPhongMaterial(convert_material(mesh.material.materials[i]));
 			}
 		} else {
-			mesh.material = new THREE.MeshStandardMaterial(convert_material(mesh.material));
+			mesh.material = new THREE.MeshPhongMaterial(convert_material(mesh.material));
 		}
 	};
 	Game.prototype.materialPostProcess = function(material, enableSkinning) {
@@ -419,7 +377,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 			   	scope.materialPostProcess(_material);
 			});
 		}
-		material.side = THREE.FrontSide;
+		material.side = THREE.DoubleSide;
 		material.skinning = true;
 	};
 	Game.prototype.setMaterialOptions = function(mesh, options) {
@@ -544,11 +502,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    });
 	};
 	Game.prototype.animate = function() {
-	    if(this.cameraUpdateFunction === undefined) {
-	        var scope = this;
-	        this.cameraUpdateFunction = this.defaultCameraUpdateFunction;
-	    }
-	    this.cameraUpdateFunction();
+	    this.camera.update();
 	
 	    var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
 
@@ -578,7 +532,7 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	};
 	Game.prototype.render = function() {
 	    this.renderer.clear();
-	    this.renderer.render( this.scene, this.camera );
+	    this.renderer.render( this.scene, this.camera.mesh );
 	};
 	Game.prototype.getCharacter = function(characterName) {
 	    return this.characters[characterName];
