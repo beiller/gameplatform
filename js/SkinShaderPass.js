@@ -2,7 +2,7 @@ function SkinShaderPass(renderer, camera, geometry, object, diffuseTexture, spec
     if (SSSparameters === undefined) SSSparameters = {};
 
     /*
-
+`
         OPTIONS
      */
     this.disableSSSRenderFrame = SSSparameters.disableSSSRenderFrame || false;

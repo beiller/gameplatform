@@ -201,6 +201,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        });
 		} else { //this item is not attached to bones but deformed by skeleton
 	        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
+	        	mesh.bind(scope.mesh.skeleton, new THREE.Matrix4());
 				scope.mesh.add(mesh);
 				scope.meshes[item.slot] = mesh;
 				//TODO optimize by update character clothing mesh (merge meshes?)

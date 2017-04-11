@@ -1,8 +1,12 @@
 define([
 	"lib/three", "lib/zepto", "Character", "physics/CannonPhysics", "physics/AmmoPhysics",
-	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge", "entity/Camera"
+	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge", "entity/Camera",
+	"Loader", "OrbitControls"
 ], 
-function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, PhysBoneConeTwist, PhysBoneHinge, Camera) {
+function(
+		THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, PhysBoneConeTwist, 
+		PhysBoneHinge, Camera, Loader, OrbitControls
+	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
 	    
@@ -20,7 +24,6 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    this.controls = null;
 	    this.clock = null;
 	
-	    this.texloader = null;
 	    this.jsonloader = null;
 	    this.loaderBusy = false;
 	
@@ -40,6 +43,8 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    
 	    this.physicsWorld = new Physics();
 	    //this.physicsWorld = new AmmoPhysics();
+
+	    this.orbitControls = null;
 	}
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
@@ -170,8 +175,9 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 
 	    this.setupLighting();
 	
-	    this.texloader = new THREE.TextureLoader();
 	    this.jsonloader = new THREE.JSONLoader();
+
+	    this.loader = new Loader();
 	
 	    this.renderer = new THREE.WebGLRenderer( { antialias: this.settings.enableAA } );
 		this.renderer.physicallyCorrectLights = true;
@@ -196,31 +202,22 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	
 	    var game = this;
 	    var onWindowResize = function() {
-	        game.camera.aspect = window.innerWidth / window.innerHeight;
-	        game.camera.updateProjectionMatrix();
+	        game.camera.mesh.aspect = window.innerWidth / window.innerHeight;
+	        game.camera.mesh.updateProjectionMatrix();
 	        game.renderer.setSize( window.innerWidth, window.innerHeight );
 	    };
 	    window.addEventListener( 'resize', onWindowResize, false );
+
+	    this.orbitControls = new THREE.OrbitControls( this.camera.mesh, this.renderer.domElement );
 	};
 	Game.prototype.loadEnvironment = function(envMapPath, onComplete) {
 	    var game = this;
-	    this.texloader.load(envMapPath, function(texture) {
+	    this.loader.loadTexture(envMapPath).then(function(texture) {
 	        var mesh = new THREE.Mesh(new THREE.SphereGeometry(50, 60, 40), new THREE.MeshBasicMaterial({map: texture}));
 	        mesh.scale.x = -1.0;
 	        game.scene.add(mesh);
 	        if(onComplete !== undefined) onComplete(mesh);
 	    });
-	};
-	Game.prototype.loadTextureFile = function(texturePath, callback) {
-	    if(this.textureCache[texturePath] !== undefined) {
-	        callback(this.textureCache[texturePath]);
-	    } else {
-	        var scope = this;
-	        this.texloader.load(texturePath, function(texture) {
-	            scope.textureCache[texturePath] = texture;
-	            callback(texture);
-	        });
-	    }
 	};
 	Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, normalPath, onComplete) {
 	    var game = this;
@@ -240,13 +237,16 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    });
 	};
 	Game.prototype.loadPhysBones = function(character) {
-
-	    this.dynamics.push(
-	    	this.physicsWorld.createPhysBone("breast_R", "spine02", character, PhysBone)
-	    );
-	    this.dynamics.push(
-	    	this.physicsWorld.createPhysBone("breast_L", "spine02", character, PhysBone)
-	    );
+		try {
+		    this.dynamics.push(
+		    	this.physicsWorld.createPhysBone("breast_R", "spine02", character, PhysBone)
+		    );
+		    this.dynamics.push(
+		    	this.physicsWorld.createPhysBone("breast_L", "spine02", character, PhysBone)
+		    );
+		} catch(e) {
+			console.log("Could not find breast_R bone.");
+		}
 	    
 	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
 	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
@@ -319,20 +319,99 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	                if(onComplete !== undefined) onComplete(character);
 	            });*/
 	        } else {
-		        var mesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
-		        mesh.bindMode = "attached";
+
+	        	var main_material = game.parseMaterial(options);
+		        var mesh = new THREE.SkinnedMesh(geometry, main_material);
+		        //mesh.bindMode = "attached";
 
 		        //mesh.frustumCulled = !game.disableCull;
 		        mesh.castShadow = game.settings.enableShadows;
 		        mesh.receiveShadow = game.settings.enableShadows;
-		        //game.setMaterialOptions(mesh, { skinning: true });
 				var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
 				var character = new Character(mesh, game, body, options.name);
 				game.characters[options.name] = character;
 				game.scene.add( mesh );
 				game.loadPhysBones(character);
-				game.meshPostProcess(mesh);
-				game.materialPostProcess(mesh.material, true);
+				//game.meshPostProcess(mesh);
+				//game.materialPostProcess(mesh.material, true);
+				function timeout(mseconds) {
+					return new Promise(function(resolve, reject) {
+						setTimeout(resolve, mseconds);
+					});
+				}
+				if("touch_self1" in character.animations) {
+					function animation_loop() {
+						timeout(5000).then(function() {
+							console.log("ACTION1");
+							character.playAnimation("touch_self1", {"crossFade": true });
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION2");
+							character.playAnimation("touch_self2", {"crossFade": true });
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION3");
+							character.playAnimation("touch_self3", {"crossFade": true });
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION3");
+							character.playAnimation("touch_self3", {"timeScale": 1.5});
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION3");
+							character.playAnimation("touch_self3", {"timeScale": 2});
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION4");
+							character.playAnimation("touch_self4", {"crossFade": true });
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION4");
+							character.playAnimation("touch_self4", {"timeScale": 1.2});
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION4");
+							character.playAnimation("touch_self4", {"timeScale": 1.5});
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION4");
+							character.playAnimation("touch_self4", {"timeScale": 2});
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION4");
+							character.playAnimation("touch_self4", {"timeScale": 2.5});
+							return timeout(1200);
+						}).then(function(){
+							console.log("ACTION5");
+							character.playAnimation("touch_self5", {"crossFade": true });
+							animation_loop();
+						});
+					}
+					animation_loop();
+				}
+				if("walk" in character.animations) {
+					function animation_loop() {
+						timeout(5000).then(function() {
+							console.log("ACTION1");
+							character.playAnimation("walk", {"crossFade": true });
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION2");
+							character.playAnimation("punch", {"crossFade": true });
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION3");
+							character.playAnimation("kick", {"crossFade": true });
+							return timeout(5000);
+						}).then(function(){
+							console.log("ACTION5");
+							character.playAnimation("idle", {"crossFade": true });
+							animation_loop();
+						});
+					}
+					animation_loop();
+				}
+
 				if(onComplete !== undefined) onComplete(character);
 	        }
 	    });
@@ -380,33 +459,6 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 		material.side = THREE.DoubleSide;
 		material.skinning = true;
 	};
-	Game.prototype.setMaterialOptions = function(mesh, options) {
-	    if(options === undefined) {
-	        return;
-	    }
-	    var cubeCamera = this.cubeCamera;
-	    function _setopt(mat, options, materialIndex) {
-	        //mat.envMap = cubeCamera.renderTarget.texture;
-	        //mat.combine = options.combine || THREE.MixOperation;
-	        mat.reflectivity = options.reflectivity || 0.2;
-	        mat.emissive  = options.emissive ? new THREE.Color(parseInt(options.emissive)) : new THREE.Color( 0x000000 );
-	        mat.specular  = options.specular ? new THREE.Color(parseInt(options.specular)) : new THREE.Color( 0x808080 );
-	        mat.skinning  = options.skinning || false;
-	        mat.transparency = options.transparency || true;
-	        mat.opacity  = options.opacity || 1.0;
-	        mat.shininess = options.shininess || 30.0;
-	        mat.side  = THREE.DoubleSide;
-	        mat.color = options.color ? new THREE.Color(parseInt(options.color)) : mat.color ? mat.color : new THREE.Color( 0xCCCCCC );
-	        mat.needsUpdate = true;
-	    }
-	    if(mesh.material.type == "MultiMaterial") {
-			mesh.material.materials.forEach(function(_material, materialIndex) {
-			   	_setopt(_material, options, materialIndex);
-			});
-	    } else {
-	        _setopt(mesh.material, options, 0);
-	    }
-	};
 	Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh, normalGeometry) {
 		normalGeometry = normalGeometry === undefined ? false : normalGeometry;
 	    if(this.meshCache[jsonFileName] !== undefined) {
@@ -448,17 +500,72 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	        });
 	    }
 	};
+	Game.prototype.parseMaterial = function(options, num_slots) {
+		var game = this;
+    	if("material" in options) {
+    		if(options["material"].constructor === Array) {
+    			var material = new THREE.MultiMaterial(options["material"].map(this.createMaterial));
+    		} else {
+    			var material = this.createMaterial(options["material"]);
+    		}
+    	} else {
+    		var material = this.createMaterial();
+    	}
+    	return material;
+	};
+	Game.prototype.createMaterial = function(materialOptions) {
+		if(materialOptions) {
+			console.log(materialOptions);
+			var map = {
+				'normalScale' : THREE.Vector2(200.0, 200.0),
+				'color': materialOptions.color ? new THREE.Color( parseInt(materialOptions.color, 16) ) : new THREE.Color( 0xFFFFFF ),
+				'transparent': materialOptions.transparent ? materialOptions.transparent : false,
+				'opacity': materialOptions.opacity || 1.0,
+				'shininess': materialOptions.shininess || 1.0,
+				'specular': materialOptions.color ? new THREE.Color( parseInt(materialOptions.specular, 16) ) : new THREE.Color( 0x777777 ),
+				'reflectivity': materialOptions.reflectivity ? materialOptions.reflectivity : 0.00001,
+				//'metalness': 0.05,
+				//'roughness': 0.25,
+				'skinning': true
+			};
+			if(game.cubeCamera) {
+				map['envMap'] = game.cubeCamera.renderTarget.texture;
+			}
+			var material = new THREE.MeshPhongMaterial(map);
+			var loader = new Loader();
+			var setMaterial = function(texturePath, slotName) {
+				loader.loadTexture(texturePath).then(function(tex) {
+					material[slotName] = tex;
+					material.needsUpdate = true;
+				});
+			}
+			var slots = ["map", "specularMap", "normalMap", "alphaMap"];
+			var optionValues = ["diffusePath", "specularPath", "normalPath", "alphaPath"];
+			slots.forEach(function(slot, i) {
+				if(optionValues[i] in materialOptions) {
+					setMaterial(materialOptions[optionValues[i]], slot);
+				}
+			});
+		} else {
+			var map = {
+				'skinning': true
+			};
+			var material = new THREE.MeshPhongMaterial(map);
+		}
+		return material;
+	};
 	Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete) {
 	    var game = this;
 	    if(options === undefined) options = {};
 	    var loadedMesh = function(geometry, materials) {
-	        var skinnedMesh = new THREE.SkinnedMesh(geometry, new THREE.MeshFaceMaterial(materials));
+	    	var material = game.parseMaterial(options);
+	        var skinnedMesh = new THREE.SkinnedMesh(geometry, material);
 	        skinnedMesh.frustumCulled = !game.disableCull;
-	        skinnedMesh.skeleton = parent.skeleton;
+	        //skinnedMesh.skeleton = parent.skeleton;
 	        skinnedMesh.castShadow = game.settings.enableShadows;
 	        skinnedMesh.receiveShadow = game.settings.enableShadows;
-	        game.meshPostProcess(skinnedMesh);
-	        game.materialPostProcess(skinnedMesh.material);
+	        //game.meshPostProcess(skinnedMesh);
+	        //game.materialPostProcess(skinnedMesh.material);
 	        if(onComplete) onComplete(skinnedMesh);
 	    };
 	    this.loadJsonMesh(jsonFileName, loadedMesh);
@@ -468,11 +575,10 @@ function(THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, Phy
 	    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
 	        var mesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
 	        mesh.position.set(position[0], position[1], position[2]);
-	        //game.setMaterialOptions(mesh, options);
 	        mesh.castShadow = game.settings.enableShadows;
 	        mesh.receiveShadow = game.settings.enableShadows;
-	        //game.meshPostProcess(mesh);
-	        //game.materialPostProcess(mesh.material);
+	        game.meshPostProcess(mesh);
+	        game.materialPostProcess(mesh.material);
 	        game.scene.add(mesh);
 	        game.physicsWorld.addStaticPhysics(shape, mesh, position);
 	        if (onComplete) onComplete(mesh);

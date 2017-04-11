@@ -13,31 +13,12 @@ requirejs.config({
 	}
 });
 
-function loadJSON(path, success, error) {
-	var xhr = new XMLHttpRequest();
-	xhr.onreadystatechange = function() {
-		if (xhr.readyState === XMLHttpRequest.DONE) {
-			if (xhr.status === 200) {
-				if (success)
-					success(JSON.parse(xhr.responseText));
-			} else {
-				if (error)
-					error(xhr);
-			}
-		}
-	};
-	path += '?cache=' + new Date().getTime();
-	xhr.open("GET", path, true);
-	xhr.send();
-}
-
-
 // Start the main app logic.
 requirejs(
 	[
-		'Game', 'HUD', 'lib/three', 'controller/AIController', 'controller/UserController'
+		'Game', 'HUD', 'lib/three', 'controller/AIController', 'controller/UserController', 'Loader'
 	],
-	function(Game, HUD, THREE, AIController, UserController) {
+	function(Game, HUD, THREE, AIController, UserController, Loader) {
 		function runGame(gameSettings, levelData, itemData) {
 			game = new Game(gameSettings);
 			game.initRendering();
@@ -45,7 +26,7 @@ requirejs(
 
 			var hud = new HUD(game);
 
-			var bricks = [];
+			/*var bricks = [];
 			for (var i = -50; i <= 50; i++) {
 				var randomHeight = (Math.random() - 0.5) * 0.25;
 				var slope = i * 0.05;
@@ -64,8 +45,8 @@ requirejs(
 					shape: 'box',
 					position: [2 * i, -3 + randomHeight + slope, -1.6]
 				});
-			}
-			levelData.staticObjects = bricks;
+			}*/
+			levelData.staticObjects = [];
 			var id_counter = 0;
 
 			function spawn_npc(name, player, position, controllerConstructor) {
@@ -83,7 +64,8 @@ requirejs(
 						specularPath: player.specularPath,
 						normalPath: player.normalPath,
 						position: position,
-						scale: player.scale
+						scale: player.scale,
+						material: player.material
 					},
 					function(characterObject) {
 						characterObject.addController(new controllerConstructor(characterObject, game));
@@ -111,7 +93,8 @@ requirejs(
 						specularPath: player.specularPath,
 						normalPath: player.normalPath,
 						position: levelData.player.position,
-						scale: player.scale
+						scale: player.scale,
+						material: player.material
 					},
 					function(characterObject) {
 						characterObject.addController(new UserController(characterObject, game));
@@ -181,12 +164,16 @@ requirejs(
 
 			draw();
 		}
-
-		loadJSON("js/data/settings.json", function(gameSettings) {
-			loadJSON("js/data/level1.json", function(levelData) {
-				loadJSON("js/data/items.json", function(itemData) {
-					runGame(gameSettings, levelData, itemData);
-				});
-			});
-		});
-	});
+		var loader = new Loader();
+		Promise.all([
+			loader.loadJSON("js/data/settings.json"),
+			loader.loadJSON("js/data/level1.json"),
+			loader.loadJSON("js/data/items.json")
+		]).then(function(arr) {
+			var gameSettings = arr[0],
+    			levelData = arr[1],
+    			itemData = arr[2];
+			runGame(gameSettings, levelData, itemData);
+		}, function(e) { throw e; });
+	}
+);

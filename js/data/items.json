@@ -111,9 +111,97 @@
     "evillingerie": {"name": "evillingerie", "model": "models/lingerie.json", "slot": "chest","options": {"reflectivity": 0.0001, "color": "0x221111", "specular": "0x111111", "shininess": 4, "emissive": "0x111111"},
         "stats": {"defence": 1,"magic_defence": {"holy": 1}}
     }, 
-    "face": {"name": "face",  "model": "models/face.json", "slot": "face", "options": 
-    	{"reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC"}
+    "face": {"name": "face",  "model": "models/face.json", "slot": "face", "options": { 
+            "material": [
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/eyebrow010.png", "transparent": true
+                },
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/eyelashes04.png", "transparent": true
+                },
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/brownlight_eye.png", "transparent": true
+                },
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/tongue01_diffuse.png"
+                },
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/teeth.png"
+                }
+            ]
+        }
     },  
+    "marie_face": {"name": "marie_face",  "model": "models/marie_rose_face.json", "slot": "face", "options": { 
+            "material": [
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/eyebrow010.png", "transparent": true
+                },
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/eyelashes04.png", "transparent": true
+                },
+                {
+                "reflectivity": 1, "specular": "0xFFFFFF", "color": "0xCCCCCC",
+                "diffusePath": "models/brownlight_eye.png", "transparent": true
+                },
+                {
+                "reflectivity": 0.1, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/tongue01_diffuse.png"
+                },
+                {
+                "reflectivity": 0.1, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/teeth.png"
+                }
+            ]
+        }
+    },
+    "marie_hair": {"name": "marie_hair",  "model": "models/marie_rose_hair.json", "slot": "hair1", "options": { 
+            "material": [
+                {"reflectivity": 0.00001, "specular": "0x111111", "color": "0x020202", "shininess": 60},
+                {"reflectivity": 0.5, "specular": "0x222222", "color": "0xE9E7C8", "opacity": 0.95, "transparent": true},
+                {"reflectivity": 0.5, "specular": "0x222222", "color": "0xE9E7C8", "opacity": 0.95, "transparent": true},
+                {"reflectivity": 0.5, "specular": "0x222222", "color": "0xE9E7C8", "opacity": 0.95, "transparent": true}
+            ]
+        }
+    },
+    "marie_harness": {"name": "marie_harness",  "model": "models/marie_rose_harness.json", "slot": "chest", "options": { 
+            "material": [
+                {"reflectivity": 0.6, "specular": "0x555555", "color": "0x020202", "shininess": 60},
+                {"reflectivity": 0.9, "specular": "0xFFFFFF", "color": "0xAAAAAA", "shininess": 120}
+            ]
+        }
+    },
+    "eve_v3_face": {"name": "eve_v3_face",  "model": "models/eve_v3_face.json", "slot": "face", "options": { 
+            "material": [
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/eyebrow010.png", "transparent": true
+                },
+                {
+                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/eyelashes04.png", "transparent": true
+                },
+                {
+                "reflectivity": 0.75, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/brownlight_eye.png", "transparent": true
+                },
+                {
+                "reflectivity": 0.1, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/tongue01_diffuse.png"
+                },
+                {
+                "reflectivity": 0.1, "specular": "0x222222", "color": "0xCCCCCC",
+                "diffusePath": "models/teeth.png"
+                }
+            ]
+        }
+    },
     "hairprincess": {"name": "hairprincess",  "model": "models/princesshair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0xFFB7DD", "shininess": 8, "specular": "0x222222"} },  
     "hairevil": {"name": "hairevil",  "model": "models/shorthair.json", "slot": "eyes5", "options": {"reflectivity": 0.0001, "color": "0x221111", "shininess": 8, "specular": "0x222222"} }
     

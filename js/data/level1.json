@@ -4,43 +4,121 @@
 	    "evil_eve": {
 	        "model": "models/evev2.json",
 	        "sss": false,
-	        "diffusePath": "models/neweveskin.jpg",
-	        "specularPath": "models/neweveskin_specular_2.jpg",
-	        "normalPath": "models/neweveskin_normal.jpg",
+	        "material": [
+                {
+                	"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0xFFFFFF", "shininess": 50,
+		        	"diffusePath": "models/neweveskin.jpg",
+		        	"specularPath": "models/neweveskin_specular_2.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg"
+	        	},
+                {"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120}
+            ],
 	        "equipment":  [ 
 	        	"rustsword", 
 	        	"panty4", 
 	        	"top4",
-	        	"stockings4",
 	        	"face",
 	        	"hairevil"
 	        ]
 	    },
+	   	"eve_v3": {
+	        "model": "models/eve_v3.json",
+	        "sss": false,
+	        "material": [
+                {
+                	"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0xFFFFFF", "shininess": 50,
+		        	"diffusePath": "models/neweveskin.jpg",
+		        	"specularPath": "models/neweveskin_specular_2.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg"
+	        	},
+                {"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120}
+            ],
+	        "equipment":  ["eve_v3_face"]
+	    },
 	    "skeleton": {
 	        "model": "models/skeleton.json",
 	        "sss": false,
-	        "diffusePath": "models/neweveskin.jpg",
-	        "specularPath": "models/neweveskin_specular_2.jpg",
-	        "normalPath": "models/neweveskin_normal.jpg",
+	        "material": [
+                {
+                	"reflectivity": 0.00001, "specular": "0xEEEEFF", "color": "0xFFFFFF", "shininess": 70,
+		        	"diffusePath": "models/neweveskin.jpg",
+		        	"specularPath": "models/neweveskin_specular_2.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg"
+	        	},
+                {"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120}
+            ],
 	        "equipment":  [ 
 	        	"rustsword"
 	        ]
 	    },    
+	    "marie_rose": {
+	        "model": "models/marie_rose_game.json",
+	        "sss": false,
+	        "material": [
+                {
+                	"reflectivity": 0.25, "specular": "0xAAAABB", "color": "0xFFFFFF", "shininess": 30,
+		        	"diffusePath": "models/neweveskin.jpg",
+		        	"specularPath": "models/neweveskin_specular_2.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg"
+	        	},
+                {"reflectivity": 0.8, "specular": "0xC035A4", "color": "0x20091C", "shininess": 120}
+            ],
+	        "equipment": [
+	        	"marie_face",
+	        	"marie_hair",
+	        	"marie_harness"
+	        ],
+	        "inventory": [
+	        	"hairprincess",
+	        	"face",
+	        	"panty5",
+	        	"bra",
+	        	"boots",
+	        	"stockings2",
+			    "panty1",
+			    "panty2",
+			    "panty3",
+			    "panty3.1",
+			    "panty4",
+			    "top4",
+			    "top3",
+			    "dragonsteel",
+			    "stockings1",
+			    "stockings4",
+	        	"witchwig",
+	        	"witchhat",
+	        	"unholychestarmor",
+	        	"firesword", 
+	        	"rustsword",
+	        	"icestaff",
+	        	"icekatana",
+	        	"cross_earrings",
+	        	"school_shirt",
+	        	"school_skirt",
+	        	"ponytail"
+	        ]
+	    },
 	    "good_eve": {
 	        "model": "models/evev2.json",
 	        "sss": false,
-	        "diffusePath": "models/neweveskin.jpg",
-	        "specularPath": "models/neweveskin_specular_2.jpg",
-	        "normalPath": "models/neweveskin_normal.jpg",
+	        "material": [
+                {
+                	"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0xFFFFFF", "shininess": 50,
+		        	"diffusePath": "models/neweveskin.jpg",
+		        	"specularPath": "models/neweveskin_specular_2.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg"
+	        	},
+                {"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120}
+            ],
 	        "equipment": [ 
 	        	"hairprincess",
 	        	"face",
 	        	"panty5",
-	        	"boots",
-	        	"stockings2",
 	        	"bra"
 	        ],
 	        "inventory": [	  
+	        	"boots",
+	        	"stockings2",
 			    "panty1",
 			    "panty2",
 			    "panty3",

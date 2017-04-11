@@ -24,7 +24,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	    document.addEventListener(mousewheelevt, displaywheel, false);
 
 	    var scope = this;
-	    document.addEventListener("mousemove", function(e) { scope.defaultMouseMoveFunction(e, scope); }, false);
+	    //document.addEventListener("mousemove", function(e) { scope.defaultMouseMoveFunction(e, scope); }, false);
 		Entity.prototype.constructor.call(this, camera, game);
 	}
 	Camera.prototype.defaultMouseMoveFunction = function(e, scope) {
@@ -43,15 +43,21 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	};
 	Camera.prototype.defaultCameraUpdateFunction = function () {
 		var game = this.game;
-        this.mesh.position.x = game.characters['eve'].body.getPositionX();
-        this.mesh.position.y = game.characters['eve'].body.getPositionY();
-        /*if(this.camera.mesh.offset) {
-        	this.camera.mesh.position.y += this.camera.mesh.offset;
-        }*/
-        game.bulbLight.position.x = game.characters['eve'].body.getPositionX() + 2.5;
-        game.bulbLight.target.position.x = game.characters['eve'].body.getPositionX();
-        game.bulbLight.target.updateMatrixWorld();
-        game.bulbLight.updateMatrixWorld();
+		if('eve' in game.characters) {
+	        /*this.mesh.position.x = game.characters['eve'].body.getPositionX();
+	        this.mesh.position.y = game.characters['eve'].body.getPositionY();
+	        game.bulbLight.position.x = game.characters['eve'].body.getPositionX() + 2.5;
+	        game.bulbLight.target.position.x = game.characters['eve'].body.getPositionX();
+	        game.bulbLight.target.updateMatrixWorld();
+	        game.bulbLight.updateMatrixWorld();*/
+	        /*game.orbitControls.target.set(
+	        	game.characters['eve'].body.getPositionX(),
+	        	game.characters['eve'].body.getPositionY(),
+	        	game.characters['eve'].body.getPositionZ()
+	        );*/
+	        //this.mesh.position.x = game.characters['eve'].body.getPositionX();
+	        //this.mesh.position.y = game.characters['eve'].body.getPositionY();
+    	}
     };
 	Camera.prototype.update = function() {
 	    this.defaultCameraUpdateFunction();
