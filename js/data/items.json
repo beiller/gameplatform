@@ -177,6 +177,13 @@
             ]
         }
     },
+    "marie_battlesuit": {"name": "marie_battlesuit",  "model": "models/marie_rose_battlesuit.json", "slot": "chest", "options": { 
+            "material": [
+                {"reflectivity": 0.6, "specular": "0x5555AA", "color": "0x020202", "shininess": 80},
+                {"reflectivity": 0.9, "specular": "0xAAAAFF", "color": "0xAAAAAA", "shininess": 5}
+            ]
+        }
+    },
     "eve_v3_face": {"name": "eve_v3_face",  "model": "models/eve_v3_face.json", "slot": "face", "options": { 
             "material": [
                 {

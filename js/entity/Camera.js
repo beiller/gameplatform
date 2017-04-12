@@ -50,11 +50,11 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	        game.bulbLight.target.position.x = game.characters['eve'].body.getPositionX();
 	        game.bulbLight.target.updateMatrixWorld();
 	        game.bulbLight.updateMatrixWorld();*/
-	        /*game.orbitControls.target.set(
+	        game.orbitControls.target.set(
 	        	game.characters['eve'].body.getPositionX(),
 	        	game.characters['eve'].body.getPositionY(),
 	        	game.characters['eve'].body.getPositionZ()
-	        );*/
+	        );
 	        //this.mesh.position.x = game.characters['eve'].body.getPositionX();
 	        //this.mesh.position.y = game.characters['eve'].body.getPositionY();
     	}

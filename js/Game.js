@@ -339,51 +339,51 @@ function(
 						setTimeout(resolve, mseconds);
 					});
 				}
-				if("touch_self1" in character.animations) {
+				if("touch_self1.baked" in character.animations) {
 					function animation_loop() {
 						timeout(5000).then(function() {
 							console.log("ACTION1");
-							character.playAnimation("touch_self1", {"crossFade": true });
+							character.playAnimation("touch_self1.baked", {"crossFade": true });
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION2");
-							character.playAnimation("touch_self2", {"crossFade": true });
+							character.playAnimation("touch_self2.baked", {"crossFade": true });
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION3");
-							character.playAnimation("touch_self3", {"crossFade": true });
+							character.playAnimation("touch_self3.baked", {"crossFade": true });
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION3");
-							character.playAnimation("touch_self3", {"timeScale": 1.5});
+							character.playAnimation("touch_self3.baked", {"timeScale": 1.5});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION3");
-							character.playAnimation("touch_self3", {"timeScale": 2});
+							character.playAnimation("touch_self3.baked", {"timeScale": 2});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4", {"crossFade": true });
+							character.playAnimation("touch_self4.baked", {"crossFade": true });
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4", {"timeScale": 1.2});
+							character.playAnimation("touch_self4.baked", {"timeScale": 1.2});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4", {"timeScale": 1.5});
+							character.playAnimation("touch_self4.baked", {"timeScale": 1.5});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4", {"timeScale": 2});
+							character.playAnimation("touch_self4.baked", {"timeScale": 2});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4", {"timeScale": 2.5});
+							character.playAnimation("touch_self4.baked", {"timeScale": 2.5});
 							return timeout(1200);
 						}).then(function(){
 							console.log("ACTION5");
-							character.playAnimation("touch_self5", {"crossFade": true });
+							character.playAnimation("touch_self5.baked", {"crossFade": true });
 							animation_loop();
 						});
 					}
