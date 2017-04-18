@@ -1,4 +1,4 @@
-define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
+define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, OrbitControls) {
 	Camera.prototype = new Entity();
 	Camera.prototype.constructor = Camera;
 		
@@ -26,6 +26,20 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	    var scope = this;
 	    //document.addEventListener("mousemove", function(e) { scope.defaultMouseMoveFunction(e, scope); }, false);
 		Entity.prototype.constructor.call(this, camera, game);
+
+		var orbitControls = null;
+		function onMouseDown(event) {
+			orbitControls.enabled = true;
+			console.log('enabled orbit', event.button);
+		}
+		function onMouseUp(event) {
+			orbitControls.enabled = false;
+			console.log('disabled orbit');
+		}
+		game.renderer.domElement.addEventListener("mousedown", onMouseDown);
+		game.renderer.domElement.addEventListener("mouseup", onMouseUp);
+		orbitControls = new THREE.OrbitControls( camera, game.renderer.domElement );
+		this.orbitControls = orbitControls
 	}
 	Camera.prototype.defaultMouseMoveFunction = function(e, scope) {
 	    var x = e.clientX;
@@ -50,14 +64,15 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	        game.bulbLight.target.position.x = game.characters['eve'].body.getPositionX();
 	        game.bulbLight.target.updateMatrixWorld();
 	        game.bulbLight.updateMatrixWorld();*/
-	        game.orbitControls.target.set(
+	        this.orbitControls.target.set(
 	        	game.characters['eve'].body.getPositionX(),
-	        	game.characters['eve'].body.getPositionY(),
+	        	this.orbitControls.target.y,
 	        	game.characters['eve'].body.getPositionZ()
 	        );
 	        //this.mesh.position.x = game.characters['eve'].body.getPositionX();
 	        //this.mesh.position.y = game.characters['eve'].body.getPositionY();
     	}
+    	this.orbitControls.update();
     };
 	Camera.prototype.update = function() {
 	    this.defaultCameraUpdateFunction();

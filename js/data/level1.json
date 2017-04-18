@@ -145,17 +145,10 @@
 	    }
 	},
 	"npcs" : [
-	    {
-	    	"character": "evil_eve", 
-	    	"position": [-20,0,0]
-	    },
-	    {
-	    	"character": "evil_eve", 
-	    	"position": [20,0,0]
-	    }
+	    
 	],
 	"player": {
-	    "character": "good_eve", 
+	    "character": "marie_rose", 
 	    "position": [0,0,0]
 	}
 }

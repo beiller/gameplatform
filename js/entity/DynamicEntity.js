@@ -1,4 +1,6 @@
 define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
+	var dynamicEntitiesByBody = {};
+
 	DynamicEntity.prototype = new Entity();
 	DynamicEntity.prototype.constructor = DynamicEntity;
 		
@@ -7,6 +9,23 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	    this.body = body;
 	    this.sleep = false;
 	    this.meshOffset = [0,0,0];
+	    if(body) {
+	    	/*
+	    	interesting javascript gotcha... have to call constructor for inheritance above? This will fail.
+	    	*/
+	    	dynamicEntitiesByBody[body] = this;
+		    var scope = this;
+			game.physicsWorld.addCollisionCallback(body.body, function(body1, body2, collisionPoint) { 
+				e1 = scope.getEntityByBody(body1);
+				e2 = scope.getEntityByBody(body2);
+				scope.dispatchEvent({
+					type: "COLLIDE",
+					entity1: e1,
+					entity2: e2,
+					collisionPoint: collisionPoint
+				});
+			});
+		}
 	}
 	DynamicEntity.prototype.update = function() {
 	    if(!this.sleep) {
@@ -14,17 +33,13 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	        this.mesh.position.fromArray(this.body.getPosition());
 	        this.mesh.quaternion.fromArray(this.body.getQuaternion());
 	    }
-	    if(this.body.debugMesh) {
-	    	this.body.debugMesh.fromArray(this.body.getPosition());
-	    	this.body.debugMesh.fromArray(this.body.getQuaternion());
+	    if(this.body && this.body.debugMesh) {
+	    	this.body.debugMesh.position.fromArray(this.body.getPosition());
+	    	this.body.debugMesh.quaternion.fromArray(this.body.getQuaternion());
 	    }
 	};
-	DynamicEntity.prototype.findDynamic = function(mesh) {
-	    for(var i in game.dynamics) {
-	        if(game.dynamics[i].mesh === mesh) {
-	            return game.dynamics[i];
-	        }
-	    }
+	DynamicEntity.prototype.getEntityByBody = function(body) {
+	    return dynamicEntitiesByBody[body];
 	};
 	DynamicEntity.prototype.getDistance = function(dynamic2) {
 		var p1 = new THREE.Vector3().fromArray(this.body.getPosition());

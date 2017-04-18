@@ -96,7 +96,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				this.animationTimeout = setTimeout(function() { scope.idle(); }, 20000);
 				var game = this.game;
 				var character = this.character;
-		        game.cameraUpdateFunction = function () {
+		        /*game.cameraUpdateFunction = function () {
 		        	
 	                //game.camera.position.x = scope.characters['eve'].body.getPositionX();
 	                //game.camera.position.y = scope.characters['eve'].body.getPositionY();
@@ -125,7 +125,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		            	game.camera.position.y += game.camera.offset;
 		            }
 	                
-		        };
+		        };*/
 			},
 			onland: function() {
 				console.log('landing');
@@ -211,7 +211,8 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	};
 	
 	BaseStateMachine.prototype.update = function(delta) {
-		var onGround = this.game.physicsWorld.checkForGround(this.character);
+		//physics runs before this function. Read onGround attribute set by physics
+		var onGround = this.character.onGround;
 		if(onGround && this.current == 'INAIR') {
 			this.land();
 		} 
@@ -222,6 +223,8 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			this.applyForces(delta);
 		}
 		this.attackCoolDown -= (delta * 1000.0);
+		//physics runs pre-update. Reset onGround attribute
+		this.character.onGround = false;
 	};	
 	BaseStateMachine.prototype.applyForces = function(delta) {
 	    if(Math.abs(this.character.body.getVelocityX()) < this.character.characterStats.movementSpeed) {

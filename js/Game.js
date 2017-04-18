@@ -1,11 +1,11 @@
 define([
 	"lib/three", "lib/zepto", "Character", "physics/CannonPhysics", "physics/AmmoPhysics",
 	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge", "entity/Camera",
-	"Loader", "OrbitControls"
+	"Loader", "SubdivisionModifier", "entity/DynamicCollisionEntity"
 ], 
 function(
 		THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, PhysBoneConeTwist, 
-		PhysBoneHinge, Camera, Loader, OrbitControls
+		PhysBoneHinge, Camera, Loader, SubdivisionModifier, DynamicCollisionEntity
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -39,12 +39,10 @@ function(
 	
 	    this.cubemapRendered = false;
 	    
-	    this.debugPhysics = false;
+	    this.debugPhysics = true;
 	    
-	    this.physicsWorld = new Physics();
-	    //this.physicsWorld = new AmmoPhysics();
-
-	    this.orbitControls = null;
+	    //this.physicsWorld = new Physics();
+	    this.physicsWorld = new AmmoPhysics();
 	}
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
@@ -141,29 +139,37 @@ function(
 				"50000 lx (Direct Sun)": 50000,
 			};
 			
-			var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
-			bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
+			//var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
+			var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
 			bulbLight.intensity = bulbLuminousPowers["1700 lm (100W)"];
 			bulbMat = new THREE.MeshStandardMaterial( {
 				emissive: 0xffffee,
 				emissiveIntensity: 1,
 				color: 0x000000
 			});
-			bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
-			bulbLight.position.set( 0, -1.0, 2 );
+			//bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
+			bulbLight.position.set( 1.0, -3.0, 2 );
+			bulbLight.target.position.set( 0, -5.0, 0 );
 			bulbLight.castShadow = true;
-			bulbLight.shadow.mapSize = new THREE.Vector2(4096, 4096);
+			bulbLight.shadow.mapSize = new THREE.Vector2( 2048, 2048 );
+			bulbLight.angle = 60.0;
+			bulbLight.shadow.camera.near = 1;
+			bulbLight.shadow.camera.far = 10;
+			bulbLight.distance = 10;
+			bulbLight.shadow.bias = -0.001;
 			this.scene.add( bulbLight );
+			this.scene.add( bulbLight.target );
 			this.bulbLight = bulbLight;
 			
 			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
-			hemiLight.intensity = hemiLuminousIrradiances["1000 lx (Overcast)"];
+			hemiLight.intensity = hemiLuminousIrradiances["100 lx (Very Overcast)"];
 			this.scene.add( hemiLight );
 
 	};
 
 
 	Game.prototype.initRendering = function() {
+		this.renderer = new THREE.WebGLRenderer( { antialias: this.settings.enableAA } );
 	    this.clock = new THREE.Clock;
 	
 	    this.container = document.createElement( 'div' );
@@ -179,7 +185,6 @@ function(
 
 	    this.loader = new Loader();
 	
-	    this.renderer = new THREE.WebGLRenderer( { antialias: this.settings.enableAA } );
 		this.renderer.physicallyCorrectLights = true;
 		
 		this.renderer.gammaInput = true;
@@ -192,7 +197,7 @@ function(
 	    this.renderer.setSize( window.innerWidth, window.innerHeight );
 	    this.renderer.autoClear = false;
 	    this.renderer.shadowMap.enabled = this.settings.enableShadows;
-	    //this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 	
 	    this.container.appendChild( this.renderer.domElement );
 	    
@@ -207,8 +212,6 @@ function(
 	        game.renderer.setSize( window.innerWidth, window.innerHeight );
 	    };
 	    window.addEventListener( 'resize', onWindowResize, false );
-
-	    this.orbitControls = new THREE.OrbitControls( this.camera.mesh, this.renderer.domElement );
 	};
 	Game.prototype.loadEnvironment = function(envMapPath, onComplete) {
 	    var game = this;
@@ -218,6 +221,15 @@ function(
 	        game.scene.add(mesh);
 	        if(onComplete !== undefined) onComplete(mesh);
 	    });
+	    var geometry = new THREE.PlaneGeometry( 50, 5, 1, 1 );
+		var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa } );
+		var floor = new THREE.Mesh( geometry, material );
+		floor.rotation.x = Math.PI / 2.0;
+		floor.position.y = -4.0;
+		floor.material.side = THREE.DoubleSide;
+		floor.castShadow = this.settings.enableShadows;
+        floor.receiveShadow = this.settings.enableShadows;
+		this.scene.add( floor );
 	};
 	Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, normalPath, onComplete) {
 	    var game = this;
@@ -237,17 +249,37 @@ function(
 	    });
 	};
 	Game.prototype.loadPhysBones = function(character) {
-		try {
-		    this.dynamics.push(
-		    	this.physicsWorld.createPhysBone("breast_R", "spine02", character, PhysBone)
-		    );
-		    this.dynamics.push(
-		    	this.physicsWorld.createPhysBone("breast_L", "spine02", character, PhysBone)
-		    );
-		} catch(e) {
-			console.log("Could not find breast_R bone.");
+		//return null;
+
+		var scope = this;
+		var doPhysDebug = function(physBone, radius) {
+	        var sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 12), new THREE.MeshBasicMaterial({wireframe: true}));
+	        scope.scene.add(sphere);
+	        physBone.debugMesh = sphere;
 		}
-	    
+		var b0 = this.physicsWorld.createCollisionBone(character.findBone("DEF-spine.003"), character, DynamicCollisionEntity);
+		var b1 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.R"), b0.body, character, PhysBone, 0.02);
+		var b2 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.L"), b0.body, character, PhysBone, 0.02);
+		//var b3 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.R.001"), b1.body, character, PhysBone, 0.0051);
+		//var b4 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.L.001"), b2.body, character, PhysBone, 0.0051);
+
+		//var b3 = this.physicsWorld.createPhysBone("DEF-f_index.03.L", character, PhysBone);
+
+		if(this.debugPhysics) {
+			doPhysDebug(b0, 0.1);
+			doPhysDebug(b1, 0.04);
+			doPhysDebug(b2, 0.04);
+			//doPhysDebug(b3, 0.01);
+			//doPhysDebug(b4, 0.01);
+			//doPhysDebug(b3);
+		}
+		this.dynamics.push(b0);
+	    this.dynamics.push(b1);
+	    this.dynamics.push(b2);
+	    //this.dynamics.push(b3);
+	    //this.dynamics.push(b4);
+	    //this.dynamics.push(b3);
+
 	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
 	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
 		var c3 = new PhysBoneConeTwist("spine03", "spine02", this, character, c2);
@@ -319,18 +351,28 @@ function(
 	                if(onComplete !== undefined) onComplete(character);
 	            });*/
 	        } else {
-
 	        	var main_material = game.parseMaterial(options);
 		        var mesh = new THREE.SkinnedMesh(geometry, main_material);
-		        //mesh.bindMode = "attached";
-
-		        //mesh.frustumCulled = !game.disableCull;
+		        mesh.frustumCulled = !game.disableCull;
 		        mesh.castShadow = game.settings.enableShadows;
 		        mesh.receiveShadow = game.settings.enableShadows;
 				var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
+				if(game.debugPhysics) {
+					var geometry = new THREE.SphereGeometry( 1, 64, 64 );
+					var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
+					body.debugMesh = new THREE.Mesh( geometry, material );
+					game.scene.add(body.debugMesh);
+				}
+
 				var character = new Character(mesh, game, body, options.name);
+				character.addEventListener("COLLIDE", function(event) { 
+					//console.log("Character collided with", event); 
+					if(event.collisionPoint[1] - character.body.getPositionY() < 0.0000) {
+						character.onGround = true;
+					}
+				});
 				game.characters[options.name] = character;
-				game.scene.add( mesh );
+				game.scene.add( character.mesh );
 				game.loadPhysBones(character);
 				//game.meshPostProcess(mesh);
 				//game.materialPostProcess(mesh.material, true);
@@ -371,11 +413,11 @@ function(
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4.baked", {"timeScale": 1.5});
+							character.playAnimation("touch_self5.baked", {"timeScale": 1});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4.baked", {"timeScale": 2});
+							character.playAnimation("touch_self5.baked", {"timeScale": 2});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");

@@ -1,3 +1,9 @@
+requirejs(
+	[
+		'lib/three'
+	],
+	function(THREE) {
+
 /**
  * @author qiao / https://github.com/qiao
  * @author mrdoob / http://mrdoob.com
@@ -13,11 +19,6 @@
 //    Zoom - middle mouse, or mousewheel / touch: two finger spread or squish
 //    Pan - right mouse, or arrow keys / touch: three finger swipe
 
-requirejs(
-	[
-		'lib/three'
-	],
-	function(THREE) {
 
 THREE.OrbitControls = function ( object, domElement ) {
 

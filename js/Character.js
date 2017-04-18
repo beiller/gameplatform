@@ -4,7 +4,16 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	Character.prototype = new DynamicEntity();
 	Character.prototype.constructor = Character;
 	function Character(mesh, game, body, name, options, sssMesh, characterStats) {
-	    DynamicEntity.prototype.constructor.call(this, mesh, game, body);
+		//defer the character to a root object3d
+		var rootMesh = new THREE.Object3D();
+		this.armature = mesh;
+		rootMesh.add(mesh);
+
+		mesh.position.y -= mesh.geometry.boundingSphere.radius;
+		
+		//call parent
+	    DynamicEntity.prototype.constructor.call(this, rootMesh, game, body);
+	    this.mesh = rootMesh;
 	
 	    this.sssMesh = sssMesh;
 	    this.controllers = [];
@@ -15,17 +24,19 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	
 	    this.stunned = false;
 	    this.blocking = false;
+
+	    this.onGround = false;
 	
 	    this.attackAnimation = "DE_Combatpunch";
 	    //this.attackAnimation = "DE_Combatattack";
 	
 	    this.animations = {};
-	    this.animationMixer = new THREE.AnimationMixer(this.mesh);
-	    for ( var i in this.mesh.geometry.animations ) {
-	        //this.animations[this.mesh.geometry.animations[ i ].name]  = this.mesh.geometry.animations[ i ];
-	        this.animations[this.mesh.geometry.animations[ i ].name] = this.animationMixer.clipAction(this.mesh.geometry.animations[ i ]);
+	    this.animationMixer = new THREE.AnimationMixer(this.armature);
+	    for ( var i in this.armature.geometry.animations ) {
+	        //this.animations[this.armature.geometry.animations[ i ].name]  = this.armature.geometry.animations[ i ];
+	        this.animations[this.armature.geometry.animations[ i ].name] = this.animationMixer.clipAction(this.armature.geometry.animations[ i ]);
 	    }
-	    //this.animationMixer.addAction( new THREE.AnimationAction( this.mesh.geometry.animations[0] ) );
+	    //this.animationMixer.addAction( new THREE.AnimationAction( this.armature.geometry.animations[0] ) );
 	    this.playingAnimation = false;
 	    this.currentAnimation = null;
 	
@@ -46,7 +57,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    sprite.scale.set( healthRatio, 0.05, 0.25);
 	    sprite.position.set(0, 2, 0);
 	    sprite.material.color = new THREE.Color( 0x00FF00 );
-	    this.mesh.add(sprite);
+	    this.armature.add(sprite);
 	    this.healthBarMesh = sprite;
 	};
 	Character.prototype.setAnimation = function(animationName, options) {
@@ -66,13 +77,13 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        if(options.crossFade && this.animationMixer !== undefined && false) {
 	            a.weight = 0.0;
 	            var crossFadeFrom = this.animationMixer.actions[this.animationMixer.actions.length - 1];
-	            //this.animationMixer = new THREE.AnimationMixer(this.mesh);
+	            //this.animationMixer = new THREE.AnimationMixer(this.armature);
 	            this.animationMixer.removeAllActions();
 	            this.animationMixer.addAction( a );
 	            this.animationMixer.addAction( crossFadeFrom );
 	            this.animationMixer.crossFade( crossFadeFrom, a, options.crossFadeDuration || 1.00, options.crossFadeWarp || false );
 	        } else {
-	            //this.animationMixer = new THREE.AnimationMixer(this.mesh);
+	            //this.animationMixer = new THREE.AnimationMixer(this.armature);
 	            this.animationMixer.stopAllAction();
 	            this.animations[animationName].play();
 	        }
@@ -85,15 +96,17 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    var quaternion = new THREE.Quaternion();
 	    if(this.movementDirection.x > 0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-	        quaternion.slerp(this.mesh.quaternion, 0.9);
-	        this.mesh.quaternion.copy(quaternion);
+	        quaternion.slerp(this.armature.quaternion, 0.9);
+	        this.armature.quaternion.copy(quaternion);
 	    } else if(this.movementDirection.x < -0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
-	        quaternion.slerp(this.mesh.quaternion, 0.9);
-	        this.mesh.quaternion.copy(quaternion);
+	        quaternion.slerp(this.armature.quaternion, 0.9);
+	        this.armature.quaternion.copy(quaternion);
 	    }
 	};
 	Character.prototype.update = function(delta) {
+		DynamicEntity.prototype.update.call(this, delta);
+
 		this.stateMachine.update(delta);
 		
 	    //this.body.position.z = 0.0; //2d game here
@@ -101,28 +114,17 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    this.pointCharacter();
 	    //update physics components and copy to mesh position
 	    if(this.body) {
-	    	var position = this.body.getPosition();
-	    	var bone = this.mesh;
-	        bone.position.fromArray(position);
-	        bone.position.y -= this.mesh.geometry.boundingSphere.radius;
-	        /*if(this.sssMesh) {
-	            this.sssMesh.position.fromArray(position);
-	        }*/
 	        this.controllers.forEach(function(controller) {
 	            controller.update(delta);
 	        });
-			if(this.body.debugMesh) {
-				this.body.debugMesh.position.fromArray(this.body.getPosition());
-				this.body.debugMesh.quaternion.fromArray(this.body.getQuaternion());
-			}
 	    }
 	    //do update skeletal Animation
 	    if(this.animationMixer) {
 	        this.animationMixer.update(delta);
 	    }
-	    //this.mesh.updateMatrixWorld(true);
-	    this.mesh.geometry.computeFaceNormals();
-	    //this.mesh.geometry.computeVertexNormals();
+	    //this.armature.updateMatrixWorld(true);
+	    //this.armature.geometry.computeFaceNormals();
+	    //this.armature.geometry.computeVertexNormals();
 	};
 	Character.prototype.unequip = function(slot) {
 		if(slot == "weapon") {
@@ -130,7 +132,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		}
 		if(this.equipment[slot]) {
 			this.addItem(this.equipment[slot]);
-			this.mesh.remove(this.meshes[slot]);
+			this.armature.remove(this.meshes[slot]);
 			this.meshes[slot] = null;
 			//delete this.meshes[slot];
 			this.equipment[slot] = null;
@@ -200,9 +202,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        	scope.meshes[item.slot] = dynamic.mesh;
 	        });
 		} else { //this item is not attached to bones but deformed by skeleton
-	        game.loadClothing(item.model, this.mesh, item.options, function(mesh) {
-	        	mesh.bind(scope.mesh.skeleton, new THREE.Matrix4());
-				scope.mesh.add(mesh);
+	        game.loadClothing(item.model, this.armature, item.options, function(mesh) {
+	        	mesh.bind(scope.armature.skeleton, new THREE.Matrix4());
+				scope.armature.add(mesh);
 				scope.meshes[item.slot] = mesh;
 				//TODO optimize by update character clothing mesh (merge meshes?)
 				//....
@@ -221,14 +223,14 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    	if(character.equipment[slot]) {
 	    		var item = character.equipment[slot];
 	    		var stats = item.stats;
-	    		if(stats.magic_defence) {
+	    		if(stats && stats.magic_defence) {
 			    	effects.forEach(function(effect) {
 			    		if(stats.magic_defence[effect]) {
 			    			magicDefences[effect] = stats.magic_defence[effect];
 			    		}
 			    	});
 		    	}
-		    	if(stats.defence) {
+		    	if(stats && stats.defence) {
 		    		physicalDefences += stats.defence;
 		    	}
 	    	}
@@ -259,11 +261,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    var damage = this.calculateEffect(attackingCharacter.characterStats, wstats);
 	    if(this.blocking || this.stateMachine.current == 'BLOCK') {
 	        console.log(this.name + " blocked an attack!");
-	        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x-0.2, this.mesh.position.y, 1.0), "Blocked", 3000);
+	        this.controllers[0].game.displayText(new THREE.Vector3(this.armature.position.x-0.2, this.armature.position.y, 1.0), "Blocked", 3000);
 	        damage = Math.round(damage * 0.1);
 	    }
 		console.log(this.name + ' takes ' + damage + ' damage.');
-	    this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
+	    this.controllers[0].game.displayText(new THREE.Vector3(this.armature.position.x, this.armature.position.y, 1.0), damage, 3000);
 	    this.characterStats.health = this.characterStats.health - damage;
 	    if (this.characterStats.health <= 0) {
 	        console.log(this.name + " has died.");
@@ -286,9 +288,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    }
 	};
 	Character.prototype.findBone = function(bone_name) {
-	    for(var bone in this.mesh.skeleton.bones) {
-	        if(this.mesh.skeleton.bones[bone].name === bone_name) {
-	            return this.mesh.skeleton.bones[bone];
+	    for(var bone in this.armature.skeleton.bones) {
+	        if(this.armature.skeleton.bones[bone].name === bone_name) {
+	            return this.armature.skeleton.bones[bone];
 	        }
 	    }
 	    return null;

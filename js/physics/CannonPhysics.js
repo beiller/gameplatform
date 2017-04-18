@@ -82,6 +82,9 @@ define(["lib/cannon", "lib/three"], function(CANNON, THREE) {
 	    
 	    this.addGroundPlane(-4);
 	};
+	CannonPhysics.prototype.addCollisionCallback = function() {
+	    
+	};
 	CannonPhysics.prototype._createBody = function(mass) {
 		var body = new CANNON.Body({
             mass: mass || 1.0
