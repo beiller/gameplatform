@@ -147,7 +147,7 @@
                 "diffusePath": "models/eyelashes04.png", "transparent": true
                 },
                 {
-                "reflectivity": 1, "specular": "0xFFFFFF", "color": "0xCCCCCC",
+                "reflectivity": 0.5, "specular": "0xFFFFFF", "color": "0xCCCCCC",
                 "diffusePath": "models/brownlight_eye.png", "transparent": true
                 },
                 {
