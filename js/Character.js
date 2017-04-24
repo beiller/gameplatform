@@ -120,7 +120,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    }
 	    //do update skeletal Animation
 	    if(this.animationMixer) {
-	        //this.animationMixer.update(delta);
+	        this.animationMixer.update(delta);
 	    }
 	    //this.armature.updateMatrixWorld(true);
 	    //this.armature.geometry.computeFaceNormals();

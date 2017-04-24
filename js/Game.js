@@ -39,7 +39,7 @@ function(
 	
 	    this.cubemapRendered = false;
 	    
-	    this.debugPhysics = true;
+	    this.debugPhysics = false;
 	    
 	    //this.physicsWorld = new Physics();
 	    this.physicsWorld = new AmmoPhysics();
@@ -257,7 +257,11 @@ function(
 	        	new THREE.SphereGeometry(radius/2, 12, 12), 
 	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
 	        );
-	        scope.scene.add(sphere);
+	        
+	        var axisHelper = new THREE.AxisHelper( 0.2 );
+		
+        	sphere.add(axisHelper);
+        	scope.scene.add(sphere);
 	        physBone.debugMesh = sphere;
 		}
 
@@ -269,21 +273,33 @@ function(
 		var b3 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.R.001"), b1.body, character, PhysBone, 0.008);
 		var b4 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.L.001"), b2.body, character, PhysBone, 0.008);
 
+		var t0 = this.physicsWorld.createCollisionBone(character.findBone("DEF-thigh.R"), character, DynamicCollisionEntity, 0.2);
+		var t1 = this.physicsWorld.createCollisionBone(character.findBone("DEF-thigh.R.001"), character, DynamicCollisionEntity, 0.2);
+		var t2 = this.physicsWorld.createCollisionBone(character.findBone("DEF-shin.R"), character, DynamicCollisionEntity, 0.18);
+		var t3 = this.physicsWorld.createCollisionBone(character.findBone("DEF-shin.R.001"), character, DynamicCollisionEntity, 0.18);
+
+
+		var f0 = this.physicsWorld.createCollisionBone(character.findBone("DEF-f_index.03.R"), character, DynamicCollisionEntity, 0.02);
+		var f1 = this.physicsWorld.createCollisionBone(character.findBone("DEF-f_middle.03.R"), character, DynamicCollisionEntity, 0.02);
+		var f2 = this.physicsWorld.createCollisionBone(character.findBone("DEF-f_ring.03.R"), character, DynamicCollisionEntity, 0.02);
+		var f3 = this.physicsWorld.createCollisionBone(character.findBone("DEF-f_pinky.03.R"), character, DynamicCollisionEntity, 0.02);
+
+		//var t1 = this.physicsWorld.createPhysBone(character.findBone("DEF-thigh.R.001"), t0.body, character, PhysBone, 0.06283);
+
 		//var b3 = this.physicsWorld.createPhysBone("DEF-f_index.03.L", character, PhysBone);
 
-		if(this.debugPhysics) {
-			doPhysDebug(b0, 0.08);
-			doPhysDebug(b1, 0.06283);
-			doPhysDebug(b2, 0.06283);
-			doPhysDebug(b3, 0.008);
-			doPhysDebug(b4, 0.008);
-			//doPhysDebug(b3);
-		}
-		this.dynamics.push(b0);
-	    this.dynamics.push(b1);
-	    this.dynamics.push(b2);
-	    this.dynamics.push(b3);
-	    this.dynamics.push(b4);
+		var dynamics = [b0, b1, b2, b3, b4, t0, t1, t2, t3, f0, f1, f2, f3];
+		var radius = [0.08, 0.06283, 0.06283, 0.008, 0.008, 0.2, 0.2, 0.18, 0.18, 0.02, 0.02, 0.02, 0.02];
+		var counter = 0;
+
+		var scope = this;
+		dynamics.forEach(function(e) {
+			if(scope.debugPhysics) {
+				doPhysDebug(e, radius[counter]);
+			}
+			scope.dynamics.push(e);
+			counter += 1;
+		});
 	    
 
 	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
@@ -660,8 +676,6 @@ function(
 	
 	    var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
 
-		//this.physicsWorld.step();
-
 	    for(var i in this.characters) {
 	        this.characters[i].update(delta);
 	    }
@@ -669,6 +683,8 @@ function(
 	    this.dynamics.forEach(function(dynamic) {
 	        dynamic.update();
 	    });
+
+	    this.physicsWorld.step();
 	
 	    //this.render();
 	};

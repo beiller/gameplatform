@@ -4,7 +4,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	DynamicCollisionEntity.prototype = new Entity();
 	DynamicCollisionEntity.prototype.constructor = DynamicCollisionEntity;
 		
-	function DynamicCollisionEntity(mesh, game, body) {
+	function DynamicCollisionEntity(mesh, game, body, localOffset) {
 		/*
 			The dynamic collision entity is a rigid body that follows the
 			position / rotation of another object (EG. a bone)
@@ -16,7 +16,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		Entity.prototype.constructor.call(this, mesh, game);
 	    this.body = body;
 	    this.sleep = false;
-	    this.meshOffset = [0,0,0];
+	    this.localOffset = localOffset;
 	    if(body) {
 	    	/*
 	    	interesting javascript gotcha... have to call constructor for inheritance above? This will fail.
@@ -41,14 +41,15 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		    var quaternion = new THREE.Quaternion();
 		    var scale = new THREE.Vector3();
 		    this.mesh.matrixWorld.decompose(position, quaternion, scale);
-	        this.body.setPosition([position.x, position.y, position.z]);
+
+		    var worldOffset = new THREE.Vector3().copy(this.localOffset).applyQuaternion(quaternion).add(position)
+	        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
 	        this.body.setQuaternion([quaternion.x, quaternion.y, quaternion.z, quaternion.w]);
-	    }
-	    if(this.debugMesh) {
-	    	var pos = this.body.getPosition();
-	    	var pos2 = this.body.body.getMotionState().getWorldTransform();
-	    	this.debugMesh.position.fromArray(this.body.getPosition());
-	    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
+		    if(this.debugMesh) {
+		    	this.debugMesh.position.copy(worldOffset);
+		    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
+		    	this.debugMesh.updateMatrixWorld();
+		    }
 	    }
 	};
 	DynamicCollisionEntity.prototype.getEntityByBody = function(body) {
