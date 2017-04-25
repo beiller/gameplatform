@@ -4,7 +4,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	DynamicCollisionEntity.prototype = new Entity();
 	DynamicCollisionEntity.prototype.constructor = DynamicCollisionEntity;
 		
-	function DynamicCollisionEntity(mesh, game, body, localOffset) {
+	function DynamicCollisionEntity(mesh, game, body, options) {
 		/*
 			The dynamic collision entity is a rigid body that follows the
 			position / rotation of another object (EG. a bone)
@@ -16,10 +16,10 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		Entity.prototype.constructor.call(this, mesh, game);
 	    this.body = body;
 	    this.sleep = false;
-	    this.localOffset = localOffset;
+	    this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
 	    if(body) {
 	    	/*
-	    	interesting javascript gotcha... have to call constructor for inheritance above? This will fail.
+	    	interesting javascript gotcha... have to call constructor for inheritance above? This will fail without the if condition.
 	    	*/
 	    	dynamicEntitiesByBody[body] = this;
 		    var scope = this;

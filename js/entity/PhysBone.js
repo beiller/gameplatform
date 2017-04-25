@@ -13,13 +13,14 @@ define(["lib/three"], function(THREE) {
 	}
 
 
-	function PhysBone(boneMesh, boneBody, parentBody, physEngine, character, radius, options) {
+	function PhysBone(boneMesh, boneBody, parentBody, physEngine, character, options) {
 		this.boneMesh = boneMesh;
 		this.parentBody = parentBody;
 		this.character = character;
 		this.body = boneBody;
-		this.radius = radius / 2;
 		this.options = options;
+
+		this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
 
 		var coords = this._get_local_coords();
 		
@@ -77,7 +78,7 @@ define(["lib/three"], function(THREE) {
 	PhysBone.prototype.update = function() {
 		this.boneMesh.quaternion.fromArray(this.body.getQuaternion());
 		var invCharMatrix = new THREE.Matrix4().getInverse(this.character.armature.matrixWorld);
-		var offset = new THREE.Vector3(0, 0, this.radius).applyQuaternion(this.boneMesh.quaternion);
+		var offset = new THREE.Vector3().copy(this.localOffset).applyQuaternion(this.boneMesh.quaternion);
 		this.boneMesh.position.fromArray(this.body.getPosition()).applyMatrix4(invCharMatrix).add(offset);
 		
 		/*var position = new THREE.Vector3().fromArray(this.body.getPosition());

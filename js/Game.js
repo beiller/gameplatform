@@ -253,8 +253,11 @@ function(
 
 		var scope = this;
 		var doPhysDebug = function(physBone, radius) {
+			if(physBone.localOffset) {
+				radius = physBone.localOffset.z;
+			}
 	        var sphere = new THREE.Mesh(
-	        	new THREE.SphereGeometry(radius/2, 12, 12), 
+	        	new THREE.SphereGeometry(radius, 12, 12), 
 	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
 	        );
 	        
@@ -265,62 +268,166 @@ function(
 	        physBone.debugMesh = sphere;
 		}
 
-		var b0 = this.physicsWorld.createCollisionBone(character.findBone("DEF-spine.003"), character, DynamicCollisionEntity, 0.08);
-		//var b1 = this.physicsWorld.createCollisionBone(character.findBone("DEF-breast.R"), character, DynamicCollisionEntity, 0.065);
-		//var b2 = this.physicsWorld.createCollisionBone(character.findBone("DEF-breast.L"), character, DynamicCollisionEntity, 0.065);
-		var b1 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.R"), b0.body, character, PhysBone, 0.06283);
-		var b2 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.L"), b0.body, character, PhysBone, 0.06283);
-		var b3 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.R.001"), b1.body, character, PhysBone, 0.008);
-		var b4 = this.physicsWorld.createPhysBone(character.findBone("DEF-breast.L.001"), b2.body, character, PhysBone, 0.008);
+		var boneMap = [
+			//{ bone: "DEF-spine.003", type: "KINEMATIC", radius: 0.08, options: { tailBone:"DEF-spine.004" } },
+			{ bone: "DEF-spine", type: "KINEMATIC", radius: 0.02, options: { tailBone:"DEF-spine.001" } },
 
-		var t0 = this.physicsWorld.createCollisionBone(character.findBone("DEF-thigh.R"), character, DynamicCollisionEntity, 0.2);
-		var t1 = this.physicsWorld.createCollisionBone(character.findBone("DEF-thigh.R.001"), character, DynamicCollisionEntity, 0.2);
-		var t2 = this.physicsWorld.createCollisionBone(character.findBone("DEF-shin.R"), character, DynamicCollisionEntity, 0.18);
-		var t3 = this.physicsWorld.createCollisionBone(character.findBone("DEF-shin.R.001"), character, DynamicCollisionEntity, 0.18);
+			{ bone: "DEF-spine.001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine", options: { 
+				tailBone:"DEF-spine.002",
+				rotationLimitsLow:  [-0.01,-0.01,-0.01],
+				rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+			} },
+			{ bone: "DEF-spine.002", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.001", options: { 
+				tailBone:"DEF-spine.003",
+				rotationLimitsLow:  [-0.01,-0.01,-0.01],
+				rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+			} },
+			{ bone: "DEF-spine.003", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.002", options: { 
+				tailBone:"DEF-spine.004",
+				rotationLimitsLow:  [-0.01,-0.01,-0.01],
+				rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+			} },
+			{ bone: "DEF-spine.004", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+				tailBone:"DEF-spine.005",
+				rotationLimitsLow:  [-0.01,-0.01,-0.01],
+				rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+			} },
+			{ bone: "DEF-spine.005", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.004", options: { 
+				tailBone:"DEF-spine.006",
+				rotationLimitsLow:  [-0.01,-0.01,-0.01],
+				rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+			} },
+			{ bone: "DEF-spine.006", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.005", options: { 
+				localOffset:[0,0,0.15],
+				rotationLimitsLow:  [-0.01,-0.01,-0.01],
+				rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+			} }
+		];
+		function createLR(side) {
+			boneMap.push.apply(boneMap, [
+				{ bone: "DEF-f_index.03."+side, type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
+				{ bone: "DEF-f_middle.03."+side, type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
+				{ bone: "DEF-f_ring.03."+side, type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
+				{ bone: "DEF-f_pinky.03."+side, type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
+
+				{ bone: "DEF-f_index.02."+side, type: "KINEMATIC", radius: 0.02, options: { tailBone:"DEF-f_index.03."+side } },
+				{ bone: "DEF-f_middle.02."+side, type: "KINEMATIC", radius: 0.02, options: { tailBone:"DEF-f_middle.03."+side } },
+				{ bone: "DEF-f_ring.02."+side, type: "KINEMATIC", radius: 0.02, options: { tailBone:"DEF-f_ring.03."+side } },
+				{ bone: "DEF-f_pinky.02."+side, type: "KINEMATIC", radius: 0.02, options: { tailBone:"DEF-f_pinky.03."+side } },
+
+				/*
+					ARMS!!!!!
+				*/
+				{ bone: "DEF-shoulder."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+					tailBone:"DEF-upper_arm."+side,
+					rotationLimitsLow:  [-0.01,-0.01,-0.01],
+					rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+				} },
+				{ bone: "DEF-upper_arm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
+					tailBone:"DEF-upper_arm."+side+".001",
+					rotationLimitsLow:  [-0.01,-0.01,-0.01],
+					rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+				} },
+				{ bone: "DEF-upper_arm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
+					tailBone:"DEF-forearm."+side,
+					rotationLimitsLow:  [-0.01,-0.01,-0.01],
+					rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+				} },
+				{ bone: "DEF-forearm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side+".001", options: { 
+					tailBone:"DEF-forearm."+side+".001",
+					rotationLimitsLow:  [-0.01,-0.01,-0.01],
+					rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+				} },
+				{ bone: "DEF-forearm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side, options: { 
+					tailBone:"DEF-hand."+side,
+					rotationLimitsLow:  [-0.01,-0.01,-0.01],
+					rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+				} },
 
 
-		var f0 = this.physicsWorld.createCollisionBone(character.findBone("DEF-f_index.03.R"), character, DynamicCollisionEntity, 0.02);
-		var f1 = this.physicsWorld.createCollisionBone(character.findBone("DEF-f_middle.03.R"), character, DynamicCollisionEntity, 0.02);
-		var f2 = this.physicsWorld.createCollisionBone(character.findBone("DEF-f_ring.03.R"), character, DynamicCollisionEntity, 0.02);
-		var f3 = this.physicsWorld.createCollisionBone(character.findBone("DEF-f_pinky.03.R"), character, DynamicCollisionEntity, 0.02);
+				{ bone: "DEF-breast."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+					tailBone:"DEF-breast."+side+".001",
+					rotationLimitsLow:  [-0.1,-0.05,-0.1],
+					rotationLimitsHigh: [ 0.2, 0.25, 0.2],
+				} },
+				{ bone: "DEF-breast."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-breast."+side, options: { 
+					localOffset:[0,0,0.02] ,
+					rotationLimitsLow:  [-0.1,-0.05,-0.1],
+					rotationLimitsHigh: [ 0.2, 0.25, 0.2],
+				} },
 
-		//var t1 = this.physicsWorld.createPhysBone(character.findBone("DEF-thigh.R.001"), t0.body, character, PhysBone, 0.06283);
+				/*
+					LEGS!!!
+				*/
+				{ bone: "DEF-thigh."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-spine", options: { 
+					tailBone:"DEF-thigh."+side+".001" ,
+					rotationLimitsLow:  [-0.0000001,-0.0000001,-0.0000001],
+					rotationLimitsHigh: [ 0.0000001, 0.0000001, 0.0000001],
+				} },
+				{ bone: "DEF-thigh."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-thigh."+side, options: { 
+					tailBone:"DEF-shin."+side ,
+					rotationLimitsLow:  [-0.0000001,-0.0000001,-0.0000001],
+					rotationLimitsHigh: [ 0.0000001, 0.0000001, 0.0000001],
+				} },
+				{ bone: "DEF-shin."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-thigh."+side+".001", options: { 
+					tailBone:"DEF-shin."+side+".001" ,
+					rotationLimitsLow:  [-1.5,-0.00,-0.00],
+					rotationLimitsHigh: [ 1.5, 0.00, 0.00],
+				} },
+				{ bone: "DEF-shin."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-shin."+side, options: { 
+					tailBone:"DEF-foot."+side ,
+					rotationLimitsLow:  [-0,-0.00,-0.50],
+					rotationLimitsHigh: [ 0, 0.00, 0.50],
+				} },
+				{ bone: "DEF-foot."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-shin."+side+".001", options: { 
+					tailBone:"DEF-toe."+side ,
+					rotationLimitsLow:  [-1.5,-0.10,-0.10],
+					rotationLimitsHigh: [ 1.5, 0.10, 0.10],
+				} },
+				{ bone: "DEF-toe."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-foot."+side, options: { 
+					localOffset:[0,0,0.05] ,
+					rotationLimitsLow:  [-1.5,-0.10,-0.10],
+					rotationLimitsHigh: [ 1.5, 0.10, 0.10],
+				} }
+			]);
+		};
+		createLR("L");
+		createLR("R");
 
-		//var b3 = this.physicsWorld.createPhysBone("DEF-f_index.03.L", character, PhysBone);
+		if(character.findBone("DEF-spine.006")) {
+			var globalBoneMap = {};
+			boneMap.forEach(function(e) {
+				var physBone = null;
+				switch(e.type) {
+					case "KINEMATIC":
+						physBone = scope.physicsWorld.createCollisionBone(
+							e.bone, 
+							character, 
+							DynamicCollisionEntity, 
+							e.radius,
+							e.options
+						);
+						break;
+					case "DYNAMIC":
+						//console.log("Connecting", globalBoneMap[e.connect_body], character.findBone(globalBoneMap[e.connect_body]));
+						physBone = scope.physicsWorld.createPhysBone(
+							e.bone, 
+							globalBoneMap[e.connect_body].body, 
+							character, 
+							PhysBone, 
+							e.radius, 
+							e.options
+						);
+						break;
+				}
+				globalBoneMap[e.bone] = physBone;
 
-		var dynamics = [b0, b1, b2, b3, b4, t0, t1, t2, t3, f0, f1, f2, f3];
-		var radius = [0.08, 0.06283, 0.06283, 0.008, 0.008, 0.2, 0.2, 0.18, 0.18, 0.02, 0.02, 0.02, 0.02];
-		var counter = 0;
-
-		var scope = this;
-		dynamics.forEach(function(e) {
-			if(scope.debugPhysics) {
-				doPhysDebug(e, radius[counter]);
-			}
-			scope.dynamics.push(e);
-			counter += 1;
-		});
-	    
-
-	    /*var c1 = new PhysBoneConeTwist("spine05", "spine04", this, character);
-	    var c2 = new PhysBoneConeTwist("spine04", "spine03", this, character, c1);
-		var c3 = new PhysBoneConeTwist("spine03", "spine02", this, character, c2);
-		this.dynamics.push(c1);
-		this.dynamics.push(c2);
-		this.dynamics.push(c3);
-		
-		
-		var c0 = new PhysBoneConeTwist("clavicle_R", "shoulder01_R", this, character);
-		var c1 = new PhysBoneConeTwist("shoulder01_R", "upperarm01_R", this, character, c0);
-	    var c2 = new PhysBoneConeTwist("upperarm01_R", "upperarm02_R", this, character, c1);
-		var c3 = new PhysBoneConeTwist("upperarm02_R", "lowerarm01_R", this, character, c2);
-		var c4 = new PhysBoneConeTwist("lowerarm01_R", "lowerarm02_R", this, character, c3);
-		this.dynamics.push(c0);
-		this.dynamics.push(c1);
-		this.dynamics.push(c2);
-		this.dynamics.push(c3);
-		this.dynamics.push(c4);
-		*/
+				if(scope.debugPhysics) {
+					doPhysDebug(physBone, e.radius);
+				}
+				scope.dynamics.push(physBone);
+			});
+		}
 
 	    return null;
 	
