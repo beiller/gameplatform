@@ -22,10 +22,10 @@ define(["lib/three"], function(THREE) {
 
 		this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
 
-		var coords = this._get_local_coords();
-		
-		this.constraint = physEngine.createConstraint("6DOF", parentBody, this.body, coords.bALocalPosition, coords.bBLocalPosition, this.options);
-
+		if(parentBody) {
+			var coords = this._get_local_coords();
+			this.constraint = physEngine.createConstraint("6DOF", parentBody, this.body, coords.bALocalPosition, coords.bBLocalPosition, this.options);
+		}
 	}
 	PhysBone.prototype._get_local_coords = function() {
 		var position = new THREE.Vector3();
@@ -76,17 +76,35 @@ define(["lib/three"], function(THREE) {
 
 
 	PhysBone.prototype.update = function() {
-		this.boneMesh.quaternion.fromArray(this.body.getQuaternion());
-		var invCharMatrix = new THREE.Matrix4().getInverse(this.character.armature.matrixWorld);
-		var offset = new THREE.Vector3().copy(this.localOffset).applyQuaternion(this.boneMesh.quaternion);
-		this.boneMesh.position.fromArray(this.body.getPosition()).applyMatrix4(invCharMatrix).add(offset);
-		
-		/*var position = new THREE.Vector3().fromArray(this.body.getPosition());
-		var quaternion = new THREE.Quaternion().fromArray(this.body.getQuaternion());
-		var scale = new THREE.Vector3(1, 1, 1);
-		this.boneMesh.matrixAutoUpdate = false;
-		this.boneMesh.matrixWorld.compose(position, quaternion, scale);
-		//this.boneMesh.matrixWorldInverse.getInverse(this.boneMesh.matrixWorld);*/
+		var p = new THREE.Vector3().fromArray(this.body.getPosition());
+		var q = new THREE.Quaternion().fromArray(this.body.getQuaternion());
+		var s = new THREE.Vector3(1, 1, 1);
+		var o = new THREE.Vector3().copy(this.localOffset).applyQuaternion(q);
+		p.add(o);
+
+		this.boneMesh.matrixWorld.compose(p, q, s);
+
+		var bone = this.boneMesh;
+		if ( bone.parent && bone.parent.isBone ) {
+
+			bone.matrix.getInverse( bone.parent.matrixWorld );
+			bone.matrix.multiply( bone.matrixWorld );
+
+		} else {
+
+			bone.matrix.copy( bone.matrixWorld );
+
+		}
+
+		bone.matrix.decompose( bone.position, bone.quaternion, bone.scale );
+
+		/*bone.traverse(function(b) {
+			b.matrixWorldNeedsUpdate = true;
+			b.updateMatrix();
+			b.updateMatrixWorld(true);
+
+		});*/
+
 
 	    if(this.debugMesh) {
 	    	this.debugMesh.position.fromArray(this.body.getPosition());

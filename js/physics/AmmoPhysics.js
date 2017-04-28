@@ -105,7 +105,7 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		this.callbacks[body.ptr] = func;
 	};
 	AmmoPhysics.prototype.step = function() {
-		var numIterations = 1;
+		var numIterations = 100;
 		var dt = 1/60;
 		if(this.m_dynamicsWorld) {
 			for(var i = 0; i < numIterations; i++) {
@@ -342,7 +342,7 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
 		cInfo.friction = 5.0;
 		var btBody = new Ammo.btRigidBody(cInfo);
-		btBody.setActivationState(4);
+		//btBody.setActivationState(4);
 		btBody.setFriction(0.9);
 		//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
@@ -363,7 +363,7 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		
 		var s = this.m_dynamicsWorld.getSolverInfo();
 		s.set_m_splitImpulse(true);
-		s.set_m_numIterations(100);
+		s.set_m_numIterations(200);
 
 		this.m_dynamicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
 
@@ -474,15 +474,22 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		if(!options) {
 			options = {};
 		}
-	    var mass = 0.5;
+	    var mass = 1.0;
 	    bone = character.findBone(bone);
 
 	    z_len = this.determineZLength(bone, character, options);
+
+	    mass *= z_len;
 	    
 	    var shape = new Ammo.btSphereShape(z_len/2);
 	    var transform = this.determineWorldPosition(bone, character, z_len);
 		
-		var btBody = this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.OTHER, this.collisionLayers.OTHER);
+		var btBody = this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
+
+		if(options.kinematic) {
+			btBody.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
+			btBody.getMotionState().setWorldTransform(transform);
+		}
 
 		options.localOffset = new THREE.Vector3(0, 0, z_len/2);
 
@@ -493,7 +500,8 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		if(!options) {
 			options = {};
 		}
-	    var mass = 0.5;
+
+	    var mass = 0;
 	    bone = character.findBone(bone);
 
 	    z_len = this.determineZLength(bone, character, options);
@@ -502,11 +510,11 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 	    var transform = this.determineWorldPosition(bone, character, z_len, options);
 
 		var body = new Body(
-			this.localCreateRigidBody(0, transform, shape, null, this.collisionLayers.OTHER, this.collisionLayers.OTHER)
+			this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD)
 		);
 		body.body.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
 		body.body.getMotionState().setWorldTransform(transform);
-
+		
 		options.localOffset = new THREE.Vector3(0, 0, -z_len/2);
 		
 		return new constructor(bone, character.game, body, options);
