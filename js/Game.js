@@ -1,11 +1,10 @@
 define([
-	"lib/three", "lib/zepto", "Character", "physics/CannonPhysics", "physics/AmmoPhysics",
-	"entity/DynamicEntity", "entity/PhysBone", "entity/PhysBoneConeTwist", "entity/PhysBoneHinge", "entity/Camera",
+	"lib/three", "lib/zepto", "Character", "physics/Physics",
+	"entity/DynamicEntity", "entity/PhysBone", "entity/Camera",
 	"Loader", "SubdivisionModifier", "entity/DynamicCollisionEntity"
 ], 
 function(
-		THREE, $, Character, Physics, AmmoPhysics, DynamicEntity, PhysBone, PhysBoneConeTwist, 
-		PhysBoneHinge, Camera, Loader, SubdivisionModifier, DynamicCollisionEntity
+		THREE, $, Character, Physics, DynamicEntity, PhysBone, Camera, Loader, SubdivisionModifier, DynamicCollisionEntity
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -41,8 +40,7 @@ function(
 	    
 	    this.debugPhysics = false;
 	    
-	    //this.physicsWorld = new Physics();
-	    this.physicsWorld = new AmmoPhysics();
+	    this.physicsWorld = new Physics();
 	}
 	Game.prototype.makeTextSprite = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
@@ -221,12 +219,12 @@ function(
 	        game.scene.add(mesh);
 	        if(onComplete !== undefined) onComplete(mesh);
 	    });
-	    var geometry = new THREE.PlaneGeometry( 50, 5, 1, 1 );
+	    //var geometry = new THREE.PlaneGeometry( 50, 5, 1, 1 );
+	    var geometry = new THREE.BoxGeometry(100, 0.5, 6);
 		var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa } );
 		var floor = new THREE.Mesh( geometry, material );
-		floor.rotation.x = Math.PI / 2.0;
 		floor.position.y = -4.0;
-		floor.material.side = THREE.DoubleSide;
+		//floor.material.side = THREE.DoubleSide;
 		floor.castShadow = this.settings.enableShadows;
         floor.receiveShadow = this.settings.enableShadows;
 		this.scene.add( floor );
@@ -257,7 +255,8 @@ function(
 				radius = physBone.localOffset.z;
 			}
 	        var sphere = new THREE.Mesh(
-	        	new THREE.SphereGeometry(radius, 12, 12), 
+	        	//new THREE.SphereGeometry(radius, 12, 12), 
+	        	new THREE.BoxGeometry(0.02, 0.02, radius*2),
 	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
 	        );
 	        
@@ -268,15 +267,18 @@ function(
 	        physBone.debugMesh = sphere;
 		}
 
-		var spinedof = 0.15;
+		var spinedof = 0.1;
 
 		var boneMap = [
 			//{ bone: "root", type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
-			{ bone: "ORG-spine", type: "DYNAMIC", radius: 0.08, options: { 
+			{ bone: "ORG-spine", type: "DYNAMIC", radius: 0.08, connect_body: "ROOT", options: { 
 				tailBone:"DEF-spine.001",
-				rotationLimitsLow:  [-0.01,-0.01,-0.01],
-				rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+				rotationLimitsLow:  [-0.0,-0.0,-0.0],
+				rotationLimitsHigh: [ 0.0, 0.0, 0.0]
 			} },
+			/*{ bone: "ORG-spine", type: "KINEMATIC", radius: 0.08, options: { 
+				tailBone:"DEF-spine.001"
+			} },*/
 			{ bone: "DEF-spine", type: "DYNAMIC", radius: 0.08, connect_body: "ORG-spine", options: { 
 				localOffset:[0,0,0.001],
 				rotationLimitsLow:  [-0.00,-0.00,-0.00],
@@ -308,7 +310,7 @@ function(
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "ORG-spine.006", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.005", options: { 
+			{ bone: "head", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.005", options: { 
 				localOffset:[0,0,0.15],
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
@@ -352,18 +354,18 @@ function(
 				*/
 				{ bone: "DEF-shoulder."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-upper_arm."+side,
-					rotationLimitsLow:  [-0.01,-0.01,-0.01],
-					rotationLimitsHigh: [ 0.01, 0.01, 0.01]
+					rotationLimitsLow:  [-0.1,-0.1,-0.1],
+					rotationLimitsHigh: [ 0.1, 0.1, 0.1]
 				} },
 				{ bone: "DEF-upper_arm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
 					tailBone:"DEF-upper_arm."+side+".001",
-					rotationLimitsLow:  [-5.14,-5.14, .1],
-					rotationLimitsHigh: [ 5.14, 5.14, .1]
+					rotationLimitsLow:  [-15.14,-15.14,-.50],
+					rotationLimitsHigh: [ 15.14, 15.14, .50]
 				} },
 				{ bone: "DEF-upper_arm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
 					tailBone:"DEF-forearm."+side,
-					rotationLimitsLow:  [ .0,-0.25, .0],
-					rotationLimitsHigh: [ .0, 0.25, .0]
+					rotationLimitsLow:  [ 0,0,0 ],
+					rotationLimitsHigh: [ 0,0,0 ]
 				} },
 				{ bone: "DEF-forearm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side+".001", options: { 
 					tailBone:"DEF-forearm."+side+".001",
@@ -372,13 +374,13 @@ function(
 				} },
 				{ bone: "DEF-forearm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side, options: { 
 					tailBone:"DEF-hand."+side,
-					rotationLimitsLow:  [-0.0001,-0.5, -0.0001],
-					rotationLimitsHigh: [ 0.0001, 0.5,  0.0001]
+					rotationLimitsLow:  [-0.0,-0.0, -0.0],
+					rotationLimitsHigh: [ 0.0, 0.0,  0.0]
 				} },
 				{ bone: "ORG-hand."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
 					tailBone:"DEF-f_middle.01."+side,
-					rotationLimitsLow:  [-0.5,-0.5, -0.5],
-					rotationLimitsHigh: [ 0.5, 0.5,  0.5]
+					rotationLimitsLow:  [-0.1,-0.1, -0.1],
+					rotationLimitsHigh: [ 0.1, 0.1,  0.1]
 				} },
 
 
@@ -419,13 +421,13 @@ function(
 				} },
 				{ bone: "DEF-foot."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-shin."+side+".001", options: { 
 					tailBone:"DEF-toe."+side ,
-					rotationLimitsLow:  [-1.5,-0.10,-0.10],
-					rotationLimitsHigh: [ 1.5, 0.10, 0.10],
+					rotationLimitsLow:  [-1.0,-0.010,-0.010],
+					rotationLimitsHigh: [ 1.0, 0.010, 0.010],
 				} },
 				{ bone: "DEF-toe."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-foot."+side, options: { 
 					localOffset:[0,0,0.05] ,
-					rotationLimitsLow:  [-1.5,-0.10,-0.10],
-					rotationLimitsHigh: [ 1.5, 0.10, 0.10],
+					rotationLimitsLow:  [-0.5,-0.010,-0.010],
+					rotationLimitsHigh: [ 0.5, 0.010, 0.010],
 				} }
 			]);
 		};
@@ -824,7 +826,7 @@ function(
 	
 	    var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
 
-	    this.physicsWorld.step();
+	    this.physicsWorld.step(delta);
 
 	    for(var i in this.characters) {
 	        this.characters[i].update(delta);

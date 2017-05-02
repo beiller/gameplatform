@@ -1,4 +1,4 @@
-define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
+define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	var temp_trans_1 = new Ammo.btTransform();
 	var temp_trans_2 = new Ammo.btTransform();
 
@@ -7,73 +7,6 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 
 	var temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	var temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
-
-	function Body(mybody) {
-		this.body = mybody;
-	}
-	Body.prototype.getPosition = function() {
-		var l = this.body.getWorldTransform().getOrigin();
-		return [l.x(), l.y(), l.z()];
-	};
-	Body.prototype.getPositionX = function() { return this.body.getWorldTransform().getOrigin().x(); };
-	Body.prototype.getPositionY = function() { return this.body.getWorldTransform().getOrigin().y(); };
-	Body.prototype.getPositionZ = function() { return this.body.getWorldTransform().getOrigin().z(); };
-	Body.prototype.setPosition = function(positionArray) {
-		//console.log(this.body.getMotionState().getWorldTransform(temp_trans_1));
-		//temp_trans_1.setIdentity();
-		//var t = this.body.getWorldTransform();
-		var t = this.body.getWorldTransform();
-		temp_vec3_1.setValue(positionArray[0], positionArray[1], positionArray[2]);
-		t.setOrigin(temp_vec3_1);
-		this.body.getMotionState().setWorldTransform(this.body.getWorldTransform());
-		//temp_trans_1.setRotation(this.body.getWorldTransform().getRotation());
-		//this.body.getMotionState().setWorldTransform(temp_trans_1);
-		//this.body.activate();
-	};
-	
-	Body.prototype.getVelocity = function() {
-		var l = this.body.getLinearVelocity();
-		return [l.x(), l.y(), l.z()];
-	};
-	Body.prototype.getVelocityX = function() { return this.body.getLinearVelocity().x(); };
-	Body.prototype.getVelocityY = function() { return this.body.getLinearVelocity().y(); };
-	Body.prototype.getVelocityZ = function() { return this.body.getLinearVelocity().z(); };
-	
-	Body.prototype.getQuaternion = function() {
-		var q = this.body.getWorldTransform().getRotation();
-		return [q.x(), q.y(), q.z(), q.w()];
-	};	
-	Body.prototype.getQuaternionX = function() { return this.body.getWorldTransform().getRotation().x(); };	
-	Body.prototype.getQuaternionY = function() { return this.body.getWorldTransform().getRotation().y(); };	
-	Body.prototype.getQuaternionZ = function() { return this.body.getWorldTransform().getRotation().z(); };	
-	Body.prototype.getQuaternionW = function() { return this.body.getWorldTransform().getRotation().w(); };	
-	Body.prototype.setQuaternion = function(positionArray) {
-		//temp_trans_1.setIdentity();
-		var t = this.body.getWorldTransform();
-		//temp_trans_1.setOrigin(this.body.getWorldTransform().getOrigin());
-		temp_quat_1.setValue(positionArray[0], positionArray[1], positionArray[2], positionArray[3]);
-		t.setRotation(temp_quat_1);
-		this.body.getMotionState().setWorldTransform(this.body.getWorldTransform());
-		//this.body.getMotionState().setWorldTransform(temp_trans_1);
-	};
-
-	/*Body.prototype.setFromOpenGLMatrix = function(array) {
-		var trans = this.body.getWorldTransform();
-		trans.setIdentity();
-		trans.setFromOpenGLMatrix(array);
-		this.body.activate();
-	}*/
-	
-	Body.prototype.applyImpulse = function(f, p) {
-		console.log(f);
-		this.body.activate();
-		temp_vec3_1.setValue(f[0], f[1], f[2]);
-		this.body.applyImpulse(temp_vec3_1);
-	};
-	
-	Body.prototype.setDamping = function(linearDamping, angularDamping) {
-		this.body.setDamping(linearDamping, angularDamping);
-	};
 
 	function AmmoPhysics() {
 		this.collisionLayers = {
@@ -104,14 +37,12 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 	AmmoPhysics.prototype.addCollisionCallback = function(body, func) {
 		this.callbacks[body.ptr] = func;
 	};
-	AmmoPhysics.prototype.step = function() {
-		var numIterations = 100;
-		var dt = 1/60;
-		if(this.m_dynamicsWorld) {
-			for(var i = 0; i < numIterations; i++) {
-	    		this.m_dynamicsWorld.stepSimulation(dt / numIterations);
-	    	}
-    	}
+	AmmoPhysics.prototype.step = function(dt) {
+		var numIterations = 3;
+		//var dt = 1/60;
+		for(var i = 0; i < numIterations; i++) {
+			this.m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/180);
+		}
 
 		var i,
 		    dp = this.dispatcher,
@@ -210,7 +141,7 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		transB.setOrigin(temp_vec3_1);
 		
 
-		var constraint = new Ammo.btGeneric6DofConstraint(
+		var constraint = new Ammo.btGeneric6DofSpringConstraint(
 			bodyA.body, 
 			bodyB.body, 
 			transA, 
@@ -218,14 +149,12 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 			false
 		);
 
-		console.log(constraint);
-
 		if(!options) {
 			options = {};
 		}
 
-		constraint.setLinearLowerLimit(new Ammo.btVector3(-0.000001, -0.000001, -0.000001));
-		constraint.setLinearUpperLimit(new Ammo.btVector3( 0.000001,  0.000001,  0.000001));
+		constraint.setLinearLowerLimit(new Ammo.btVector3(.0, .0, .0));
+		constraint.setLinearUpperLimit(new Ammo.btVector3(.0, .0, .0));
 
 		var angleLow = options.rotationLimitsLow ? options.rotationLimitsLow : [-0.5, -0.25, -0.5];
 		var angleHigh = options.rotationLimitsHigh ? options.rotationLimitsHigh : [0.5, 0.25, 0.5];
@@ -363,7 +292,11 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		
 		var s = this.m_dynamicsWorld.getSolverInfo();
 		s.set_m_splitImpulse(true);
-		s.set_m_numIterations(200);
+		s.set_m_numIterations(50);
+
+		/*Ammo.ContactResultCallback = function(e) {
+			console.log("CONTACT?", e);
+		};*/
 
 		this.m_dynamicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
 
@@ -374,10 +307,13 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 
 		// Create ground
 		var groundShape = new Ammo.btBoxShape(new Ammo.btVector3(100, 0.5, 6));
-		var groundTransform = temp_trans_1;
-		groundTransform.setIdentity();
-		groundTransform.setOrigin(new Ammo.btVector3(0, height-0.25, 0));
-		var body = new Body(this.localCreateRigidBody(0, groundTransform, groundShape));
+		//var groundShape = new Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), -1.0);
+		temp_trans_1.setIdentity();
+		temp_vec3_1.setValue(0, -4.0, 0);
+		temp_trans_1.setOrigin(temp_vec3_1);
+		var body = new Body(this.localCreateRigidBody(0, temp_trans_1, groundShape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD | this.collisionLayers.PLAYER));
+		body.body.setCollisionFlags(this.collisionFlags.CF_STATIC_OBJECT);
+
 		/*
 		// Create infinite ground plane
 		var aabbShape = new Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), -1.5);
@@ -474,21 +410,29 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 		if(!options) {
 			options = {};
 		}
-	    var mass = 1.0;
+	    var mass = 100.0;
 	    bone = character.findBone(bone);
 
 	    z_len = this.determineZLength(bone, character, options);
 
-	    mass *= z_len;
+	    //mass *= z_len;
+
+	    if(options.kinematic) {
+	    	mass = 0;
+	    }
 	    
-	    var shape = new Ammo.btSphereShape(z_len/2);
+	    temp_vec3_1.setValue(0.02, 0.02, z_len/2);
+	    //var shape = new Ammo.btSphereShape(z_len/2);
+	    var shape = new Ammo.btBoxShape(temp_vec3_1);
 	    var transform = this.determineWorldPosition(bone, character, z_len);
 		
 		var btBody = this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
 
 		if(options.kinematic) {
 			btBody.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
-			btBody.getMotionState().setWorldTransform(transform);
+			btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
+			btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
+			btBody.setActivationState(4);
 		}
 
 		options.localOffset = new THREE.Vector3(0, 0, z_len/2);
@@ -513,7 +457,9 @@ define(["lib/ammo", "lib/three"], function(Ammo, THREE) {
 			this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD)
 		);
 		body.body.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
-		body.body.getMotionState().setWorldTransform(transform);
+		body.body.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
+		body.body.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
+		body.body.setActivationState(4);
 		
 		options.localOffset = new THREE.Vector3(0, 0, -z_len/2);
 		

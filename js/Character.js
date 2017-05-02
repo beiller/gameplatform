@@ -125,9 +125,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    if(this.animationMixer) {
 	        //this.animationMixer.update(delta);
 	    }
-	    //this.armature.updateMatrixWorld(true);
-	    //this.armature.geometry.computeFaceNormals();
-	    //this.armature.geometry.computeVertexNormals();
+
 	};
 	Character.prototype.unequip = function(slot) {
 		if(slot == "weapon") {
