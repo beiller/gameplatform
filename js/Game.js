@@ -249,25 +249,7 @@ function(
 	Game.prototype.loadPhysBones = function(character) {
 		//return null;
 
-		var scope = this;
-		var doPhysDebug = function(physBone, radius) {
-			if(physBone.localOffset) {
-				radius = physBone.localOffset.z;
-			}
-	        var sphere = new THREE.Mesh(
-	        	//new THREE.SphereGeometry(radius, 12, 12), 
-	        	new THREE.BoxGeometry(0.02, 0.02, radius*2),
-	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
-	        );
-	        
-	        var axisHelper = new THREE.AxisHelper( 0.2 );
-		
-        	sphere.add(axisHelper);
-        	scope.scene.add(sphere);
-	        physBone.debugMesh = sphere;
-		}
-
-		var spinedof = 0.1;
+		var spinedof = 0.02;
 
 		var boneMap = [
 			//{ bone: "root", type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
@@ -434,41 +416,10 @@ function(
 		createLR("L");
 		createLR("R");
 
-		if(character.findBone("DEF-spine.006")) {
-			var globalBoneMap = { "ROOT": character };
-			boneMap.forEach(function(e) {
-				var physBone = null;
-				switch(e.type) {
-					case "KINEMATIC":
-						physBone = scope.physicsWorld.createCollisionBone(
-							e.bone, 
-							character, 
-							DynamicCollisionEntity, 
-							e.radius,
-							e.options
-						);
-						break;
-					case "DYNAMIC":
-						var connectBody = null;
-						if(e.connect_body in globalBoneMap) {
-							connectBody = globalBoneMap[e.connect_body].body;
-						}
-						physBone = scope.physicsWorld.createPhysBone(
-							e.bone, 
-							connectBody, 
-							character, 
-							PhysBone, 
-							e.radius, 
-							e.options
-						);
-						break;
-				}
-				globalBoneMap[e.bone] = physBone;
 
-				if(scope.debugPhysics) {
-					doPhysDebug(physBone, e.radius);
-				}
-				scope.dynamics.push(physBone);
+		if(character.findBone("DEF-spine.006")) {
+			boneMap.forEach(function(e) {
+				character.createPhysic(e);
 			});
 		}
 
@@ -770,16 +721,28 @@ function(
 	};
 	Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete) {
 	    var game = this;
-	    if(options === undefined) options = {};
+	    if(!options) options = {};
 	    var loadedMesh = function(geometry, materials) {
 	    	var material = game.parseMaterial(options);
 	        var skinnedMesh = new THREE.SkinnedMesh(geometry, material);
 	        skinnedMesh.frustumCulled = !game.disableCull;
-	        //skinnedMesh.skeleton = parent.skeleton;
+
 	        skinnedMesh.castShadow = game.settings.enableShadows;
 	        skinnedMesh.receiveShadow = game.settings.enableShadows;
-	        //game.meshPostProcess(skinnedMesh);
-	        //game.materialPostProcess(skinnedMesh.material);
+
+	        if(onComplete) onComplete(skinnedMesh);
+	    };
+	    this.loadJsonMesh(jsonFileName, loadedMesh);
+	};
+	Game.prototype.loadPhysItem = function(jsonFileName, character, options, onComplete) {
+	    var game = this;
+	    if(!options) options = {};
+	    var loadedMesh = function(geometry, materials) {
+	    	var material = game.parseMaterial(options);
+	        var skinnedMesh = new THREE.SkinnedMesh(geometry, material);
+	        skinnedMesh.frustumCulled = !game.disableCull;
+	        skinnedMesh.castShadow = game.settings.enableShadows;
+	        skinnedMesh.receiveShadow = game.settings.enableShadows;
 	        if(onComplete) onComplete(skinnedMesh);
 	    };
 	    this.loadJsonMesh(jsonFileName, loadedMesh);
@@ -799,7 +762,7 @@ function(
 	    });
 	};
 	Game.prototype.loadDynamicObject = function(jsonFileName, options, onComplete) {
-	    options = options === undefined ? {} : options;
+	    if(!options) options = {};
 	    var mass = options.mass || 10.0;
 	    var position = options.position || [0,1,0];
 	    var game = this;

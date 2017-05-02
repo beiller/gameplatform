@@ -177,10 +177,23 @@
             ]
         }
     },
+    "cross_earring": {
+        "name": "cross_earring",  
+        "model": "models/cross_earring.json", 
+        "slot": "earring", 
+        "physics": [
+            { "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "DEF-spine.006", "options": {} }
+        ],
+        "options": { 
+            "material": [
+                {"reflectivity": 0.9, "specular": "0xFFFFFF", "color": "0xAAAAAA", "shininess": 120}
+            ]
+        }
+    },
     "marie_battlesuit": {"name": "marie_battlesuit",  "model": "models/marie_rose_battlesuit.json", "slot": "chest", "options": { 
             "material": [
-                {"reflectivity": 0.6, "specular": "0x5555AA", "color": "0x020202", "shininess": 80},
-                {"reflectivity": 0.9, "specular": "0xAAAAFF", "color": "0xAAAAAA", "shininess": 5}
+                {"reflectivity": 0.6, "specular": "0x5555AA", "color": "0x020208", "shininess": 80},
+                {"reflectivity": 0.00001, "specular": "0xAAAAFF", "color": "0xAAAAAA", "shininess": 5}
             ]
         }
     },

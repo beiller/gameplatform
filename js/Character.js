@@ -1,6 +1,10 @@
 
-define(["CharacterStats", "entity/DynamicEntity", "lib/three", "BaseStateMachine"], 
-function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
+define([
+	"CharacterStats", "entity/DynamicEntity", "lib/three", "BaseStateMachine", 
+	"entity/DynamicCollisionEntity", "entity/PhysBone"
+	],
+
+function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisionEntity, PhysBone) {
 	Character.prototype = new DynamicEntity();
 	Character.prototype.constructor = Character;
 	function Character(mesh, game, body, name, options, sssMesh, characterStats) {
@@ -48,6 +52,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    this.equipment = {};
 	    this.inventory = [];
 	    this.meshes = {};
+	    this.physicMap = { "ROOT": this };
 	    
 	    this.stateMachine = new BaseStateMachine(this, game);
 
@@ -172,7 +177,6 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		this.characterStats.init(newStats);
 	};
 	Character.prototype.equip = function(item) {
-		var game = this.controllers[0].game;
 		if(item.slot == "weapon") {
 		    this.attackAnimation = "DE_Combatattack";
 		}
@@ -182,7 +186,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    this.equipment[item.slot] = item;
 		this.updateCharacterStats();
 	
-		var game = this.controllers[0].game;
+		var game = this.game;
 	    var scope = this;
 	    function addToBone(item, dynamic) {
 			game.scene.remove(dynamic.mesh);
@@ -193,7 +197,13 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 			dynamic.sleep = true;
 	    }
 		//load the mesh
-		if(item.bone) { //this item is static and attaches to bones
+		if(item.physics) {
+			console.log("WOW SUCH EARRING!");
+	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
+				scope.mesh.add(mesh);
+				scope.meshes[item.slot] = mesh;
+	        });
+		} else if(item.bone) { //this item is static and attaches to bones
 	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
 	        	try {
 	        		addToBone(item, dynamic);
@@ -212,6 +222,61 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        });
 		}
 	};
+	Character.prototype.createPhysic = function(physicInfo) {
+		var scope = this.game;
+
+		var doPhysDebug = function(physBone, radius) {
+			if(physBone.localOffset) {
+				radius = physBone.localOffset.z;
+			}
+	        var sphere = new THREE.Mesh(
+	        	//new THREE.SphereGeometry(radius, 12, 12), 
+	        	new THREE.BoxGeometry(0.02, 0.02, radius*2),
+	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
+	        );
+	        
+	        var axisHelper = new THREE.AxisHelper( 0.2 );
+		
+        	sphere.add(axisHelper);
+        	scope.scene.add(sphere);
+	        physBone.debugMesh = sphere;
+		}
+
+		var globalBoneMap = this.physicMap;
+		var physBone = null;
+		switch(physicInfo.type) {
+			case "KINEMATIC":
+				physBone = this.game.physicsWorld.createCollisionBone(
+					physicInfo.bone, 
+					this, 
+					DynamicCollisionEntity, 
+					physicInfo.radius,
+					physicInfo.options
+				);
+				break;
+			case "DYNAMIC":
+				var connectBody = null;
+				if(physicInfo.connect_body in globalBoneMap) {
+					connectBody = globalBoneMap[physicInfo.connect_body].body;
+				}
+				physBone = this.game.physicsWorld.createPhysBone(
+					physicInfo.bone, 
+					connectBody, 
+					this, 
+					PhysBone, 
+					physicInfo.radius, 
+					physicInfo.options
+				);
+				break;
+		}
+		globalBoneMap[physicInfo.bone] = physBone;
+
+		if(this.game.debugPhysics) {
+			doPhysDebug(physBone, physicInfo.radius);
+		}
+		this.game.dynamics.push(physBone);
+	};
+
 	Character.prototype.calculateEffect = function(characterStats, weaponStats) {
 	    var magicDamage = 0;
 	    armors = ['chest', 'arms', 'head', 'legs', 'pants', 'boots', 'gloves'];
