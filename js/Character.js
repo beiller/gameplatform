@@ -201,7 +201,6 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 			console.log("WOW SUCH EARRING!");
 	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
 	        	scope.game.scene.add(mesh);
-				//scope.mesh.add(mesh);
 				scope.meshes[item.slot] = mesh;
 				if(item.physics) {
 					item.physics.forEach(function(e) {
@@ -239,6 +238,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 						scope.createPhysic(e, mesh);
 					});
 				}
+				mesh.position.set(0,0,0);
+				mesh.quaternion.set(0,0,0,1);
 	        });
 		} else if(item.bone) { //this item is static and attaches to bones
 	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
