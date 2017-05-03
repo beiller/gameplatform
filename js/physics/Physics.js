@@ -388,7 +388,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	AmmoPhysics.prototype.determineZLength = function(bone, character, options) {
 		var z_len = 0.0;
 	    if(options.tailBone) {
-	    	var tailBone = character.findBone(options.tailBone);
+	    	var tailBone = options.tailBone;
 		    var position = new THREE.Vector3();
 		    var quaternion = new THREE.Quaternion();
 		    var scale = new THREE.Vector3();
@@ -411,7 +411,6 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 			options = {};
 		}
 	    var mass = 100.0;
-	    bone = character.findBone(bone);
 
 	    z_len = this.determineZLength(bone, character, options);
 
@@ -446,7 +445,6 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		}
 
 	    var mass = 0;
-	    bone = character.findBone(bone);
 
 	    z_len = this.determineZLength(bone, character, options);
 	    

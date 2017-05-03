@@ -38,7 +38,7 @@ function(
 	
 	    this.cubemapRendered = false;
 	    
-	    this.debugPhysics = false;
+	    this.debugPhysics = true;
 	    
 	    this.physicsWorld = new Physics();
 	}
@@ -419,6 +419,8 @@ function(
 
 		if(character.findBone("DEF-spine.006")) {
 			boneMap.forEach(function(e) {
+				if(e.bone) e.bone = character.findBone(e.bone); 
+				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
 				character.createPhysic(e);
 			});
 		}

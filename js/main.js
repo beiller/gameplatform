@@ -126,10 +126,10 @@ requirejs(
 			}
 
 			//game.addGroundPlane(-4);
-			game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+			//game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
 				game.updateCubeMap();
 				loadLevel(levelData, itemData);
-			});
+			//});
 
 			//loadLevel(levelData, itemData);
 

@@ -202,6 +202,21 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
 				scope.mesh.add(mesh);
 				scope.meshes[item.slot] = mesh;
+				if(item.physics) {
+					item.physics.forEach(function(e) {
+						//TODO a bone with the same name as the main armature will mess something up here.
+						//since the connect_body is looked up via bone name in createPhysics
+						if(e.bone) e.bone = scope.findBone(e.bone, mesh.skeleton); 
+						//if there is some offset, move the main bone to that offset before attaching
+						//or if there is a move-to bone
+						if(e.options && e.options.moveTo) {
+							var moveTo = scope.findBone(e.options.moveTo); 
+							e.bone.matrixWorld.copy(moveTo.matrixWorld);
+						}
+						if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone);
+						scope.createPhysic(e);
+					});
+				}
 	        });
 		} else if(item.bone) { //this item is static and attaches to bones
 	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
@@ -269,7 +284,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 				);
 				break;
 		}
-		globalBoneMap[physicInfo.bone] = physBone;
+		globalBoneMap[physicInfo.bone.name] = physBone;
 
 		if(this.game.debugPhysics) {
 			doPhysDebug(physBone, physicInfo.radius);
@@ -353,10 +368,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 	        }, 100);
 	    }
 	};
-	Character.prototype.findBone = function(bone_name) {
-	    for(var bone in this.armature.skeleton.bones) {
-	        if(this.armature.skeleton.bones[bone].name === bone_name) {
-	            return this.armature.skeleton.bones[bone];
+	Character.prototype.findBone = function(bone_name, skeleton) {
+		if(!skeleton) skeleton = this.armature.skeleton;
+	    for(var bone in skeleton.bones) {
+	        if(skeleton.bones[bone].name === bone_name) {
+	            return skeleton.bones[bone];
 	        }
 	    }
 	    return null;
