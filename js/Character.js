@@ -200,7 +200,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 		if(item.physics) {
 			console.log("WOW SUCH EARRING!");
 	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
-				scope.mesh.add(mesh);
+	        	scope.game.scene.add(mesh);
+				//scope.mesh.add(mesh);
 				scope.meshes[item.slot] = mesh;
 				if(item.physics) {
 					item.physics.forEach(function(e) {
@@ -210,11 +211,32 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 						//if there is some offset, move the main bone to that offset before attaching
 						//or if there is a move-to bone
 						if(e.options && e.options.moveTo) {
+
 							var moveTo = scope.findBone(e.options.moveTo); 
-							e.bone.matrixWorld.copy(moveTo.matrixWorld);
+					        moveTo.matrixWorld.decompose(
+					        	mesh.position,
+					        	mesh.quaternion,
+					        	mesh.scale
+					        );
+							/*//DEBUG CODE TO REMOVE=================
+					        var sphere = new THREE.Mesh(
+					        	//new THREE.SphereGeometry(radius, 12, 12), 
+					        	new THREE.BoxGeometry(0.02, 0.02, 0.02),
+					        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
+					        );
+					        moveTo.matrixWorld.decompose(
+					        	sphere.position,
+					        	sphere.quaternion,
+					        	sphere.scale
+					        );
+					        var axisHelper = new THREE.AxisHelper( 0.2 );
+						
+				        	sphere.add(axisHelper);
+				        	scope.game.scene.add(sphere);
+					        //END DEBUG CODE TO REMOVE=================*/
 						}
 						if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone);
-						scope.createPhysic(e);
+						scope.createPhysic(e, mesh);
 					});
 				}
 	        });
@@ -237,7 +259,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 	        });
 		}
 	};
-	Character.prototype.createPhysic = function(physicInfo) {
+	Character.prototype.createPhysic = function(physicInfo, parentMesh) {
 		var scope = this.game;
 
 		var doPhysDebug = function(physBone, radius) {
@@ -263,10 +285,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 			case "KINEMATIC":
 				physBone = this.game.physicsWorld.createCollisionBone(
 					physicInfo.bone, 
-					this, 
+					parentMesh, 
 					DynamicCollisionEntity, 
 					physicInfo.radius,
-					physicInfo.options
+					physicInfo.options,
+					this.game
 				);
 				break;
 			case "DYNAMIC":
@@ -277,10 +300,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 				physBone = this.game.physicsWorld.createPhysBone(
 					physicInfo.bone, 
 					connectBody, 
-					this, 
+					parentMesh, 
 					PhysBone, 
 					physicInfo.radius, 
-					physicInfo.options
+					physicInfo.options,
+					this.game
 				);
 				break;
 		}

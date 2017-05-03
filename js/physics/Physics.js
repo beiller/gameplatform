@@ -367,14 +367,14 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		);
 	};
 
-	AmmoPhysics.prototype.determineWorldPosition = function(bone, character, radius) {
+	AmmoPhysics.prototype.determineWorldPosition = function(bone, parentMesh, radius) {
 	    var position = new THREE.Vector3();
 	    var quaternion = new THREE.Quaternion();
 	    var scale = new THREE.Vector3();
 	    bone.matrixWorld.decompose(position, quaternion, scale);
 
 	    var translation = new THREE.Vector3(0, 0, -radius/2).applyQuaternion(quaternion);
-	    position.add(translation).add(character.armature.position);
+	    position.add(translation).add(parentMesh.position);
 		
 		var transform = temp_trans_1;
 		temp_vec3_1.setValue(position.x, position.y, position.z);
@@ -385,7 +385,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		return transform;
 	};
 
-	AmmoPhysics.prototype.determineZLength = function(bone, character, options) {
+	AmmoPhysics.prototype.determineZLength = function(bone, options) {
 		var z_len = 0.0;
 	    if(options.tailBone) {
 	    	var tailBone = options.tailBone;
@@ -406,13 +406,13 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	    return z_len;
 	};
 
-	AmmoPhysics.prototype.createPhysBone = function(bone, parentBody, character, constructor, z_len, options) {
+	AmmoPhysics.prototype.createPhysBone = function(bone, parentBody, parentMesh, constructor, z_len, options, game) {
 		if(!options) {
 			options = {};
 		}
 	    var mass = 100.0;
 
-	    z_len = this.determineZLength(bone, character, options);
+	    z_len = this.determineZLength(bone, options);
 
 	    //mass *= z_len;
 
@@ -423,7 +423,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	    temp_vec3_1.setValue(0.02, 0.02, z_len/2);
 	    //var shape = new Ammo.btSphereShape(z_len/2);
 	    var shape = new Ammo.btBoxShape(temp_vec3_1);
-	    var transform = this.determineWorldPosition(bone, character, z_len);
+	    var transform = this.determineWorldPosition(bone, parentMesh, z_len);
 		
 		var btBody = this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
 
@@ -436,20 +436,20 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 
 		options.localOffset = new THREE.Vector3(0, 0, z_len/2);
 
-		return new constructor(bone, new Body(btBody), parentBody, this, character, options);
+		return new constructor(bone, new Body(btBody), parentBody, parentMesh, game, options);
 	};
 
-	AmmoPhysics.prototype.createCollisionBone = function(bone, character, constructor, z_len, options) {
+	AmmoPhysics.prototype.createCollisionBone = function(bone, parentMesh, constructor, z_len, options, game) {
 		if(!options) {
 			options = {};
 		}
 
 	    var mass = 0;
 
-	    z_len = this.determineZLength(bone, character, options);
+	    z_len = this.determineZLength(bone, options);
 	    
 	    var shape = new Ammo.btSphereShape(z_len/2);
-	    var transform = this.determineWorldPosition(bone, character, z_len, options);
+	    var transform = this.determineWorldPosition(bone, parentMesh, z_len, options);
 
 		var body = new Body(
 			this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD)
@@ -461,7 +461,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		
 		options.localOffset = new THREE.Vector3(0, 0, -z_len/2);
 		
-		return new constructor(bone, character.game, body, options);
+		return new constructor(bone, game, body, options);
 	};
 
 	return AmmoPhysics;

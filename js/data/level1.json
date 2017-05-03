@@ -66,11 +66,11 @@
 	        "equipment": [
 	        	"marie_face",
 	        	"marie_hair",
-	        	"marie_battlesuit",
-	        	"cross_earring"
+	        	"marie_battlesuit"
 	        ],
 	        "inventory": [
 	        	"marie_harness",
+	        	"cross_earring",
 	        	"hairprincess",
 	        	"face",
 	        	"panty5",

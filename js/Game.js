@@ -421,7 +421,7 @@ function(
 			boneMap.forEach(function(e) {
 				if(e.bone) e.bone = character.findBone(e.bone); 
 				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
-				character.createPhysic(e);
+				character.createPhysic(e, character.armature);
 			});
 		}
 

@@ -13,18 +13,19 @@ define(["lib/three"], function(THREE) {
 	}
 
 
-	function PhysBone(boneMesh, boneBody, parentBody, physEngine, character, options) {
+	function PhysBone(boneMesh, boneBody, parentBody, parentMesh, game, options) {
+		this.body = boneBody;
 		this.boneMesh = boneMesh;
 		this.parentBody = parentBody;
-		this.character = character;
-		this.body = boneBody;
+		this.parentMesh = parentMesh;
+		this.game = game;
 		this.options = options;
 
 		this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
 
 		if(parentBody) {
 			var coords = this._get_local_coords();
-			this.constraint = physEngine.createConstraint("6DOF", parentBody, this.body, coords.bALocalPosition, coords.bBLocalPosition, this.options);
+			this.constraint = game.physicsWorld.createConstraint("6DOF", parentBody, this.body, coords.bALocalPosition, coords.bBLocalPosition, this.options);
 		}
 	}
 	PhysBone.prototype._get_local_coords = function() {
@@ -35,7 +36,7 @@ define(["lib/three"], function(THREE) {
 	    //confirmed above is not needed
 	    this.boneMesh.matrixWorld.decompose(position, quaternion, scale);
 
-	    var constraintPoint = new THREE.Vector3().copy(position).add(this.character.armature.position);
+	    var constraintPoint = new THREE.Vector3().copy(position).add(this.parentMesh.position);
 
 		//read datas
 		var childLocation = new THREE.Vector3().fromArray(this.body.getPosition());
@@ -58,12 +59,12 @@ define(["lib/three"], function(THREE) {
 		localPositionParent.applyMatrix4(parentMatrixWorldInv);
 		localPositionChild.applyMatrix4(childMatrixWorldInv);
 
-		if(this.character.game.debugPhysics && !this.jointdebug) {
+		if(this.game.debugPhysics && !this.jointdebug) {
 			var newChildLocation = new THREE.Vector3().copy(localPositionChild).applyQuaternion(childQuaternion);
 			var childWorldLocation = new THREE.Vector3().fromArray(this.body.getPosition());
 			var jointWorldLocation = new THREE.Vector3().copy(childWorldLocation).add(newChildLocation);
-    		this.jointdebug = makeDebugSphereOfChaos(this.character.game.scene, jointWorldLocation, 0.003, 0x00FF00);
-    		this.character.game.scene.add(this.jointdebug);
+    		this.jointdebug = makeDebugSphereOfChaos(this.game.scene, jointWorldLocation, 0.003, 0x00FF00);
+    		this.game.scene.add(this.jointdebug);
     		//this.boneMesh.add(this.jointdebug);
     	}
 
@@ -98,24 +99,9 @@ define(["lib/three"], function(THREE) {
 
 		bone.matrix.decompose( bone.position, bone.quaternion, bone.scale );
 
-		/*bone.traverse(function(b) {
-			b.matrixWorldNeedsUpdate = true;
-			b.updateMatrix();
-			b.updateMatrixWorld(true);
-
-		});*/
-
-
 	    if(this.debugMesh) {
 	    	this.debugMesh.position.fromArray(this.body.getPosition());
 	    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
-
-			//var coords = this._get_local_coords();
-			//var pos = new THREE.Vector3().fromArray(coords.bBWorldPosition);
-			//this.jointdebug.position.copy(pos);//.sub(this.character.armature.position);
-
-			//makeDebugSphereOfChaos(character.game.scene, recalculatedChild, 0.001, 0xFF0000);
-			//makeDebugSphereOfChaos(character.game.scene, recalculatedParent, 0.002, 0x00FF00);
 	    }
 	};
 
