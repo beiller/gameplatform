@@ -65,12 +65,15 @@
             ],
 	        "equipment": [
 	        	"marie_face",
-	        	"marie_hair",
-	        	"marie_battlesuit"
+	        	"marie_hair_dynamic",
+	        	"marie_battlesuit",
+	        	"cross_earring",
+	        	"cross_earring2",
+	        	"cross_earring3",
+	        	"cross_earring4"
 	        ],
 	        "inventory": [
 	        	"marie_harness",
-	        	"cross_earring",
 	        	"hairprincess",
 	        	"face",
 	        	"panty5",

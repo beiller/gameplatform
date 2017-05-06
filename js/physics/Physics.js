@@ -153,13 +153,17 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 			options = {};
 		}
 
-		constraint.setLinearLowerLimit(new Ammo.btVector3(.0, .0, .0));
-		constraint.setLinearUpperLimit(new Ammo.btVector3(.0, .0, .0));
+		temp_vec3_1.setValue(0,0,0);
+		constraint.setLinearLowerLimit(temp_vec3_1);
+		constraint.setLinearUpperLimit(temp_vec3_1);
+
 
 		var angleLow = options.rotationLimitsLow ? options.rotationLimitsLow : [-0.5, -0.25, -0.5];
 		var angleHigh = options.rotationLimitsHigh ? options.rotationLimitsHigh : [0.5, 0.25, 0.5];
-		constraint.setAngularLowerLimit(new Ammo.btVector3( angleLow[0], angleLow[1], angleLow[2] ));
-		constraint.setAngularUpperLimit(new Ammo.btVector3( angleHigh[0], angleHigh[1], angleHigh[2] ));
+		temp_vec3_1.setValue(angleLow[0], angleLow[1], angleLow[2]);
+		temp_vec3_2.setValue(angleHigh[0], angleHigh[1], angleHigh[2]);
+		constraint.setAngularLowerLimit(temp_vec3_1);
+		constraint.setAngularUpperLimit(temp_vec3_2);
 
 		this.m_dynamicsWorld.addConstraint(constraint, true);
 		return {
@@ -170,7 +174,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		};
 	};
 
-	AmmoPhysics.prototype.createConstraintCone = function(bodyA, bodyB, localA, localB, options) {
+	/*AmmoPhysics.prototype.createConstraintCone = function(bodyA, bodyB, localA, localB, options) {
 		var q1 = new THREE.Quaternion().fromArray(bodyA.getQuaternion()).inverse();
 		var q2 = new THREE.Quaternion().fromArray(bodyB.getQuaternion()).inverse();
 		//var q1_i = new THREE.Quaternion().copy(q1).inverse();
@@ -240,7 +244,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 			constraint: constraint,
 			updateSpringPosition: function(positionArray) {  }
 		};
-	};
+	};*/
 
 	/**
 	 * Spawns a rigid body into the demo scene
@@ -271,7 +275,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
 		cInfo.friction = 5.0;
 		var btBody = new Ammo.btRigidBody(cInfo);
-		//btBody.setActivationState(4);
+		btBody.setActivationState(4);
 		btBody.setFriction(0.9);
 		//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
@@ -297,8 +301,8 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		/*Ammo.ContactResultCallback = function(e) {
 			console.log("CONTACT?", e);
 		};*/
-
-		this.m_dynamicsWorld.setGravity(new Ammo.btVector3(0, -9.82, 0));
+		temp_vec3_1.setValue(0, -9.82, 0);
+		this.m_dynamicsWorld.setGravity(temp_vec3_1);
 
 
 		this.addGroundPlane(-4);
@@ -306,7 +310,8 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	AmmoPhysics.prototype.addGroundPlane = function(height) {
 
 		// Create ground
-		var groundShape = new Ammo.btBoxShape(new Ammo.btVector3(100, 0.5, 6));
+		temp_vec3_1.setValue(100, 0.5, 6);
+		var groundShape = new Ammo.btBoxShape(temp_vec3_1);
 		//var groundShape = new Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), -1.0);
 		temp_trans_1.setIdentity();
 		temp_vec3_1.setValue(0, -4.0, 0);
@@ -327,10 +332,12 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		if(position === undefined) position = [0,0,0];
 		var shape = new Ammo.btSphereShape(radius || 1.0);
 		var transform = temp_trans_1;
+		temp_vec3_1.setValue(position[0], position[1], position[2]);
 		transform.setIdentity();
-		transform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
+		transform.setOrigin(temp_vec3_1);
 		var btBody = this.localCreateRigidBody(mass || 49.0, transform, shape, null, this.collisionLayers.PLAYER, this.collisionLayers.WORLD);
-		btBody.setAngularFactor(new Ammo.btVector3(0, 0, 0));
+		temp_vec3_1.setValue(0,0,0);
+		btBody.setAngularFactor(temp_vec3_1);
 		//btBody.setDamping(0.9, 1.0);
 		return new Body(
 			btBody
@@ -423,14 +430,22 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	    temp_vec3_1.setValue(0.02, 0.02, z_len/2);
 	    //var shape = new Ammo.btSphereShape(z_len/2);
 	    var shape = new Ammo.btBoxShape(temp_vec3_1);
+	    shape.setMargin(0.0001);
 	    var transform = this.determineWorldPosition(bone, parentMesh, z_len);
 		
 		var btBody = this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
 
 		if(options.kinematic) {
-			btBody.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
-			btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
-			btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
+			if(options.nocontact) {
+				body.body.setCollisionFlags(
+					this.collisionFlags.CF_KINEMATIC_OBJECT | this.collisionFlags.CF_NO_CONTACT_RESPONSE
+				);
+			} else {
+				body.body.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
+			}
+			temp_vec3_1.setValue(0,0,0)
+			btBody.setLinearVelocity(temp_vec3_1);
+			btBody.setAngularVelocity(temp_vec3_1);
 			btBody.setActivationState(4);
 		}
 
@@ -449,14 +464,22 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	    z_len = this.determineZLength(bone, options);
 	    
 	    var shape = new Ammo.btSphereShape(z_len/2);
+	    shape.setMargin(0.0001);
 	    var transform = this.determineWorldPosition(bone, parentMesh, z_len, options);
 
 		var body = new Body(
 			this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD)
 		);
-		body.body.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
-		body.body.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
-		body.body.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
+		if(options.nocontact) {
+			body.body.setCollisionFlags(
+				this.collisionFlags.CF_KINEMATIC_OBJECT | this.collisionFlags.CF_NO_CONTACT_RESPONSE
+			);
+		} else {
+			body.body.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
+		}
+		temp_vec3_1.setValue(0,0,0);
+		body.body.setLinearVelocity(temp_vec3_1);
+		body.body.setAngularVelocity(temp_vec3_1);
 		body.body.setActivationState(4);
 		
 		options.localOffset = new THREE.Vector3(0, 0, -z_len/2);

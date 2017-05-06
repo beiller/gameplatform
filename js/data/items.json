@@ -170,6 +170,39 @@
             ]
         }
     },
+    "marie_hair_dynamic": {"name": "marie_hair_dynamic",  "model": "models/marie_rose_hair_dynamic.json", "slot": "hair1", 
+        "physicsChain" : [
+            {
+                "bone": "Bone.003", "connect_body": "head", "dof": 0.5
+            },
+            {
+                "bone": "Bone.004", "connect_body": "head", "dof": 0.5
+            },
+            {
+                "bone": "Bone.017", "connect_body": "head", "dof": 0.5
+            },
+            {
+                "bone": "Bone.020", "connect_body": "head", "dof": 0.5
+            }
+        ],
+        "physics": [
+            { 
+                "bone": "Bone", "type": "KINEMATIC", "radius": 0.08, "connect_body": "head", "options": {
+                    "moveTo": "ORG-face",
+                    "nocontact": true,
+                    "localOffset": [0,0,0.035]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {"reflectivity": 0.00001, "specular": "0x111111", "color": "0x020202", "shininess": 60},
+                {"reflectivity": 0.5, "specular": "0x222222", "color": "0xE9E7C8", "opacity": 0.95, "transparent": true},
+                {"reflectivity": 0.5, "specular": "0x222222", "color": "0xE9E7C8", "opacity": 0.95, "transparent": true},
+                {"reflectivity": 0.5, "specular": "0x222222", "color": "0xE9E7C8", "opacity": 0.95, "transparent": true}
+            ]
+        }
+    },
     "marie_harness": {"name": "marie_harness",  "model": "models/marie_rose_harness.json", "slot": "chest", "options": { 
             "material": [
                 {"reflectivity": 0.6, "specular": "0x555555", "color": "0x020202", "shininess": 60},
@@ -186,8 +219,8 @@
                 "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "head", "options": {
                     "moveTo": "DEF-ear.R.004",
                     "localOffset": [0,0,0.035],
-                    "rotationLimitsLow":  [-15.14,-15.14,-0.50],
-                    "rotationLimitsHigh": [ 15.14, 15.14, 0.50]
+                    "rotationLimitsLow":  [-15.14,-15.14,-0.5],
+                    "rotationLimitsHigh": [ 15.14, 15.14, 0.5]
                 } 
             }
         ],
@@ -197,6 +230,67 @@
             ]
         }
     },
+    "cross_earring2": {
+        "name": "cross_earring2",  
+        "model": "models/cross_earring.json", 
+        "slot": "earring2", 
+        "physics": [
+            { 
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "head", "options": {
+                    "moveTo": "DEF-ear.L.004",
+                    "localOffset": [0,0,0.035],
+                    "rotationLimitsLow":  [-3.14,-1.14,-0.35],
+                    "rotationLimitsHigh": [ 3.14, 1.14, 0.35]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {"reflectivity": 0.9, "specular": "0xFFFFFF", "color": "0xAAAAAA", "shininess": 120}
+            ]
+        }
+    },
+    "cross_earring3": {
+        "name": "cross_earring3",  
+        "model": "models/cross_earring.json", 
+        "slot": "earring3", 
+        "physics": [
+            { 
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "ORG-breast.R", "options": {
+                    "moveTo": "DEF-breast.R.001",
+                    "localOffset": [0,0,0.035],
+                    "rotationLimitsLow":  [-1.14,-1.14,-0.35],
+                    "rotationLimitsHigh": [ 1.14, 1.14, 0.35]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {"reflectivity": 0.9, "specular": "0xFFFFFF", "color": "0xAAAAAA", "shininess": 120}
+            ]
+        }
+    },
+    "cross_earring4": {
+        "name": "cross_earring4",  
+        "model": "models/cross_earring.json", 
+        "slot": "earring4", 
+        "physics": [
+            { 
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "ORG-breast.L", "options": {
+                    "moveTo": "DEF-breast.L.001",
+                    "localOffset": [0,0,0.035],
+                    "rotationLimitsLow":  [-1.14,-1.14,-0.35],
+                    "rotationLimitsHigh": [ 1.14, 1.14, 0.35]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {"reflectivity": 0.9, "specular": "0xFFFFFF", "color": "0xAAAAAA", "shininess": 120}
+            ]
+        }
+    },
+
     "marie_battlesuit": {"name": "marie_battlesuit",  "model": "models/marie_rose_battlesuit.json", "slot": "chest", "options": { 
             "material": [
                 {"reflectivity": 0.6, "specular": "0x5555AA", "color": "0x020208", "shininess": 80},

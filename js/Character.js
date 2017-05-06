@@ -128,7 +128,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 	    }
 	    //do update skeletal Animation
 	    if(this.animationMixer) {
-	        //this.animationMixer.update(delta);
+	        this.animationMixer.update(delta);
 	    }
 
 	};
@@ -198,48 +198,62 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 	    }
 		//load the mesh
 		if(item.physics) {
-			console.log("WOW SUCH EARRING!");
 	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
-	        	scope.game.scene.add(mesh);
-				scope.meshes[item.slot] = mesh;
-				if(item.physics) {
-					item.physics.forEach(function(e) {
-						//TODO a bone with the same name as the main armature will mess something up here.
-						//since the connect_body is looked up via bone name in createPhysics
-						if(e.bone) e.bone = scope.findBone(e.bone, mesh.skeleton); 
-						//if there is some offset, move the main bone to that offset before attaching
-						//or if there is a move-to bone
-						if(e.options && e.options.moveTo) {
+				function createFromPhysic(e) {
+					//TODO a bone with the same name as the main armature will mess something up here.
+					//since the connect_body is looked up via bone name in createPhysics
+					if(e.bone) e.bone = scope.findBone(e.bone, mesh.skeleton); 
+					//if there is some offset, move the main bone to that offset before attaching
+					//or if there is a move-to bone
+					if(e.options && e.options.moveTo) {
 
-							var moveTo = scope.findBone(e.options.moveTo); 
-					        moveTo.matrixWorld.decompose(
-					        	mesh.position,
-					        	mesh.quaternion,
-					        	mesh.scale
-					        );
-							/*//DEBUG CODE TO REMOVE=================
-					        var sphere = new THREE.Mesh(
-					        	//new THREE.SphereGeometry(radius, 12, 12), 
-					        	new THREE.BoxGeometry(0.02, 0.02, 0.02),
-					        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
-					        );
-					        moveTo.matrixWorld.decompose(
-					        	sphere.position,
-					        	sphere.quaternion,
-					        	sphere.scale
-					        );
-					        var axisHelper = new THREE.AxisHelper( 0.2 );
-						
-				        	sphere.add(axisHelper);
-				        	scope.game.scene.add(sphere);
-					        //END DEBUG CODE TO REMOVE=================*/
-						}
-						if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone);
-						scope.createPhysic(e, mesh);
-					});
+						var moveTo = scope.findBone(e.options.moveTo); 
+						moveTo.add(mesh);
+						moveTo.updateMatrixWorld(true);
+						e.bone.parent = moveTo;
+
+					}
+					if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone);
+					scope.createPhysic(e, mesh);
 				}
-				mesh.position.set(0,0,0);
-				mesh.quaternion.set(0,0,0,1);
+
+				scope.meshes[item.slot] = mesh;
+
+				if(item.physics) {
+					item.physics.forEach(createFromPhysic);
+				}
+				console.log(item);
+				if(item.physicsChain) {
+					function createChainRecurse(c) {
+						var boneName = c.bone
+						var connectBodyName = c.connect_body
+						var dof = c.dof;
+						var e = {}
+						var bone = scope.findBone(boneName, mesh.skeleton);
+						var child = bone.children[0];
+
+						e.bone = boneName;
+						e.type = "DYNAMIC";
+						e.connect_body = connectBodyName;
+						e.options = {
+							"rotationLimitsLow":  [-dof,-dof,-dof],
+							"rotationLimitsHigh": [ dof, dof, dof]
+						};
+						if(child) {
+							e.options.tailBone = child.name;
+						} else {
+							e.options.localOffset = [0,0,0.035];
+						}
+						createFromPhysic(e);
+						if(child) {
+							createChainRecurse({bone: child.name, connect_body: boneName, dof: dof});
+						}
+
+					}
+					item.physicsChain.forEach(createChainRecurse)
+				}
+				//mesh.position.set(0,0,0);
+				//mesh.quaternion.set(0,0,0,1);
 	        });
 		} else if(item.bone) { //this item is static and attaches to bones
 	        game.loadDynamicObject(item.model, item.options, function(dynamic) {

@@ -38,7 +38,7 @@ function(
 	
 	    this.cubemapRendered = false;
 	    
-	    this.debugPhysics = true;
+	    this.debugPhysics = false;
 	    
 	    this.physicsWorld = new Physics();
 	}
@@ -253,7 +253,7 @@ function(
 
 		var boneMap = [
 			//{ bone: "root", type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
-			{ bone: "ORG-spine", type: "DYNAMIC", radius: 0.08, connect_body: "ROOT", options: { 
+			{ bone: "ORG-spine", type: "KINEMATIC", radius: 0.08, connect_body: "ROOT", options: { 
 				tailBone:"DEF-spine.001",
 				rotationLimitsLow:  [-0.0,-0.0,-0.0],
 				rotationLimitsHigh: [ 0.0, 0.0, 0.0]
@@ -261,38 +261,38 @@ function(
 			/*{ bone: "ORG-spine", type: "KINEMATIC", radius: 0.08, options: { 
 				tailBone:"DEF-spine.001"
 			} },*/
-			{ bone: "DEF-spine", type: "DYNAMIC", radius: 0.08, connect_body: "ORG-spine", options: { 
+			{ bone: "DEF-spine", type: "KINEMATIC", radius: 0.08, connect_body: "ORG-spine", options: { 
 				localOffset:[0,0,0.001],
 				rotationLimitsLow:  [-0.00,-0.00,-0.00],
 				rotationLimitsHigh: [ 0.00, 0.00, 0.00]
 			} },
 
-			{ bone: "DEF-spine.001", type: "DYNAMIC", radius: 0.08, connect_body: "ORG-spine", options: { 
+			{ bone: "DEF-spine.001", type: "KINEMATIC", radius: 0.08, connect_body: "ORG-spine", options: { 
 				tailBone:"DEF-spine.002",
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.002", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.001", options: { 
+			{ bone: "DEF-spine.002", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.001", options: { 
 				tailBone:"DEF-spine.003",
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.003", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.002", options: { 
+			{ bone: "DEF-spine.003", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.002", options: { 
 				tailBone:"DEF-spine.004",
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.004", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+			{ bone: "DEF-spine.004", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 				tailBone:"DEF-spine.005",
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.005", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.004", options: { 
+			{ bone: "DEF-spine.005", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.004", options: { 
 				tailBone:"DEF-spine.006",
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "head", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.005", options: { 
+			{ bone: "head", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.005", options: { 
 				localOffset:[0,0,0.15],
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
@@ -334,62 +334,62 @@ function(
 				/*
 					ARMS!!!!!
 				*/
-				{ bone: "DEF-shoulder."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+				{ bone: "DEF-shoulder."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-upper_arm."+side,
 					rotationLimitsLow:  [-0.1,-0.1,-0.1],
 					rotationLimitsHigh: [ 0.1, 0.1, 0.1]
 				} },
-				{ bone: "DEF-upper_arm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
+				{ bone: "DEF-upper_arm."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
 					tailBone:"DEF-upper_arm."+side+".001",
 					rotationLimitsLow:  [-15.14,-15.14,-.50],
 					rotationLimitsHigh: [ 15.14, 15.14, .50]
 				} },
-				{ bone: "DEF-upper_arm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
+				{ bone: "DEF-upper_arm."+side+".001", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
 					tailBone:"DEF-forearm."+side,
 					rotationLimitsLow:  [ 0,0,0 ],
 					rotationLimitsHigh: [ 0,0,0 ]
 				} },
-				{ bone: "DEF-forearm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side+".001", options: { 
+				{ bone: "DEF-forearm."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-upper_arm."+side+".001", options: { 
 					tailBone:"DEF-forearm."+side+".001",
 					rotationLimitsLow:  [-0.00,-0.00,-0.00],
 					rotationLimitsHigh: [ 3.14, 0.00, 0.00]
 				} },
-				{ bone: "DEF-forearm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side, options: { 
+				{ bone: "DEF-forearm."+side+".001", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-forearm."+side, options: { 
 					tailBone:"DEF-hand."+side,
 					rotationLimitsLow:  [-0.0,-0.0, -0.0],
 					rotationLimitsHigh: [ 0.0, 0.0,  0.0]
 				} },
-				{ bone: "ORG-hand."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
+				{ bone: "ORG-hand."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
 					tailBone:"DEF-f_middle.01."+side,
 					rotationLimitsLow:  [-0.1,-0.1, -0.1],
 					rotationLimitsHigh: [ 0.1, 0.1,  0.1]
 				} },
 
 
-				{ bone: "DEF-breast."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+				{ bone: "ORG-breast."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-breast."+side+".001",
 					//localOffset:[0,0,0.07] ,
 					rotationLimitsLow:  [-0.1,-0.05,-0.1],
 					rotationLimitsHigh: [ 0.2, 0.25, 0.2],
 				} },
-				{ bone: "DEF-breast."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-breast."+side, options: { 
+				/*{ bone: "DEF-breast."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-breast."+side, options: { 
 					localOffset:[0,0,0.02] ,
 					rotationLimitsLow:  [-0.1,-0.05,-0.1],
 					rotationLimitsHigh: [ 0.2, 0.25, 0.2],
-				} },
+				} },*/
 
 				/*
 					LEGS!!!
 				*/
-				{ bone: "DEF-thigh."+side, type: "DYNAMIC", radius: 0.02, connect_body: "ORG-spine", options: { 
+				{ bone: "DEF-thigh."+side, type: "KINEMATIC", radius: 0.02, connect_body: "ORG-spine", options: { 
 					tailBone:"DEF-thigh."+side+".001" ,
 					rotationLimitsLow:  [-0.1,-0.0,-0.1],
 					rotationLimitsHigh: [ 0.1, 0.0, 0.1],
 				} },
 				{ bone: "DEF-thigh."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-thigh."+side, options: { 
 					tailBone:"DEF-shin."+side ,
-					rotationLimitsLow:  [-0.0000001,-0.5,-0.0000001],
-					rotationLimitsHigh: [ 0.0000001, 0.5, 0.0000001],
+					rotationLimitsLow:  [0, -0.5, 0],
+					rotationLimitsHigh: [0,  0.5, 0],
 				} },
 				{ bone: "DEF-shin."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-thigh."+side+".001", options: { 
 					tailBone:"DEF-shin."+side+".001" ,
@@ -506,51 +506,51 @@ function(
 						setTimeout(resolve, mseconds);
 					});
 				}
-				if("touch_self1.baked" in character.animations) {
+				if("touch_self1" in character.animations) {
 					function animation_loop() {
 						timeout(5000).then(function() {
 							console.log("ACTION1");
-							character.playAnimation("touch_self1.baked", {"crossFade": true });
+							character.playAnimation("touch_self1", {"crossFade": true });
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION2");
-							character.playAnimation("touch_self2.baked", {"crossFade": true });
+							character.playAnimation("touch_self2", {"crossFade": true });
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION3");
-							character.playAnimation("touch_self3.baked", {"crossFade": true });
+							character.playAnimation("touch_self3", {"crossFade": true });
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION3");
-							character.playAnimation("touch_self3.baked", {"timeScale": 1.5});
+							character.playAnimation("touch_self3", {"timeScale": 1.5});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION3");
-							character.playAnimation("touch_self3.baked", {"timeScale": 2});
+							character.playAnimation("touch_self3", {"timeScale": 2});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4.baked", {"crossFade": true });
+							character.playAnimation("touch_self4", {"crossFade": true });
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4.baked", {"timeScale": 1.2});
+							character.playAnimation("touch_self4", {"timeScale": 1.2});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self5.baked", {"timeScale": 1});
+							character.playAnimation("touch_self5", {"timeScale": 1});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self5.baked", {"timeScale": 2});
+							character.playAnimation("touch_self5", {"timeScale": 2});
 							return timeout(5000);
 						}).then(function(){
 							console.log("ACTION4");
-							character.playAnimation("touch_self4.baked", {"timeScale": 2.5});
+							character.playAnimation("touch_self4", {"timeScale": 2.5});
 							return timeout(1200);
 						}).then(function(){
 							console.log("ACTION5");
-							character.playAnimation("touch_self5.baked", {"crossFade": true });
+							character.playAnimation("touch_self5", {"crossFade": true });
 							animation_loop();
 						});
 					}
