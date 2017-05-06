@@ -8,65 +8,151 @@ define(["lib/ammo"], function(Ammo) {
 	var temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	var temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
 
+	var collisionFlags = { 
+		CF_STATIC_OBJECT: 1, 
+		CF_KINEMATIC_OBJECT: 2, 
+		CF_NO_CONTACT_RESPONSE: 4, 
+		CF_CUSTOM_MATERIAL_CALLBACK: 8, 
+		CF_CHARACTER_OBJECT: 16, 
+		CF_DISABLE_VISUALIZE_OBJECT: 32, 
+		CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
+	};
 
+	function Body(bodyInfo, shapeInfo) {
+		if(!shapeInfo) {
+			this.body = bodyInfo;
+			return;
+		}
+		this.collisionFlags = [];
 
-	function Body(mybody) {
-		this.body = mybody;
+		this.shape = this.createShape(shapeInfo);
+
+		if(bodyInfo.kinematic) {
+	    	bodyInfo.mass = 0;
+	    }
+		this.body = this.localCreateRigidBody(
+			bodyInfo.mass, 
+			bodyInfo.transform, 
+			this.shape, 
+			bodyInfo.options
+		);
+		if(bodyInfo.noContact) {
+			this.collisionFlags.push(collisionFlags.CF_NO_CONTACT_RESPONSE);
+		}
+		if(bodyInfo.staticObject) {
+			this.collisionFlags.push(collisionFlags.CF_STATIC_OBJECT);
+		}
+		if(bodyInfo.kinematic) {
+			this.collisionFlags.push(collisionFlags.CF_KINEMATIC_OBJECT);
+
+			temp_vec3_1.setValue(0,0,0)
+			this.body.setLinearVelocity(temp_vec3_1);
+			this.body.setAngularVelocity(temp_vec3_1);
+		}
+		var flagToSet = 0
+		this.collisionFlags.forEach(function(e) { flagToSet |= e; })
+		if(flagToSet > 0) {
+			this.body.setCollisionFlags(flagToSet);
+		}
 	}
-	Body.prototype.getPosition = function() {
-		var l = this.body.getWorldTransform().getOrigin();
-		return [l.x(), l.y(), l.z()];
-	};
-	Body.prototype.getPositionX = function() { return this.body.getWorldTransform().getOrigin().x(); };
-	Body.prototype.getPositionY = function() { return this.body.getWorldTransform().getOrigin().y(); };
-	Body.prototype.getPositionZ = function() { return this.body.getWorldTransform().getOrigin().z(); };
-	Body.prototype.setPosition = function(positionArray) {
-		//console.log(this.body.getMotionState().getWorldTransform(temp_trans_1));
-		//temp_trans_1.setIdentity();
-		//var t = this.body.getWorldTransform();
-		var t = this.body.getWorldTransform();
-		temp_vec3_1.setValue(positionArray[0], positionArray[1], positionArray[2]);
-		t.setOrigin(temp_vec3_1);
-		this.body.getMotionState().setWorldTransform(this.body.getWorldTransform());
+
+	Body.prototype = {
+		getPosition: function() {
+			var l = this.body.getWorldTransform().getOrigin();
+			return [l.x(), l.y(), l.z()];
+		},
+		getPositionX: function() { return this.body.getWorldTransform().getOrigin().x(); },
+		getPositionY: function() { return this.body.getWorldTransform().getOrigin().y(); },
+		getPositionZ: function() { return this.body.getWorldTransform().getOrigin().z(); },
+		setPosition: function(positionArray) {
+			//console.log(this.body.getMotionState().getWorldTransform(temp_trans_1));
+			//temp_trans_1.setIdentity();
+			//var t = this.body.getWorldTransform();
+			var t = this.body.getWorldTransform();
+			temp_vec3_1.setValue(positionArray[0], positionArray[1], positionArray[2]);
+			t.setOrigin(temp_vec3_1);
+			this.body.getMotionState().setWorldTransform(this.body.getWorldTransform());
+			
+			//temp_trans_1.setRotation(this.body.getWorldTransform().getRotation());
+			//this.body.getMotionState().setWorldTransform(temp_trans_1);
+			//this.body.activate();
+		},
 		
-		//temp_trans_1.setRotation(this.body.getWorldTransform().getRotation());
-		//this.body.getMotionState().setWorldTransform(temp_trans_1);
-		//this.body.activate();
+		getVelocity: function() {
+			var l = this.body.getLinearVelocity();
+			return [l.x(), l.y(), l.z()];
+		},
+		getVelocityX: function() { return this.body.getLinearVelocity().x(); },
+		getVelocityY: function() { return this.body.getLinearVelocity().y(); },
+		getVelocityZ: function() { return this.body.getLinearVelocity().z(); },
+		
+		getQuaternion: function() {
+			var q = this.body.getWorldTransform().getRotation();
+			return [q.x(), q.y(), q.z(), q.w()];
+		},
+		getQuaternionX: function() { return this.body.getWorldTransform().getRotation().x(); },
+		getQuaternionY: function() { return this.body.getWorldTransform().getRotation().y(); },	
+		getQuaternionZ: function() { return this.body.getWorldTransform().getRotation().z(); },	
+		getQuaternionW: function() { return this.body.getWorldTransform().getRotation().w(); },	
+		setQuaternion: function(positionArray) {
+			//temp_trans_1.setIdentity();
+			var t = this.body.getWorldTransform();
+			//temp_trans_1.setOrigin(this.body.getWorldTransform().getOrigin());
+			temp_quat_1.setValue(positionArray[0], positionArray[1], positionArray[2], positionArray[3]);
+			t.setRotation(temp_quat_1);
+			this.body.getMotionState().setWorldTransform(this.body.getWorldTransform());
+			//this.body.getMotionState().setWorldTransform(temp_trans_1);
+		},
+		
+		applyImpulse: function(f, p) {
+			temp_vec3_1.setValue(f[0], f[1], f[2]);
+			this.body.applyImpulse(temp_vec3_1);
+		},
+		
+		setDamping: function(linearDamping, angularDamping) {
+			this.body.setDamping(linearDamping, angularDamping);
+		}
 	};
-	
-	Body.prototype.getVelocity = function() {
-		var l = this.body.getLinearVelocity();
-		return [l.x(), l.y(), l.z()];
-	};
-	Body.prototype.getVelocityX = function() { return this.body.getLinearVelocity().x(); };
-	Body.prototype.getVelocityY = function() { return this.body.getLinearVelocity().y(); };
-	Body.prototype.getVelocityZ = function() { return this.body.getLinearVelocity().z(); };
-	
-	Body.prototype.getQuaternion = function() {
-		var q = this.body.getWorldTransform().getRotation();
-		return [q.x(), q.y(), q.z(), q.w()];
-	};	
-	Body.prototype.getQuaternionX = function() { return this.body.getWorldTransform().getRotation().x(); };	
-	Body.prototype.getQuaternionY = function() { return this.body.getWorldTransform().getRotation().y(); };	
-	Body.prototype.getQuaternionZ = function() { return this.body.getWorldTransform().getRotation().z(); };	
-	Body.prototype.getQuaternionW = function() { return this.body.getWorldTransform().getRotation().w(); };	
-	Body.prototype.setQuaternion = function(positionArray) {
-		//temp_trans_1.setIdentity();
-		var t = this.body.getWorldTransform();
-		//temp_trans_1.setOrigin(this.body.getWorldTransform().getOrigin());
-		temp_quat_1.setValue(positionArray[0], positionArray[1], positionArray[2], positionArray[3]);
-		t.setRotation(temp_quat_1);
-		this.body.getMotionState().setWorldTransform(this.body.getWorldTransform());
-		//this.body.getMotionState().setWorldTransform(temp_trans_1);
-	};
-	
-	Body.prototype.applyImpulse = function(f, p) {
-		temp_vec3_1.setValue(f[0], f[1], f[2]);
-		this.body.applyImpulse(temp_vec3_1);
-	};
-	
-	Body.prototype.setDamping = function(linearDamping, angularDamping) {
-		this.body.setDamping(linearDamping, angularDamping);
+	Body.prototype.createShape = function(shapeInfo) {
+		var shape = null;
+		switch(shapeInfo.type) {
+			case "sphere":
+				if(! 'radius' in shapeInfo) throw("Must specify radius in shape info");
+				var shape = new Ammo.btSphereShape(shapeInfo.radius);
+				break;
+			case "box":
+				if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
+				temp_vec3_1.setValue(shapeInfo.x, shapeInfo.y, shapeInfo.z);
+			    var shape = new Ammo.btBoxShape(temp_vec3_1);
+			    shape.setMargin(shapeInfo.margin || 0.0001);
+			    break;
+			default:
+				throw("Invalid shape type: " + shapeInfo.type);
+		};
+		return shape;
+	}
+	Body.prototype.localCreateRigidBody = function(mass, startTransform, shape, options, layers, mask) {
+		if (!shape)
+			return null;
+
+		// rigidbody is dynamic if and only if mass is non zero, otherwise static
+		var isDynamic = (mass != 0.0);
+
+		var localInertia = new Ammo.btVector3(0, 0, 0);
+		if (isDynamic)
+			shape.calculateLocalInertia(mass, localInertia);
+
+		var myMotionState = new Ammo.btDefaultMotionState(startTransform);
+		var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
+		cInfo.friction = 5.0;
+		var btBody = new Ammo.btRigidBody(cInfo);
+		btBody.setActivationState(4); //disables sleep
+		btBody.setFriction(0.9);
+		//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
+		//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
+		//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
+		
+		return btBody;
 	};
 
 	return Body;

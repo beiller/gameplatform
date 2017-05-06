@@ -213,7 +213,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 						e.bone.parent = moveTo;
 
 					}
-					if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone);
+					if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
 					scope.createPhysic(e, mesh);
 				}
 
@@ -232,7 +232,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 						var bone = scope.findBone(boneName, mesh.skeleton);
 						var child = bone.children[0];
 
-						e.bone = boneName;
+						e.bone = bone.name;
 						e.type = "DYNAMIC";
 						e.connect_body = connectBodyName;
 						e.options = {

@@ -38,7 +38,7 @@ function(
 	
 	    this.cubemapRendered = false;
 	    
-	    this.debugPhysics = false;
+	    this.debugPhysics = true;
 	    
 	    this.physicsWorld = new Physics();
 	}

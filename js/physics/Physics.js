@@ -21,15 +21,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 			LAYER_9:  256,
 			LAYER_10: 512,
 		};
-		this.collisionFlags = { 
-		  CF_STATIC_OBJECT: 1, 
-		  CF_KINEMATIC_OBJECT: 2, 
-		  CF_NO_CONTACT_RESPONSE: 4, 
-		  CF_CUSTOM_MATERIAL_CALLBACK: 8, 
-		  CF_CHARACTER_OBJECT: 16, 
-		  CF_DISABLE_VISUALIZE_OBJECT: 32, 
-		  CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
-		};
+
 		this.callbacks = {};
 
 		this.initPhysics();
@@ -63,11 +55,11 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		        var b2 = manifold.getBody1();
 		        if(b1.ptr in this.callbacks) {
 		        	var hp = pt.getPositionWorldOnA();
-		        	this.callbacks[b1.ptr](new Body(b1), new Body(b2), [hp.x(), hp.y(), hp.z()]);
+		        	//this.callbacks[b1.ptr](new Body(b1), new Body(b2), [hp.x(), hp.y(), hp.z()]);
 		        }
 		        if(b2.ptr in this.callbacks) {
 		        	var hp = pt.getPositionWorldOnB();
-		        	this.callbacks[b2.ptr](new Body(b2), new Body(b1), [hp.x(), hp.y(), hp.z()]);
+		        	//this.callbacks[b2.ptr](new Body(b2), new Body(b1), [hp.x(), hp.y(), hp.z()]);
 		        }
 		    }
 		}
@@ -246,44 +238,6 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		};
 	};*/
 
-	/**
-	 * Spawns a rigid body into the demo scene
-	 * @tparam float mass
-	 * @tparam btTransform startTransform
-	 * @tparam btCollisionShape shape
-	 * @tparam Object options
-	 * @treturn btRigidBody
-	 */
-	AmmoPhysics.prototype.localCreateRigidBody = function(mass, startTransform, shape, options, layers, mask) {
-		if (!shape)
-			return null;
-		if(!layers) {
-			layers = this.collisionLayers.WORLD;
-		}
-		if(!mask) {
-			mask = this.collisionLayers.WORLD | this.collisionLayers.PLAYER;
-		}
-
-		// rigidbody is dynamic if and only if mass is non zero, otherwise static
-		var isDynamic = (mass != 0.0);
-
-		var localInertia = new Ammo.btVector3(0, 0, 0);
-		if (isDynamic)
-			shape.calculateLocalInertia(mass, localInertia);
-
-		var myMotionState = new Ammo.btDefaultMotionState(startTransform);
-		var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
-		cInfo.friction = 5.0;
-		var btBody = new Ammo.btRigidBody(cInfo);
-		btBody.setActivationState(4);
-		btBody.setFriction(0.9);
-		//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
-		//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
-		//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
-		this.m_dynamicsWorld.addRigidBody(btBody, layers, mask);
-		return btBody;
-	};
-
 	AmmoPhysics.prototype.initPhysics = function() {
 		// Bullet-interfacing code
 		var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -308,24 +262,23 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		this.addGroundPlane(-4);
 	};
 	AmmoPhysics.prototype.addGroundPlane = function(height) {
-
-		// Create ground
-		temp_vec3_1.setValue(100, 0.5, 6);
-		var groundShape = new Ammo.btBoxShape(temp_vec3_1);
-		//var groundShape = new Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), -1.0);
 		temp_trans_1.setIdentity();
-		temp_vec3_1.setValue(0, -4.0, 0);
+		temp_vec3_1.setValue(0, height, 0);
 		temp_trans_1.setOrigin(temp_vec3_1);
-		var body = new Body(this.localCreateRigidBody(0, temp_trans_1, groundShape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD | this.collisionLayers.PLAYER));
-		body.body.setCollisionFlags(this.collisionFlags.CF_STATIC_OBJECT);
 
-		/*
-		// Create infinite ground plane
-		var aabbShape = new Ammo.btStaticPlaneShape(new Ammo.btVector3(0, 1, 0), -1.5);
-		var aabbTransform = temp_trans_1;
-		aabbTransform.setIdentity();
-		aabbTransform.setOrigin(new Ammo.btVector3(0, height, 0));
-		var body = new Body(this.localCreateRigidBody(0, aabbTransform, aabbShape));	*/
+	    var shapeOptions = { type: "box", x: 100, y: 0.5, z: 6, margin: 0.0001 };
+
+	    var bodyOptions = {
+	    	mass: 0,
+	    	transform: temp_trans_1,
+	    	options: {},
+	    	staticObject: true
+	    };
+
+		var body = new Body(bodyOptions, shapeOptions);
+		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD | this.collisionLayers.PLAYER);
+
+		return body;
 	};
 	AmmoPhysics.prototype.addCharacterPhysics = function(radius, mass, position) {
 		// Create character body
@@ -335,43 +288,70 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		temp_vec3_1.setValue(position[0], position[1], position[2]);
 		transform.setIdentity();
 		transform.setOrigin(temp_vec3_1);
-		var btBody = this.localCreateRigidBody(mass || 49.0, transform, shape, null, this.collisionLayers.PLAYER, this.collisionLayers.WORLD);
+
+		var shapeOptions = { type: "sphere", radius: radius };
+
+	    var bodyOptions = {
+	    	mass: mass,
+	    	transform: transform,
+	    	options: {}
+	    };
+
+		var body = new Body(bodyOptions, shapeOptions);
+		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.PLAYER, this.collisionLayers.WORLD);
+
+		
 		temp_vec3_1.setValue(0,0,0);
-		btBody.setAngularFactor(temp_vec3_1);
-		//btBody.setDamping(0.9, 1.0);
-		return new Body(
-			btBody
-		);
+		body.body.setAngularFactor(temp_vec3_1);
+
+		return body;
+		
 	};
 	AmmoPhysics.prototype.addStaticPhysics = function(shape, mesh, position) {
 		if (shape === 'box') {
 			if(position === undefined) position = [0,0,0];
 			mesh.geometry.computeBoundingBox();
 			var bboxmax = mesh.geometry.boundingBox.max;
-			var boxShape = new Ammo.btBoxShape(new Ammo.btVector3(bboxmax.x, bboxmax.y, bboxmax.z));
 			var boxTransform = temp_trans_1;
 			boxTransform.setIdentity();
 			boxTransform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
-			return new Body(
-				this.localCreateRigidBody(0, boxTransform, boxShape)
-			);
+
+		    var shapeOptions = { type: "box", x: bboxmax.x, y: bboxmax.y, z: bboxmax.z, margin: 0.0001 };
+
+		    var bodyOptions = {
+		    	mass: 0,
+		    	transform: boxTransform,
+		    	options: {}
+		    };
+
+			var body = new Body(bodyOptions, shapeOptions);
+			this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
+
+			return body;
 		}
 	};
 	AmmoPhysics.prototype.addObjectPhysics = function(mesh, mass, position) {
 		mesh.geometry.computeBoundingBox();
 		var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
-		var sizex = Math.abs(len.x);
-		var sizey = Math.abs(len.y);
-		var sizez = Math.abs(len.z);
 		if (position === undefined)
 			position = [0, 0, 0];
-		var boxShape = new Ammo.btBoxShape(new Ammo.btVector3(sizex, sizey, sizez));
+
 		var boxTransform = temp_trans_1;
 		boxTransform.setIdentity();
 		boxTransform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
-		return new Body(
-			this.localCreateRigidBody(mass || 49.0, boxTransform, boxShape, this.collisionLayers.OTHER, this.collisionLayers.OTHER)
-		);
+
+	    var shapeOptions = { type: "box", x: Math.abs(len.x), y: Math.abs(len.y), z: Math.abs(len.z), margin: 0.0001 };
+
+	    var bodyOptions = {
+	    	mass: mass,
+	    	transform: boxTransform,
+	    	options: {}
+	    };
+
+		var body = new Body(bodyOptions, shapeOptions);
+		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
+
+		return body;
 	};
 
 	AmmoPhysics.prototype.determineWorldPosition = function(bone, parentMesh, radius) {
@@ -422,36 +402,25 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	    z_len = this.determineZLength(bone, options);
 
 	    //mass *= z_len;
-
-	    if(options.kinematic) {
-	    	mass = 0;
-	    }
 	    
-	    temp_vec3_1.setValue(0.02, 0.02, z_len/2);
-	    //var shape = new Ammo.btSphereShape(z_len/2);
-	    var shape = new Ammo.btBoxShape(temp_vec3_1);
-	    shape.setMargin(0.0001);
 	    var transform = this.determineWorldPosition(bone, parentMesh, z_len);
-		
-		var btBody = this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
+	    var shapeOptions = {
+	    	type: "box",
+	    	x: 0.02, y: 0.02, z: z_len/2, margin: 0.0001
+	    };
 
-		if(options.kinematic) {
-			if(options.nocontact) {
-				body.body.setCollisionFlags(
-					this.collisionFlags.CF_KINEMATIC_OBJECT | this.collisionFlags.CF_NO_CONTACT_RESPONSE
-				);
-			} else {
-				body.body.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
-			}
-			temp_vec3_1.setValue(0,0,0)
-			btBody.setLinearVelocity(temp_vec3_1);
-			btBody.setAngularVelocity(temp_vec3_1);
-			btBody.setActivationState(4);
-		}
+	    var bodyOptions = {
+	    	mass: mass,
+	    	transform: transform,
+	    	options: {}
+	    };
+
+		var body = new Body(bodyOptions, shapeOptions);
+		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
 
 		options.localOffset = new THREE.Vector3(0, 0, z_len/2);
 
-		return new constructor(bone, new Body(btBody), parentBody, parentMesh, game, options);
+		return new constructor(bone, body, parentBody, parentMesh, game, options);
 	};
 
 	AmmoPhysics.prototype.createCollisionBone = function(bone, parentMesh, constructor, z_len, options, game) {
@@ -459,28 +428,22 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 			options = {};
 		}
 
-	    var mass = 0;
-
 	    z_len = this.determineZLength(bone, options);
-	    
-	    var shape = new Ammo.btSphereShape(z_len/2);
-	    shape.setMargin(0.0001);
+
 	    var transform = this.determineWorldPosition(bone, parentMesh, z_len, options);
 
-		var body = new Body(
-			this.localCreateRigidBody(mass, transform, shape, null, this.collisionLayers.WORLD, this.collisionLayers.WORLD)
-		);
-		if(options.nocontact) {
-			body.body.setCollisionFlags(
-				this.collisionFlags.CF_KINEMATIC_OBJECT | this.collisionFlags.CF_NO_CONTACT_RESPONSE
-			);
-		} else {
-			body.body.setCollisionFlags(this.collisionFlags.CF_KINEMATIC_OBJECT);
-		}
-		temp_vec3_1.setValue(0,0,0);
-		body.body.setLinearVelocity(temp_vec3_1);
-		body.body.setAngularVelocity(temp_vec3_1);
-		body.body.setActivationState(4);
+	    var shapeOptions = { type: "box", x: 0.02, y: 0.02, z: z_len/2, margin: 0.0001 };
+
+	    var bodyOptions = {
+	    	mass: 0,
+	    	transform: transform,
+	    	options: {},
+	    	kinematic: true,
+	    	noContact: true
+	    };
+
+		var body = new Body(bodyOptions, shapeOptions);
+		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
 		
 		options.localOffset = new THREE.Vector3(0, 0, -z_len/2);
 		
