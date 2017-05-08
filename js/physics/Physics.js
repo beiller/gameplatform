@@ -1,4 +1,9 @@
-define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
+define([
+	"lib/ammo", "lib/three", "physics/Body", 
+	"entity/DynamicCollisionEntity", "entity/PhysBone"], 
+
+	function(Ammo, THREE, Body, DynamicCollisionEntity, PhysBone) {
+	
 	var temp_trans_1 = new Ammo.btTransform();
 	var temp_trans_2 = new Ammo.btTransform();
 
@@ -393,7 +398,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 	    return z_len;
 	};
 
-	AmmoPhysics.prototype.createPhysBone = function(bone, parentBody, parentMesh, constructor, z_len, options, game) {
+	AmmoPhysics.prototype.createPhysBone = function(bone, parentBody, parentMesh, z_len, options, game) {
 		if(!options) {
 			options = {};
 		}
@@ -420,10 +425,10 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 
 		options.localOffset = new THREE.Vector3(0, 0, z_len/2);
 
-		return new constructor(bone, body, parentBody, parentMesh, game, options);
+		return new PhysBone(bone, body, parentBody, parentMesh, game, options);
 	};
 
-	AmmoPhysics.prototype.createCollisionBone = function(bone, parentMesh, constructor, z_len, options, game) {
+	AmmoPhysics.prototype.createCollisionBone = function(bone, parentMesh, z_len, options, game) {
 		if(!options) {
 			options = {};
 		}
@@ -447,7 +452,7 @@ define(["lib/ammo", "lib/three", "physics/Body"], function(Ammo, THREE, Body) {
 		
 		options.localOffset = new THREE.Vector3(0, 0, -z_len/2);
 		
-		return new constructor(bone, game, body, options);
+		return new DynamicCollisionEntity(bone, game, body, options);
 	};
 
 	return AmmoPhysics;

@@ -1,10 +1,9 @@
 
 define([
-	"CharacterStats", "entity/DynamicEntity", "lib/three", "BaseStateMachine", 
-	"entity/DynamicCollisionEntity", "entity/PhysBone"
+	"CharacterStats", "entity/DynamicEntity", "lib/three", "BaseStateMachine"
 	],
 
-function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisionEntity, PhysBone) {
+function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	Character.prototype = new DynamicEntity();
 	Character.prototype.constructor = Character;
 	function Character(mesh, game, body, name, options, sssMesh, characterStats) {
@@ -207,14 +206,43 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 					//or if there is a move-to bone
 					if(e.options && e.options.moveTo) {
 
-						var moveTo = scope.findBone(e.options.moveTo); 
+						var moveTo = scope.findBone(e.options.moveTo);
 						moveTo.add(mesh);
 						moveTo.updateMatrixWorld(true);
+						mesh.updateMatrixWorld(true);
+
+						//TODO this is a hack for some reason I have to set the parent. This relationship could
+						//incorrectly span multiple armatures, but that does not seem to be a problem yet...
 						e.bone.parent = moveTo;
 
 					}
 					if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
 					scope.createPhysic(e, mesh);
+				}
+				function createChainRecurse(c) {
+					var boneName = c.bone
+					var connectBodyName = c.connect_body
+					var dof = c.dof;
+					var e = {}
+					var bone = scope.findBone(boneName, mesh.skeleton);
+					var child = bone.children[0];
+
+					e.bone = bone.name;
+					e.type = "DYNAMIC";
+					e.connect_body = connectBodyName;
+					e.options = {
+						"rotationLimitsLow":  [-dof,-dof,-dof],
+						"rotationLimitsHigh": [ dof, dof, dof]
+					};
+					if(child) {
+						e.options.tailBone = child.name;
+					} else {
+						e.options.localOffset = [0,0,0.035];
+					}
+					createFromPhysic(e);
+					if(child) {
+						createChainRecurse({bone: child.name, connect_body: boneName, dof: dof});
+					}
 				}
 
 				scope.meshes[item.slot] = mesh;
@@ -222,38 +250,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 				if(item.physics) {
 					item.physics.forEach(createFromPhysic);
 				}
-				console.log(item);
 				if(item.physicsChain) {
-					function createChainRecurse(c) {
-						var boneName = c.bone
-						var connectBodyName = c.connect_body
-						var dof = c.dof;
-						var e = {}
-						var bone = scope.findBone(boneName, mesh.skeleton);
-						var child = bone.children[0];
-
-						e.bone = bone.name;
-						e.type = "DYNAMIC";
-						e.connect_body = connectBodyName;
-						e.options = {
-							"rotationLimitsLow":  [-dof,-dof,-dof],
-							"rotationLimitsHigh": [ dof, dof, dof]
-						};
-						if(child) {
-							e.options.tailBone = child.name;
-						} else {
-							e.options.localOffset = [0,0,0.035];
-						}
-						createFromPhysic(e);
-						if(child) {
-							createChainRecurse({bone: child.name, connect_body: boneName, dof: dof});
-						}
-
-					}
 					item.physicsChain.forEach(createChainRecurse)
 				}
-				//mesh.position.set(0,0,0);
-				//mesh.quaternion.set(0,0,0,1);
 	        });
 		} else if(item.bone) { //this item is static and attaches to bones
 	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
@@ -300,8 +299,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 			case "KINEMATIC":
 				physBone = this.game.physicsWorld.createCollisionBone(
 					physicInfo.bone, 
-					parentMesh, 
-					DynamicCollisionEntity, 
+					parentMesh,
 					physicInfo.radius,
 					physicInfo.options,
 					this.game
@@ -315,8 +313,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, DynamicCollisio
 				physBone = this.game.physicsWorld.createPhysBone(
 					physicInfo.bone, 
 					connectBody, 
-					parentMesh, 
-					PhysBone, 
+					parentMesh,
 					physicInfo.radius, 
 					physicInfo.options,
 					this.game

@@ -1,10 +1,9 @@
 define([
 	"lib/three", "lib/zepto", "Character", "physics/Physics",
-	"entity/DynamicEntity", "entity/PhysBone", "entity/Camera",
-	"Loader", "SubdivisionModifier", "entity/DynamicCollisionEntity"
+	"entity/DynamicEntity", "entity/Camera", "Loader"
 ], 
 function(
-		THREE, $, Character, Physics, DynamicEntity, PhysBone, Camera, Loader, SubdivisionModifier, DynamicCollisionEntity
+		THREE, $, Character, Physics, DynamicEntity, Camera, Loader
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -462,16 +461,6 @@ function(
 	                if(options.scale) {
 	                    mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
 	                }
-	                var bones = [
-	                	'spine05', 'spine04', 'spine03', 'spine02', 'spine01', 'head', 
-	                	'upperarm01_R', 'upperarm02_R', 'lowerarm01_R', 'lowerarm02_R',
-	                	'upperarm01_L', 'upperarm02_L', 'lowerarm01_L', 'lowerarm02_L',
-	                	'upperleg01_R', 'upperleg02_R', 'lowerleg01_R', 'lowerleg02_R',
-	                	'upperleg01_L', 'upperleg02_L', 'lowerleg01_L', 'lowerleg02_L',
-	                ];
-	           		bones.forEach(function(b) {
-	           			game.dynamics.push(new PhysBone2(character.findBone(b), character.findBone("spine03"), character, game));
-	           		});
 	                game.loadPhysBones(character);
 	                if(onComplete !== undefined) onComplete(character);
 	            });*/
@@ -791,10 +780,10 @@ function(
 	
 	    var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
 
-	    this.physicsWorld.step(delta);
+	    //this.physicsWorld.step(delta);
 
 	    for(var i in this.characters) {
-	        this.characters[i].update(delta);
+	        //this.characters[i].update(delta);
 	    }
 	
 	    this.dynamics.forEach(function(dynamic) {
