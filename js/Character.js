@@ -210,10 +210,19 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 						moveTo.add(mesh);
 						moveTo.updateMatrixWorld(true);
 						mesh.updateMatrixWorld(true);
+						e.bone.position.set(0,0,0);
+						e.bone.quaternion.set(0,0,0,1);
+						//var q = new THREE.Quaternion();
+						//var s = new THREE.Vector3();
+						//moveTo.matrixWorld.decompose(e.bone.position, e.bone.quaternion, e.bone.scale);
+						e.bone.updateMatrixWorld(true);
 
 						//TODO this is a hack for some reason I have to set the parent. This relationship could
 						//incorrectly span multiple armatures, but that does not seem to be a problem yet...
-						e.bone.parent = moveTo;
+						//if(!e.bone.parent) {
+							e.bone.parent = moveTo;
+						//}
+						
 
 					}
 					if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
@@ -232,7 +241,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 					e.connect_body = connectBodyName;
 					e.options = {
 						"rotationLimitsLow":  [-dof,-dof,-dof],
-						"rotationLimitsHigh": [ dof, dof, dof]
+						"rotationLimitsHigh": [ dof, dof, dof],
+						"mass" : c.mass || 1.0
 					};
 					if(child) {
 						e.options.tailBone = child.name;
@@ -276,13 +286,16 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	Character.prototype.createPhysic = function(physicInfo, parentMesh) {
 		var scope = this.game;
 
-		var doPhysDebug = function(physBone, radius) {
+		var doPhysDebug = function(physBone, radius, options) {
+			if(!options) {
+				options = {};
+			}
 			if(physBone.localOffset) {
 				radius = physBone.localOffset.z;
 			}
 	        var sphere = new THREE.Mesh(
 	        	//new THREE.SphereGeometry(radius, 12, 12), 
-	        	new THREE.BoxGeometry(0.02, 0.02, radius*2),
+	        	new THREE.BoxGeometry(options.boxWidth || 0.02, options.boxDepth || 0.02, radius*2),
 	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
 	        );
 	        
@@ -295,6 +308,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 
 		var globalBoneMap = this.physicMap;
 		var physBone = null;
+		if(!(parentMesh.id in globalBoneMap)) {
+			globalBoneMap[parentMesh.id] = {};
+		}
 		switch(physicInfo.type) {
 			case "KINEMATIC":
 				physBone = this.game.physicsWorld.createCollisionBone(
@@ -307,8 +323,13 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 				break;
 			case "DYNAMIC":
 				var connectBody = null;
-				if(physicInfo.connect_body in globalBoneMap) {
-					connectBody = globalBoneMap[physicInfo.connect_body].body;
+				if(physicInfo.connect_body in globalBoneMap[parentMesh.id]) {
+					connectBody = globalBoneMap[parentMesh.id][physicInfo.connect_body].body;
+				} else if(physicInfo.connect_body in globalBoneMap[this.armature.id]) {
+					connectBody = globalBoneMap[this.armature.id][physicInfo.connect_body].body;
+				} else {
+					console.log("Cannot find bone!", physicInfo.connect_body, globalBoneMap[parentMesh.id])
+					//throw "Cannot find bone!";
 				}
 				physBone = this.game.physicsWorld.createPhysBone(
 					physicInfo.bone, 
@@ -320,10 +341,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 				);
 				break;
 		}
-		globalBoneMap[physicInfo.bone.name] = physBone;
+		globalBoneMap[parentMesh.id][physicInfo.bone.name] = physBone;
 
 		if(this.game.debugPhysics) {
-			doPhysDebug(physBone, physicInfo.radius);
+			doPhysDebug(physBone, physicInfo.radius, physicInfo.options);
 		}
 		this.game.dynamics.push(physBone);
 	};

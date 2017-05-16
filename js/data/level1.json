@@ -57,9 +57,9 @@
 	        "material": [
                 {
                 	"reflectivity": 0.25, "specular": "0xAAAABB", "color": "0xFFFFFF", "shininess": 30,
-		        	"diffusePath": "models/neweveskin.jpg",
-		        	"specularPath": "models/neweveskin_specular_2.jpg",
-		        	"normalPath": "models/neweveskin_normal.jpg"
+		        	"diffusePath": "models/neweveskin_low.jpg",
+		        	"specularPath": "models/neweveskin_specular_2_low.jpg",
+		        	"normalPath": "models/neweveskin_normal_low.jpg"
 	        	},
                 {"reflectivity": 0.8, "specular": "0xC035A4", "color": "0x20091C", "shininess": 120}
             ],
@@ -70,7 +70,7 @@
 	        	"cross_earring",
 	        	"cross_earring2",
 	        	"cross_earring3",
-	        	"cross_earring4"
+	        	"chain_earring1"
 	        ],
 	        "inventory": [
 	        	"marie_harness",

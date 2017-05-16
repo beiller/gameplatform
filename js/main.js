@@ -146,8 +146,13 @@ requirejs(
 			var frameCount = 0;
 			var logicCount = 0;
 
+			var skipPhysics = true;
+			var skipAnimation = true;
+			
+
 			function draw() {
 				requestAnimationFrame(draw);
+				game.animate(skipPhysics, skipAnimation);
 				game.render();
 				if (frameTimer.getElapsedTime() >= 1.0) {
 					document.getElementById("debugConsole").innerHTML = "drawFPS: " + frameCount + "<br/>logicFPS: " + logicCount;
@@ -156,11 +161,18 @@ requirejs(
 					frameTimer = new THREE.Clock(true);
 				}
 				frameCount++;
+				
+
 			}
-			var logicInterval = setInterval(function() {
+
+			setTimeout(function() {
+				skipPhysics = false;
+				skipAnimation = false;
+			}, 8000);
+			/*var logicInterval = setInterval(function() {
 				game.animate();
 				logicCount++;
-			}, interval);
+			}, interval);*/
 
 			draw();
 		}

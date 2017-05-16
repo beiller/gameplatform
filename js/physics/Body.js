@@ -18,6 +18,8 @@ define(["lib/ammo"], function(Ammo) {
 		CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
 	};
 
+	var body_map = {};
+
 	function Body(bodyInfo, shapeInfo) {
 		if(!shapeInfo) {
 			this.body = bodyInfo;
@@ -54,6 +56,8 @@ define(["lib/ammo"], function(Ammo) {
 		if(flagToSet > 0) {
 			this.body.setCollisionFlags(flagToSet);
 		}
+		body_map[this.body.ptr] = this;
+		this.setDamping(0.7, 0.7);
 	}
 
 	Body.prototype = {
@@ -153,6 +157,13 @@ define(["lib/ammo"], function(Ammo) {
 		//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
 		
 		return btBody;
+	};
+
+	Body.getByBody = function(engineBody) {
+		if(!(engineBody.ptr in body_map)) {
+			throw "Unable to find body specified!";
+		}
+		return body_map[engineBody.ptr];
 	};
 
 	return Body;

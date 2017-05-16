@@ -29,16 +29,19 @@ define([
 
 		this.callbacks = {};
 
+		this.stepHz = 180;
+		this.constraintSolverIterations = 25;
+
 		this.initPhysics();
 	}
 	AmmoPhysics.prototype.addCollisionCallback = function(body, func) {
 		this.callbacks[body.ptr] = func;
 	};
 	AmmoPhysics.prototype.step = function(dt) {
-		var numIterations = 3;
+		var numIterations = this.stepHz / 60;
 		//var dt = 1/60;
 		for(var i = 0; i < numIterations; i++) {
-			this.m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/180);
+			this.m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/this.stepHz);
 		}
 
 		var i,
@@ -60,11 +63,11 @@ define([
 		        var b2 = manifold.getBody1();
 		        if(b1.ptr in this.callbacks) {
 		        	var hp = pt.getPositionWorldOnA();
-		        	//this.callbacks[b1.ptr](new Body(b1), new Body(b2), [hp.x(), hp.y(), hp.z()]);
+		        	this.callbacks[b1.ptr](Body.getByBody(b1), Body.getByBody(b2), [hp.x(), hp.y(), hp.z()]);
 		        }
 		        if(b2.ptr in this.callbacks) {
 		        	var hp = pt.getPositionWorldOnB();
-		        	//this.callbacks[b2.ptr](new Body(b2), new Body(b1), [hp.x(), hp.y(), hp.z()]);
+		        	this.callbacks[b2.ptr](Body.getByBody(b2), Body.getByBody(b1), [hp.x(), hp.y(), hp.z()]);
 		        }
 		    }
 		}
@@ -150,17 +153,38 @@ define([
 			options = {};
 		}
 
-		temp_vec3_1.setValue(0,0,0);
-		constraint.setLinearLowerLimit(temp_vec3_1);
-		constraint.setLinearUpperLimit(temp_vec3_1);
-
-
 		var angleLow = options.rotationLimitsLow ? options.rotationLimitsLow : [-0.5, -0.25, -0.5];
 		var angleHigh = options.rotationLimitsHigh ? options.rotationLimitsHigh : [0.5, 0.25, 0.5];
 		temp_vec3_1.setValue(angleLow[0], angleLow[1], angleLow[2]);
 		temp_vec3_2.setValue(angleHigh[0], angleHigh[1], angleHigh[2]);
 		constraint.setAngularLowerLimit(temp_vec3_1);
 		constraint.setAngularUpperLimit(temp_vec3_2);
+
+		if(options.spring) {
+			constraint.enableSpring(3, true);
+			constraint.enableSpring(4, true);
+			constraint.enableSpring(5, true);
+
+			constraint.setStiffness(3, options.stiffness || 5.0);
+			constraint.setStiffness(4, options.stiffness || 5.0);
+			constraint.setStiffness(5, options.stiffness || 5.0);
+
+			//constraint.setDamping(3, options.damping || 100);
+			//constraint.setDamping(4, options.damping || 100);
+			//constraint.setDamping(5, options.damping || 100);
+
+			dist = options.distance || 1.5;
+			temp_vec3_1.setValue(-dist, -dist, -0);
+			constraint.setAngularLowerLimit(temp_vec3_1);
+			temp_vec3_1.setValue(dist, dist, 0);
+			constraint.setAngularUpperLimit(temp_vec3_2);
+		} else {
+			temp_vec3_1.setValue(0,0,0);
+			constraint.setLinearLowerLimit(temp_vec3_1);
+			constraint.setLinearUpperLimit(temp_vec3_1);	
+		}
+
+		
 
 		this.m_dynamicsWorld.addConstraint(constraint, true);
 		return {
@@ -255,7 +279,7 @@ define([
 		
 		var s = this.m_dynamicsWorld.getSolverInfo();
 		s.set_m_splitImpulse(true);
-		s.set_m_numIterations(50);
+		s.set_m_numIterations(this.constraintSolverIterations);
 
 		/*Ammo.ContactResultCallback = function(e) {
 			console.log("CONTACT?", e);
@@ -402,7 +426,7 @@ define([
 		if(!options) {
 			options = {};
 		}
-	    var mass = 100.0;
+	    var mass = 1.0;
 
 	    z_len = this.determineZLength(bone, options);
 
@@ -411,13 +435,14 @@ define([
 	    var transform = this.determineWorldPosition(bone, parentMesh, z_len);
 	    var shapeOptions = {
 	    	type: "box",
-	    	x: 0.02, y: 0.02, z: z_len/2, margin: 0.0001
+	    	x: options.boxWidth || 0.02, y: options.boxDepth || 0.02, z: z_len/2, margin: 0.0001
 	    };
 
 	    var bodyOptions = {
-	    	mass: mass,
+	    	mass: options.mass || mass,
 	    	transform: transform,
-	    	options: {}
+	    	options: {},
+	    	noContact: options.noContact || false
 	    };
 
 		var body = new Body(bodyOptions, shapeOptions);

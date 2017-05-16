@@ -99,6 +99,12 @@ define(["lib/three"], function(THREE) {
 
 		bone.matrix.decompose( bone.position, bone.quaternion, bone.scale );
 
+		/*bone.traverse(function(o) {
+			o.updateMatrixWorld(true);
+		});*/
+		//bone.parent.updateMatrixWorld(true);
+		//bone.updateMatrixWorld(true);
+
 	    if(this.debugMesh) {
 	    	this.debugMesh.position.fromArray(this.body.getPosition());
 	    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());

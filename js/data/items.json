@@ -173,23 +173,22 @@
     "marie_hair_dynamic": {"name": "marie_hair_dynamic",  "model": "models/marie_rose_hair_dynamic.json", "slot": "hair1", 
         "physicsChain" : [
             {
-                "bone": "Bone.003", "connect_body": "head", "dof": 0.5
+                "bone": "Bone.003", "connect_body": "head", "dof": 1, "mass": 0.01
             },
             {
-                "bone": "Bone.004", "connect_body": "head", "dof": 0.5
+                "bone": "Bone.004", "connect_body": "head", "dof": 1, "mass": 0.01
             },
             {
-                "bone": "Bone.017", "connect_body": "head", "dof": 0.5
+                "bone": "Bone.017", "connect_body": "head", "dof": 1, "mass": 0.01
             },
             {
-                "bone": "Bone.020", "connect_body": "head", "dof": 0.5
+                "bone": "Bone.020", "connect_body": "head", "dof": 1, "mass": 0.01
             }
         ],
         "physics": [
             { 
-                "bone": "Bone", "type": "KINEMATIC", "radius": 0.08, "connect_body": "head", "options": {
-                    "moveTo": "ORG-face",
-                    "nocontact": true,
+                "bone": "Bone", "type": "KINEMATIC", "radius": 0.02, "options": { 
+                    "moveTo": "head",
                     "localOffset": [0,0,0.035]
                 } 
             }
@@ -239,8 +238,8 @@
                 "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "head", "options": {
                     "moveTo": "DEF-ear.L.004",
                     "localOffset": [0,0,0.035],
-                    "rotationLimitsLow":  [-3.14,-1.14,-0.35],
-                    "rotationLimitsHigh": [ 3.14, 1.14, 0.35]
+                    "rotationLimitsLow":  [-3.14,-3.14,-0.35],
+                    "rotationLimitsHigh": [ 3.14, 3.14, 0.35]
                 } 
             }
         ],
@@ -259,8 +258,8 @@
                 "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "ORG-breast.R", "options": {
                     "moveTo": "DEF-breast.R.001",
                     "localOffset": [0,0,0.035],
-                    "rotationLimitsLow":  [-1.14,-1.14,-0.35],
-                    "rotationLimitsHigh": [ 1.14, 1.14, 0.35]
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35]
                 } 
             }
         ],
@@ -270,22 +269,48 @@
             ]
         }
     },
-    "cross_earring4": {
-        "name": "cross_earring4",  
-        "model": "models/cross_earring.json", 
+    "chain_earring1": {
+        "name": "chain_earring1",  
+        "model": "models/marie_rose_gem_earring.json", 
         "slot": "earring4", 
         "physics": [
             { 
                 "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "ORG-breast.L", "options": {
                     "moveTo": "DEF-breast.L.001",
-                    "localOffset": [0,0,0.035],
-                    "rotationLimitsLow":  [-1.14,-1.14,-0.35],
-                    "rotationLimitsHigh": [ 1.14, 1.14, 0.35]
+                    "tailBone": "Bone.001",
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.1
+                } 
+            },
+            { 
+                "bone": "Bone.001", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.1
+                } 
+            },
+            { 
+                "bone": "Bone.002", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.1
+                } 
+            },
+            { 
+                "bone": "Bone.003", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.1
                 } 
             }
         ],
         "options": { 
             "material": [
+                {"reflectivity": 0.9, "specular": "0xFFFFFF", "color": "0xAAAAAA", "shininess": 120},
                 {"reflectivity": 0.9, "specular": "0xFFFFFF", "color": "0xAAAAAA", "shininess": 120}
             ]
         }

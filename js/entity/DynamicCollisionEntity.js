@@ -35,7 +35,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			});
 		}
 	}
-	DynamicCollisionEntity.prototype.update = function() {
+	DynamicCollisionEntity.prototype.update = function(dt) {
 	    if(!this.sleep) {
 		    var position = new THREE.Vector3();
 		    var quaternion = new THREE.Quaternion();
@@ -50,6 +50,8 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
 		    	this.debugMesh.updateMatrixWorld();
 		    }
+		    //following doent exist yet?
+		    //this.body.body.saveKinematicState(dt);
 	    }
 	};
 	DynamicCollisionEntity.prototype.getEntityByBody = function(body) {
