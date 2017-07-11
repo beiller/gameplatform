@@ -69,7 +69,7 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 	        	this.orbitControls.target.y,
 	        	game.characters['eve'].body.getPositionZ()
 	        );
-	        //this.mesh.position.x = game.characters['eve'].body.getPositionX();
+	        this.mesh.position.x = game.characters['eve'].body.getPositionX();
 	        //this.mesh.position.y = game.characters['eve'].body.getPositionY();
     	}
     	this.orbitControls.update();
