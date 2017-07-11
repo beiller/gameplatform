@@ -423,6 +423,9 @@ function(
 
 		if(character.findBone("DEF-spine.006")) {
 			boneMap.forEach(function(e) {
+				//DEBUG!!!!
+				e.type = "KINEMATIC";
+				//END DEBUG!!!!
 				if(e.bone) e.bone = character.findBone(e.bone); 
 				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
 				character.createPhysic(e, character.armature);
@@ -500,7 +503,10 @@ function(
 						setTimeout(resolve, mseconds);
 					});
 				}
-				if("touch_self1" in character.animations) {
+
+				console.log("Animations:", character.animations)
+
+				if("touch_self1" in character.animations && false) {
 					function animation_loop() {
 						timeout(5000).then(function() {
 							console.log("ACTION1");
@@ -550,7 +556,7 @@ function(
 					}
 					animation_loop();
 				}
-				if("walk" in character.animations) {
+				if("walk" in character.animations && false) {
 					function animation_loop() {
 						timeout(5000).then(function() {
 							console.log("ACTION1");

@@ -21,6 +21,22 @@
 	        	"hairevil"
 	        ]
 	    },
+	    "necker": {
+	        "model": "models/necker.json",
+	        "sss": false,
+	        "material": [
+                {
+                	"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0xFFFFFF", "shininess": 50,
+		        	"diffusePath": "models/neweveskin.jpg",
+		        	"specularPath": "models/neweveskin_specular_2.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg"
+	        	},
+                {"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120}
+            ],
+	        "equipment":  [ 
+	        	
+	        ]
+	    },
 	   	"eve_v3": {
 	        "model": "models/eve_v3.json",
 	        "sss": false,
@@ -152,7 +168,7 @@
 	    
 	],
 	"player": {
-	    "character": "marie_rose", 
+	    "character": "necker", 
 	    "position": [0,0,0]
 	}
 }

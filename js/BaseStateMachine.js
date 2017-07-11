@@ -1,4 +1,28 @@
 define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
+	/*var animationMap = {
+		'attack': 'DE_Combatattack',
+		'idle': 'DE_Combatiddle',
+		'walk': 'DE_CombatRun',
+		'block': 'DE_Combatblock',
+		'hit': 'DE_Hit'
+	}*/
+
+	/*var animationMap = {
+		'attack': 'kick.001',
+		'idle': 'idle',
+		'walk': 'walk',
+		'block': 'DE_Combatblock',
+		'hit': 'DE_Hit'
+	}*/
+
+	var animationMap = {
+		'attack': 'attack',
+		'idle': 'idle',
+		'walk': 'walk',
+		'block': 'block',
+		'hit': 'hit'
+	}
+
 	var BaseStateMachine = function(character, game) {
 		this.character = character;
 		this.game = game;
@@ -133,21 +157,21 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 					this.run();
 					return false;
 				}
-				this.character.setAnimation("DE_Combatiddle");
+				this.character.setAnimation(animationMap['idle']);
 			},
 			onendattack: function() {
-				this.character.setAnimation("DE_Combatiddle");
+				this.character.setAnimation(animationMap['idle']);
 			},
 			onfall: function() {
 				console.log('falling');
 			},
 			onidle: function(event, from, to, msg) {
 				console.log('idle');
-		        this.character.setAnimation("DE_Combatiddle");
+		        this.character.setAnimation(animationMap['idle']);
 			},
 			onrun: function(event, from, to, msg) {
 				console.log('run');
-				this.character.setAnimation("DE_CombatRun");
+				this.character.setAnimation(animationMap['walk']);
 			},
 			onjump: function(event, from, to, msg) {
 				console.log('Applying Impulse!', event, from, to, msg);
@@ -155,14 +179,14 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			onhit: function(event, from, to, msg) {
 				console.log(event, from, to, msg);
-				this.character.setAnimation("DE_Hit");
+				this.character.setAnimation(animationMap['hit']);
 				var scope = this;
 				this.hitTimeout = setTimeout(function(){
 				    scope.idle();
 				}, this.character.characterStats.hitStunDuration);
 			},
 		    onblock: function(event, from, to, msg) {
-		        this.character.setAnimation("DE_Combatblock");
+		        this.character.setAnimation(animationMap['block']);
 		    },
 		    onattack: function(event, from, to, msg) {
 		    	/*if(this.attackCoolDown > 0.0) {
@@ -171,7 +195,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		    	}*/
 		    	console.log("ATTACKING!", event, from, to, msg);
 		    	this.attackCoolDown = this.character.characterStats.attackCooldown;
-		    	this.character.setAnimation("DE_Combatattack");
+		    	this.character.setAnimation(animationMap['attack']);
 		    	var scope = this;
 			    setTimeout(function() {
 			        var range = scope.character.characterStats.range;
