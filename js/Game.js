@@ -127,6 +127,7 @@ function(
 				"0.002 lx (Night Airglow)": 0.002,
 				"0.5 lx (Full Moon)": 0.5,
 				"3.4 lx (City Twilight)": 3.4,
+				"25 lx (Shade)": 25,
 				"50 lx (Living Room)": 50,
 				"100 lx (Very Overcast)": 100,
 				"350 lx (Office Room)": 350,
@@ -136,7 +137,7 @@ function(
 				"50000 lx (Direct Sun)": 50000,
 			};
 			
-			//var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
+			var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
 			var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
 			bulbLight.intensity = bulbLuminousPowers["1700 lm (100W)"];
 			bulbMat = new THREE.MeshStandardMaterial( {
@@ -144,22 +145,29 @@ function(
 				emissiveIntensity: 1,
 				color: 0x000000
 			});
-			//bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
-			bulbLight.position.set( 1.0, -3.0, 2 );
-			bulbLight.target.position.set( 0, -5.0, 0 );
+			bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
+			bulbLight.position.set( 0.5, 0, 5 );
+			bulbLight.target.position.set( 0, -2.5, 0 );
 			bulbLight.castShadow = true;
-			bulbLight.shadow.mapSize = new THREE.Vector2( 2048, 2048 );
-			bulbLight.angle = 60.0;
+			bulbLight.shadow.mapSize = new THREE.Vector2( 4096, 4096 );
+			bulbLight.angle = 10.0;
+			bulbLight.shadow.camera.fov = 10.0;
 			bulbLight.shadow.camera.near = 1;
-			bulbLight.shadow.camera.far = 10;
+			bulbLight.shadow.camera.far = 5;
 			bulbLight.distance = 10;
-			bulbLight.shadow.bias = -0.001;
+			bulbLight.shadow.bias = 0.00001;
+
+			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
+			this.scene.add( shadowCameraHelper );
+			var lightHelper = new THREE.SpotLightHelper( bulbLight );
+			this.scene.add( lightHelper );*/
+
 			this.scene.add( bulbLight );
 			this.scene.add( bulbLight.target );
 			this.bulbLight = bulbLight;
 			
 			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
-			hemiLight.intensity = hemiLuminousIrradiances["100 lx (Very Overcast)"];
+			hemiLight.intensity = hemiLuminousIrradiances["25 lx (Shade)"];
 			this.scene.add( hemiLight );
 
 	};
@@ -337,32 +345,32 @@ function(
 				/*
 					ARMS!!!!!
 				*/
-				{ bone: "DEF-shoulder."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+				{ bone: "DEF-shoulder."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-upper_arm."+side,
 					rotationLimitsLow:  [-0.1,-0.1,-0.1],
 					rotationLimitsHigh: [ 0.1, 0.1, 0.1]
 				} },
-				{ bone: "DEF-upper_arm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
+				{ bone: "DEF-upper_arm."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
 					tailBone:"DEF-upper_arm."+side+".001",
 					rotationLimitsLow:  [-15.14,-15.14,-.50],
 					rotationLimitsHigh: [ 15.14, 15.14, .50]
 				} },
-				{ bone: "DEF-upper_arm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
+				{ bone: "DEF-upper_arm."+side+".001", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
 					tailBone:"DEF-forearm."+side,
 					rotationLimitsLow:  [ 0,0,0 ],
 					rotationLimitsHigh: [ 0,0,0 ]
 				} },
-				{ bone: "DEF-forearm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side+".001", options: { 
+				{ bone: "DEF-forearm."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-upper_arm."+side+".001", options: { 
 					tailBone:"DEF-forearm."+side+".001",
 					rotationLimitsLow:  [-0.00,-0.00,-0.00],
 					rotationLimitsHigh: [ 3.14, 0.00, 0.00]
 				} },
-				{ bone: "DEF-forearm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side, options: { 
+				{ bone: "DEF-forearm."+side+".001", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-forearm."+side, options: { 
 					tailBone:"DEF-hand."+side,
 					rotationLimitsLow:  [-0.0,-0.0, -0.0],
 					rotationLimitsHigh: [ 0.0, 0.0,  0.0]
 				} },
-				{ bone: "ORG-hand."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
+				{ bone: "ORG-hand."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
 					tailBone:"DEF-f_middle.01."+side,
 					rotationLimitsLow:  [-0.1,-0.1, -0.1],
 					rotationLimitsHigh: [ 0.1, 0.1,  0.1]
@@ -372,8 +380,8 @@ function(
 				{ bone: "ORG-breast."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-breast."+side+".001",
 					//localOffset:[0,0,0.07] ,
-					rotationLimitsLow:  [-0.1,-0.1,-0.1],
-					rotationLimitsHigh: [ 0.1, 0.1, 0.1],
+					rotationLimitsLow:  [-0.25,-0.25,-0.25],
+					rotationLimitsHigh: [ 0.25, 0.25, 0.25],
 					spring: true
 				} },
 				/*{ bone: "DEF-breast."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-breast."+side, options: { 
@@ -385,32 +393,32 @@ function(
 				/*
 					LEGS!!!
 				*/
-				{ bone: "DEF-thigh."+side, type: "DYNAMIC", radius: 0.02, connect_body: "ORG-spine", options: { 
+				{ bone: "DEF-thigh."+side, type: "KINEMATIC", radius: 0.02, connect_body: "ORG-spine", options: { 
 					tailBone:"DEF-thigh."+side+".001" ,
 					rotationLimitsLow:  [-0.1,-0.0,-0.1],
 					rotationLimitsHigh: [ 0.1, 0.0, 0.1],
 				} },
-				{ bone: "DEF-thigh."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-thigh."+side, options: { 
+				{ bone: "DEF-thigh."+side+".001", type: "KINEMATIC", radius: 0.02, connect_body: "DEF-thigh."+side, options: { 
 					tailBone:"DEF-shin."+side ,
 					rotationLimitsLow:  [0, -0.5, 0],
 					rotationLimitsHigh: [0,  0.5, 0],
 				} },
-				{ bone: "DEF-shin."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-thigh."+side+".001", options: { 
+				{ bone: "DEF-shin."+side, type: "KINEMATIC", radius: 0.02, connect_body: "DEF-thigh."+side+".001", options: { 
 					tailBone:"DEF-shin."+side+".001" ,
 					rotationLimitsLow:  [-1.5,-0.00,-0.00],
 					rotationLimitsHigh: [ 0.01, 0.00, 0.00],
 				} },
-				{ bone: "DEF-shin."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-shin."+side, options: { 
+				{ bone: "DEF-shin."+side+".001", type: "KINEMATIC", radius: 0.02, connect_body: "DEF-shin."+side, options: { 
 					tailBone:"DEF-foot."+side ,
 					rotationLimitsLow:  [-0,-0.50,-0.00],
 					rotationLimitsHigh: [ 0, 0.50, 0.00],
 				} },
-				{ bone: "DEF-foot."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-shin."+side+".001", options: { 
+				{ bone: "DEF-foot."+side, type: "KINEMATIC", radius: 0.02, connect_body: "DEF-shin."+side+".001", options: { 
 					tailBone:"DEF-toe."+side ,
 					rotationLimitsLow:  [-1.0,-0.010,-0.010],
 					rotationLimitsHigh: [ 1.0, 0.010, 0.010],
 				} },
-				{ bone: "DEF-toe."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-foot."+side, options: { 
+				{ bone: "DEF-toe."+side, type: "KINEMATIC", radius: 0.02, connect_body: "DEF-foot."+side, options: { 
 					localOffset:[0,0,0.05] ,
 					rotationLimitsLow:  [-0.5,-0.010,-0.010],
 					rotationLimitsHigh: [ 0.5, 0.010, 0.010],
@@ -424,7 +432,7 @@ function(
 		if(character.findBone("DEF-spine.006")) {
 			boneMap.forEach(function(e) {
 				//DEBUG!!!!
-				e.type = "KINEMATIC";
+				//e.type = "KINEMATIC";
 				//END DEBUG!!!!
 				if(e.bone) e.bone = character.findBone(e.bone); 
 				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
@@ -458,6 +466,7 @@ function(
 	    this.loadJsonMesh(jsonFileName, function( geometry, materials ) {
 	        if(!geometry.boundingSphere)
 	            geometry.computeBoundingSphere();
+	        console.log(materials);
 	        var radius = geometry.boundingSphere.radius;
 	        if(options.sss) {
 	            /*game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
@@ -488,7 +497,7 @@ function(
 
 				var character = new Character(mesh, game, body, options.name);
 				character.addEventListener("COLLIDE", function(event) { 
-					//console.log("Character collided with", event); 
+					console.log("Character collided with", event); 
 					if(event.collisionPoint[1] - character.body.getPositionY() < 0.0000) {
 						character.onGround = true;
 					}
@@ -496,8 +505,6 @@ function(
 				game.characters[options.name] = character;
 				game.scene.add( character.mesh );
 				game.loadPhysBones(character);
-				//game.meshPostProcess(mesh);
-				//game.materialPostProcess(mesh.material, true);
 				function timeout(mseconds) {
 					return new Promise(function(resolve, reject) {
 						setTimeout(resolve, mseconds);
@@ -583,49 +590,6 @@ function(
 	        }
 	    });
 	};
-	Game.prototype.meshPostProcess = function(mesh) {
-		var scope = this;
-		var convert_material = function(material) {
-			console.log(material);
-			var map = {
-				'map': material.map,
-				'color': new THREE.Color( 0xFFFFFF ),
-				'transparent': material.transparent === null ? false : material.transparent,
-				'opacity': material.opacity || 1.0,
-				'alphaMap': material.alphaMap,
-				'shininess': 80,
-				'specular': new THREE.Color( 0x666666 ),
-				//'metalness': 0.05,
-				//'envMap': scope.cubeCamera.renderTarget.texture,
-				//'roughness': 0.25
-			};
-			if(material['specularMap']) {
-				map['specularMap'] = material['specularMap'];
-			}
-			if(material['normalMap']) {
-				map['normalMap'] = material['normalMap'];
-				map['normalScale'] = THREE.Vector2(10.0, 10.0);
-			}
-			return map;
-		};
-		if(mesh.material.type == "MultiMaterial") {
-			for(var i in mesh.material.materials) {
-				mesh.material.materials[i] = new THREE.MeshPhongMaterial(convert_material(mesh.material.materials[i]));
-			}
-		} else {
-			mesh.material = new THREE.MeshPhongMaterial(convert_material(mesh.material));
-		}
-	};
-	Game.prototype.materialPostProcess = function(material, enableSkinning) {
-		var scope = this;
-		if(material.type == "MultiMaterial") {
-			material.materials.forEach(function(_material, materialIndex) {
-			   	scope.materialPostProcess(_material);
-			});
-		}
-		material.side = THREE.DoubleSide;
-		material.skinning = true;
-	};
 	Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh, normalGeometry) {
 		normalGeometry = normalGeometry === undefined ? false : normalGeometry;
 	    if(this.meshCache[jsonFileName] !== undefined) {
@@ -685,20 +649,26 @@ function(
 			console.log(materialOptions);
 			var map = {
 				'normalScale' : THREE.Vector2(200.0, 200.0),
+				'bumpScale': materialOptions.bumpScale || 0.0025,
 				'color': materialOptions.color ? new THREE.Color( parseInt(materialOptions.color, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'transparent': materialOptions.transparent ? materialOptions.transparent : false,
 				'opacity': materialOptions.opacity || 1.0,
-				'shininess': materialOptions.shininess || 1.0,
-				'specular': materialOptions.color ? new THREE.Color( parseInt(materialOptions.specular, 16) ) : new THREE.Color( 0x777777 ),
-				'reflectivity': materialOptions.reflectivity ? materialOptions.reflectivity : 0.00001,
-				//'metalness': 0.05,
-				//'roughness': 0.25,
-				'skinning': true
+				'metalness': materialOptions.metalness || 0,
+				'metalness': 'metalness' in materialOptions ? materialOptions.metalness : 0.0,
+				'roughness': 'roughness' in materialOptions ? materialOptions.roughness : 1.0,
+				'skinning': true,
+				'envMapIntensity': 25.0,
+				//'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.9999,
+				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0,
 			};
 			if(game.cubeCamera) {
 				map['envMap'] = game.cubeCamera.renderTarget.texture;
 			}
-			var material = new THREE.MeshPhongMaterial(map);
+			console.log("Roughness", map.roughness);
+			if('specular' in map || 'specularPath' in map) {
+				console.log("Warning: using specular data when we are physical based.");
+			}
+			var material = new THREE.MeshStandardMaterial(map);
 			var loader = new Loader();
 			var setMaterial = function(texturePath, slotName) {
 				loader.loadTexture(texturePath).then(function(tex) {
@@ -706,8 +676,8 @@ function(
 					material.needsUpdate = true;
 				});
 			}
-			var slots = ["map", "specularMap", "normalMap", "alphaMap"];
-			var optionValues = ["diffusePath", "specularPath", "normalPath", "alphaPath"];
+			var slots = ["map", "specularMap", "normalMap", "alphaMap", "bumpMap", "roughnessMap"];
+			var optionValues = ["diffusePath", "specularPath", "normalPath", "alphaPath", "bumpPath", "roughnessPath"];
 			slots.forEach(function(slot, i) {
 				if(optionValues[i] in materialOptions) {
 					setMaterial(materialOptions[optionValues[i]], slot);
@@ -717,26 +687,17 @@ function(
 			var map = {
 				'skinning': true
 			};
-			var material = new THREE.MeshPhongMaterial(map);
+			var material = new THREE.MeshStandardMaterial(map);
 		}
 		return material;
 	};
 	Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete) {
-	    var game = this;
-	    if(!options) options = {};
-	    var loadedMesh = function(geometry, materials) {
-	    	var material = game.parseMaterial(options);
-	        var skinnedMesh = new THREE.SkinnedMesh(geometry, material);
-	        skinnedMesh.frustumCulled = !game.disableCull;
-
-	        skinnedMesh.castShadow = game.settings.enableShadows;
-	        skinnedMesh.receiveShadow = game.settings.enableShadows;
-
-	        if(onComplete) onComplete(skinnedMesh);
-	    };
-	    this.loadJsonMesh(jsonFileName, loadedMesh);
+	    this.loadItem(jsonFileName, parent, options, onComplete);
 	};
 	Game.prototype.loadPhysItem = function(jsonFileName, character, options, onComplete) {
+		this.loadItem(jsonFileName, character, options, onComplete);
+	};
+	Game.prototype.loadItem = function(jsonFileName, parent, options, onComplete) {
 	    var game = this;
 	    if(!options) options = {};
 	    var loadedMesh = function(geometry, materials) {
@@ -756,8 +717,6 @@ function(
 	        mesh.position.set(position[0], position[1], position[2]);
 	        mesh.castShadow = game.settings.enableShadows;
 	        mesh.receiveShadow = game.settings.enableShadows;
-	        game.meshPostProcess(mesh);
-	        game.materialPostProcess(mesh.material);
 	        game.scene.add(mesh);
 	        game.physicsWorld.addStaticPhysics(shape, mesh, position);
 	        if (onComplete) onComplete(mesh);
@@ -778,8 +737,6 @@ function(
 	        dynamic.meshOffset = [len.x/2.0, len.y/2.0, len.z/2.0];
 	        dynamic.sleep = !physEnabled;
 	        game.dynamics.push(dynamic);
-	        //game.meshPostProcess(mesh);
-	        //game.materialPostProcess(mesh.material);
 	        mesh.castShadow = game.settings.enableShadows;
 	        mesh.receiveShadow = game.settings.enableShadows;
 	        game.scene.add(mesh);

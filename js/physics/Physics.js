@@ -44,6 +44,11 @@ define([
 			this.m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/this.stepHz);
 		}
 
+		/*
+			Emit collision detection events
+
+			CollisionCallback arguments body1:Body, body2:Body, hitpoint:Array(xyz)
+		*/
 		var i,
 		    dp = this.dispatcher,
 		    num = dp.getNumManifolds(),

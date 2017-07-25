@@ -13,7 +13,7 @@ function(StateMachine, Controller) {
 	    var scope = this;
 	    var animationIndex = 0;
 	    var animations = [
-	    	"idle2", "sd1", "y3", "pm1", "y2", "horiz1"
+	    	"f1", "f2", "f3"
 	    ];
 
 	    var keymap = {
@@ -23,8 +23,46 @@ function(StateMachine, Controller) {
 	            '68': function() { mv.x += 1.0; stateMachine.run(); }, //A KEY
 	            '65': function() { mv.x -= 1.0; stateMachine.run(); },  //D KEY
 	            '32': function() { 
-	            	stateMachine.playAnimation(animations[animationIndex % animations.length]); 
-	            	animationIndex += 1; 
+	            	
+
+					var me = character;
+					var found = null;
+					var best_dist = 100.0;
+					for (var char_id in game.characters) {
+						(function(character) {
+							if (character != me) {
+								var dist = character.getDistance(me);
+								if (dist < 1.0 && dist < best_dist) {
+									best_dist = dist;
+									found = character;
+								}
+							}
+						})(game.characters[char_id]);
+					}
+					if (found === null) {
+						console.log('no char found')
+					} else {
+						//move this character to my position
+						found.stateMachine.playAnimation(animations[animationIndex % animations.length]);
+						
+						found.mesh.quaternion.y = character.mesh.quaternion.y;
+						found.mesh.position.x = character.mesh.position.x;
+						
+						found.update = function(delta) {
+	
+							this.stateMachine.update(delta);
+
+						    //do update skeletal Animation
+						    if(this.animationMixer) {
+						        this.animationMixer.update(delta);
+						    }
+
+						};
+						
+						character.stateMachine.playAnimation(animations[animationIndex % animations.length]); 
+	            		animationIndex += 1; 	
+					}
+
 	            }  //SPACEBAR
 	        },
 	        'keyup':{

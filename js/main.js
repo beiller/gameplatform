@@ -46,7 +46,7 @@ requirejs(
 					position: [2 * i, -3 + randomHeight + slope, -1.6]
 				});
 			}*/
-			levelData.staticObjects = [];
+			//levelData.staticObjects = [];
 			var id_counter = 0;
 
 			function spawn_npc(name, player, position, controllerConstructor) {
@@ -126,10 +126,10 @@ requirejs(
 			}
 
 			//game.addGroundPlane(-4);
-			//game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+			game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
 				game.updateCubeMap();
 				loadLevel(levelData, itemData);
-			//});
+			});
 
 			//loadLevel(levelData, itemData);
 
@@ -179,7 +179,7 @@ requirejs(
 		var loader = new Loader();
 		Promise.all([
 			loader.loadJSON("js/data/settings.json"),
-			loader.loadJSON("js/data/level1.json"),
+			loader.loadJSON("level2/level2.json"),
 			loader.loadJSON("js/data/items.json")
 		]).then(function(arr) {
 			var gameSettings = arr[0],

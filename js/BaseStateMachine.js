@@ -28,7 +28,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		this.game = game;
 		this.blendAnimationDuration = 0.05;
 	    this.runBlendAnimationSpeed = 0.05;
-	    this.movementForce = 20.0;
+	    this.movementForce = 10.0;
 	    this.jumpForce = 100.0;
 	    
 	    this.attackCoolDown = 0;

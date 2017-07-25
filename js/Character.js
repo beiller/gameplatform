@@ -103,11 +103,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    var quaternion = new THREE.Quaternion();
 	    if(this.movementDirection.x > 0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-	        quaternion.slerp(this.armature.quaternion, 0.75);
+	        quaternion.slerp(this.armature.quaternion, 0.9);
 	        this.armature.quaternion.copy(quaternion);
 	    } else if(this.movementDirection.x < -0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
-	        quaternion.slerp(this.armature.quaternion, 0.75);
+	        quaternion.slerp(this.armature.quaternion, 0.9);
 	        this.armature.quaternion.copy(quaternion);
 	    }
 	};
@@ -399,11 +399,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    var damage = this.calculateEffect(attackingCharacter.characterStats, wstats);
 	    if(this.blocking || this.stateMachine.current == 'BLOCK') {
 	        console.log(this.name + " blocked an attack!");
-	        this.controllers[0].game.displayText(new THREE.Vector3(this.armature.position.x-0.2, this.armature.position.y, 1.0), "Blocked", 3000);
+	        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
 	        damage = Math.round(damage * 0.1);
 	    }
 		console.log(this.name + ' takes ' + damage + ' damage.');
-	    this.controllers[0].game.displayText(new THREE.Vector3(this.armature.position.x, this.armature.position.y, 1.0), damage, 3000);
+	    this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
 	    this.characterStats.health = this.characterStats.health - damage;
 	    if (this.characterStats.health <= 0) {
 	        console.log(this.name + " has died.");
