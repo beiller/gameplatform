@@ -28,7 +28,7 @@
 	        ]
 	    },
 	    "necker": {
-	        "model": "level2/necker.json",
+	        "model": "models/necker.json",
 	        "sss": false,
 	        "material": [
                 {
@@ -222,7 +222,7 @@
 		}
 	],
 	"player": {
-	    "character": "char1", 
+	    "character": "necker", 
 	    "position": [0,0,0]
 	}
 }

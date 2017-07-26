@@ -34,79 +34,79 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	    this.attackCoolDown = 0;
 		
 		var error = function(eventName, from, to, args, errorCode, errorMessage) {
-		    //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+		    console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
 		};
-		var initial = 'NONE';
+		var initial = 'initialized';
 		var events = [
 			{
 				name: 'playAnimation',
 				from: '*',
-				to: 'PLAYANIMATION'
+				to: 'playinganimation'
 			},
 			{ 
 				name: 'startup',
-				from: ['NONE'],
-				to: 'IDLE'
+				from: ['initialized'],
+				to: 'idling'
 			},
 			{ 
 				name: 'endattack',
-				from: ['ATTACK'],
-				to: 'IDLE'
+				from: ['attacking'],
+				to: 'idling'
 			},
 			{ 
 				name: 'idle',
-				from: ['RUN', 'PLAYANIMATION'],
-				to: 'IDLE'
+				from: ['running', 'playinganimation', 'stunned'],
+				to: 'idling'
 			},
-{ 
+			{ 
 				name: 'run',
-				from: ['IDLE'],
-				to: 'RUN'
+				from: ['idling', 'running'],
+				to: 'running'
 			},
 			{ 
 				name: 'jump',
-				from: ['IDLE', 'RUN'],
-				to: 'INAIR'
+				from: ['idling', 'running'],
+				to: 'inair'
 			},
 			{ 
 				name: 'land',
-				from: 'INAIR',
-				to: 'IDLE'
+				from: 'inair',
+				to: 'idling'
 			},
 			{ 
 				name: 'fall',
-				from: ['IDLE', 'ATTACK', 'BLOCK', 'HIT', 'RUN'],
-				to: 'INAIR'
+				from: ['idling', 'attacking', 'blocking', 'stunned', 'running'],
+				to: 'inair'
 			},
 			{ 
 				name: 'attack',
-				from: ['IDLE'],
-				to: 'ATTACK'
+				from: ['idling'],
+				to: 'attacking'
 			},
 			{ 
 				name: 'block',
-				from: ['IDLE'],
-				to: 'BLOCK'
+				from: ['idling'],
+				to: 'blocking'
 			},
 			{ 
 				name: 'unblock',
-				from: ['BLOCK'],
-				to: 'IDLE'
+				from: ['blocking'],
+				to: 'idling'
 			},
 			{ 
 				name: 'hit',
-				from: ['IDLE', 'INAIR', 'ATTACK', 'HIT'],
-				to: 'HIT'
+				from: ['idling', 'inair', 'attacking', 'stunned'],
+				to: 'stunned'
 			},
 			{ 
 				name: 'stun',
-				from: ['IDLE', 'INAIR', 'ATTACK', 'HIT', 'BLOCK'],
-				to: 'HIT'
+				from: ['idling', 'inair', 'attacking', 'stunned', 'blocking'],
+				to: 'stunned'
 			},
 			{ 
-				name: 'dead',
+				name: 'die',
 				from: '*',
-				to: 'DEAD'
+				to: 'dead'
 			}
 		];
 		var callbacks = {
@@ -151,6 +151,22 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	                
 		        };*/
 			},
+			onenterstunned: function() {
+				this.character.setAnimation(animationMap['hit']);
+				var scope = this;
+				this.hitTimeout = setTimeout(function(){
+				    scope.idle();
+				}, this.character.characterStats.hitStunDuration);
+			},
+			onexitstunned: function() {
+				clearTimeout(this.hitTimeout);
+			},
+			onenterrunning: function() {
+				this.character.setAnimation(animationMap['walk']);
+			},
+			onexitrunning: function() {
+				this.character.setAnimation(animationMap['idle']);
+			},
 			onland: function() {
 				console.log('landing');
 				if(Math.abs(this.character.movementDirection.x) > 0.1) {
@@ -169,21 +185,9 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				console.log('idle');
 		        this.character.setAnimation(animationMap['idle']);
 			},
-			onrun: function(event, from, to, msg) {
-				console.log('run');
-				this.character.setAnimation(animationMap['walk']);
-			},
 			onjump: function(event, from, to, msg) {
 				console.log('Applying Impulse!', event, from, to, msg);
 				this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
-			},
-			onhit: function(event, from, to, msg) {
-				console.log(event, from, to, msg);
-				this.character.setAnimation(animationMap['hit']);
-				var scope = this;
-				this.hitTimeout = setTimeout(function(){
-				    scope.idle();
-				}, this.character.characterStats.hitStunDuration);
 			},
 		    onblock: function(event, from, to, msg) {
 		        this.character.setAnimation(animationMap['block']);
@@ -194,34 +198,28 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		    		return false;
 		    	}*/
 		    	console.log("ATTACKING!", event, from, to, msg);
-		    	this.attackCoolDown = this.character.characterStats.attackCooldown;
+		    	var attackCoolDown = this.character.characterStats.attackCooldown;
 		    	this.character.setAnimation(animationMap['attack']);
 		    	var scope = this;
 			    setTimeout(function() {
 			        var range = scope.character.characterStats.range;
-			        for(var c in scope.game.characters) {
-			            var myQuaternion = scope.character.mesh.quaternion;
-			            var dist = scope.game.characters[c].body.getPositionX() - character.body.getPositionX();
-			            var facingDist = dist;
-			            var verticalDist = scope.game.characters[c].body.getPositionY() - character.body.getPositionY();
-			            if(myQuaternion.y < 0.0) {
-			                facingDist *= -1.0;
-			            }
-			            if(Math.abs(verticalDist) < 2.0 && Math.abs(dist) <= range && facingDist > 0.0 && scope.game.characters[c] !== character) {
-			                scope.game.characters[c].stateMachine.hit();
-			                var unitDist = -1;
-			                if(dist > 0) {
-			                    unitDist = 1;
-			                }
-			                scope.game.characters[c].body.applyImpulse([unitDist * scope.movementForce * 0.5, scope.movementForce * 0.5, 0], character.body.getPosition());
-			                scope.game.characters[c].hit(character);
-			            }
-			
-			        }
+					var me = scope.character;
+					for (var char_id in game.characters) {
+						(function(character) {
+							if (character != me) {
+								var dist = character.getDistance(me);
+								console.log("Enemy distance", dist);
+								if (dist < range) {
+									character.stateMachine.hit();
+									character.hit(me);
+								}
+							}
+						})(game.characters[char_id]);
+					}
 			    }, 100);
 		        setTimeout(function() {
 		        	scope.endattack();
-		        }, 500);
+		        }, attackCoolDown - 100);
 		    }
 		};
 		var fsm = StateMachine.create({
@@ -237,13 +235,13 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	BaseStateMachine.prototype.update = function(delta) {
 		//physics runs before this function. Read onGround attribute set by physics
 		var onGround = this.character.onGround;
-		if(onGround && this.current == 'INAIR') {
+		if(onGround && this.current == 'inair') {
 			this.land();
 		} 
-		if(!onGround && this.current != 'RUN' && this.current != 'IDLE') {
+		if(!onGround && this.current != 'running' && this.current != 'idling' && this.current != 'inair') {
 			this.fall();
 		}
-		if(this.current == 'RUN') {
+		if(this.current == 'running') {
 			this.applyForces(delta);
 		}
 		this.attackCoolDown -= (delta * 1000.0);

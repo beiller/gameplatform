@@ -69,7 +69,7 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 	        	this.orbitControls.target.y,
 	        	game.characters['eve'].body.getPositionZ()
 	        );
-	        if(game.characters['eve'].stateMachine.current != 'PLAYANIMATION') {
+	        if(game.characters['eve'].stateMachine.current != 'playinganimation') {
 	        	this.mesh.position.x = game.characters['eve'].body.getPositionX();
 	    	}
 	        //this.mesh.position.y = game.characters['eve'].body.getPositionY();

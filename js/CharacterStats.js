@@ -9,9 +9,9 @@ define(function() {
 	    this.damage = params.damage || 10;
 	
 	    //ATTACK cool down in MS
-	    this.attackCooldown = params.attackCooldown || 500;
+	    this.attackCooldown = params.attackCooldown || 1000;
 	    //Stun duration after hit in MS
-	    this.hitStunDuration = params.hitStunDuration || 500;
+	    this.hitStunDuration = params.hitStunDuration || 5000;
 	    //force in some arbitrary unit
 	    this.jumpHeight = params.jumpHeight || 1;
 	    //chance to block
@@ -22,7 +22,7 @@ define(function() {
 	    this.movementSpeed = params.movementSpeed || 1.0;
 	
 	    //chance to stun opponent while blocking
-	    this.stunWhileBlockingChance = params.stunWhileBlockingChance || 0.1;
+	    this.stunWhileBlockingChance = params.stunWhileBlockingChance || 0.05;
 	
 	    this.strength = params.strength || 10;
 	    this.magic = params.magic || 10;

@@ -1,9 +1,9 @@
 define([
 	"lib/three", "lib/zepto", "Character", "physics/Physics",
-	"entity/DynamicEntity", "entity/Camera", "Loader"
+	"entity/DynamicEntity", "entity/Camera", "Loader", 'controller/AIController', 'controller/UserController'
 ], 
 function(
-		THREE, $, Character, Physics, DynamicEntity, Camera, Loader
+		THREE, $, Character, Physics, DynamicEntity, Camera, Loader, AIController, UserController
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -497,7 +497,7 @@ function(
 
 				var character = new Character(mesh, game, body, options.name);
 				character.addEventListener("COLLIDE", function(event) { 
-					console.log("Character collided with", event); 
+					//console.log("Character collided with", event); 
 					if(event.collisionPoint[1] - character.body.getPositionY() < 0.0000) {
 						character.onGround = true;
 					}
@@ -648,7 +648,7 @@ function(
 		if(materialOptions) {
 			console.log(materialOptions);
 			var map = {
-				'normalScale' : THREE.Vector2(200.0, 200.0),
+				//'normalScale' : THREE.Vector2(200.0, 200.0),
 				'bumpScale': materialOptions.bumpScale || 0.0025,
 				'color': materialOptions.color ? new THREE.Color( parseInt(materialOptions.color, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'transparent': materialOptions.transparent ? materialOptions.transparent : false,
@@ -661,7 +661,7 @@ function(
 				//'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.9999,
 				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0,
 			};
-			if(game.cubeCamera) {
+			if(this.cubeCamera) {
 				map['envMap'] = game.cubeCamera.renderTarget.texture;
 			}
 			console.log("Roughness", map.roughness);
@@ -786,5 +786,146 @@ function(
 	Game.prototype.getCharacter = function(characterName) {
 	    return this.characters[characterName];
 	};
+
+	Game.runGame = function(gameSettings, levelData, itemData) {
+		var game = new Game(gameSettings);
+		game.initRendering();
+		var objectCount = 0;
+
+		/*var bricks = [];
+		for (var i = -50; i <= 50; i++) {
+			var randomHeight = (Math.random() - 0.5) * 0.25;
+			var slope = i * 0.05;
+			bricks.push({
+				model: 'models/big_brick.json',
+				shape: 'box',
+				position: [2 * i, -3 + randomHeight + slope, 0]
+			});
+			bricks.push({
+				model: 'models/stone_wall1.json',
+				shape: 'box',
+				position: [2 * i, -3 + randomHeight + slope, -2]
+			});
+			bricks.push({
+				model: 'models/stone_pillar.json',
+				shape: 'box',
+				position: [2 * i, -3 + randomHeight + slope, -1.6]
+			});
+		}*/
+		//levelData.staticObjects = [];
+		var id_counter = 0;
+
+		function spawn_npc(name, player, position, controllerConstructor) {
+			if (!player) {
+				console.log('no player specified');
+				return;
+			}
+			controllerConstructor = controllerConstructor ? controllerConstructor : AIController;
+
+			game.loadCharacter(
+				player.model, {
+					name: name,
+					sss: player.sss,
+					diffusePath: player.diffusePath,
+					specularPath: player.specularPath,
+					normalPath: player.normalPath,
+					position: position,
+					scale: player.scale,
+					material: player.material
+				},
+				function(characterObject) {
+					characterObject.addController(new controllerConstructor(characterObject, game));
+					player.equipment.forEach(function(itemName) {
+						characterObject.equip(itemData[itemName]);
+					});
+					if (player.inventory !== undefined) {
+						player.inventory.forEach(function(itemName) {
+							characterObject.inventory.push(itemData[itemName]);
+						});
+					}
+				}
+			);
+
+		}
+
+		function loadLevel(levelData, itemData) {
+			//load player
+			var player = levelData.characters[levelData.player.character];
+			game.loadCharacter(
+				player.model, {
+					name: 'eve',
+					sss: player.sss,
+					diffusePath: player.diffusePath,
+					specularPath: player.specularPath,
+					normalPath: player.normalPath,
+					position: levelData.player.position,
+					scale: player.scale,
+					material: player.material
+				},
+				function(characterObject) {
+					characterObject.addController(new UserController(characterObject, game));
+					player.equipment.forEach(function(itemName) {
+						characterObject.equip(itemData[itemName]);
+					});
+					if (player.inventory !== undefined) {
+						player.inventory.forEach(function(itemName) {
+							characterObject.inventory.push(itemData[itemName]);
+						});
+					}
+				}
+			);
+
+			levelData.staticObjects.forEach(function(element) {
+				game.loadStaticObject(element.model, element.shape, element.position);
+			});
+
+			levelData.npcs.forEach(function(npc) {
+				spawn_npc('monster' + id_counter, levelData.characters[npc.character], npc.position);
+				id_counter += 1;
+			});
+
+			/*setInterval(function() {
+    		spawn_npc('monster'+id_counter, levelData.characters.skeleton, [Math.random() * 200 - 100,0,0]);
+    		id_counter+=1;
+    	}, 12000);*/
+
+		}
+
+		//game.addGroundPlane(-4);
+		game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+			game.updateCubeMap();
+			loadLevel(levelData, itemData);
+		});
+
+		//loadLevel(levelData, itemData);
+
+		/*setInterval(function() {
+			game.updateCubeMap();
+    	}, 1000);*/
+
+
+		/*var logicInterval = setInterval(function() {
+			game.animate();
+			logicCount++;
+		}, interval);*/
+
+		return game;
+	}
+
+	Game.loadLevel = function(levelFileName) {
+		var loader = new Loader();
+		return Promise.all([
+			loader.loadJSON("js/data/settings.json"),
+			loader.loadJSON(levelFileName),
+			loader.loadJSON("js/data/items.json")
+		]).then(function(arr) {
+			var gameSettings = arr[0],
+    			levelData = arr[1],
+    			itemData = arr[2];
+			return Game.runGame(gameSettings, levelData, itemData);
+		}, function(e) { throw e; });
+	};
+
+
 	return Game;
 });

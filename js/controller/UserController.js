@@ -43,22 +43,12 @@ function(StateMachine, Controller) {
 						console.log('no char found')
 					} else {
 						//move this character to my position
+						character.body.setPosition(found.body.getPosition());
+						character.body.setQuaternion(found.body.getQuaternion());
+
+						character.armature.quaternion.copy(found.armature.quaternion);
+						
 						found.stateMachine.playAnimation(animations[animationIndex % animations.length]);
-						
-						found.mesh.quaternion.y = character.mesh.quaternion.y;
-						found.mesh.position.x = character.mesh.position.x;
-						
-						found.update = function(delta) {
-	
-							this.stateMachine.update(delta);
-
-						    //do update skeletal Animation
-						    if(this.animationMixer) {
-						        this.animationMixer.update(delta);
-						    }
-
-						};
-						
 						character.stateMachine.playAnimation(animations[animationIndex % animations.length]); 
 	            		animationIndex += 1; 	
 					}

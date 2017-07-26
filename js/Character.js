@@ -397,7 +397,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    }
 	    var wstats = attackingCharacter.equipment.weapon ? attackingCharacter.equipment.weapon.stats : { damage: this.characterStats.strength };
 	    var damage = this.calculateEffect(attackingCharacter.characterStats, wstats);
-	    if(this.blocking || this.stateMachine.current == 'BLOCK') {
+	    if(this.blocking || this.stateMachine.current == 'blocking') {
 	        console.log(this.name + " blocked an attack!");
 	        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
 	        damage = Math.round(damage * 0.1);
@@ -408,7 +408,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    if (this.characterStats.health <= 0) {
 	        console.log(this.name + " has died.");
 	        this.dead = true;
-	        this.stateMachine.dead();
+	        this.stateMachine.die();
 	    }
 	    if (this.healthBarMesh) {
 	        var healthRatio = Math.max(0.0, this.characterStats.health / this.characterStats.maxHealth);

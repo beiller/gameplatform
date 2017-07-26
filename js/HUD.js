@@ -1,4 +1,4 @@
-define(["lib/three", "lib/zepto"], function(THREE, $) {
+define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 	function HUD(game) {
 		this.game = game;
 		this.init();
@@ -85,6 +85,26 @@ define(["lib/three", "lib/zepto"], function(THREE, $) {
 			});
 			uiWindow.append(toggleInventory);
 
+			var loadLevelFunction = function(levelFileName) {
+				if(window.game) {
+					document.body.removeChild(window.game.container); 
+				}
+				Game.loadLevel(levelFileName).then(function(game) {
+					window.game = game;
+					scope.game = game;
+				});
+			};
+			uiWindow.append(
+				$('<a href="#" class="button btn-loadlevel1">Load Level 1</a>').on('click', function(e) {
+					loadLevelFunction("js/data/level1.json");
+				})
+			);
+			uiWindow.append(
+				$('<a href="#" class="button btn-loadlevel2">Load Level 2</a>').on('click', function(e) {
+					loadLevelFunction("level2/level2.json");
+				})
+			);
+
 			var exposureControl = $('<input id="intNumber" type="range" min="1" max="20" step="0.1" />').on('change', function(e) {
 				e.stopPropagation();
 				console.log("Setting exposure: " + this.valueAsNumber);
@@ -114,6 +134,9 @@ define(["lib/three", "lib/zepto"], function(THREE, $) {
 			});
 			uiWindow.append(updateCubeMap);
 			$(window).on('mousemove', function(e) {
+				if(!game || !game.characters) {
+					return;
+				}
 				var me = game.characters.eve;
 				var found = null;
 				var best_dist = 100.0;
