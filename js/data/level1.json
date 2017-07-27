@@ -32,60 +32,13 @@
 	        "sss": false,
 	        "material": [
                 {
-                	"reflectivity": 0.25, "specular": "0xAAAABB", "color": "0xFFFFFF", "shininess": 30,
-		        	"diffusePath": "level2/beast_skin_blue.png",
-		        	"transparent": true
+                	"roughness": 0.25,
+		        	"diffusePath": "models/beast_skin_blue.png",
+		        	"transparent": false
 	        	}
             ],
 	        "equipment":  [ 
 	        	
-	        ]
-	    },
-	    "char1": {
-	        "model": "level2/char1.json",
-	        "sss": false,
-	        "material": [
-                {
-                	"reflectivity": 0.25, "specular": "0xAAAABB", "color": "0x000000", "shininess": 30,
-		        	"alphaPath": "level2/Chiyo_001.png",
-		        	"transparent": true
-	        	},
-                {
-                	"reflectivity": 0.25, "specular": "0xAAAABB", "color": "0xFFFFFF", "shininess": 30,
-		        	"diffusePath": "level2/Chiyo_001.png",
-		        	"specularPath": "level2/Chiyo_002.png",
-		        	"transparent": true
-	        	},
-                {
-                	"reflectivity": 0.25, "specular": "0xAAAABB", "color": "0xFFFFFF", "shininess": 30,
-		        	"diffusePath": "level2/Chiyo_001.png",
-		        	"specularPath": "level2/Chiyo_002.png",
-		        	"transparent": true
-	        	},
-                {
-                	"opacity": 0, "transparent": true
-	        	},
-                {
-                	"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120
-                },
-                {
-                	"reflectivity": 0, "specular": "0x000000", "color": "0x000000", "shininess": 0
-	        	},
-                {
-                	"reflectivity": 0.25, "specular": "0xAAAABB", "color": "0xFFFFFF", "shininess": 30,
-		        	"diffusePath": "level2/Chiyo_001.png",
-		        	"specularPath": "level2/Chiyo_002.png"
-	        	}
-            ],
-	        "equipment":  [ 
-	        	"chain_earring1",
-	        	"chain_earring2"
-	        ],
-	        "inventory": [
-	        	"marie_hair_dynamic_char1",
-	        	"cross_earring",
-	        	"cross_earring2",
-	        	"cross_earring3"
 	        ]
 	    },
 	   	"eve_v3": {

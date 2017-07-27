@@ -1,9 +1,10 @@
 define([
 	"lib/three", "lib/zepto", "Character", "physics/Physics",
-	"entity/DynamicEntity", "entity/Camera", "Loader", 'controller/AIController', 'controller/UserController'
+	"entity/DynamicEntity", "entity/Camera", "Loader", 'controller/AIController', 'controller/UserController',
+	"PMREMGenerator", "PMREMCubeUVPacker"
 ], 
 function(
-		THREE, $, Character, Physics, DynamicEntity, Camera, Loader, AIController, UserController
+		THREE, $, Character, Physics, DynamicEntity, Camera, Loader, AIController, UserController, PMREMGenerator, PMREMCubeUVPacker
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -208,6 +209,11 @@ function(
 	    
 	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 32 );
 	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
+
+	    //no idea what I am doing beyond this point
+	    this.pmremGenerator = new THREE.PMREMGenerator( this.cubeCamera.renderTarget.texture );
+	    this.pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( this.pmremGenerator.cubeLods );
+
 	    this.scene.add( this.cubeCamera );
 	
 	    var game = this;
@@ -635,7 +641,7 @@ function(
 		var game = this;
     	if("material" in options) {
     		if(options["material"].constructor === Array) {
-    			var material = new THREE.MultiMaterial(options["material"].map(this.createMaterial));
+    			var material = options["material"].map(this.createMaterial, this);
     		} else {
     			var material = this.createMaterial(options["material"]);
     		}
@@ -658,11 +664,14 @@ function(
 				'roughness': 'roughness' in materialOptions ? materialOptions.roughness : 1.0,
 				'skinning': true,
 				'envMapIntensity': 25.0,
+				'emissive': materialOptions.emissive ? new THREE.Color( parseInt(materialOptions.emissive, 16) ) : new THREE.Color( 0xFFFFFF ),
+				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0
 				//'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.9999,
 				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0,
 			};
 			if(this.cubeCamera) {
-				map['envMap'] = game.cubeCamera.renderTarget.texture;
+				map['envMap'] = this.cubeCamera.renderTarget.texture;
+				//map['envMap'] = this.pmremCubeUVPacker.CubeUVRenderTarget.texture;
 			}
 			console.log("Roughness", map.roughness);
 			if('specular' in map || 'specularPath' in map) {
@@ -676,8 +685,8 @@ function(
 					material.needsUpdate = true;
 				});
 			}
-			var slots = ["map", "specularMap", "normalMap", "alphaMap", "bumpMap", "roughnessMap"];
-			var optionValues = ["diffusePath", "specularPath", "normalPath", "alphaPath", "bumpPath", "roughnessPath"];
+			var slots = ["map", "specularMap", "normalMap", "alphaMap", "bumpMap", "roughnessMap", "emissiveMap"];
+			var optionValues = ["diffusePath", "specularPath", "normalPath", "alphaPath", "bumpPath", "roughnessPath", "emissiveMap"];
 			slots.forEach(function(slot, i) {
 				if(optionValues[i] in materialOptions) {
 					setMaterial(materialOptions[optionValues[i]], slot);
@@ -772,8 +781,38 @@ function(
 	        this.characters[i].mesh.visible=false;//(delta);
 	    }
 		this.renderer.clear();
+		this.cubeCamera.renderTarget.generateMipmaps = true;
+		this.cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
+		this.cubeCamera.renderTarget.needsUpdate = true;
+
+
+		//this.cubeCamera.renderTarget.texture.generateMipmaps = true;
+		//this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipMapLinearFilter;
+		//this.cubeCamera.renderTarget.texture.needsUpdate = true;
+	    
 	    this.cubeCamera.updateCubeMap( this.renderer, this.scene );
 	    this.cubemapRendered = true;
+
+    	//this.cubeCamera.renderTarget.texture.encoding = THREE.GammaEncoding;
+	    //this.pmremGenerator = new THREE.PMREMGenerator( this.cubeCamera.renderTarget.texture );
+		//this.pmremGenerator.update( this.renderer );
+		/*var mipMaps = []
+		for(var lod in this.pmremGenerator.cubeLods) {
+			mipMaps.push(this.pmremGenerator.cubeLods[lod].texture);
+		}
+		this.cubeCamera.renderTarget.texture.mipmaps = mipMaps;
+		this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipMapLinearFilter;
+		this.cubeCamera.renderTarget.texture.needsUpdate = true;*/
+
+		//this.pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( this.pmremGenerator.cubeLods );
+		//this.pmremCubeUVPacker.update( this.renderer );
+
+		//this.cubeCamera.renderTarget.texture = this.pmremCubeUVPacker.CubeUVRenderTarget.texture;
+
+		//var t1 = this.cubeCamera.renderTarget.texture;
+		//var t2 = this.pmremCubeUVPacker.CubeUVRenderTarget.texture;
+		//var t3 = this.pmremGenerator.cubeLods;*/
+
 	    //this.renderer.toneMappingExposure = Math.pow( 0.31, this.exposureSetting );
 	    for(var i in this.characters) {
 	        this.characters[i].mesh.visible=true;//(delta);
@@ -891,11 +930,15 @@ function(
 
 		}
 
-		//game.addGroundPlane(-4);
 		game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+			game.animate();
+			game.render();
 			game.updateCubeMap();
+			
 			loadLevel(levelData, itemData);
 		});
+
+		//game.addGroundPlane(-4);
 
 		//loadLevel(levelData, itemData);
 
@@ -922,7 +965,9 @@ function(
 			var gameSettings = arr[0],
     			levelData = arr[1],
     			itemData = arr[2];
-			return Game.runGame(gameSettings, levelData, itemData);
+			var game = Game.runGame(gameSettings, levelData, itemData);
+			
+			return game;
 		}, function(e) { throw e; });
 	};
 

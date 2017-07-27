@@ -235,6 +235,30 @@
             ]
         }
     },
+    "fairy1_hair2": {"name": "fairy1_hair2",  "model": "level2/fairy1_hair2.json", "slot": "hair", "options": { 
+            "material": [
+                {"roughness": 0.8, "color": "0x000000" },
+                {"roughness": 0.8, "color": "0x000000" },
+                {"roughness": 0.2, "color": "0xD095B0" },
+                {"roughness": 0.2, "color": "0xD095B0" },
+                {"roughness": 0.2, "color": "0xD095B0" },
+                {"roughness": 0.8, "color": "0x000000" },
+                {"roughness": 0.8, "color": "0x000000" },
+                {"roughness": 0.8, "color": "0x000000" },
+                {"roughness": 0.8, "color": "0x000000" }
+            ]
+        }
+    },
+    "fairy1_armor2": {"name": "fairy1_armor2",  "model": "level2/fairy1_armor2.json", "slot": "chest", "options": { 
+            "material": [
+                {"roughness": 0.05, "color": "0xDDDDDD", "metalness": 1.0, "name": "metal" },
+                {"roughness": 0.8, "color": "0x9CFF90", "name": "chest"},
+                {"roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                {"roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem2" },
+                {"roughness": 0.8, "color": "0x9CFF90", "name": "panty" }
+            ]
+        }
+    },
     "char1_harness": {"name": "char1_harness",  "model": "level2/char1_harness.json", "slot": "chest", "options": { 
             "material": [
                 {"roughness": 0.2, "color": "0x010101" },

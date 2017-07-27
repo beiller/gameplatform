@@ -117,30 +117,39 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				uiWindow.append($('<h3>' + materialPropertyName + '</h3>'));
 				var control = $('<input type="range" min="' + min + '" max="' + max + '" step="' + step + '" />').on('change', function(e) {
 					e.stopPropagation();
-					console.log("Setting exposure: " + this.valueAsNumber);
-					game.characters.eve.mesh.material.materials[0][materialPropertyName] = this.valueAsNumber;
-					game.characters.eve.mesh.material.materials[0].needsUpdate = true;
+					console.log("Setting material property " + materialPropertyName + ": " + this.valueAsNumber);
+		    		if(scope.game.characters.eve.armature.material.constructor === Array) {
+						for(i in scope.game.characters.eve.armature.material) {
+							scope.game.characters.eve.armature.material[i][materialPropertyName] = this.valueAsNumber;
+							scope.game.characters.eve.armature.material[i].needsUpdate = true;
+						}
+		    		} else {
+						scope.game.characters.eve.armature.material[materialPropertyName] = this.valueAsNumber;
+						scope.game.characters.eve.armature.material.needsUpdate = true;
+		    		}
 					return false;
 				});
 				uiWindow.append(control);
 			}
-			createSliderControl(0, 1, 0.05, 'metalness');
+			//createSliderControl(0, 1, 0.05, 'metalness');
 			createSliderControl(0, 1, 0.05, 'roughness');
+			createSliderControl(0, 500, 0.05, 'envMapIntensity');
+
 
 			var updateCubeMap = $('<a href="#" class="button">Update Cube</a>').on('click', function(e) {
 				e.stopPropagation();
-				game.updateCubeMap();
+				scope.game.updateCubeMap();
 				return false;
 			});
 			uiWindow.append(updateCubeMap);
 			$(window).on('mousemove', function(e) {
-				if(!game || !game.characters) {
+				if(!scope.game || !scope.game.characters) {
 					return;
 				}
-				var me = game.characters.eve;
+				var me = scope.game.characters.eve;
 				var found = null;
 				var best_dist = 100.0;
-				for (var char_id in game.characters) {
+				for (var char_id in scope.game.characters) {
 					(function(character) {
 						if (character != me) {
 							var dist = character.getDistance(me);
@@ -149,7 +158,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 								found = character;
 							}
 						}
-					})(game.characters[char_id]);
+					})(scope.game.characters[char_id]);
 				}
 				if (found === null) {
 					$(".loot-menu").css('visibility', 'hidden');
