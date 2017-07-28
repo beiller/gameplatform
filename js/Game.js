@@ -930,7 +930,7 @@ function(
 
 		}
 
-		game.loadEnvironment("textures/tropical_beach.jpg", function(mesh) {
+		game.loadEnvironment("textures/forest_park.jpg", function(mesh) {
 			game.animate();
 			game.render();
 			game.updateCubeMap();

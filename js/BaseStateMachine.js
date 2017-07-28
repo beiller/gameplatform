@@ -34,7 +34,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	    this.attackCoolDown = 0;
 		
 		var error = function(eventName, from, to, args, errorCode, errorMessage) {
-		    console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+		    //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
 		};
 		var initial = 'initialized';
 		var events = [

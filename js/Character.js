@@ -199,34 +199,38 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		if(item.physics) {
 	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
 				function createFromPhysic(e) {
-					//TODO a bone with the same name as the main armature will mess something up here.
-					//since the connect_body is looked up via bone name in createPhysics
-					if(e.bone) e.bone = scope.findBone(e.bone, mesh.skeleton); 
-					//if there is some offset, move the main bone to that offset before attaching
-					//or if there is a move-to bone
-					if(e.options && e.options.moveTo) {
+					try {
+						//TODO a bone with the same name as the main armature will mess something up here.
+						//since the connect_body is looked up via bone name in createPhysics
+						if(e.bone) e.bone = scope.findBone(e.bone, mesh.skeleton); 
+						//if there is some offset, move the main bone to that offset before attaching
+						//or if there is a move-to bone
+						if(e.options && e.options.moveTo) {
 
-						var moveTo = scope.findBone(e.options.moveTo);
-						moveTo.add(mesh);
-						moveTo.updateMatrixWorld(true);
-						mesh.updateMatrixWorld(true);
-						e.bone.position.set(0,0,0);
-						e.bone.quaternion.set(0,0,0,1);
-						//var q = new THREE.Quaternion();
-						//var s = new THREE.Vector3();
-						//moveTo.matrixWorld.decompose(e.bone.position, e.bone.quaternion, e.bone.scale);
-						e.bone.updateMatrixWorld(true);
+							var moveTo = scope.findBone(e.options.moveTo);
+							moveTo.add(mesh);
+							moveTo.updateMatrixWorld(true);
+							mesh.updateMatrixWorld(true);
+							e.bone.position.set(0,0,0);
+							e.bone.quaternion.set(0,0,0,1);
+							//var q = new THREE.Quaternion();
+							//var s = new THREE.Vector3();
+							//moveTo.matrixWorld.decompose(e.bone.position, e.bone.quaternion, e.bone.scale);
+							e.bone.updateMatrixWorld(true);
 
-						//TODO this is a hack for some reason I have to set the parent. This relationship could
-						//incorrectly span multiple armatures, but that does not seem to be a problem yet...
-						//if(!e.bone.parent) {
-							e.bone.parent = moveTo;
-						//}
-						
+							//TODO this is a hack for some reason I have to set the parent. This relationship could
+							//incorrectly span multiple armatures, but that does not seem to be a problem yet...
+							//if(!e.bone.parent) {
+								e.bone.parent = moveTo;
+							//}
+							
 
+						}
+						if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
+						scope.createPhysic(e, mesh);
+					} catch(e) {
+						console.log(e);
 					}
-					if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
-					scope.createPhysic(e, mesh);
 				}
 				function createChainRecurse(c) {
 					var boneName = c.bone

@@ -4,7 +4,11 @@
         "model": "models/gold_sword.json",
         "slot": "weapon",
         "bone": "weapon1",
-        "options": {"reflectivity": 0.5, "color": "0xFF7E7A" },
+        "options": {
+            "material": [
+                {"roughness": 0.05, "color": "0xFF7E7A" }
+            ]
+        },
         "stats": {
             "damage": 413,
             "magic_damage": {
@@ -19,7 +23,7 @@
         "model": "models/gold_sword.json",
         "slot": "weapon",
         "bone": "weapon1",
-        "options": {"reflectivity": 0.01, "color": "0x662121", "shininess": 20, "specular": "0x443333" },
+        "options": {"roughness": 0.5, "color": "0x662121" },
         "stats": {
             "damage": 15,
             "attackCooldown": 600
@@ -30,7 +34,7 @@
         "model": "models/gold_sword.json", 
         "slot": "weapon",
         "bone": "weapon1",
-        "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
+        "options": {"roughness": 0.05, "color": "0x5D91FF" },
         "stats": {
             "damage": 412,
             "magic_damage": {
@@ -80,6 +84,14 @@
                 "holy": 200
             },
             "health": 200
+        },
+        "options": {
+            "material": [
+                {"roughness": 0.15, "color": "0xDDDDDD", "metalness": 1.0 },
+                {"roughness": 0.15, "color": "0xDDDDDD", "metalness": 1.0 },
+                {"roughness": 0.15, "color": "0xDDDDDD", "metalness": 1.0 },
+                {"roughness": 0.15, "color": "0xDDDDDD", "metalness": 1.0 }
+            ]
         }
     },
     "panty1": {"name": "panty1", "model": "models/panty1.json", "slot": "underwear","stats": {"defence": 1,"magic_defence": {"holy": 1}}},

@@ -33,6 +33,21 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			}, character.equipment);
 		},
 
+		loadAnimations: function() {
+			var character = this.game.characters.eve;
+			var invWindow = $(".inventory-menu");
+			var scope = this;
+			invWindow.html("");
+			character.animations.forEach(function(animation) {
+				var button = $("<a href='#' class='button'></a>");
+				button.html(animation.name).on('click', function(e) {
+					e.stopPropagation();
+					character.playAnimation(animation.name, {"crossFade": true });
+				});
+				invWindow.append(button);
+			});
+		},
+
 		showLootMenu: function(container) {
 			var invWindow = $(".loot-menu");
 			var scope = this;
@@ -84,6 +99,21 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				return false;
 			});
 			uiWindow.append(toggleInventory);
+
+			var toggleAnimations = $('<a href="#" class="button btn-openinventory">Toggle Animations</a>');
+			toggleInventory.on('click', function(e) {
+				e.stopPropagation();
+				var invWindow = $(".inventory-menu");
+				if (invWindow.css('visibility') == 'hidden') {
+					invWindow.css('visibility', 'visible');
+				} else {
+					invWindow.css('visibility', 'hidden');
+				}
+				scope.loadInventory();
+				return false;
+			});
+			uiWindow.append(toggleAnimations);
+
 
 			var loadLevelFunction = function(levelFileName) {
 				if(window.game) {

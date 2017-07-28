@@ -76,12 +76,13 @@
 	        "sss": false,
 	        "material": [
                 {
-                	"reflectivity": 0.25, "specular": "0xAAAABB", "color": "0xFFFFFF", "shininess": 30,
+                	"roughness": 0.5,
 		        	"diffusePath": "models/neweveskin_low.jpg",
-		        	"specularPath": "models/neweveskin_specular_2_low.jpg",
 		        	"normalPath": "models/neweveskin_normal_low.jpg"
 	        	},
-                {"reflectivity": 0.8, "specular": "0xC035A4", "color": "0x20091C", "shininess": 120}
+                {
+                	"roughness": 0.25, "color": "0x020202"
+	        	}
             ],
 	        "equipment": [
 	        	"marie_face",
@@ -128,12 +129,13 @@
 	        "sss": false,
 	        "material": [
                 {
-                	"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0xFFFFFF", "shininess": 50,
-		        	"diffusePath": "models/neweveskin.jpg",
-		        	"specularPath": "models/neweveskin_specular_2.jpg",
-		        	"normalPath": "models/neweveskin_normal.jpg"
+                	"roughness": 0.5,
+		        	"diffusePath": "models/neweveskin.jpg"
 	        	},
-                {"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120}
+                {
+                	"roughness": 0.1,
+		        	"color": "0x020202"
+	        	}
             ],
 	        "equipment": [ 
 	        	"hairprincess",
@@ -169,13 +171,9 @@
 	    }
 	},
 	"npcs" : [
-		{
-		    "character": "necker",
-		    "position": [-10,0,0]
-		}
 	],
 	"player": {
-	    "character": "necker", 
+	    "character": "marie_rose", 
 	    "position": [0,0,0]
 	}
 }
