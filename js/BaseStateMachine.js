@@ -113,13 +113,13 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			onplayAnimation: function(event, from, to, msg) {
 				console.log("Playing animation " + msg);
 				this.character.setAnimation(msg);
-				var scope = this;
-				if(this.animationTimeout) {
+				//var scope = this;
+				/*if(this.animationTimeout) {
 					cancelTimeout(this.animationTimeout);
 				}
-				this.animationTimeout = setTimeout(function() { scope.idle(); }, 20000);
-				var game = this.game;
-				var character = this.character;
+				this.animationTimeout = setTimeout(function() { scope.idle(); }, 20000);*/
+				//var game = this.game;
+				//var character = this.character;
 		        /*game.cameraUpdateFunction = function () {
 		        	
 	                //game.camera.position.x = scope.characters['eve'].body.getPositionX();

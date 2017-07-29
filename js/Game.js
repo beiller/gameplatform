@@ -138,34 +138,44 @@ function(
 				"50000 lx (Direct Sun)": 50000,
 			};
 			
-			var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
-			var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
-			bulbLight.intensity = bulbLuminousPowers["1700 lm (100W)"];
-			bulbMat = new THREE.MeshStandardMaterial( {
-				emissive: 0xffffee,
-				emissiveIntensity: 1,
-				color: 0x000000
-			});
-			bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
-			bulbLight.position.set( 0.5, 0, 5 );
-			bulbLight.target.position.set( 0, -2.5, 0 );
-			bulbLight.castShadow = true;
-			bulbLight.shadow.mapSize = new THREE.Vector2( 4096, 4096 );
-			bulbLight.angle = 10.0;
-			bulbLight.shadow.camera.fov = 10.0;
-			bulbLight.shadow.camera.near = 1;
-			bulbLight.shadow.camera.far = 5;
-			bulbLight.distance = 10;
-			bulbLight.shadow.bias = 0.00001;
+			var scope = this;
+			function createSpotLight(pos, tar) {
+				var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
+				var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
+				bulbLight.intensity = bulbLuminousPowers["1700 lm (100W)"];
+				bulbMat = new THREE.MeshStandardMaterial( {
+					emissive: 0xffffee,
+					emissiveIntensity: 1,
+					color: 0x000000
+				});
+				bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
+				bulbLight.position.set( pos[0], pos[1], pos[2] );
+				bulbLight.target.position.set( tar[0], tar[1], tar[2] );
+				bulbLight.castShadow = true;
+				bulbLight.shadow.mapSize = new THREE.Vector2( 4096, 4096 );
+				bulbLight.angle = 10.0;
+				bulbLight.shadow.camera.fov = 10.0;
+				bulbLight.shadow.camera.near = 1;
+				bulbLight.shadow.camera.far = 5;
+				bulbLight.distance = 10;
+				//bulbLight.shadow.bias = 0.00001;
+				scope.scene.add( bulbLight );
+				scope.scene.add( bulbLight.target );
+				scope.bulbLight = bulbLight;
+				return bulbLight;
+			}
+
+			createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
+			createSpotLight([0.5, 0, -5], [0, -2.5, 0]);
 
 			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
 			this.scene.add( shadowCameraHelper );
 			var lightHelper = new THREE.SpotLightHelper( bulbLight );
 			this.scene.add( lightHelper );*/
 
-			this.scene.add( bulbLight );
-			this.scene.add( bulbLight.target );
-			this.bulbLight = bulbLight;
+
+
+			
 			
 			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
 			hemiLight.intensity = hemiLuminousIrradiances["25 lx (Shade)"];
@@ -180,7 +190,7 @@ function(
 	
 	    this.container = document.createElement( 'div' );
 	    document.body.appendChild( this.container );
-	
+
 	    this.scene = new THREE.Scene();
 
 	    this.camera = new Camera(null, this, 37.8, window.innerWidth/window.innerHeight, 0.3, 100);
@@ -440,9 +450,9 @@ function(
 				//DEBUG!!!!
 				//e.type = "KINEMATIC";
 				//END DEBUG!!!!
-				if(e.bone) e.bone = character.findBone(e.bone); 
+				/*if(e.bone) e.bone = character.findBone(e.bone); 
 				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
-				character.createPhysic(e, character.armature);
+				character.createPhysic(e, character.armature);*/
 			});
 		}
 
@@ -778,7 +788,7 @@ function(
 	};
 	Game.prototype.updateCubeMap = function() {
 	    for(var i in this.characters) {
-	        this.characters[i].mesh.visible=false;//(delta);
+	        //this.characters[i].mesh.visible=false;//(delta);
 	    }
 		this.renderer.clear();
 		this.cubeCamera.renderTarget.generateMipmaps = true;

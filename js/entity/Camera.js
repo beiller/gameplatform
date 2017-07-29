@@ -10,6 +10,9 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 	    camera.targetQuaternion = new THREE.Quaternion();
 
 	    var cameraZoom = 35.0;
+	    this.trackingCharacter = 'eve';
+
+	    this.disableYLock = false;
 	
 	    function displaywheel(e) {
 	        var evt=window.event || e; //equalize event object
@@ -57,22 +60,18 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 	};
 	Camera.prototype.defaultCameraUpdateFunction = function () {
 		var game = this.game;
-		if('eve' in game.characters) {
-	        /*this.mesh.position.x = game.characters['eve'].body.getPositionX();
-	        this.mesh.position.y = game.characters['eve'].body.getPositionY();
-	        game.bulbLight.position.x = game.characters['eve'].body.getPositionX() + 2.5;
-	        game.bulbLight.target.position.x = game.characters['eve'].body.getPositionX();
-	        game.bulbLight.target.updateMatrixWorld();
-	        game.bulbLight.updateMatrixWorld();*/
-	        this.orbitControls.target.set(
-	        	game.characters['eve'].body.getPositionX(),
-	        	this.orbitControls.target.y,
-	        	game.characters['eve'].body.getPositionZ()
-	        );
-	        if(game.characters['eve'].stateMachine.current != 'playinganimation') {
-	        	this.mesh.position.x = game.characters['eve'].body.getPositionX();
+		if(this.trackingCharacter in game.characters) {
+			if(!this.disableYLock) {
+		        this.orbitControls.target.set(
+		        	game.characters[this.trackingCharacter].body.getPositionX(),
+		        	this.orbitControls.target.y,
+		        	game.characters[this.trackingCharacter].body.getPositionZ()
+		        );
 	    	}
-	        //this.mesh.position.y = game.characters['eve'].body.getPositionY();
+	        if(game.characters[this.trackingCharacter].stateMachine.current != 'playinganimation' && !this.disableYLock) {
+	        	this.mesh.position.x = game.characters[this.trackingCharacter].body.getPositionX();
+	    	}
+	        //this.mesh.position.y = game.characters[this.trackingCharacter].body.getPositionY();
     	}
     	this.orbitControls.update();
     };

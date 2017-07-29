@@ -76,12 +76,13 @@
 	        "sss": false,
 	        "material": [
                 {
-                	"roughness": 0.5,
-		        	"diffusePath": "models/neweveskin_low.jpg",
-		        	"normalPath": "models/neweveskin_normal_low.jpg"
+                	"roughness": 1.0,
+		        	"diffusePath": "models/neweveskin.jpg",
+		        	"roughnessPath": "models/neweveskin_roughness.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg" 
 	        	},
                 {
-                	"roughness": 0.25, "color": "0x020202"
+                	"roughness": 0.2, "color": "0x2101010", "metalness": 1.0
 	        	}
             ],
 	        "equipment": [

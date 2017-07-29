@@ -80,7 +80,11 @@ function(StateMachine, Controller) {
 	        }
 	    };
 	    var onMouseDownFunction = function( event ) {
+	    	return false;
 	        //console.log(event);
+	        if(stateMachine.current == 'playinganimation') {
+	        	return false;
+	        }
 	        event.preventDefault();
 	        if(event.button == 0) {
 	            stateMachine.attack();
@@ -92,6 +96,10 @@ function(StateMachine, Controller) {
 	    };
 	    var onMouseUpFunction = function( event ) {
 	        //console.log(event);
+	        return false;
+	        if(stateMachine.current == 'playinganimation') {
+	        	return false;
+	        }
 	        event.preventDefault();
 	        if(event.button == 2) {
 	            stateMachine.unblock();

@@ -189,12 +189,6 @@
             },
             {
                 "bone": "Bone.004", "connect_body": "head", "dof": 1, "mass": 0.01
-            },
-            {
-                "bone": "Bone.017", "connect_body": "head", "dof": 1, "mass": 0.01
-            },
-            {
-                "bone": "Bone.020", "connect_body": "head", "dof": 1, "mass": 0.01
             }
         ],
         "physics": [
@@ -257,7 +251,10 @@
                 {"roughness": 0.8, "color": "0x000000" },
                 {"roughness": 0.8, "color": "0x000000" },
                 {"roughness": 0.8, "color": "0x000000" },
-                {"roughness": 0.8, "color": "0x000000" }
+                {"roughness": 0.8, "color": "0x000000" },
+                {"roughness": 0.05, "color": "0xDDDDDD", "metalness": 1.0, "name": "metal" },
+                {"roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                {"roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem2" }
             ]
         }
     },
@@ -452,8 +449,8 @@
     },
     "marie_battlesuit": {"name": "marie_battlesuit",  "model": "models/marie_rose_battlesuit.json", "slot": "chest", "options": { 
             "material": [
-                {"reflectivity": 0.6, "specular": "0x5555AA", "color": "0x020208", "shininess": 80},
-                {"reflectivity": 0.00001, "specular": "0xAAAAFF", "color": "0xAAAAAA", "shininess": 5}
+                {"roughness": 0.4, "color": "0x020208"},
+                {"roughness": 1.0, "color": "0xAAAAAA"}
             ]
         }
     },
