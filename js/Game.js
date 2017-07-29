@@ -152,7 +152,7 @@ function(
 				bulbLight.position.set( pos[0], pos[1], pos[2] );
 				bulbLight.target.position.set( tar[0], tar[1], tar[2] );
 				bulbLight.castShadow = true;
-				bulbLight.shadow.mapSize = new THREE.Vector2( 4096, 4096 );
+				bulbLight.shadow.mapSize = new THREE.Vector2( 1024, 1024 );
 				bulbLight.angle = 10.0;
 				bulbLight.shadow.camera.fov = 10.0;
 				bulbLight.shadow.camera.near = 1;
@@ -165,8 +165,8 @@ function(
 				return bulbLight;
 			}
 
-			createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
-			createSpotLight([0.5, 0, -5], [0, -2.5, 0]);
+			//createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
+			//createSpotLight([0.5, 0, -5], [0, -2.5, 0]);
 
 			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
 			this.scene.add( shadowCameraHelper );
@@ -217,12 +217,12 @@ function(
 	
 	    this.container.appendChild( this.renderer.domElement );
 	    
-	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 32 );
+	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 512 );
 	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
 
 	    //no idea what I am doing beyond this point
-	    this.pmremGenerator = new THREE.PMREMGenerator( this.cubeCamera.renderTarget.texture );
-	    this.pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( this.pmremGenerator.cubeLods );
+	    //this.pmremGenerator = new THREE.PMREMGenerator( this.cubeCamera.renderTarget.texture );
+	    //this.pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( this.pmremGenerator.cubeLods );
 
 	    this.scene.add( this.cubeCamera );
 	
@@ -791,16 +791,16 @@ function(
 	        //this.characters[i].mesh.visible=false;//(delta);
 	    }
 		this.renderer.clear();
-		this.cubeCamera.renderTarget.generateMipmaps = true;
-		this.cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
-		this.cubeCamera.renderTarget.needsUpdate = true;
+		this.cubeCamera.renderTarget.texture.generateMipmaps = true;
+		this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipMapLinearFilter;
+		this.cubeCamera.renderTarget.texture.needsUpdate = true;
 
 
 		//this.cubeCamera.renderTarget.texture.generateMipmaps = true;
 		//this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipMapLinearFilter;
 		//this.cubeCamera.renderTarget.texture.needsUpdate = true;
 	    
-	    this.cubeCamera.updateCubeMap( this.renderer, this.scene );
+	    this.cubeCamera.update( this.renderer, this.scene );
 	    this.cubemapRendered = true;
 
     	//this.cubeCamera.renderTarget.texture.encoding = THREE.GammaEncoding;

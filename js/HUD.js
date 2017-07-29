@@ -168,7 +168,6 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				Game.loadLevel(levelFileName).then(function(game) {
 					window.game = game;
 					scope.game = game;
-					scope.game.container.childNodes[0].webkitRequestFullscreen();
 				});
 			};
 			uiWindow.append(
@@ -219,12 +218,12 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				console.log("Setting material property " + materialPropertyName + ": " + this.valueAsNumber);
 	    		if(scope.character.armature.material.constructor === Array) {
 					for(i in scope.character.armature.material) {
-						scope.game.character.armature.material[i][materialPropertyName] = this.valueAsNumber;
-						scope.game.character.armature.material[i].needsUpdate = true;
+						scope.character.armature.material[i][materialPropertyName] = this.valueAsNumber;
+						scope.character.armature.material[i].needsUpdate = true;
 					}
 	    		} else {
-					scope.game.character.armature.material[materialPropertyName] = this.valueAsNumber;
-					scope.game.character.armature.material.needsUpdate = true;
+					scope.character.armature.material[materialPropertyName] = this.valueAsNumber;
+					scope.character.armature.material.needsUpdate = true;
 	    		}
 				return false;
 			};
