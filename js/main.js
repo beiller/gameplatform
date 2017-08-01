@@ -50,14 +50,13 @@ requirejs(
 			if(!window.game) {
 				return;
 			}
-			var game = window.game;
-			game.animate(skipPhysics, skipAnimation);
-			game.render();
+			window.game.animate(skipPhysics, skipAnimation);
+			window.game.render();
 			if (frameTimer.getElapsedTime() >= 1.0) {
 				document.getElementById("debugConsole").innerHTML = "drawFPS: " + frameCount + "<br/>logicFPS: " + logicCount;
 				frameCount = 0;
 				logicCount = 0;
-				frameTimer = new THREE.Clock(true);
+				frameTimer.start();
 			}
 			frameCount++;
 		}

@@ -75,14 +75,15 @@ define(["lib/three"], function(THREE) {
 		}
 	};
 
-
+	var p = new THREE.Vector3();
+	var q = new THREE.Quaternion();
+	var s = new THREE.Vector3(1, 1, 1);
+	var o = new THREE.Vector3();
 	PhysBone.prototype.update = function() {
-		var p = new THREE.Vector3().fromArray(this.body.getPosition());
-		var q = new THREE.Quaternion().fromArray(this.body.getQuaternion());
-		var s = new THREE.Vector3(1, 1, 1);
-		var o = new THREE.Vector3().copy(this.localOffset).applyQuaternion(q);
+		p.fromArray(this.body.getPosition());
+		q.fromArray(this.body.getQuaternion());		
+		o.copy(this.localOffset).applyQuaternion(q);
 		p.add(o);
-
 		this.boneMesh.matrixWorld.compose(p, q, s);
 
 		var bone = this.boneMesh;

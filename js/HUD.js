@@ -182,6 +182,12 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 					document.body.webkitRequestFullscreen();
 				})
 			);
+			uiWindow.append(
+				$('<a href="#" class="button btn-loadlevel4">Load Level 4</a>').on('click', function(e) {
+					loadLevelFunction("level4/level4.json");
+					document.body.webkitRequestFullscreen();
+				})
+			);
 
 			/*var characterIndex = 0
 			var characterNames = [];

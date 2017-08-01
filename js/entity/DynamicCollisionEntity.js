@@ -35,14 +35,15 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			});
 		}
 	}
+    var position = new THREE.Vector3();
+    var quaternion = new THREE.Quaternion();
+    var scale = new THREE.Vector3();
+    var tmpVec1 = new THREE.Vector3();
+    
 	DynamicCollisionEntity.prototype.update = function(dt) {
 	    if(!this.sleep) {
-		    var position = new THREE.Vector3();
-		    var quaternion = new THREE.Quaternion();
-		    var scale = new THREE.Vector3();
 		    this.mesh.matrixWorld.decompose(position, quaternion, scale);
-
-		    var worldOffset = new THREE.Vector3().copy(this.localOffset).applyQuaternion(quaternion).add(position)
+		    var worldOffset = tmpVec1.copy(this.localOffset).applyQuaternion(quaternion).add(position)
 	        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
 	        this.body.setQuaternion([quaternion.x, quaternion.y, quaternion.z, quaternion.w]);
 		    if(this.debugMesh) {

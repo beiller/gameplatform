@@ -141,6 +141,9 @@ function(
 			var scope = this;
 			function createSpotLight(pos, tar) {
 				var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
+				//var width = 2;
+				//var height = 10;
+				//var bulbLight = new THREE.RectAreaLight( 0xffee88, undefined,  width, height );
 				var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
 				bulbLight.intensity = bulbLuminousPowers["1700 lm (100W)"];
 				bulbMat = new THREE.MeshStandardMaterial( {
@@ -152,33 +155,28 @@ function(
 				bulbLight.position.set( pos[0], pos[1], pos[2] );
 				bulbLight.target.position.set( tar[0], tar[1], tar[2] );
 				bulbLight.castShadow = true;
-				bulbLight.shadow.mapSize = new THREE.Vector2( 1024, 1024 );
+				bulbLight.shadow.mapSize = new THREE.Vector2( scope.settings.shadowResolution, scope.settings.shadowResolution );
 				bulbLight.angle = 10.0;
 				bulbLight.shadow.camera.fov = 10.0;
 				bulbLight.shadow.camera.near = 1;
 				bulbLight.shadow.camera.far = 5;
 				bulbLight.distance = 10;
-				//bulbLight.shadow.bias = 0.00001;
-				scope.scene.add( bulbLight );
+				//bulbLight.shadow.bias = 0.000001;
 				scope.scene.add( bulbLight.target );
 				scope.bulbLight = bulbLight;
 				return bulbLight;
 			}
 
-			//createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
-			//createSpotLight([0.5, 0, -5], [0, -2.5, 0]);
+			this.scene.add(   createSpotLight([0.5, 0, 5], [0, -2.5, 0])    );
+			this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
 
 			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
 			this.scene.add( shadowCameraHelper );
 			var lightHelper = new THREE.SpotLightHelper( bulbLight );
 			this.scene.add( lightHelper );*/
-
-
-
-			
 			
 			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
-			hemiLight.intensity = hemiLuminousIrradiances["25 lx (Shade)"];
+			hemiLight.intensity = hemiLuminousIrradiances["50 lx (Living Room)"];
 			this.scene.add( hemiLight );
 
 	};
@@ -207,22 +205,19 @@ function(
 		this.renderer.gammaOutput = true;
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.toneMapping = THREE.ReinhardToneMapping;
-		this.exposureSetting = 8.0;
+		this.exposureSetting = 3.0;
 	    this.renderer.setClearColor( 0x050505 );
 	    this.renderer.setPixelRatio( window.devicePixelRatio );
 	    this.renderer.setSize( window.innerWidth, window.innerHeight );
 	    this.renderer.autoClear = false;
 	    this.renderer.shadowMap.enabled = this.settings.enableShadows;
-	    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	    if(this.settings.softShadows) {
+	    	this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+	    }
 	
 	    this.container.appendChild( this.renderer.domElement );
 	    
-	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, 512 );
-	    //this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearFilter;
-
-	    //no idea what I am doing beyond this point
-	    //this.pmremGenerator = new THREE.PMREMGenerator( this.cubeCamera.renderTarget.texture );
-	    //this.pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( this.pmremGenerator.cubeLods );
+	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, this.settings.cubeMapResolution );
 
 	    this.scene.add( this.cubeCamera );
 	
@@ -237,7 +232,17 @@ function(
 	Game.prototype.loadEnvironment = function(envMapPath, onComplete) {
 	    var game = this;
 	    this.loader.loadTexture(envMapPath).then(function(texture) {
-	        var mesh = new THREE.Mesh(new THREE.SphereGeometry(50, 60, 40), new THREE.MeshBasicMaterial({map: texture}));
+	        var mesh = new THREE.Mesh(
+	        	new THREE.SphereGeometry(50, 60, 40), 
+	        	new THREE.MeshStandardMaterial(
+	        		{
+	        			emissiveMap: texture,
+	        			emissiveIntensity: 100.0,
+	        			emissive: new THREE.Color( 0xFFFFFF )
+	        		}
+	        	)
+	        );
+	        //var mesh = new THREE.Mesh(new THREE.SphereGeometry(50, 60, 40), new THREE.MeshBasicMaterial({map: texture}));
 	        mesh.scale.x = -1.0;
 	        game.scene.add(mesh);
 	        if(onComplete !== undefined) onComplete(mesh);
@@ -323,7 +328,7 @@ function(
 				rotationLimitsLow:  [-0.00,-0.00,-0.00],
 				rotationLimitsHigh: [ 0.00, 0.00, 0.00], 
 				noContact: true
-			} },
+			} }
 		];
 		function createLR(side) {
 			boneMap.push.apply(boneMap, [
@@ -450,9 +455,9 @@ function(
 				//DEBUG!!!!
 				//e.type = "KINEMATIC";
 				//END DEBUG!!!!
-				/*if(e.bone) e.bone = character.findBone(e.bone); 
+				if(e.bone) e.bone = character.findBone(e.bone); 
 				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
-				character.createPhysic(e, character.armature);*/
+				character.createPhysic(e, character.armature);
 			});
 		}
 
@@ -673,10 +678,10 @@ function(
 				'metalness': 'metalness' in materialOptions ? materialOptions.metalness : 0.0,
 				'roughness': 'roughness' in materialOptions ? materialOptions.roughness : 1.0,
 				'skinning': true,
-				'envMapIntensity': 25.0,
+				'envMapIntensity': 100.0,
 				'emissive': materialOptions.emissive ? new THREE.Color( parseInt(materialOptions.emissive, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0
-				//'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.9999,
+				//'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.8,
 				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0,
 			};
 			if(this.cubeCamera) {
@@ -729,10 +734,11 @@ function(
 	    };
 	    this.loadJsonMesh(jsonFileName, loadedMesh);
 	};
-	Game.prototype.loadStaticObject = function(jsonFileName, shape, position, onComplete) {
+	Game.prototype.loadStaticObject = function(jsonFileName, shape, position, options, onComplete) {
 	    var game = this;
 	    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
-	        var mesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
+	    	var material = game.parseMaterial(options);
+	        var mesh = new THREE.Mesh(geometry, material);
 	        mesh.position.set(position[0], position[1], position[2]);
 	        mesh.castShadow = game.settings.enableShadows;
 	        mesh.receiveShadow = game.settings.enableShadows;
@@ -777,12 +783,9 @@ function(
 		    }
 		}
 		
-
-	    this.dynamics.forEach(function(dynamic) {
-	        dynamic.update(delta);
-	    });
-
-	    
+		for(var i in this.dynamics) {
+			this.dynamics[i].update(delta);
+		}
 
 	    //this.render();
 	};
@@ -790,17 +793,22 @@ function(
 	    for(var i in this.characters) {
 	        //this.characters[i].mesh.visible=false;//(delta);
 	    }
+
+	    //this.cubeCamera.position.copy(this.camera.orbitControls.target);
+	    if(this.camera.trackingCharacter && this.characters && this.characters[this.camera.trackingCharacter]) {
+	    	this.cubeCamera.position.copy(this.characters[this.camera.trackingCharacter].armature.position);
+	    }
 		this.renderer.clear();
+		this.cubeCamera.renderTarget.generateMipmaps = true;
+		this.cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
+		this.cubeCamera.renderTarget.needsUpdate = true;
+
+
 		this.cubeCamera.renderTarget.texture.generateMipmaps = true;
 		this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipMapLinearFilter;
 		this.cubeCamera.renderTarget.texture.needsUpdate = true;
-
-
-		//this.cubeCamera.renderTarget.texture.generateMipmaps = true;
-		//this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipMapLinearFilter;
-		//this.cubeCamera.renderTarget.texture.needsUpdate = true;
 	    
-	    this.cubeCamera.update( this.renderer, this.scene );
+	    this.cubeCamera.updateCubeMap( this.renderer, this.scene );
 	    this.cubemapRendered = true;
 
     	//this.cubeCamera.renderTarget.texture.encoding = THREE.GammaEncoding;
@@ -925,7 +933,7 @@ function(
 			);
 
 			levelData.staticObjects.forEach(function(element) {
-				game.loadStaticObject(element.model, element.shape, element.position);
+				game.loadStaticObject(element.model, element.shape, element.position, element.options);
 			});
 
 			levelData.npcs.forEach(function(npc) {

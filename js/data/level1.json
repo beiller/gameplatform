@@ -1,10 +1,6 @@
 {
 	"staticObjects": [
-		{
-			"model": "models/big_brick.json",
-			"shape": "box",
-			"position": [0,-3, 0]
-		}
+
 	],
 	"characters": {
 	    "evil_eve": {

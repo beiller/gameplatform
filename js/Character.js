@@ -121,9 +121,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    this.pointCharacter();
 	    //update physics components and copy to mesh position
 	    if(this.body) {
-	        this.controllers.forEach(function(controller) {
-	            controller.update(delta);
-	        });
+	    	for(var i in this.controllers) {
+	    		this.controllers[i].update(delta);
+	    	}
 	    }
 	    //do update skeletal Animation
 	    if(this.animationMixer) {

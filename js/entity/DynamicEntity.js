@@ -41,9 +41,12 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	DynamicEntity.prototype.getEntityByBody = function(body) {
 	    return dynamicEntitiesByBody[body];
 	};
+
+	var p1 = new THREE.Vector3();
+	var p2 = new THREE.Vector3();
 	DynamicEntity.prototype.getDistance = function(dynamic2) {
-		var p1 = new THREE.Vector3().fromArray(this.body.getPosition());
-		var p2 = new THREE.Vector3().fromArray(dynamic2.body.getPosition());
+		p1.fromArray(this.body.getPosition());
+		p2.fromArray(dynamic2.body.getPosition());
 		return p1.sub(p2).length();
 	};
 	return DynamicEntity;

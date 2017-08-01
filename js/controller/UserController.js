@@ -13,7 +13,7 @@ function(StateMachine, Controller) {
 	    var scope = this;
 	    var animationIndex = 0;
 	    var animations = [
-	    	"f1", "f2", "f3"
+	    	"f5", "f1", "f4", "f2", "f3"
 	    ];
 
 	    var keymap = {
@@ -28,13 +28,17 @@ function(StateMachine, Controller) {
 					var me = character;
 					var found = null;
 					var best_dist = 100.0;
+					var all_found = [];
 					for (var char_id in game.characters) {
 						(function(character) {
 							if (character != me) {
 								var dist = character.getDistance(me);
-								if (dist < 1.0 && dist < best_dist) {
-									best_dist = dist;
-									found = character;
+								if (dist < 2.0) {
+									all_found.push(character);
+									if(dist < best_dist) {
+										best_dist = dist;
+										found = character;
+									}
 								}
 							}
 						})(game.characters[char_id]);
@@ -42,15 +46,19 @@ function(StateMachine, Controller) {
 					if (found === null) {
 						console.log('no char found')
 					} else {
-						//move this character to my position
-						character.body.setPosition(found.body.getPosition());
-						character.body.setQuaternion(found.body.getQuaternion());
+						for(var i in all_found) {
+							var characterFound = all_found[i];
+							//move this character to my position
+							characterFound.body.setPosition(character.body.getPosition());
+							characterFound.body.setQuaternion(character.body.getQuaternion());
 
-						character.armature.quaternion.copy(found.armature.quaternion);
-						
-						found.stateMachine.playAnimation(animations[animationIndex % animations.length]);
-						character.stateMachine.playAnimation(animations[animationIndex % animations.length]); 
+							characterFound.armature.quaternion.copy(character.armature.quaternion);
+							
+							characterFound.stateMachine.playAnimation(animations[animationIndex % animations.length]);
+							character.stateMachine.playAnimation(animations[animationIndex % animations.length]); 
+						}
 	            		animationIndex += 1; 	
+
 					}
 
 	            }  //SPACEBAR
@@ -80,8 +88,9 @@ function(StateMachine, Controller) {
 	        }
 	    };
 	    var onMouseDownFunction = function( event ) {
-	    	return false;
-	        //console.log(event);
+	    	if(game.camera.disableYLock) {
+	        	return false;
+	        }
 	        if(stateMachine.current == 'playinganimation') {
 	        	return false;
 	        }
@@ -95,8 +104,9 @@ function(StateMachine, Controller) {
 	        return false;
 	    };
 	    var onMouseUpFunction = function( event ) {
-	        //console.log(event);
-	        return false;
+	        if(game.camera.disableYLock) {
+	        	return false;
+	        }
 	        if(stateMachine.current == 'playinganimation') {
 	        	return false;
 	        }

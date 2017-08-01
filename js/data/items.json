@@ -275,6 +275,32 @@
             ]
         }
     },
+    "char1_shorts1": {"name": "char1_shorts1",  "model": "level2/char1_shorts1.json", "slot": "pants", "options": { 
+            "material": [
+                {"roughness": 0.8, "color": "0x006D15" },
+                {"roughness": 0.8, "color": "0x006D15" },
+                {"roughness": 0.1, "color": "0x010101" }
+            ]
+        }
+    },
+    "char1_top1": {"name": "char1_top1",  "model": "level2/char1_top1.json", "slot": "top", "options": { 
+            "material": [
+                {"roughness": 0.8, "color": "0x006D15" },
+                {"roughness": 0.8, "color": "0x006D15" },
+                {"roughness": 0.8, "color": "0x006D15" },
+                {"roughness": 0.1, "color": "0x010101" }
+            ]
+        }
+    },
+    "char1_boots1": {"name": "char1_boots1",  "model": "level2/char1_boots1.json", "slot": "boots", "options": { 
+            "material": [
+                {"roughness": 0.8, "color": "0x020202" },
+                {"roughness": 0.8, "color": "0x020202" },
+                {"roughness": 0.8, "color": "0x020202" },
+                {"roughness": 0.1, "color": "0xEEEEEE", "metalness": 1.0 }
+            ]
+        }
+    },
     "cross_earring": {
         "name": "cross_earring",  
         "model": "models/cross_earring.json", 
