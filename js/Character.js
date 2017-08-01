@@ -403,11 +403,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    var damage = this.calculateEffect(attackingCharacter.characterStats, wstats);
 	    if(this.blocking || this.stateMachine.current == 'blocking') {
 	        console.log(this.name + " blocked an attack!");
-	        this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
+	        this.game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
 	        damage = Math.round(damage * 0.1);
 	    }
 		console.log(this.name + ' takes ' + damage + ' damage.');
-	    this.controllers[0].game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
+	    this.game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
 	    this.characterStats.health = this.characterStats.health - damage;
 	    if (this.characterStats.health <= 0) {
 	        console.log(this.name + " has died.");
@@ -425,7 +425,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        this.stateMachine.stun();
 	        var scope = this;
 	        setTimeout(function() {
-	            scope.controllers[0].game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y, 1.0), "Stunned", 3000);
+	            scope.game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y, 1.0), "Stunned", 3000);
 	        }, 100);
 	    }
 	};
