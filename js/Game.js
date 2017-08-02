@@ -637,6 +637,7 @@ function(
 	        scope.loaderBusy = true;
 	        jsonFileNameNoCache = jsonFileName + '?cache=' + new Date().getTime();
 	        scope.jsonloader.load(jsonFileNameNoCache, function(geometry, materials) {
+	        	scope.loaderBusy = false;
 	        	if(!normalGeometry) {
 					var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
 					//THREE.js issue# 6869
@@ -649,7 +650,6 @@ function(
 					scope.meshCache[jsonFileName] = {geometry: geometry, materials: materials};
 					loadedMesh(geometry, materials);
 				} 
-				scope.loaderBusy = false;
 	        });
 	    }
 	};

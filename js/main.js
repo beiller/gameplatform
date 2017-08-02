@@ -54,30 +54,42 @@ requirejs(
 
 		var fps = 60;
 		var interval = 1000 / fps;
+		var frameTime = 1.0 / fps;
 		var drawTime = null;
 		var logicTime = null;
 		var frameTimer = new THREE.Clock(true);
+		var drawTimer = new THREE.Clock(true);
 		var frameCount = 0;
 		var logicCount = 0;
 		var skipPhysics = false;
 		var skipAnimation = false;
 		
 		window.game = null;
+		var tickerInfo = ["drawFPS:", 0, "<br/>", "logicFPS:", 0];
 
 		function draw() {
 			requestAnimationFrame(draw);
+			
 			if(!window.game) {
 				return;
 			}
 			window.game.animate(skipPhysics, skipAnimation);
-			window.game.render();
+			if(drawTimer.getElapsedTime() >= frameTime) {
+				
+				window.game.render();
+				drawTimer.start();
+				frameCount++;
+			}
+			
 			if (frameTimer.getElapsedTime() >= 1.0) {
-				document.getElementById("debugConsole").innerHTML = "drawFPS: " + frameCount + "<br/>logicFPS: " + logicCount;
+				tickerInfo[1] = frameCount;
+				tickerInfo[4] = logicCount;
+				document.getElementById("debugConsole").innerHTML = tickerInfo.join(" ");
 				frameCount = 0;
 				logicCount = 0;
 				frameTimer.start();
 			}
-			frameCount++;
+			
 		}
 
 		draw();

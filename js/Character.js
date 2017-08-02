@@ -99,8 +99,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	Character.prototype.addController = function(controller) {
 	    this.controllers.push(controller);
 	};
+	var quaternion = new THREE.Quaternion();
 	Character.prototype.pointCharacter = function() {
-	    var quaternion = new THREE.Quaternion();
 	    if(this.movementDirection.x > 0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
 	        quaternion.slerp(this.armature.quaternion, 0.9);

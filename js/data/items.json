@@ -3,7 +3,7 @@
     	"name": "Ember Blade", 
         "model": "models/gold_sword.json",
         "slot": "weapon",
-        "bone": "weapon1",
+        "bone": "DEF-hand.R",
         "options": {
             "material": [
                 {"roughness": 0.05, "color": "0xFF7E7A" }

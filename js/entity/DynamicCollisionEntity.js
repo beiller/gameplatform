@@ -24,12 +24,10 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	    	dynamicEntitiesByBody[body] = this;
 		    var scope = this;
 			game.physicsWorld.addCollisionCallback(body.body, function(body1, body2, collisionPoint) { 
-				e1 = scope.getEntityByBody(body1);
-				e2 = scope.getEntityByBody(body2);
 				scope.dispatchEvent({
 					type: "COLLIDE",
-					entity1: e1,
-					entity2: e2,
+					entity1: dynamicEntitiesByBody[body1],
+					entity2: dynamicEntitiesByBody[body2],
 					collisionPoint: collisionPoint
 				});
 			});
