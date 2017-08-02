@@ -1,6 +1,74 @@
 {
 	"staticObjects": [
-
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [0, -3.58, 0],
+			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+		},
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [0, -1.58, -2],
+			"options": { 
+				"material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ],
+				"rotation": [-1.57075, 0, 0] 
+			}
+		},
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [-2, -1.58, -2],
+			"options": { 
+				"material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ],
+				"rotation": [-1.57075, 0, 0] 
+			}
+		},	
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [2, -1.58, -2],
+			"options": { 
+				"material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ],
+				"rotation": [-1.57075, 0, 0] 
+			}
+		},		
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [-2,-3.58, 0],
+			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+		},
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [-4,-3.58, 0],
+			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+		},
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [-6,-3.58, 0],
+			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+		},
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [ 2,-3.58, 0],
+			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+		},
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [ 4,-3.58, 0],
+			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+		},
+		{
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [ 6,-3.58, 0],
+			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+		}
 	],
 	"characters": {
 	    "evil_eve": {
@@ -28,8 +96,9 @@
 	        "sss": false,
 	        "material": [
                 {
-                	"roughness": 0.25,
+                	"roughness": 1.5,
 		        	"diffusePath": "models/beast_skin_blue.png",
+		        	"roughnessPath": "models/beast_skin_blue.png",
 		        	"transparent": false
 	        	}
             ],
@@ -92,33 +161,13 @@
 	        ],
 	        "inventory": [
 	        	"marie_harness",
-	        	"hairprincess",
-	        	"face",
-	        	"panty5",
-	        	"bra",
-	        	"boots",
-	        	"stockings2",
-			    "panty1",
-			    "panty2",
-			    "panty3",
-			    "panty3.1",
-			    "panty4",
-			    "top4",
-			    "top3",
-			    "dragonsteel",
-			    "stockings1",
-			    "stockings4",
-	        	"witchwig",
-	        	"witchhat",
-	        	"unholychestarmor",
+	        	"chain_earring1",
+	        	"chain_earring2",
 	        	"firesword", 
 	        	"rustsword",
 	        	"icestaff",
 	        	"icekatana",
-	        	"cross_earrings",
-	        	"school_shirt",
-	        	"school_skirt",
-	        	"ponytail"
+	        	"cross_earrings"
 	        ]
 	    },
 	    "good_eve": {
@@ -168,6 +217,14 @@
 	    }
 	},
 	"npcs" : [
+		{
+			"character": "necker", 
+	    	"position": [-11,0,0]
+		},
+		{
+			"character": "necker", 
+	    	"position": [11,0,0]
+		}
 	],
 	"player": {
 	    "character": "marie_rose", 

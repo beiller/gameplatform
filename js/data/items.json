@@ -151,24 +151,24 @@
     "marie_face": {"name": "marie_face",  "model": "models/marie_rose_face.json", "slot": "face", "options": { 
             "material": [
                 {
-                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
-                "diffusePath": "models/eyebrow010.png", "transparent": true
+                    "color": "0x000000", "diffusePath": "models/eyebrow010.png", "transparent": true,
+                    "roughness": 0.95
                 },
                 {
-                "reflectivity": 0.00001, "specular": "0x222222", "color": "0xCCCCCC",
-                "diffusePath": "models/eyelashes04.png", "transparent": true
+                    "color": "0x000000", "diffusePath": "models/eyelashes04.png", "transparent": true,
+                    "roughness": 0.95
                 },
                 {
-                "reflectivity": 0.00015, "specular": "0xFFFFFF", "color": "0xCCCCCC",
-                "diffusePath": "models/brownlight_eye.png", "transparent": true, "shininess": 180
+                    "color": "0xFFFFFF", "transparent": true,
+                    "diffusePath": "models/brownlight_eye.png",
+                    "roughness": 0.1
                 },
                 {
-                "reflectivity": 0.1, "specular": "0x222222", "color": "0xCCCCCC",
-                "diffusePath": "models/tongue01_diffuse.png"
+                    "diffusePath": "models/tongue01_diffuse.png", "roughness": 0.5
                 },
                 {
-                "reflectivity": 0.1, "specular": "0x222222", "color": "0xCCCCCC",
-                "diffusePath": "models/teeth.png"
+                    "diffusePath": "models/teeth.png", "roughness": 0.4
+                    
                 }
             ]
         }
@@ -185,10 +185,10 @@
     "marie_hair_dynamic": {"name": "marie_hair_dynamic",  "model": "models/marie_rose_hair_dynamic.json", "slot": "hair1", 
         "physicsChain" : [
             {
-                "bone": "Bone.003", "connect_body": "head", "dof": 1, "mass": 0.01
+                "bone": "Bone.003", "connect_body": "head", "dof": 0.5, "mass": 0.1
             },
             {
-                "bone": "Bone.004", "connect_body": "head", "dof": 1, "mass": 0.01
+                "bone": "Bone.004", "connect_body": "head", "dof": 0.5, "mass": 0.1
             }
         ],
         "physics": [

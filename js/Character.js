@@ -229,7 +229,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 						if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
 						scope.createPhysic(e, mesh);
 					} catch(e) {
-						console.log(e);
+						//console.log(e);
+						throw e;
 					}
 				}
 				function createChainRecurse(c) {

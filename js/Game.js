@@ -156,10 +156,10 @@ function(
 				bulbLight.target.position.set( tar[0], tar[1], tar[2] );
 				bulbLight.castShadow = true;
 				bulbLight.shadow.mapSize = new THREE.Vector2( scope.settings.shadowResolution, scope.settings.shadowResolution );
-				bulbLight.angle = 10.0;
-				bulbLight.shadow.camera.fov = 10.0;
+				bulbLight.angle = 40.0;
+				bulbLight.shadow.camera.fov = 40.0;
 				bulbLight.shadow.camera.near = 1;
-				bulbLight.shadow.camera.far = 5;
+				bulbLight.shadow.camera.far = 3;
 				bulbLight.distance = 10;
 				//bulbLight.shadow.bias = 0.000001;
 				scope.scene.add( bulbLight.target );
@@ -167,8 +167,9 @@ function(
 				return bulbLight;
 			}
 
+
 			this.scene.add(   createSpotLight([0.5, 0, 5], [0, -2.5, 0])    );
-			this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
+			//this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
 
 			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
 			this.scene.add( shadowCameraHelper );
@@ -669,8 +670,8 @@ function(
 		if(materialOptions) {
 			console.log(materialOptions);
 			var map = {
-				//'normalScale' : THREE.Vector2(200.0, 200.0),
-				'bumpScale': materialOptions.bumpScale || 0.0025,
+				'normalScale' : new THREE.Vector2(0.5, 0.5),
+				'bumpScale': 'bumpScale' in materialOptions ? materialOptions.bumpScale : 0.0025,
 				'color': materialOptions.color ? new THREE.Color( parseInt(materialOptions.color, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'transparent': materialOptions.transparent ? materialOptions.transparent : false,
 				'opacity': materialOptions.opacity || 1.0,
@@ -701,7 +702,7 @@ function(
 				});
 			}
 			var slots = ["map", "specularMap", "normalMap", "alphaMap", "bumpMap", "roughnessMap", "emissiveMap"];
-			var optionValues = ["diffusePath", "specularPath", "normalPath", "alphaPath", "bumpPath", "roughnessPath", "emissiveMap"];
+			var optionValues = ["diffusePath", "specularPath", "normalPath", "alphaPath", "bumpPath", "roughnessPath", "emissivePath"];
 			slots.forEach(function(slot, i) {
 				if(optionValues[i] in materialOptions) {
 					setMaterial(materialOptions[optionValues[i]], slot);
@@ -725,6 +726,7 @@ function(
 	    var game = this;
 	    if(!options) options = {};
 	    var loadedMesh = function(geometry, materials) {
+	    	console.log("MATERIALS IN", jsonFileName, materials);
 	    	var material = game.parseMaterial(options);
 	        var skinnedMesh = new THREE.SkinnedMesh(geometry, material);
 	        skinnedMesh.frustumCulled = !game.disableCull;
@@ -740,6 +742,9 @@ function(
 	    	var material = game.parseMaterial(options);
 	        var mesh = new THREE.Mesh(geometry, material);
 	        mesh.position.set(position[0], position[1], position[2]);
+	        if(options.rotation) {
+	        	mesh.rotation.set(options.rotation[0], options.rotation[1], options.rotation[2]);
+	        }
 	        mesh.castShadow = game.settings.enableShadows;
 	        mesh.receiveShadow = game.settings.enableShadows;
 	        game.scene.add(mesh);

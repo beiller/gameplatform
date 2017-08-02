@@ -189,6 +189,45 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				})
 			);
 
+			uiWindow.append(
+				$('<a href="#" class="button btn-uhh">Uhhhh</a>').on('click', function(e) {
+					var video = $('<video id="video" crossorigin="anonymous" style="width: 100%; height: 100%; visibility: visible;" preload="metadata" class=""><source src="https://dv.phncdn.com/videos/201602/05/67891491/720P_1500K_67891491.mp4?ttl=1501645018&amp;ri=1228800&amp;rs=1592&amp;hash=ffd376cf80ad39aae355539ce1a96381" type="video/mp4"></video>');
+					$(document.body).append(video);
+					var video = document.getElementById( 'video' );
+					video.currentTime = 300.0;
+					video.play();
+
+					var texture = new THREE.VideoTexture( video );
+					//texture.minFilter = THREE.LinearFilter;
+					texture.minFilter = THREE.LinearFilter;
+					texture.magFilter = THREE.LinearFilter;
+					texture.format = THREE.RGBFormat;
+
+					var geometry = new THREE.PlaneGeometry(0.215, 0.125, 12, 12);
+				    var material = new THREE.MeshStandardMaterial( { 
+				    	map: texture,
+				    	emissiveMap: texture, side: THREE.DoubleSide, emissiveIntensity: 100.0,
+				    	emissive: new THREE.Color( 0xFFFFFF ),
+				    	opacity: 0.75,
+				    	transparent: true
+				    } );
+				 
+				    mesh = new THREE.Mesh(geometry, material );		
+				    mesh.rotateX(1.6);
+				    mesh.scale.set(-1, -1, 1);
+
+				    var bone = game.characters.eve.findBone("eyes");
+				    
+				    //var e = bone.matrixWorld.elements;
+				    //console.log("Position:", [e[12], e[13], e[14]])
+				    //mesh.position.set(0, 0, 1.0);
+				    //mesh.position.z = -50;
+
+				    bone.add( mesh );
+				})
+			);
+
+
 			/*var characterIndex = 0
 			var characterNames = [];
 			for(var characterName in scope.game.characters) {
