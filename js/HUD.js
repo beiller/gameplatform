@@ -189,7 +189,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				})
 			);
 
-			uiWindow.append(
+			/*uiWindow.append(
 				$('<a href="#" class="button btn-uhh">Uhhhh</a>').on('click', function(e) {
 					var video = $('<video id="video" crossorigin="anonymous" style="width: 100%; height: 100%; visibility: visible;" preload="metadata" class=""><source src="https://dv.phncdn.com/videos/201602/05/67891491/720P_1500K_67891491.mp4?ttl=1501645018&amp;ri=1228800&amp;rs=1592&amp;hash=ffd376cf80ad39aae355539ce1a96381" type="video/mp4"></video>');
 					$(document.body).append(video);
@@ -217,15 +217,10 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				    mesh.scale.set(-1, -1, 1);
 
 				    var bone = game.characters.eve.findBone("eyes");
-				    
-				    //var e = bone.matrixWorld.elements;
-				    //console.log("Position:", [e[12], e[13], e[14]])
-				    //mesh.position.set(0, 0, 1.0);
-				    //mesh.position.z = -50;
 
 				    bone.add( mesh );
 				})
-			);
+			);*/
 
 
 			/*var characterIndex = 0
