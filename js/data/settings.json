@@ -3,8 +3,8 @@
 	"disableCull": 	true,
 	"enableAA": false,
 	"enableShadows": true,
-	"shadowResolution": 512,
+	"shadowResolution": 4096,
 	"cubeMapResolution": 128,
-	"softShadows": false
+	"softShadows": true
 }
 

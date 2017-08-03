@@ -248,9 +248,10 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		//physics runs pre-update. Reset onGround attribute
 		this.character.onGround = false;
 	};	
+	var forceVec = new THREE.Vector3();
 	BaseStateMachine.prototype.applyForces = function(delta) {
 	    if(Math.abs(this.character.body.getVelocityX()) < this.character.characterStats.movementSpeed) {
-		    var forceVec = new THREE.Vector3().copy(this.character.movementDirection);
+		    forceVec.copy(this.character.movementDirection);
 		    forceVec = forceVec.normalize();
 		    var f = forceVec.multiplyScalar(this.movementForce);
 		    this.character.body.applyImpulse([f.x, f.y, f.z], this.character.body.getPosition());

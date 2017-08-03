@@ -74,12 +74,12 @@ requirejs(
 				return;
 			}
 			window.game.animate(skipPhysics, skipAnimation);
-			if(drawTimer.getElapsedTime() >= frameTime) {
+			//if(drawTimer.getElapsedTime() >= frameTime) {
 				
 				window.game.render();
 				drawTimer.start();
 				frameCount++;
-			}
+			//}
 			
 			if (frameTimer.getElapsedTime() >= 1.0) {
 				tickerInfo[1] = frameCount;

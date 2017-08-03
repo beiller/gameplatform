@@ -137,9 +137,14 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		}
 		if(this.equipment[slot]) {
 			this.addItem(this.equipment[slot]);
-			this.armature.remove(this.meshes[slot]);
+			if(this.equipment[slot].bone) {
+				this.findBone(this.equipment[slot].bone).remove(this.meshes[slot]);
+			} else {
+				this.armature.remove(this.meshes[slot]);
+			}
 			this.meshes[slot] = null;
 			//delete this.meshes[slot];
+
 			this.equipment[slot] = null;
 			delete this.equipment[slot];
 		}
@@ -160,8 +165,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		});
 		this.inventory = newInventory;
 	};
+
+	var newStats = new CharacterStats();
 	Character.prototype.updateCharacterStats = function() {
-		var newStats = new CharacterStats(this.baseStats);
+		newStats.init(this.baseStats);
 		var scope = this;
 		Object.keys(this.equipment).forEach(function(slot) {
 			var item = scope.equipment[slot];
@@ -277,6 +284,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        		console.log('Could not attach item to bone: '+item.bone, item, e);
 	        	}
 	        	scope.meshes[item.slot] = dynamic.mesh;
+
+	        	dynamic.mesh.rotateX(1.57075);
+	        	dynamic.mesh.rotateZ(1.57075);
+	        	dynamic.mesh.position.set(-0.02, -0.2, -0.04);
 	        });
 		} else { //this item is not attached to bones but deformed by skeleton
 	        game.loadClothing(item.model, this.armature, item.options, function(mesh) {
@@ -396,6 +407,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	
 	    return physicalDamage + magicDamage;
 	};
+
+	var tmpVec1 = new THREE.Vector3();
+	var tmpVec2 = new THREE.Vector3();
+	var tmpVec3 = new THREE.Vector3();
 	Character.prototype.hit = function(attackingCharacter) {
 	    if(this.dead) {
 	        return;
@@ -404,11 +419,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    var damage = this.calculateEffect(attackingCharacter.characterStats, wstats);
 	    if(this.blocking || this.stateMachine.current == 'blocking') {
 	        console.log(this.name + " blocked an attack!");
-	        this.game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
+	        this.game.displayText(tmpVec1.set(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
 	        damage = Math.round(damage * 0.1);
 	    }
 		console.log(this.name + ' takes ' + damage + ' damage.');
-	    this.game.displayText(new THREE.Vector3(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
+	    this.game.displayText(tmpVec1.set(this.mesh.position.x, this.mesh.position.y, 1.0), damage, 3000);
 	    this.characterStats.health = this.characterStats.health - damage;
 	    if (this.characterStats.health <= 0) {
 	        console.log(this.name + " has died.");
@@ -426,7 +441,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        this.stateMachine.stun();
 	        var scope = this;
 	        setTimeout(function() {
-	            scope.game.displayText(new THREE.Vector3(scope.mesh.position.x, scope.mesh.position.y, 1.0), "Stunned", 3000);
+	            scope.game.displayText(tmpVec1.set(scope.mesh.position.x, scope.mesh.position.y, 1.0), "Stunned", 3000);
 	        }, 100);
 	    }
 	};

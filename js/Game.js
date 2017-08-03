@@ -758,7 +758,8 @@ function(
 	    var position = options.position || [0,1,0];
 	    var game = this;
 	    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
-	        var mesh = new THREE.Mesh(geometry, new THREE.MultiMaterial(materials));
+	    	var material = game.parseMaterial(options);
+	        var mesh = new THREE.Mesh(geometry, material);
 	        position = [mesh.position.x, mesh.position.y, mesh.position.z];
 	        var physEnabled = options.enabled !== undefined ? options.enabled : true;
 	        var body = game.physicsWorld.addObjectPhysics(mesh, mass, position);

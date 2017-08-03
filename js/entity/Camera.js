@@ -44,13 +44,18 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 		orbitControls = new THREE.OrbitControls( camera, game.renderer.domElement );
 		this.orbitControls = orbitControls
 	}
+
+    var qtarget = new THREE.Quaternion();
+    var qtarget2 = new THREE.Quaternion();
+    var tmpVec1 = new THREE.Vector3(0, -.1, 0);
+    var tmpVec2 = new THREE.Vector3(-.1, 0, 0);
 	Camera.prototype.defaultMouseMoveFunction = function(e, scope) {
 	    var x = e.clientX;
 	    var y = e.clientY;
 	    var xr = ((x / window.innerWidth) - 0.5) * 2.0;
 	    var yr = ((y / window.innerHeight) - 0.5) * 2.0;
-	    var qtarget = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, -.1, 0), xr);
-	    var qtarget2 = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(-.1, 0, 0), yr);
+	    qtarget.setFromAxisAngle(tmpVec1, xr);
+	    qtarget2.setFromAxisAngle(prototype, yr);
 	    qtarget.multiply(qtarget2);
 	    //cam.quaternion.slerp(qtarget, 0.25);
 	    if(scope.mesh.targetQuaternion) {

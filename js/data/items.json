@@ -4,9 +4,12 @@
         "model": "models/gold_sword.json",
         "slot": "weapon",
         "bone": "DEF-hand.R",
-        "options": {
+        "options": { 
             "material": [
-                {"roughness": 0.05, "color": "0xFF7E7A" }
+                {"roughness": 0.2, "color": "0x343434", "name": "hilt", "metalness": 1.0},
+                {"roughness": 1, "color": "0x251C1D", "name": "grip"},
+                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x440000", "emissiveIntensity": 500.0, "metalness": 1.0 },
+                {"roughness": 0.00001, "color": "0xAA0000", "metalness": 1.0, "name": "gem"}
             ]
         },
         "stats": {
@@ -22,8 +25,15 @@
 		"name": "Rusted Steel",
         "model": "models/gold_sword.json",
         "slot": "weapon",
-        "bone": "weapon1",
-        "options": {"roughness": 0.5, "color": "0x662121" },
+        "bone": "DEF-hand.R",
+        "options": { 
+            "material": [
+                {"roughness": 0.2, "color": "0xA7B200", "name": "hilt", "metalness": 1.0},
+                {"roughness": 1, "color": "0x251C1D", "name": "grip"},
+                {"roughness": 0.00001, "color": "0xCCCCCC", "metalness": 1.0, "name": "blade"},
+                {"roughness": 0.00001, "color": "0x446644", "metalness": 1.0, "name": "gem"}
+            ]
+        },
         "stats": {
             "damage": 15,
             "attackCooldown": 600
@@ -33,8 +43,15 @@
     	"name": "Glacial Edge",
         "model": "models/gold_sword.json", 
         "slot": "weapon",
-        "bone": "weapon1",
-        "options": {"roughness": 0.05, "color": "0x5D91FF" },
+        "bone": "DEF-hand.R",
+        "options": { 
+            "material": [
+                {"roughness": 0.5, "color": "0xE7B500", "name": "hilt", "metalness": 1.0},
+                {"roughness": 1, "color": "0x251C1D", "name": "grip"},
+                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x0033FF", "emissiveIntensity": 500.0, "metalness": 1.0 },
+                {"roughness": 0.00001, "color": "0x444466", "metalness": 1.0, "name": "gem"}
+            ]
+        },
         "stats": {
             "damage": 412,
             "magic_damage": {
@@ -48,8 +65,14 @@
     	"name": "Glacial Staff of Magic",
         "model": "models/staff.json", 
         "slot": "weapon",
-        "bone": "weapon1",
-        "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
+        "bone": "DEF-hand.R",
+        "options": { 
+            "material": [
+                {"roughness": 1, "color": "332222"},
+                {"roughness": 1, "color": "0xFFFFFF", "emissive": "0x0000FF", "emissiveIntensity": 500.0 },
+                {"roughness": 0.00001, "color": "0x444488", "metalness": 1.0 }
+            ]
+        },
         "stats": {
             "damage": 12,
             "magic_damage": {
@@ -60,11 +83,38 @@
         }
     },
     "icekatana": {
-    	"name": "Glacial Katana",
+        "name": "Glacial Katana",
         "model": "models/katana.json", 
         "slot": "weapon",
-        "bone": "weapon1",
-        "options": {"reflectivity": 0.5, "color": "0x5D91FF" },
+        "bone": "DEF-hand.R",
+        "options": {
+            "material": [
+                {"roughness": 1, "color": "0x251C1D", "name": "grip"},
+                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x000044", "emissiveIntensity": 500.0, "metalness": 1.0 },
+                {"roughness": 0.00001, "color": "0xE7B500", "name": "hilt"}
+            ]
+        },
+        "stats": {
+            "damage": 9000,
+            "magic_damage": {
+                "water": 255
+            },
+            "health": 200,
+            "attackCooldown": 1000
+        }
+    },
+    "firekatana": {
+        "name": "Ember Katana",
+        "model": "models/katana.json", 
+        "slot": "weapon",
+        "bone": "DEF-hand.R",
+        "options": {
+            "material": [
+                {"roughness": 1, "color": "0x251C1D", "name": "grip"},
+                {"roughness": 0.00001, "color": "0x323232", "emissive": "0x440000", "emissiveIntensity": 500.0, "metalness": 1.0 },
+                {"roughness": 0.1, "color": "0xE7B500", "name": "hilt"}
+            ]
+        },
         "stats": {
             "damage": 9000,
             "magic_damage": {
