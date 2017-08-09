@@ -8,7 +8,7 @@
             "material": [
                 {"roughness": 0.2, "color": "0x343434", "name": "hilt", "metalness": 1.0},
                 {"roughness": 1, "color": "0x251C1D", "name": "grip"},
-                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x440000", "emissiveIntensity": 500.0, "metalness": 1.0 },
+                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x440000", "emissiveIntensity": 1000.0, "metalness": 1.0 },
                 {"roughness": 0.00001, "color": "0xAA0000", "metalness": 1.0, "name": "gem"}
             ]
         },
@@ -46,9 +46,9 @@
         "bone": "DEF-hand.R",
         "options": { 
             "material": [
-                {"roughness": 0.5, "color": "0xE7B500", "name": "hilt", "metalness": 1.0},
+                {"roughness": 0.5, "color": "0xFFE39D", "name": "hilt", "metalness": 1.0},
                 {"roughness": 1, "color": "0x251C1D", "name": "grip"},
-                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x0033FF", "emissiveIntensity": 500.0, "metalness": 1.0 },
+                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x0033FF", "emissiveIntensity": 1000.0, "metalness": 1.0 },
                 {"roughness": 0.00001, "color": "0x444466", "metalness": 1.0, "name": "gem"}
             ]
         },
@@ -69,7 +69,7 @@
         "options": { 
             "material": [
                 {"roughness": 1, "color": "332222"},
-                {"roughness": 1, "color": "0xFFFFFF", "emissive": "0x0000FF", "emissiveIntensity": 500.0 },
+                {"roughness": 1, "color": "0xFFFFFF", "emissive": "0x0000FF", "emissiveIntensity": 1000.0 },
                 {"roughness": 0.00001, "color": "0x444488", "metalness": 1.0 }
             ]
         },
@@ -90,7 +90,7 @@
         "options": {
             "material": [
                 {"roughness": 1, "color": "0x251C1D", "name": "grip"},
-                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x000044", "emissiveIntensity": 500.0, "metalness": 1.0 },
+                {"roughness": 0.00001, "color": "0xBBBBBB", "emissive": "0x000044", "emissiveIntensity": 1000.0, "metalness": 1.0 },
                 {"roughness": 0.00001, "color": "0xE7B500", "name": "hilt"}
             ]
         },
@@ -111,7 +111,7 @@
         "options": {
             "material": [
                 {"roughness": 1, "color": "0x251C1D", "name": "grip"},
-                {"roughness": 0.00001, "color": "0x323232", "emissive": "0x440000", "emissiveIntensity": 500.0, "metalness": 1.0 },
+                {"roughness": 0.00001, "color": "0x323232", "emissive": "0x440000", "emissiveIntensity": 1000.0, "metalness": 1.0 },
                 {"roughness": 0.1, "color": "0xE7B500", "name": "hilt"}
             ]
         },

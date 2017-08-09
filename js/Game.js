@@ -169,7 +169,7 @@ function(
 
 
 			this.scene.add(   createSpotLight([0.5, 0, 5], [0, -2.5, 0])    );
-			//this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
+			this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
 
 			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
 			this.scene.add( shadowCameraHelper );

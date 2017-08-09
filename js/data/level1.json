@@ -147,7 +147,7 @@
 		        	"normalPath": "models/neweveskin_normal.jpg" 
 	        	},
                 {
-                	"roughness": 0.2, "color": "0x2101010", "metalness": 1.0
+                	"roughness": 0.45, "color": "0x2101010", "metalness": 0.3
 	        	}
             ],
 	        "equipment": [
@@ -167,7 +167,8 @@
 	        	"rustsword",
 	        	"icestaff",
 	        	"icekatana",
-	        	"icesword"
+	        	"icesword",
+	        	"firekatana"
 	        ]
 	    },
 	    "good_eve": {
