@@ -199,7 +199,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		    	}*/
 		    	console.log("ATTACKING!", event, from, to, msg);
 		    	var attackCoolDown = this.character.characterStats.attackCooldown;
-		    	this.character.setAnimation(animationMap['attack']);
+		    	this.character.setAnimation(animationMap['attack'], { loop: THREE.LoopOnce });
 		    	var scope = this;
 			    setTimeout(function() {
 			        var range = scope.character.characterStats.range;

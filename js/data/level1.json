@@ -171,6 +171,44 @@
 	        	"firekatana"
 	        ]
 	    },
+	    "miku": {
+	        "model": "models/miku_game.json",
+	        "sss": false,
+	        "material": [
+                {
+                	"roughness": 1.0,
+		        	"diffusePath": "models/neweveskin.jpg",
+		        	"roughnessPath": "models/neweveskin_roughness.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg" 
+	        	},
+                {
+                	"roughness": 0.45, "color": "0x2101010", "metalness": 0.3
+	        	}
+            ],
+	        "equipment": [
+	        	"miku_face",
+	        	"miku_outfit1"
+	        ],
+	        "inventory": [
+	        	"miku_dynamic_hair",
+	        	"marie_face",
+	        	"marie_hair_dynamic",
+	        	"marie_battlesuit",
+	        	"cross_earring",
+	        	"cross_earring2",
+	        	"cross_earring3",
+	        	"chain_earring1",
+	        	"marie_harness",
+	        	"chain_earring1",
+	        	"chain_earring2",
+	        	"firesword", 
+	        	"rustsword",
+	        	"icestaff",
+	        	"icekatana",
+	        	"icesword",
+	        	"firekatana"
+	        ]
+	    },
 	    "good_eve": {
 	        "model": "models/evev2.json",
 	        "sss": false,
@@ -228,7 +266,7 @@
 		}
 	],
 	"player": {
-	    "character": "marie_rose", 
+	    "character": "miku", 
 	    "position": [0,0,0]
 	}
 }

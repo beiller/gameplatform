@@ -20,6 +20,8 @@ requirejs(
 	],
 	function(HUD, THREE) {
 
+		/*
+		// USE THE FOLLOWING FOR EXTREME DEBUGGING
 		window.onerror = function(msg, url, line, col, error) {
 		   // Note that col & error are new to the HTML 5 spec and may not be 
 		   // supported in every browser.  It worked for me in Chrome.
@@ -37,6 +39,7 @@ requirejs(
 		   // Internet Explorer) will be suppressed.
 		   return suppressErrorAlert;
 		};
+		*/
 
 		
 		/*var loader = new Loader();

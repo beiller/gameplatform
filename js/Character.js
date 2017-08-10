@@ -4,6 +4,10 @@ define([
 	],
 
 function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
+	var tmpVec1 = new THREE.Vector3();
+	var tmpVec2 = new THREE.Vector3();
+	var tmpVec3 = new THREE.Vector3();
+
 	Character.prototype = new DynamicEntity();
 	Character.prototype.constructor = Character;
 	function Character(mesh, game, body, name, options, sssMesh, characterStats) {
@@ -111,6 +115,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        this.armature.quaternion.copy(quaternion);
 	    }
 	};
+
 	Character.prototype.update = function(delta) {
 		DynamicEntity.prototype.update.call(this, delta);
 
@@ -118,17 +123,26 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		
 	    //this.body.position.z = 0.0; //2d game here
 
-	    this.pointCharacter();
-	    //update physics components and copy to mesh position
-	    if(this.body) {
-	    	for(var i in this.controllers) {
-	    		this.controllers[i].update(delta);
+	    var c = this.stateMachine.current;
+	    if(c != 'playinganimation') {
+	    	if(c != 'dead') {
+	    		this.pointCharacter();
 	    	}
+		    //update physics components and copy to mesh position
+		    if(this.body) {
+		    	for(var i in this.controllers) {
+		    		this.controllers[i].update(delta);
+		    	}
+		    }
 	    }
-	    //do update skeletal Animation
-	    if(this.animationMixer) {
-	        this.animationMixer.update(delta);
-	    }
+
+	    //do update skeletal Animation if we are less than 5 units away from camera
+	    var l = Math.abs(this.mesh.position.x - this.game.camera.mesh.position.x);
+	    if(l < 5.0) {
+		    if(this.animationMixer) {
+		        this.animationMixer.update(delta);
+		    }
+		}
 
 	};
 	Character.prototype.unequip = function(slot) {
@@ -408,9 +422,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    return physicalDamage + magicDamage;
 	};
 
-	var tmpVec1 = new THREE.Vector3();
-	var tmpVec2 = new THREE.Vector3();
-	var tmpVec3 = new THREE.Vector3();
+
 	Character.prototype.hit = function(attackingCharacter) {
 	    if(this.dead) {
 	        return;
