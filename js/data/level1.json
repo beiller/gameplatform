@@ -187,26 +187,47 @@
             ],
 	        "equipment": [
 	        	"miku_face",
-	        	"miku_outfit1"
+	        	"miku_outfit1",
+	        	"miku_dynamic_hair"
 	        ],
 	        "inventory": [
 	        	"miku_dynamic_hair",
-	        	"marie_face",
-	        	"marie_hair_dynamic",
-	        	"marie_battlesuit",
 	        	"cross_earring",
 	        	"cross_earring2",
-	        	"cross_earring3",
-	        	"chain_earring1",
-	        	"marie_harness",
 	        	"chain_earring1",
 	        	"chain_earring2",
+	        	"glasskatana",
 	        	"firesword", 
 	        	"rustsword",
 	        	"icestaff",
 	        	"icekatana",
 	        	"icesword",
 	        	"firekatana"
+	        ]
+	    },
+	    "miku_jelly": {
+	        "model": "models/miku_game.json",
+	        "sss": false,
+	        "material": [
+                {
+                	"roughness": 0.9,
+		        	"diffusePath": "models/neweveskin_blue.jpg",
+		        	"roughnessPath": "models/neweveskin_roughness.jpg",
+		        	"normalPath": "models/neweveskin_normal.jpg", "metalness": 1,
+		        	"transparent": true, "opacity": 0.99,
+		        	"refractionRatio": 0.8,
+		        	"emissive": "0x0000FF", "emissiveIntensity": 200.0
+	        	},
+                {
+                	"roughness": 0.45, "color": "0x2101010", "metalness": 0.3
+	        	}
+            ],
+	        "equipment": [
+	        	"miku_face",
+	        	"icesword"
+	        ],
+	        "inventory": [
+
 	        ]
 	    },
 	    "good_eve": {
@@ -261,7 +282,7 @@
 	    	"position": [-11,0,0]
 		},
 		{
-			"character": "necker", 
+			"character": "miku_jelly", 
 	    	"position": [11,0,0]
 		}
 	],

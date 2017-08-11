@@ -76,13 +76,16 @@ requirejs(
 			if(!window.game) {
 				return;
 			}
-			window.game.animate(skipPhysics, skipAnimation);
-			//if(drawTimer.getElapsedTime() >= frameTime) {
-				
+			setTimeout(function() {
+				window.game.animate(skipPhysics, skipAnimation);
+			}, 0);
+
+			//window.game.animate(skipPhysics, skipAnimation);
+			if(drawTimer.getElapsedTime() >= frameTime) {
 				window.game.render();
 				drawTimer.start();
 				frameCount++;
-			//}
+			}
 			
 			if (frameTimer.getElapsedTime() >= 1.0) {
 				tickerInfo[1] = frameCount;

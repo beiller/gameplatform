@@ -123,9 +123,18 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		
 	    //this.body.position.z = 0.0; //2d game here
 
+	    //do update skeletal Animation if we are less than 5 units away from camera
+	    var l = Math.abs(this.mesh.position.x - this.game.camera.mesh.position.x);
+	    if(l < 5.0) {
+		    if(this.animationMixer) {
+		        this.animationMixer.update(delta);
+		    }
+		}
+
+		//point character and update physics
 	    var c = this.stateMachine.current;
 	    if(c != 'playinganimation') {
-	    	if(c != 'dead') {
+	    	if(c != 'dead' && c != 'blocking' && c != 'stunned') {
 	    		this.pointCharacter();
 	    	}
 		    //update physics components and copy to mesh position
@@ -135,15 +144,6 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		    	}
 		    }
 	    }
-
-	    //do update skeletal Animation if we are less than 5 units away from camera
-	    var l = Math.abs(this.mesh.position.x - this.game.camera.mesh.position.x);
-	    if(l < 5.0) {
-		    if(this.animationMixer) {
-		        this.animationMixer.update(delta);
-		    }
-		}
-
 	};
 	Character.prototype.unequip = function(slot) {
 		if(slot == "weapon") {

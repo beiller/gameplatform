@@ -100,7 +100,7 @@
                 "water": 255
             },
             "health": 200,
-            "attackCooldown": 1000
+            "attackCooldown": 500
         }
     },
     "firekatana": {
@@ -121,7 +121,28 @@
                 "water": 255
             },
             "health": 200,
-            "attackCooldown": 1000
+            "attackCooldown": 250
+        }
+    },
+    "glasskatana": {
+        "name": "Glass Katana",
+        "model": "models/katana.json", 
+        "slot": "weapon",
+        "bone": "DEF-hand.R",
+        "options": {
+            "material": [
+                {"roughness": 1, "color": "0x251C1D", "name": "grip"},
+                {"color": "0xFFFFFF", "refractionRatio": 0.98, "transparent": true, "opacity": 0.5, "metalness": 1.0, "roughness": 0.0 },
+                {"roughness": 0.1, "color": "0xE7B500", "name": "hilt"}
+            ]
+        },
+        "stats": {
+            "damage": 9000,
+            "magic_damage": {
+                "water": 255
+            },
+            "health": 200,
+            "attackCooldown": 500
         }
     },
     "unholychestarmor": {
@@ -236,7 +257,7 @@
                 {
                     "color": "0xFFFFFF", "transparent": true,
                     "diffusePath": "models/brownlight_eye.png",
-                    "roughness": 0.1
+                    "roughness": 0.5
                 },
                 {
                     "diffusePath": "models/tongue01_diffuse.png", "roughness": 0.5
@@ -244,13 +265,17 @@
                 {
                     "diffusePath": "models/teeth.png", "roughness": 0.4
                     
+                },
+                {
+                    "roughness": 0.0, "transparent": true, "opacity": 0.15, 
+                    "color": "0xFFFFFF", "name": "glass", "metalness": 1.0
                 }
             ]
         }
     },
     "miku_outfit1": {"name": "miku_outfit1",  "model": "models/miku_outfit1.json", "slot": "chest", "options": { 
             "material": [
-                {"color": "0xFFBBF9", "roughness": 0.95, "diffusePath": "models/lingerie1.png", "transparent": true}
+                {"color": "0x000000", "roughness": 0.95, "diffusePath": "models/lingerie1.png", "transparent": true}
             ]
         }
     },
@@ -305,8 +330,8 @@
         ],
         "options": { 
             "material": [
-                {"roughness": 0.7, "color": "0x020202" },
-                {"roughness": 0.7, "color": "0x020202" }
+                {"roughness": 0.7, "color": "0xFFFFFF", "diffusePath": "models/Angels.png", "transparent": true  },
+                {"roughness": 0.7, "color": "0xFFFFFF", "diffusePath": "models/Angels.png", "transparent": true  }
             ]
         }
     },

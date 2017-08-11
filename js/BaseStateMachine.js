@@ -175,6 +175,9 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				}
 				this.character.setAnimation(animationMap['idle']);
 			},
+			onenterattacking: function() {
+				this.character.setAnimation(animationMap['idle']);
+			},
 			onendattack: function() {
 				this.character.setAnimation(animationMap['idle']);
 			},
@@ -205,16 +208,15 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			        var range = scope.character.characterStats.range;
 					var me = scope.character;
 					for (var char_id in game.characters) {
-						(function(character) {
-							if (character != me) {
-								var dist = character.getDistance(me);
-								console.log("Enemy distance", dist);
-								if (dist < range) {
-									character.stateMachine.hit();
-									character.hit(me);
-								}
+						var character = game.characters[char_id];
+						if (character != me) {
+							var dist = character.getDistance(me);
+							console.log("Enemy distance", dist);
+							if (dist < range) {
+								character.stateMachine.hit();
+								character.hit(me);
 							}
-						})(game.characters[char_id]);
+						}
 					}
 			    }, 100);
 		        setTimeout(function() {

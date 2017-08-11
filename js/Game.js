@@ -169,7 +169,7 @@ function(
 
 
 			this.scene.add(   createSpotLight([0.5, 0, 5], [0, -2.5, 0])    );
-			this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
+			//this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
 
 			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
 			this.scene.add( shadowCameraHelper );
@@ -218,7 +218,7 @@ function(
 	
 	    this.container.appendChild( this.renderer.domElement );
 	    
-	    this.cubeCamera = new THREE.CubeCamera( 1, 1000, this.settings.cubeMapResolution );
+	    this.cubeCamera = new THREE.CubeCamera( 0.01, 1000, this.settings.cubeMapResolution );
 
 	    this.scene.add( this.cubeCamera );
 	
@@ -681,10 +681,12 @@ function(
 				'skinning': true,
 				'envMapIntensity': 100.0,
 				'emissive': materialOptions.emissive ? new THREE.Color( parseInt(materialOptions.emissive, 16) ) : new THREE.Color( 0xFFFFFF ),
-				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0
-				//'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.8,
-				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0,
+				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0,
+				'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.95
+				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0
+				//'side': THREE.DoubleSide
 			};
+
 			if(this.cubeCamera) {
 				map['envMap'] = this.cubeCamera.renderTarget.texture;
 				//map['envMap'] = this.pmremCubeUVPacker.CubeUVRenderTarget.texture;
@@ -693,7 +695,9 @@ function(
 			if('specular' in map || 'specularPath' in map) {
 				console.log("Warning: using specular data when we are physical based.");
 			}
-			var material = new THREE.MeshStandardMaterial(map);
+
+			//var material = new THREE.MeshStandardMaterial(map);
+			var material = 'phong' in materialOptions ? new THREE.MeshPhongMaterial(map) : new THREE.MeshStandardMaterial(map);
 			var loader = new Loader();
 			var setMaterial = function(texturePath, slotName) {
 				loader.loadTexture(texturePath).then(function(tex) {
@@ -796,27 +800,33 @@ function(
 	    //this.render();
 	};
 	Game.prototype.updateCubeMap = function() {
-	    for(var i in this.characters) {
-	        //this.characters[i].mesh.visible=false;//(delta);
-	    }
+		if(this.camera.trackingCharacter) {
+		    for(var i in this.characters) {
+		    	if(i == this.camera.trackingCharacter) {
+		        	this.characters[i].armature.visible=false;//(delta);
+		        }
+		    }
+		}
 
 	    //this.cubeCamera.position.copy(this.camera.orbitControls.target);
 	    if(this.camera.trackingCharacter && this.characters && this.characters[this.camera.trackingCharacter]) {
-	    	this.cubeCamera.position.copy(this.characters[this.camera.trackingCharacter].armature.position);
+	    	this.cubeCamera.position.copy(this.characters[this.camera.trackingCharacter].mesh.position);
 	    }
 		this.renderer.clear();
-		this.cubeCamera.renderTarget.generateMipmaps = true;
+		//this.cubeCamera.renderTarget.texture.mapping = THREE.CubeRefractionMapping;
+		/*this.cubeCamera.renderTarget.generateMipmaps = true;
 		this.cubeCamera.renderTarget.minFilter = THREE.LinearMipMapLinearFilter;
-		this.cubeCamera.renderTarget.needsUpdate = true;
+		this.cubeCamera.renderTarget.needsUpdate = true;*/
 
 
 		this.cubeCamera.renderTarget.texture.generateMipmaps = true;
 		this.cubeCamera.renderTarget.texture.minFilter = THREE.LinearMipMapLinearFilter;
 		this.cubeCamera.renderTarget.texture.needsUpdate = true;
 	    
+	    //this.renderer.clearTarget( this.cubeCamera.renderTarget, true, true, true );
 	    this.cubeCamera.updateCubeMap( this.renderer, this.scene );
 	    this.cubemapRendered = true;
-
+		//this.cubeCamera.renderTarget.texture.mapping = THREE.CubeRefractionMapping;
     	//this.cubeCamera.renderTarget.texture.encoding = THREE.GammaEncoding;
 	    //this.pmremGenerator = new THREE.PMREMGenerator( this.cubeCamera.renderTarget.texture );
 		//this.pmremGenerator.update( this.renderer );
@@ -839,7 +849,7 @@ function(
 
 	    //this.renderer.toneMappingExposure = Math.pow( 0.31, this.exposureSetting );
 	    for(var i in this.characters) {
-	        this.characters[i].mesh.visible=true;//(delta);
+	        this.characters[i].armature.visible=true;//(delta);
 	    }
 	};
 	Game.prototype.render = function() {
