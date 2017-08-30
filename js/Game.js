@@ -156,12 +156,12 @@ function(
 				bulbLight.target.position.set( tar[0], tar[1], tar[2] );
 				bulbLight.castShadow = true;
 				bulbLight.shadow.mapSize = new THREE.Vector2( scope.settings.shadowResolution, scope.settings.shadowResolution );
-				bulbLight.angle = 40.0;
-				bulbLight.shadow.camera.fov = 40.0;
-				bulbLight.shadow.camera.near = 1;
-				bulbLight.shadow.camera.far = 3;
+				bulbLight.angle = 150.0;
+				bulbLight.shadow.camera.fov = 1.0;
+				bulbLight.shadow.camera.near = 0.1;
+				bulbLight.shadow.camera.far = 10;
 				bulbLight.distance = 10;
-				//bulbLight.shadow.bias = 0.000001;
+				bulbLight.shadow.bias = 0.00001;
 				scope.scene.add( bulbLight.target );
 				scope.bulbLight = bulbLight;
 				return bulbLight;
@@ -169,7 +169,7 @@ function(
 
 
 			this.scene.add(   createSpotLight([0.5, 0, 5], [0, -2.5, 0])    );
-			//this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
+			this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
 
 			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
 			this.scene.add( shadowCameraHelper );
@@ -192,7 +192,7 @@ function(
 
 	    this.scene = new THREE.Scene();
 
-	    this.camera = new Camera(null, this, 37.8, window.innerWidth/window.innerHeight, 0.3, 100);
+	    this.camera = new Camera(null, this, 37.8, window.innerWidth/window.innerHeight, 0.01, 100);
 
 	    this.setupLighting();
 	

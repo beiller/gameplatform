@@ -68,11 +68,11 @@ define([
 		        var b2 = manifold.getBody1();
 		        if(b1.ptr in this.callbacks) {
 		        	var hp = pt.getPositionWorldOnA();
-		        	this.callbacks[b1.ptr](Body.getByBody(b1), Body.getByBody(b2), [hp.x(), hp.y(), hp.z()]);
+		        	this.callbacks[b1.ptr](b1, b2, [hp.x(), hp.y(), hp.z()]);
 		        }
 		        if(b2.ptr in this.callbacks) {
 		        	var hp = pt.getPositionWorldOnB();
-		        	this.callbacks[b2.ptr](Body.getByBody(b2), Body.getByBody(b1), [hp.x(), hp.y(), hp.z()]);
+		        	this.callbacks[b2.ptr](b2, b1, [hp.x(), hp.y(), hp.z()]);
 		        }
 		    }
 		}

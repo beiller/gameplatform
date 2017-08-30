@@ -144,7 +144,10 @@
                 	"roughness": 1.0,
 		        	"diffusePath": "models/neweveskin.jpg",
 		        	"roughnessPath": "models/neweveskin_roughness.jpg",
-		        	"normalPath": "models/neweveskin_normal.jpg" 
+		        	"normalPath": "models/neweveskin_normal.jpg",
+		        	"emissivePath": "models/neweveskin_low.jpg", 
+		        	"emissive": "0xFFFFFF",
+		        	"emissiveIntensity": 5
 	        	},
                 {
                 	"roughness": 0.45, "color": "0x2101010", "metalness": 0.3
@@ -172,21 +175,44 @@
 	        ]
 	    },
 	    "miku": {
-	        "model": "models/miku_game.json",
+	        "model": "models/miku_game_highres.json",
 	        "sss": false,
 	        "material": [
                 {
                 	"roughness": 1.0,
 		        	"diffusePath": "models/neweveskin.jpg",
 		        	"roughnessPath": "models/neweveskin_roughness.jpg",
-		        	"normalPath": "models/neweveskin_normal.jpg" 
+		        	"normalPath": "models/neweveskin_normal.jpg",
+		        	"emissivePath": "models/neweveskin_low.jpg", 
+		        	"emissive": "0xFFFFFF",
+		        	"emissiveIntensity": 5
 	        	},
                 {
-                	"roughness": 0.45, "color": "0x2101010", "metalness": 0.3
-	        	}
+                    "color": "0x000000", "diffusePath": "models/eyebrow010.png", "transparent": true,
+                    "roughness": 0.95
+                },
+                {
+                    "color": "0x000000", "diffusePath": "models/eyelashes04.png", "transparent": true,
+                    "roughness": 0.95
+                },
+                {
+                    "color": "0xFFFFFF", "transparent": true,
+                    "diffusePath": "models/brownlight_eye.png",
+                    "roughness": 0.5
+                },
+                {
+                    "diffusePath": "models/tongue01_diffuse.png", "roughness": 0.5
+                },
+                {
+                    "diffusePath": "models/teeth.png", "roughness": 0.4
+                    
+                },
+                {
+                    "roughness": 0.0, "transparent": true, "opacity": 0.15, 
+                    "color": "0xFFFFFF", "name": "glass", "metalness": 1.0
+                }
             ],
 	        "equipment": [
-	        	"miku_face",
 	        	"miku_outfit1",
 	        	"miku_dynamic_hair"
 	        ],
@@ -284,6 +310,10 @@
 		{
 			"character": "miku_jelly", 
 	    	"position": [11,0,0]
+		},
+		{
+			"character": "marie_rose", 
+	    	"position": [-21,0,0]
 		}
 	],
 	"player": {
