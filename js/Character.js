@@ -7,9 +7,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	var tmpVec1 = new THREE.Vector3();
 	var tmpVec2 = new THREE.Vector3();
 	var tmpVec3 = new THREE.Vector3();
-
-	Character.prototype = new DynamicEntity();
-	Character.prototype.constructor = Character;
+	
 	function Character(mesh, game, body, name, options, sssMesh, characterStats) {
 		//defer the character to a root object3d
 		var rootMesh = new THREE.Object3D();
@@ -18,8 +16,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 
 		mesh.position.y -= mesh.geometry.boundingSphere.radius;
 		
-		//call parent
-	    DynamicEntity.prototype.constructor.call(this, rootMesh, game, body);
+	    DynamicEntity.call(this, mesh, game, body);
 	    this.mesh = rootMesh;
 	
 	    this.sssMesh = sssMesh;
@@ -62,6 +59,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    /*this.skeletonHelper = new THREE.SkeletonHelper(this.armature);
 	    this.game.scene.add(this.skeletonHelper);*/
 	}
+	Character.prototype = Object.assign( Object.create( DynamicEntity.prototype ), {
+		constructor: Character
+	});
+
 	Character.prototype.createHealthBar = function() {
 	    var sprite = new THREE.Sprite();
 	    var healthRatio = this.characterStats.health / this.characterStats.maxHealth;

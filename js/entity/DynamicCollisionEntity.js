@@ -1,9 +1,11 @@
 define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	var dynamicEntitiesByBody = {};
 
-	DynamicCollisionEntity.prototype = new Entity();
-	DynamicCollisionEntity.prototype.constructor = DynamicCollisionEntity;
-		
+	var position = new THREE.Vector3();
+    var quaternion = new THREE.Quaternion();
+    var scale = new THREE.Vector3();
+    var tmpVec1 = new THREE.Vector3();
+    
 	function DynamicCollisionEntity(mesh, game, body, options) {
 		/*
 			The dynamic collision entity is a rigid body that follows the
@@ -13,48 +15,46 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			game: game state
 			body: the rigid body
 		*/
-		Entity.prototype.constructor.call(this, mesh, game);
+		Entity.call(this, mesh, game);
+		
 	    this.body = body;
 	    this.sleep = false;
 	    this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
-	    if(body) {
-	    	/*
-	    	interesting javascript gotcha... have to call constructor for inheritance above? This will fail without the if condition.
-	    	*/
-	    	dynamicEntitiesByBody[body] = this;
-		    var scope = this;
-			game.physicsWorld.addCollisionCallback(body.body, function(body1, body2, collisionPoint) { 
-				scope.dispatchEvent({
-					type: "COLLIDE",
-					entity1: dynamicEntitiesByBody[body1],
-					entity2: dynamicEntitiesByBody[body2],
-					collisionPoint: collisionPoint
-				});
+
+    	dynamicEntitiesByBody[body] = this;
+	    var scope = this;
+		game.physicsWorld.addCollisionCallback(body.body, function(body1, body2, collisionPoint) { 
+			scope.dispatchEvent({
+				type: "COLLIDE",
+				entity1: dynamicEntitiesByBody[body1],
+				entity2: dynamicEntitiesByBody[body2],
+				collisionPoint: collisionPoint
 			});
-		}
+		});
+
 	}
-    var position = new THREE.Vector3();
-    var quaternion = new THREE.Quaternion();
-    var scale = new THREE.Vector3();
-    var tmpVec1 = new THREE.Vector3();
-    
-	DynamicCollisionEntity.prototype.update = function(dt) {
-	    if(!this.sleep) {
-		    this.mesh.matrixWorld.decompose(position, quaternion, scale);
-		    var worldOffset = tmpVec1.copy(this.localOffset).applyQuaternion(quaternion).add(position)
-	        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
-	        this.body.setQuaternion([quaternion.x, quaternion.y, quaternion.z, quaternion.w]);
-		    if(this.debugMesh) {
-		    	this.debugMesh.position.copy(worldOffset);
-		    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
-		    	this.debugMesh.updateMatrixWorld();
+
+	DynamicCollisionEntity.prototype = Object.assign( Object.create( Entity.prototype ), {
+		constructor: DynamicCollisionEntity,
+		update: function(dt) {
+		    if(!this.sleep) {
+			    this.mesh.matrixWorld.decompose(position, quaternion, scale);
+			    var worldOffset = tmpVec1.copy(this.localOffset).applyQuaternion(quaternion).add(position)
+		        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
+		        this.body.setQuaternion([quaternion.x, quaternion.y, quaternion.z, quaternion.w]);
+			    if(this.debugMesh) {
+			    	this.debugMesh.position.copy(worldOffset);
+			    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
+			    	this.debugMesh.updateMatrixWorld();
+			    }
+			    //following doent exist yet?
+			    //this.body.body.saveKinematicState(dt);
 		    }
-		    //following doent exist yet?
-		    //this.body.body.saveKinematicState(dt);
-	    }
-	};
-	DynamicCollisionEntity.prototype.getEntityByBody = function(body) {
-	    return dynamicEntitiesByBody[body];
-	};
+		},
+		getEntityByBody: function(body) {
+		    return dynamicEntitiesByBody[body];
+		}
+	});
+
 	return DynamicCollisionEntity;
 });

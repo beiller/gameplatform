@@ -173,25 +173,25 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			uiWindow.append(
 				$('<a href="#" class="button btn-loadlevel1">Load Level 1</a>').on('click', function(e) {
 					loadLevelFunction("js/data/level1.json");
-					document.body.webkitRequestFullscreen();
+					//document.body.webkitRequestFullscreen();
 				})
 			);
 			uiWindow.append(
 				$('<a href="#" class="button btn-loadlevel2">Load Level 2</a>').on('click', function(e) {
 					loadLevelFunction("level2/level2.json");
-					document.body.webkitRequestFullscreen();
+					//document.body.webkitRequestFullscreen();
 				})
 			);
 			uiWindow.append(
 				$('<a href="#" class="button btn-loadlevel4">Load Level 4</a>').on('click', function(e) {
 					loadLevelFunction("level4/level4.json");
-					document.body.webkitRequestFullscreen();
+					//document.body.webkitRequestFullscreen();
 				})
 			);
 			uiWindow.append(
 				$('<a href="#" class="button btn-loadlevel5">Load Level 5</a>').on('click', function(e) {
 					loadLevelFunction("level5/level5.json");
-					document.body.webkitRequestFullscreen();
+					//document.body.webkitRequestFullscreen();
 				})
 			);
 

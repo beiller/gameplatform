@@ -1,5 +1,10 @@
 define(["lib/three"], function(THREE) {
 
+	var p = new THREE.Vector3();
+	var q = new THREE.Quaternion();
+	var s = new THREE.Vector3(1, 1, 1);
+	var o = new THREE.Vector3();
+
 	function makeDebugSphereOfChaos(scene, position, radius, color) {
         var sphere = new THREE.Mesh(
         	new THREE.SphereGeometry(radius, 12, 12), 
@@ -11,7 +16,6 @@ define(["lib/three"], function(THREE) {
         sphere.add(axisHelper);
         return sphere;
 	}
-
 
 	function PhysBone(boneMesh, boneBody, parentBody, parentMesh, game, options) {
 		this.body = boneBody;
@@ -28,15 +32,16 @@ define(["lib/three"], function(THREE) {
 			this.constraint = game.physicsWorld.createConstraint("6DOF", parentBody, this.body, coords.bALocalPosition, coords.bBLocalPosition, this.options);
 		}
 	}
+	
 	PhysBone.prototype._get_local_coords = function() {
-		var position = new THREE.Vector3();
-	    var quaternion = new THREE.Quaternion();
-	    var scale = new THREE.Vector3();
+		var position = p;
+	    var quaternion = q;
+	    var scale = s;
 	    //this.boneMesh.updateMatrixWorld(true);
 	    //confirmed above is not needed
 	    this.boneMesh.matrixWorld.decompose(position, quaternion, scale);
 
-	    var constraintPoint = new THREE.Vector3().copy(position).add(this.parentMesh.position);
+	    var constraintPoint = p.add(this.parentMesh.position);
 
 		//read datas
 		var childLocation = new THREE.Vector3().fromArray(this.body.getPosition());
@@ -75,10 +80,6 @@ define(["lib/three"], function(THREE) {
 		}
 	};
 
-	var p = new THREE.Vector3();
-	var q = new THREE.Quaternion();
-	var s = new THREE.Vector3(1, 1, 1);
-	var o = new THREE.Vector3();
 	PhysBone.prototype.update = function() {
 		p.fromArray(this.body.getPosition());
 		q.fromArray(this.body.getQuaternion());		

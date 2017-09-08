@@ -1,8 +1,12 @@
 define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, OrbitControls) {
-	Camera.prototype = new Entity();
-	Camera.prototype.constructor = Camera;
-		
+
+	var qtarget = new THREE.Quaternion();
+    var qtarget2 = new THREE.Quaternion();
+    var tmpVec1 = new THREE.Vector3(0, -.1, 0);
+    var tmpVec2 = new THREE.Vector3(-.1, 0, 0);
+
 	function Camera(mesh, game, dof, ratio, clipNear, clipFar) {
+		Entity.call(this, mesh, game);
 	    var camera = new THREE.PerspectiveCamera(dof, ratio, clipNear, clipFar);
 	    camera.position.z = 5;
 	    camera.position.y = -3;
@@ -45,10 +49,10 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 		this.orbitControls = orbitControls
 	}
 
-    var qtarget = new THREE.Quaternion();
-    var qtarget2 = new THREE.Quaternion();
-    var tmpVec1 = new THREE.Vector3(0, -.1, 0);
-    var tmpVec2 = new THREE.Vector3(-.1, 0, 0);
+	Camera.prototype = Object.assign( Object.create( Entity.prototype ), {
+		constructor: Camera
+	});
+
 	Camera.prototype.defaultMouseMoveFunction = function(e, scope) {
 	    var x = e.clientX;
 	    var y = e.clientY;

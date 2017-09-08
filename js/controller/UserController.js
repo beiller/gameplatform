@@ -1,11 +1,9 @@
 define(["lib/state-machine", "controller/Controller"], 
 function(StateMachine, Controller) {
-	UserController.prototype = new Controller();
-	UserController.prototype.constructor = UserController;
-	function UserController(character, game) {
-	    Controller.prototype.constructor.call(this, character, game);
 
-	
+	function UserController(character, game) {
+	    Controller.call(this, character, game);
+
 	    var mv = character.movementDirection;
 	    var stateMachine = character.stateMachine;
 	    this.keyModifier = {};
@@ -157,6 +155,10 @@ function(StateMachine, Controller) {
 	    }
 
 	}
+
+	UserController.prototype = Object.assign( Object.create( Controller.prototype ), {
+		constructor: UserController
+	});
 	
 	return UserController;
 });

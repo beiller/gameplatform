@@ -1,30 +1,22 @@
 
-define(function() {
+define(["lib/three"], function(THREE) {
 	var entitiesByMesh = {};
 
 	function Entity(mesh, game) {
+        THREE.EventDispatcher.call(this);
 		this.mesh = mesh;
 		this.game = game;
-		this.eventListeners = new Array();
 		entitiesByMesh[mesh] = this;
 	}
-    
-    Entity.prototype.addEventListener = function(type, eventHandler) {
-        var listener = new Object();
-        listener.type = type;
-        listener.eventHandler = eventHandler;
-        this.eventListeners.push(listener);
-    };
 
-    Entity.prototype.dispatchEvent = function(event) {
-        for (var i = 0; i < this.eventListeners.length; i++)
-            if (event.type == this.eventListeners[i].type)
-                this.eventListeners[i].eventHandler(event);
-    };
+    Entity.prototype = Object.assign( Object.create( THREE.EventDispatcher.prototype ), {
+        constructor: Entity,
 
-    Entity.prototype.getEntityByMesh = function(mesh) {
-    	return entitiesByMesh[mesh];
-    };
+        getEntityByMesh: function(mesh) {
+            return entitiesByMesh[mesh];
+        }
+
+    } );
 
 	return Entity;
 });
