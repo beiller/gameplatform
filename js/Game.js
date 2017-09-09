@@ -309,22 +309,22 @@ function(
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.004", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+			{ bone: "DEF-spine.004", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 				tailBone:"DEF-spine.005",
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.005", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.004", options: { 
+			{ bone: "DEF-spine.005", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.004", options: { 
 				tailBone:"DEF-spine.006",
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "head", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.005", options: { 
+			{ bone: "head", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.005", options: { 
 				localOffset:[0,0,0.15],
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.006", type: "KINEMATIC", radius: 0.08, connect_body: "head", options: { 
+			{ bone: "DEF-spine.006", type: "DYNAMIC", radius: 0.08, connect_body: "head", options: { 
 				localOffset:[0,0,0.001],
 				rotationLimitsLow:  [-0.00,-0.00,-0.00],
 				rotationLimitsHigh: [ 0.00, 0.00, 0.00], 
@@ -367,32 +367,32 @@ function(
 				/*
 					ARMS!!!!!
 				*/
-				{ bone: "DEF-shoulder."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+				{ bone: "DEF-shoulder."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-upper_arm."+side,
 					rotationLimitsLow:  [-0.1,-0.1,-0.1],
 					rotationLimitsHigh: [ 0.1, 0.1, 0.1]
 				} },
-				{ bone: "DEF-upper_arm."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
+				{ bone: "DEF-upper_arm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
 					tailBone:"DEF-upper_arm."+side+".001",
 					rotationLimitsLow:  [-15.14,-15.14,-.50],
 					rotationLimitsHigh: [ 15.14, 15.14, .50]
 				} },
-				{ bone: "DEF-upper_arm."+side+".001", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
+				{ bone: "DEF-upper_arm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
 					tailBone:"DEF-forearm."+side,
 					rotationLimitsLow:  [ 0,0,0 ],
 					rotationLimitsHigh: [ 0,0,0 ]
 				} },
-				{ bone: "DEF-forearm."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-upper_arm."+side+".001", options: { 
+				{ bone: "DEF-forearm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side+".001", options: { 
 					tailBone:"DEF-forearm."+side+".001",
 					rotationLimitsLow:  [-0.00,-0.00,-0.00],
 					rotationLimitsHigh: [ 3.14, 0.00, 0.00]
 				} },
-				{ bone: "DEF-forearm."+side+".001", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-forearm."+side, options: { 
+				{ bone: "DEF-forearm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side, options: { 
 					tailBone:"DEF-hand."+side,
 					rotationLimitsLow:  [-0.0,-0.0, -0.0],
 					rotationLimitsHigh: [ 0.0, 0.0,  0.0]
 				} },
-				{ bone: "ORG-hand."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
+				{ bone: "ORG-hand."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
 					tailBone:"DEF-f_middle.01."+side,
 					rotationLimitsLow:  [-0.1,-0.1, -0.1],
 					rotationLimitsHigh: [ 0.1, 0.1,  0.1]
@@ -420,27 +420,27 @@ function(
 					rotationLimitsLow:  [-0.1,-0.0,-0.1],
 					rotationLimitsHigh: [ 0.1, 0.0, 0.1],
 				} },
-				{ bone: "DEF-thigh."+side+".001", type: "KINEMATIC", radius: 0.02, connect_body: "DEF-thigh."+side, options: { 
+				{ bone: "DEF-thigh."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-thigh."+side, options: { 
 					tailBone:"DEF-shin."+side ,
 					rotationLimitsLow:  [0, -0.5, 0],
 					rotationLimitsHigh: [0,  0.5, 0],
 				} },
-				{ bone: "DEF-shin."+side, type: "KINEMATIC", radius: 0.02, connect_body: "DEF-thigh."+side+".001", options: { 
+				{ bone: "DEF-shin."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-thigh."+side+".001", options: { 
 					tailBone:"DEF-shin."+side+".001" ,
 					rotationLimitsLow:  [-1.5,-0.00,-0.00],
 					rotationLimitsHigh: [ 0.01, 0.00, 0.00],
 				} },
-				{ bone: "DEF-shin."+side+".001", type: "KINEMATIC", radius: 0.02, connect_body: "DEF-shin."+side, options: { 
+				{ bone: "DEF-shin."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-shin."+side, options: { 
 					tailBone:"DEF-foot."+side ,
 					rotationLimitsLow:  [-0,-0.50,-0.00],
 					rotationLimitsHigh: [ 0, 0.50, 0.00],
 				} },
-				{ bone: "DEF-foot."+side, type: "KINEMATIC", radius: 0.02, connect_body: "DEF-shin."+side+".001", options: { 
+				{ bone: "DEF-foot."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-shin."+side+".001", options: { 
 					tailBone:"DEF-toe."+side ,
 					rotationLimitsLow:  [-1.0,-0.010,-0.010],
 					rotationLimitsHigh: [ 1.0, 0.010, 0.010],
 				} },
-				{ bone: "DEF-toe."+side, type: "KINEMATIC", radius: 0.02, connect_body: "DEF-foot."+side, options: { 
+				{ bone: "DEF-toe."+side, type: "DYNAMIC", radius: 0.02, connect_body: "DEF-foot."+side, options: { 
 					localOffset:[0,0,0.05] ,
 					rotationLimitsLow:  [-0.5,-0.010,-0.010],
 					rotationLimitsHigh: [ 0.5, 0.010, 0.010],
@@ -783,18 +783,27 @@ function(
 	
 	    var delta = Math.min(0.1, (this.clock.getDelta() * this.timescale));
 
-	    if(!skipPhysics) {
-	        this.physicsWorld.step(delta);
-	    }
-
 	    if(!skipAnimation) {
 		    for(var i in this.characters) {
 		        this.characters[i].update(delta);
 		    }
 		}
+
+		//copy bones locations to physics simulation if they are kinetic
+		for(var i in this.dynamics) {
+			if(this.dynamics[i].body.getKinematic()) {
+				this.dynamics[i].update(delta);
+			}
+		}
+
+		if(!skipPhysics) {
+	        this.physicsWorld.step(delta);
+	    }
 		
 		for(var i in this.dynamics) {
-			this.dynamics[i].update(delta);
+			if(!this.dynamics[i].body.getKinematic()) {
+				this.dynamics[i].update(delta);
+			}
 		}
 
 	    //this.render();

@@ -175,7 +175,7 @@
 	        ]
 	    },
 	    "miku": {
-	        "model": "models/miku_game_highres.json",
+	        "model": "models/miku_game.json",
 	        "sss": false,
 	        "material": [
                 {
@@ -306,18 +306,10 @@
 		{
 			"character": "necker", 
 	    	"position": [-11,0,0]
-		},
-		{
-			"character": "miku_jelly", 
-	    	"position": [11,0,0]
-		},
-		{
-			"character": "marie_rose", 
-	    	"position": [-21,0,0]
 		}
 	],
 	"player": {
-	    "character": "miku", 
+	    "character": "marie_rose", 
 	    "position": [0,0,0]
 	}
 }

@@ -1,6 +1,9 @@
 define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
-	var dynamicEntitiesByBody = {};
 
+	// index used to find DynamicEntity by body
+	var dynamicEntitiesByBody = new Map();
+
+	// temporary vectors pre-allocated
 	var p1 = new THREE.Vector3();
 	var p2 = new THREE.Vector3();
 
@@ -28,8 +31,15 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	}
 
 	DynamicEntity.prototype = Object.assign( Object.create( Entity.prototype ), {
+
 		constructor: DynamicEntity,
-		update: function() {
+
+		/*
+			General update function for game-graph
+
+			updateDeep - used to optionally disable updating children
+		*/
+		update: function(updateDeep) {
 		    if(!this.sleep) {
 		        //update physics components and copy to mesh position
 		        this.mesh.position.fromArray(this.body.getPosition());
@@ -39,10 +49,19 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		    	this.body.debugMesh.position.fromArray(this.body.getPosition());
 		    	this.body.debugMesh.quaternion.fromArray(this.body.getQuaternion());
 		    }
+		    Entity.prototype.update.call(this, updateDeep);
 		},
+
+		/*
+			Lookup function getting a dynamic entity by body as an index
+		*/
 		getEntityByBody: function(body) {
 		    return dynamicEntitiesByBody[body];
 		},
+
+		/*
+			Calculate distance between 2 dynamic entities
+		*/
 		getDistance: function(dynamic2) {
 			p1.fromArray(this.body.getPosition());
 			p2.fromArray(dynamic2.body.getPosition());

@@ -1,4 +1,4 @@
-define(["lib/three"], function(THREE) {
+define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 
 	var p = new THREE.Vector3();
 	var q = new THREE.Quaternion();
@@ -18,11 +18,11 @@ define(["lib/three"], function(THREE) {
 	}
 
 	function PhysBone(boneMesh, boneBody, parentBody, parentMesh, game, options) {
+		Entity.call(this, boneMesh, game);
 		this.body = boneBody;
 		this.boneMesh = boneMesh;
 		this.parentBody = parentBody;
 		this.parentMesh = parentMesh;
-		this.game = game;
 		this.options = options;
 
 		this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
@@ -32,6 +32,10 @@ define(["lib/three"], function(THREE) {
 			this.constraint = game.physicsWorld.createConstraint("6DOF", parentBody, this.body, coords.bALocalPosition, coords.bBLocalPosition, this.options);
 		}
 	}
+
+	PhysBone.prototype = Object.assign( Object.create( Entity.prototype ), {
+		constructor: PhysBone
+	});
 	
 	PhysBone.prototype._get_local_coords = function() {
 		var position = p;
@@ -111,6 +115,8 @@ define(["lib/three"], function(THREE) {
 	    	this.debugMesh.position.fromArray(this.body.getPosition());
 	    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
 	    }
+
+	    Entity.prototype.update.call(this);
 	};
 
 	return PhysBone;

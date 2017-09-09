@@ -35,8 +35,11 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	}
 
 	DynamicCollisionEntity.prototype = Object.assign( Object.create( Entity.prototype ), {
+
 		constructor: DynamicCollisionEntity,
-		update: function(dt) {
+		
+		update: function(updateDeep) {
+
 		    if(!this.sleep) {
 			    this.mesh.matrixWorld.decompose(position, quaternion, scale);
 			    var worldOffset = tmpVec1.copy(this.localOffset).applyQuaternion(quaternion).add(position)
@@ -50,7 +53,9 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			    //following doent exist yet?
 			    //this.body.body.saveKinematicState(dt);
 		    }
+		    Entity.prototype.update.call(this, updateDeep);
 		},
+		
 		getEntityByBody: function(body) {
 		    return dynamicEntitiesByBody[body];
 		}

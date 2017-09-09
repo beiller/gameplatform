@@ -118,15 +118,16 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	};
 
 	Character.prototype.update = function(delta) {
-		DynamicEntity.prototype.update.call(this, delta);
+		//do a shallow update, so only update the surrounding sphere which emcompases the whole mesh
+		DynamicEntity.prototype.update.call(this, false);
 
 		this.stateMachine.update(delta);
 		
 	    //this.body.position.z = 0.0; //2d game here
 
-	    //do update skeletal Animation if we are less than 5 units away from camera
+	    //do update skeletal Animation if we are less than n units away from camera
 	    var l = Math.abs(this.mesh.position.x - this.game.camera.mesh.position.x);
-	    if(l < 5.0) {
+	    if(l < 8.0) {
 		    if(this.animationMixer) {
 		        this.animationMixer.update(delta);
 		    }
@@ -145,6 +146,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		    	}
 		    }
 	    }
+
+	    DynamicEntity.prototype.update.call(this);
 	};
 	Character.prototype.unequip = function(slot) {
 		if(slot == "weapon") {
@@ -351,25 +354,39 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 					physicInfo.options,
 					this.game
 				);
+				//this.add(physBone);
+				this.game.dynamics.push(physBone);
 				break;
 			case "DYNAMIC":
 				var connectBody = null;
-				if(physicInfo.connect_body in globalBoneMap[parentMesh.id]) {
-					connectBody = globalBoneMap[parentMesh.id][physicInfo.connect_body].body;
-				} else if(physicInfo.connect_body in globalBoneMap[this.armature.id]) {
-					connectBody = globalBoneMap[this.armature.id][physicInfo.connect_body].body;
+				if("connect_body" in physicInfo) {
+					if(physicInfo.connect_body in globalBoneMap[parentMesh.id]) {
+						connectBody = globalBoneMap[parentMesh.id][physicInfo.connect_body];
+					} else if(physicInfo.connect_body in globalBoneMap[this.armature.id]) {
+						connectBody = globalBoneMap[this.armature.id][physicInfo.connect_body];
+					} else {
+						console.log("Cannot find bone!", physicInfo.connect_body, globalBoneMap[parentMesh.id])
+						//throw "Cannot find bone!";
+					}
 				} else {
-					console.log("Cannot find bone!", physicInfo.connect_body, globalBoneMap[parentMesh.id])
-					//throw "Cannot find bone!";
+					connectBody = {body: null};
 				}
 				physBone = this.game.physicsWorld.createPhysBone(
 					physicInfo.bone, 
-					connectBody, 
+					connectBody.body, 
 					parentMesh,
 					physicInfo.radius, 
 					physicInfo.options,
 					this.game
 				);
+				this.game.dynamics.push(physBone);
+				/*
+				if(connectBody.body !== null) {
+					connectBody.add(physBone);
+				} else {
+					this.add(physBone);
+				}
+				//this.staticBones.push(physBone);*/
 				break;
 		}
 		globalBoneMap[parentMesh.id][physicInfo.bone.name] = physBone;
@@ -377,7 +394,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		if(this.game.debugPhysics) {
 			doPhysDebug(physBone, physicInfo.radius, physicInfo.options);
 		}
-		this.game.dynamics.push(physBone);
+		//this.game.dynamics.push(physBone);
+		//this.add(physBone);
 	};
 
 	Character.prototype.calculateEffect = function(characterStats, weaponStats) {

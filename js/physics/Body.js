@@ -18,13 +18,9 @@ define(["lib/ammo"], function(Ammo) {
 		CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
 	};
 
-	var body_map = {};
+	var body_map = new Map();
 
 	function Body(bodyInfo, shapeInfo) {
-		if(!shapeInfo) {
-			this.body = bodyInfo;
-			return;
-		}
 		this.collisionFlags = [];
 
 		this.shape = this.createShape(shapeInfo);
@@ -38,29 +34,74 @@ define(["lib/ammo"], function(Ammo) {
 			this.shape, 
 			bodyInfo.options
 		);
-		if(bodyInfo.noContact) {
-			this.collisionFlags.push(collisionFlags.CF_NO_CONTACT_RESPONSE);
-		}
-		if(bodyInfo.staticObject) {
-			this.collisionFlags.push(collisionFlags.CF_STATIC_OBJECT);
-		}
-		if(bodyInfo.kinematic) {
-			this.collisionFlags.push(collisionFlags.CF_KINEMATIC_OBJECT);
 
-			temp_vec3_1.setValue(0,0,0)
-			this.body.setLinearVelocity(temp_vec3_1);
-			this.body.setAngularVelocity(temp_vec3_1);
-		}
-		var flagToSet = 0
-		this.collisionFlags.forEach(function(e) { flagToSet |= e; })
-		if(flagToSet > 0) {
-			this.body.setCollisionFlags(flagToSet);
-		}
+		this.setNoContact(bodyInfo.noContact && true);
+		this.setStatic(bodyInfo.staticObject && true);
+		this.setKinematic(bodyInfo.kinematic && true);
+
 		body_map[this.body.ptr] = this;
 		this.setDamping(0.7, 0.7);
 	}
 
 	Body.prototype = {
+		/*
+			General purpose flag manipulators
+		*/
+		_writeFlags: function() {
+			var flagToSet = 0
+			this.collisionFlags.forEach(function(e) { flagToSet |= e; });
+			this.body.setCollisionFlags(flagToSet);
+		},
+		_setFlag: function(flag, value) {
+			if(value && !(flag in this.collisionFlags)) {
+				this.collisionFlags.push(flag);
+				this._writeFlags();
+			}
+			if(!value && (flag in this.collisionFlags)) {
+				this.collisionFlags = this.collisionFlags.filter(function(item) { 
+				    return item !== flag;
+				});
+				this._writeFlags();
+			}
+		},
+		_getFlag: function(flag) {
+			return this.collisionFlags.indexOf(flag) > -1;
+		},
+
+		/*
+			Flag Setters
+		*/
+		setKinematic: function(isKinematic) {
+			this._setFlag(collisionFlags.CF_KINEMATIC_OBJECT, isKinematic);
+			if(isKinematic) {
+				temp_vec3_1.setValue(0,0,0)
+				this.body.setLinearVelocity(temp_vec3_1);
+				this.body.setAngularVelocity(temp_vec3_1);
+			}
+		},
+		setNoContact: function(isNoContact) {
+			this._setFlag(collisionFlags.CF_NO_CONTACT_RESPONSE, isNoContact);
+		},
+		setStatic: function(isStatic) {
+			this._setFlag(collisionFlags.CF_STATIC_OBJECT, isStatic);
+		},
+
+		/*
+			Flag Getters
+		*/
+		getKinematic: function(isKinematic) {
+			return this._getFlag(collisionFlags.CF_KINEMATIC_OBJECT);
+		},
+		getNoContact: function(isNoContact) {
+			return this._getFlag(collisionFlags.CF_NO_CONTACT_RESPONSE);
+		},
+		getStatic: function(isStatic) {
+			return this._getFlag(collisionFlags.CF_STATIC_OBJECT);
+		},
+
+		/*
+			Various getting and setting of physics state
+		*/
 		getPosition: function() {
 			var l = this.body.getWorldTransform().getOrigin();
 			return [l.x(), l.y(), l.z()];
@@ -160,9 +201,6 @@ define(["lib/ammo"], function(Ammo) {
 	};
 
 	Body.getByBody = function(engineBody) {
-		if(!(engineBody.ptr in body_map)) {
-			throw "Unable to find body specified!";
-		}
 		return body_map[engineBody.ptr];
 	};
 

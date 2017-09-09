@@ -50,42 +50,44 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 	}
 
 	Camera.prototype = Object.assign( Object.create( Entity.prototype ), {
-		constructor: Camera
+		constructor: Camera,
+
+		defaultMouseMoveFunction: function(e, scope) {
+		    var x = e.clientX;
+		    var y = e.clientY;
+		    var xr = ((x / window.innerWidth) - 0.5) * 2.0;
+		    var yr = ((y / window.innerHeight) - 0.5) * 2.0;
+		    qtarget.setFromAxisAngle(tmpVec1, xr);
+		    qtarget2.setFromAxisAngle(prototype, yr);
+		    qtarget.multiply(qtarget2);
+		    //cam.quaternion.slerp(qtarget, 0.25);
+		    if(scope.mesh.targetQuaternion) {
+		    	scope.mesh.targetQuaternion.copy(qtarget);
+		    }  
+		    scope.mesh.offset = yr;
+		},
+		defaultCameraUpdateFunction: function () {
+			var game = this.game;
+			if(this.trackingCharacter in game.characters) {
+				if(!this.disableYLock) {
+			        this.orbitControls.target.set(
+			        	game.characters[this.trackingCharacter].body.getPositionX(),
+			        	this.orbitControls.target.y,
+			        	game.characters[this.trackingCharacter].body.getPositionZ()
+			        );
+		    	}
+		        if(game.characters[this.trackingCharacter].stateMachine.current != 'playinganimation' && !this.disableYLock) {
+		        	this.mesh.position.x = game.characters[this.trackingCharacter].body.getPositionX();
+		    	}
+		        //this.mesh.position.y = game.characters[this.trackingCharacter].body.getPositionY();
+	    	}
+	    	this.orbitControls.update();
+	    },
+		update: function() {
+		    this.defaultCameraUpdateFunction();
+		    Entity.prototype.update.call(this);
+		}
 	});
 
-	Camera.prototype.defaultMouseMoveFunction = function(e, scope) {
-	    var x = e.clientX;
-	    var y = e.clientY;
-	    var xr = ((x / window.innerWidth) - 0.5) * 2.0;
-	    var yr = ((y / window.innerHeight) - 0.5) * 2.0;
-	    qtarget.setFromAxisAngle(tmpVec1, xr);
-	    qtarget2.setFromAxisAngle(prototype, yr);
-	    qtarget.multiply(qtarget2);
-	    //cam.quaternion.slerp(qtarget, 0.25);
-	    if(scope.mesh.targetQuaternion) {
-	    	scope.mesh.targetQuaternion.copy(qtarget);
-	    }  
-	    scope.mesh.offset = yr;
-	};
-	Camera.prototype.defaultCameraUpdateFunction = function () {
-		var game = this.game;
-		if(this.trackingCharacter in game.characters) {
-			if(!this.disableYLock) {
-		        this.orbitControls.target.set(
-		        	game.characters[this.trackingCharacter].body.getPositionX(),
-		        	this.orbitControls.target.y,
-		        	game.characters[this.trackingCharacter].body.getPositionZ()
-		        );
-	    	}
-	        if(game.characters[this.trackingCharacter].stateMachine.current != 'playinganimation' && !this.disableYLock) {
-	        	this.mesh.position.x = game.characters[this.trackingCharacter].body.getPositionX();
-	    	}
-	        //this.mesh.position.y = game.characters[this.trackingCharacter].body.getPositionY();
-    	}
-    	this.orbitControls.update();
-    };
-	Camera.prototype.update = function() {
-	    this.defaultCameraUpdateFunction();
-	};
 	return Camera;
 });
