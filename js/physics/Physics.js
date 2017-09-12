@@ -459,7 +459,9 @@ define([
 		} else {
 			options.localOffset = new THREE.Vector3(0, 0, z_len/2);
 		}
-		return new PhysBone(bone, body, parentBody, parentMesh, game, options);
+		var physBone = new PhysBone(bone, body, parentBody, parentMesh, game, options);
+		physBone.update();
+		return physBone;
 	};
 
 	return AmmoPhysics;

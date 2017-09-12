@@ -5,6 +5,9 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	var s = new THREE.Vector3(1, 1, 1);
 	var o = new THREE.Vector3();
 
+	/*
+		Used for visual debugging purposes
+	 */
 	function makeDebugSphereOfChaos(scene, position, radius, color) {
         var sphere = new THREE.Mesh(
         	new THREE.SphereGeometry(radius, 12, 12), 
@@ -31,21 +34,86 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			var coords = this._get_local_coords();
 			this.constraint = game.physicsWorld.createConstraint("6DOF", parentBody, this.body, coords.bALocalPosition, coords.bBLocalPosition, this.options);
 		}
+
+		if(this.body.getKinematic()) {
+			this.update = this.updateKinematic;
+		} else {
+			this.update = this.updateDynamic;
+		}
 	}
 
 	PhysBone.prototype = Object.assign( Object.create( Entity.prototype ), {
 		
 		constructor: PhysBone,
 
-		update: function(updateDeep) {
-			if(this.body.getKinematic()) {
-				this.updateKinematic();
+		/* 
+			Function used to toggle between the bone 
+			copying the physics (dynamic), or the physics 
+			copying the bone (kinematic)
+		*/
+		setKinematic: function(isKinematic) {
+			if(isKinematic) {
+				this.update = this.updateDynamic;
 			} else {
-				this.updateDynamic();
+				this.update = this.updateKinematic;
 			}
+			this.body.setKinematic(isKinematic);
+		},
+
+		updateKinematic: function(updateDeep) {
+
+		    if(!this.sleep) {
+			    this.mesh.matrixWorld.decompose(p, q, s);
+			    var worldOffset = o.copy(this.localOffset).applyQuaternion(q).add(p)
+		        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
+		        this.body.setQuaternion([q.x, q.y, q.z, q.w]);
+			    if(this.debugMesh) {
+			    	this.debugMesh.position.copy(worldOffset);
+			    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
+			    	this.debugMesh.updateMatrixWorld();
+			    }
+			    //following doent exist yet?
+			    //this.body.body.saveKinematicState(dt);
+		    }
+
+		    Entity.prototype.update.call(this);
+		},
+
+		updateDynamic: function(updateDeep) {
+			p.fromArray(this.body.getPosition());
+			q.fromArray(this.body.getQuaternion());		
+			o.copy(this.localOffset).applyQuaternion(q);
+			p.add(o);
+			this.boneMesh.matrixWorld.compose(p, q, s);
+
+			var bone = this.boneMesh;
+			if ( bone.parent && bone.parent.isBone ) {
+
+				bone.matrix.getInverse( bone.parent.matrixWorld );
+				bone.matrix.multiply( bone.matrixWorld );
+
+			} else {
+
+				bone.matrix.copy( bone.matrixWorld );
+
+			}
+
+			bone.matrix.decompose( bone.position, bone.quaternion, bone.scale );
+
+		    if(this.debugMesh) {
+		    	this.debugMesh.position.fromArray(this.body.getPosition());
+		    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
+		    }
+
+		    Entity.prototype.update.call(this);
 		}
 	});
 	
+	/*
+		One time function to do some maths and determine
+		how to set up the physics locations etc. Do not run
+		every frame!!!!
+	 */
 	PhysBone.prototype._get_local_coords = function() {
 		var position = p;
 	    var quaternion = q;
@@ -92,61 +160,6 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			bBWorldPosition: constraintPoint.toArray()
 		}
 	};
-
-	PhysBone.prototype.updateDynamic = function() {
-		p.fromArray(this.body.getPosition());
-		q.fromArray(this.body.getQuaternion());		
-		o.copy(this.localOffset).applyQuaternion(q);
-		p.add(o);
-		this.boneMesh.matrixWorld.compose(p, q, s);
-
-		var bone = this.boneMesh;
-		if ( bone.parent && bone.parent.isBone ) {
-
-			bone.matrix.getInverse( bone.parent.matrixWorld );
-			bone.matrix.multiply( bone.matrixWorld );
-
-		} else {
-
-			bone.matrix.copy( bone.matrixWorld );
-
-		}
-
-		bone.matrix.decompose( bone.position, bone.quaternion, bone.scale );
-
-		/*bone.traverse(function(o) {
-			o.updateMatrixWorld(true);
-		});*/
-		//bone.parent.updateMatrixWorld(true);
-		//bone.updateMatrixWorld(true);
-
-	    if(this.debugMesh) {
-	    	this.debugMesh.position.fromArray(this.body.getPosition());
-	    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
-	    }
-
-	    Entity.prototype.update.call(this);
-	};
-
-	PhysBone.prototype.updateKinematic = function(updateDeep) {
-
-	    if(!this.sleep) {
-		    this.mesh.matrixWorld.decompose(p, q, s);
-		    var worldOffset = o.copy(this.localOffset).applyQuaternion(q).add(p)
-	        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
-	        this.body.setQuaternion([q.x, q.y, q.z, q.w]);
-		    if(this.debugMesh) {
-		    	this.debugMesh.position.copy(worldOffset);
-		    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
-		    	this.debugMesh.updateMatrixWorld();
-		    }
-		    //following doent exist yet?
-		    //this.body.body.saveKinematicState(dt);
-	    }
-	    //DyamicEntity.prototype.update.call(this, updateDeep);
-	    //Entity.prototype.update.call(this, updateDeep);
-	    Entity.prototype.update.call(this);
-	}
 
 	return PhysBone;
 });

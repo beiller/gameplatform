@@ -303,13 +303,9 @@
 	    }
 	},
 	"npcs" : [
-		{
-			"character": "necker", 
-	    	"position": [-11,0,0]
-		}
 	],
 	"player": {
-	    "character": "miku", 
+	    "character": "marie_rose", 
 	    "position": [0,0,0]
 	}
 }

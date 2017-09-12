@@ -509,6 +509,7 @@ function(
 		        mesh.frustumCulled = !game.disableCull;
 		        mesh.castShadow = game.settings.enableShadows;
 		        mesh.receiveShadow = game.settings.enableShadows;
+		        mesh.visible = false;
 				var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
 				if(game.debugPhysics) {
 					var geometry = new THREE.SphereGeometry( 1, 64, 64 );
@@ -535,56 +536,6 @@ function(
 
 				console.log("Animations:", character.animations)
 
-				if("touch_self1" in character.animations && false) {
-					function animation_loop() {
-						timeout(5000).then(function() {
-							console.log("ACTION1");
-							character.playAnimation("touch_self1", {"crossFade": true });
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION2");
-							character.playAnimation("touch_self2", {"crossFade": true });
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION3");
-							character.playAnimation("touch_self3", {"crossFade": true });
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION3");
-							character.playAnimation("touch_self3", {"timeScale": 1.5});
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION3");
-							character.playAnimation("touch_self3", {"timeScale": 2});
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION4");
-							character.playAnimation("touch_self4", {"crossFade": true });
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION4");
-							character.playAnimation("touch_self4", {"timeScale": 1.2});
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION4");
-							character.playAnimation("touch_self5", {"timeScale": 1});
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION4");
-							character.playAnimation("touch_self5", {"timeScale": 2});
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION4");
-							character.playAnimation("touch_self4", {"timeScale": 2.5});
-							return timeout(1200);
-						}).then(function(){
-							console.log("ACTION5");
-							character.playAnimation("touch_self5", {"crossFade": true });
-							animation_loop();
-						});
-					}
-					animation_loop();
-				}
 				if("walk" in character.animations && false) {
 					function animation_loop() {
 						timeout(5000).then(function() {

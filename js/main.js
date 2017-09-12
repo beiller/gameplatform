@@ -64,7 +64,7 @@ requirejs(
 		var drawTimer = new THREE.Clock(true);
 		var frameCount = 0;
 		var logicCount = 0;
-		var skipPhysics = false;
+		var skipPhysics = true;
 		var skipAnimation = false;
 
 		function animFunction() {
