@@ -29,7 +29,7 @@ define([
 
 		this.callbacks = {};
 
-		this.stepHz = 180;
+		this.stepHz = 240;
 		this.constraintSolverIterations = 60;
 
 		this.initPhysics();

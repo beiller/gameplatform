@@ -66,26 +66,37 @@ requirejs(
 		var logicCount = 0;
 		var skipPhysics = false;
 		var skipAnimation = false;
+
+		function animFunction() {
+			if(!window.game) {
+				return;
+			}
+			window.game.animate(skipPhysics, skipAnimation);
+		}
+
+		function drawFunction() {
+			window.game.render();
+			drawTimer.start();
+			frameCount++;
+		}
+
+		setInterval(animFunction, 1000/60);
 		
 		window.game = null;
 		var tickerInfo = ["drawFPS:", 0, "<br/>", "logicFPS:", 0];
 
 		function draw() {
+
 			requestAnimationFrame(draw);
 			
 			if(!window.game) {
 				return;
 			}
-			setTimeout(function() {
-				window.game.animate(skipPhysics, skipAnimation);
-			}, 0);
-
-			//window.game.animate(skipPhysics, skipAnimation);
-			if(drawTimer.getElapsedTime() >= frameTime) {
-				window.game.render();
-				drawTimer.start();
-				frameCount++;
-			}
+			
+			drawFunction();
+			//if(drawTimer.getElapsedTime() >= frameTime) {
+			//	
+			//}
 			
 			if (frameTimer.getElapsedTime() >= 1.0) {
 				tickerInfo[1] = frameCount;

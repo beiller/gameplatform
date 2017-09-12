@@ -175,7 +175,7 @@
 	        ]
 	    },
 	    "miku": {
-	        "model": "models/miku_game.json",
+	        "model": "models/miku_game_highres.json",
 	        "sss": false,
 	        "material": [
                 {
@@ -309,7 +309,7 @@
 		}
 	],
 	"player": {
-	    "character": "marie_rose", 
+	    "character": "miku", 
 	    "position": [0,0,0]
 	}
 }

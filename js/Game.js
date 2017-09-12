@@ -161,7 +161,7 @@ function(
 				bulbLight.shadow.camera.near = 0.1;
 				bulbLight.shadow.camera.far = 10;
 				bulbLight.distance = 10;
-				bulbLight.shadow.bias = 0.00001;
+				//bulbLight.shadow.bias = 0.00001;
 				scope.scene.add( bulbLight.target );
 				scope.bulbLight = bulbLight;
 				return bulbLight;
@@ -323,13 +323,13 @@ function(
 				localOffset:[0,0,0.15],
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
-			} },
+			} }/*,
 			{ bone: "DEF-spine.006", type: "DYNAMIC", radius: 0.08, connect_body: "head", options: { 
 				localOffset:[0,0,0.001],
 				rotationLimitsLow:  [-0.00,-0.00,-0.00],
 				rotationLimitsHigh: [ 0.00, 0.00, 0.00], 
 				noContact: true
-			} }
+			} }*/
 		];
 		function createLR(side) {
 			boneMap.push.apply(boneMap, [
@@ -367,12 +367,12 @@ function(
 				/*
 					ARMS!!!!!
 				*/
-				{ bone: "DEF-shoulder."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+				{ bone: "DEF-shoulder."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-upper_arm."+side,
 					rotationLimitsLow:  [-0.1,-0.1,-0.1],
 					rotationLimitsHigh: [ 0.1, 0.1, 0.1]
 				} },
-				{ bone: "DEF-upper_arm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
+				{ bone: "DEF-upper_arm."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
 					tailBone:"DEF-upper_arm."+side+".001",
 					rotationLimitsLow:  [-15.14,-15.14,-.50],
 					rotationLimitsHigh: [ 15.14, 15.14, .50]
@@ -789,21 +789,15 @@ function(
 		    }
 		}
 
-		//copy bones locations to physics simulation if they are kinetic
-		for(var i in this.dynamics) {
-			if(this.dynamics[i].body.getKinematic()) {
-				this.dynamics[i].update(delta);
-			}
-		}
-
+		//run the physics step
 		if(!skipPhysics) {
 	        this.physicsWorld.step(delta);
 	    }
-		
-		for(var i in this.dynamics) {
-			if(!this.dynamics[i].body.getKinematic()) {
-				this.dynamics[i].update(delta);
-			}
+
+	    if(!skipAnimation) {
+		    for(var i in this.characters) {
+		        this.characters[i].updateDynamicBones(delta);
+		    }
 		}
 
 	    //this.render();

@@ -56,6 +56,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    
 	    this.stateMachine = new BaseStateMachine(this, game);
 
+	    this.dynamics = [];
+
 	    /*this.skeletonHelper = new THREE.SkeletonHelper(this.armature);
 	    this.game.scene.add(this.skeletonHelper);*/
 	}
@@ -117,13 +119,29 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    }
 	};
 
+	Character.prototype.updateKineticBones = function(delta) {
+	    //copy bones' locations to physics simulation if they are kinematic
+		for(var i in this.dynamics) {
+			if(this.dynamics[i].body.getKinematic()) {
+				this.dynamics[i].update(delta);
+			}
+		}
+	};
+	Character.prototype.updateDynamicBones = function(delta) {
+	    //if the bones' are dynamic, copy their updated positions to the armature
+		for(var i in this.dynamics) {
+			if(!this.dynamics[i].body.getKinematic()) {
+				this.dynamics[i].update(delta);
+			}
+		}
+	};
 	Character.prototype.update = function(delta) {
-		//do a shallow update, so only update the surrounding sphere which emcompases the whole mesh
-		DynamicEntity.prototype.update.call(this, false);
+		//I believe this will update the physics. 
+		// copies the bounding sphere's position to this mesh's (character)
+		DynamicEntity.prototype.update.call(this);
 
+		//tick the character's state machine
 		this.stateMachine.update(delta);
-		
-	    //this.body.position.z = 0.0; //2d game here
 
 	    //do update skeletal Animation if we are less than n units away from camera
 	    var l = Math.abs(this.mesh.position.x - this.game.camera.mesh.position.x);
@@ -139,7 +157,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    	if(c != 'dead' && c != 'blocking' && c != 'stunned') {
 	    		this.pointCharacter();
 	    	}
-		    //update physics components and copy to mesh position
+		    //tick the AI or user controlled events...
 		    if(this.body) {
 		    	for(var i in this.controllers) {
 		    		this.controllers[i].update(delta);
@@ -147,7 +165,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		    }
 	    }
 
-	    DynamicEntity.prototype.update.call(this);
+	    //send the bones' position to physics simulation
+	    this.updateKineticBones();
 	};
 	Character.prototype.unequip = function(slot) {
 		if(slot == "weapon") {
@@ -355,7 +374,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 					this.game
 				);
 				//this.add(physBone);
-				this.game.dynamics.push(physBone);
+				this.dynamics.push(physBone);
 				break;
 			case "DYNAMIC":
 				var connectBody = null;
@@ -379,7 +398,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 					physicInfo.options,
 					this.game
 				);
-				this.game.dynamics.push(physBone);
+				this.dynamics.push(physBone);
 				/*
 				if(connectBody.body !== null) {
 					connectBody.add(physBone);
@@ -394,8 +413,6 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 		if(this.game.debugPhysics) {
 			doPhysDebug(physBone, physicInfo.radius, physicInfo.options);
 		}
-		//this.game.dynamics.push(physBone);
-		//this.add(physBone);
 	};
 
 	Character.prototype.calculateEffect = function(characterStats, weaponStats) {
