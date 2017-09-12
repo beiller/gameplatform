@@ -43,6 +43,11 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				from: '*',
 				to: 'playinganimation'
 			},
+			{
+				name: 'playPose',
+				from: '*',
+				to: 'playinganimation'
+			},
 			{ 
 				name: 'startup',
 				from: ['initialized'],
@@ -110,6 +115,10 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			}
 		];
 		var callbacks = {
+			onplayPose: function(event, from, to, msg) {
+				console.log("Playing animation " + msg);
+				this.character.playPose(msg);
+			},
 			onplayAnimation: function(event, from, to, msg) {
 				console.log("Playing animation " + msg);
 				this.character.setAnimation(msg);

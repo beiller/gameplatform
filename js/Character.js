@@ -80,6 +80,23 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        this.currentAnimation = animationName;
 	    }
 	};
+	Character.prototype.playPose = function(poseIndex) {
+		/*
+			Support a animation named "PoseLib" which each frame is a pose.
+		*/
+	    if(this.animations["PoseLib"] !== undefined) {
+	        var a = this.animations["PoseLib"];
+	        var duration = a.getClip().duration;
+	        var fps = 24;
+	        var interval = duration / fps;
+	        var poseIndexAdjusted = poseIndex % (duration * fps);
+	        a.timeScale = 0.0;
+	        a.time = interval * poseIndexAdjusted;
+	        this.animationMixer.stopAllAction();
+	        console.log("Playing animation at time offset", interval * poseIndexAdjusted);
+            a.play();
+	    }
+	};
 	Character.prototype.playAnimation = function(animationName, options) {
 	    if(options === undefined) {
 	        options = {};
@@ -365,18 +382,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 			globalBoneMap[parentMesh.id] = {};
 		}
 		switch(physicInfo.type) {
-			case "KINEMATIC":
-				physBone = this.game.physicsWorld.createCollisionBone(
-					physicInfo.bone, 
-					parentMesh,
-					physicInfo.radius,
-					physicInfo.options,
-					this.game
-				);
-				//this.add(physBone);
-				this.dynamics.push(physBone);
-				break;
-			case "DYNAMIC":
+			default:
 				var connectBody = null;
 				if("connect_body" in physicInfo) {
 					if(physicInfo.connect_body in globalBoneMap[parentMesh.id]) {
@@ -390,13 +396,18 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 				} else {
 					connectBody = {body: null};
 				}
+				physicInfo.options.kinematic = physicInfo.type == "KINEMATIC";
+				if(!("noContact" in physicInfo.options)) {
+					physicInfo.options.noContact = physicInfo.type == "KINEMATIC";
+				}
 				physBone = this.game.physicsWorld.createPhysBone(
 					physicInfo.bone, 
 					connectBody.body, 
 					parentMesh,
 					physicInfo.radius, 
 					physicInfo.options,
-					this.game
+					this.game,
+					physicInfo.type == "KINEMATIC"
 				);
 				this.dynamics.push(physBone);
 				/*

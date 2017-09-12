@@ -34,7 +34,16 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	}
 
 	PhysBone.prototype = Object.assign( Object.create( Entity.prototype ), {
-		constructor: PhysBone
+		
+		constructor: PhysBone,
+
+		update: function(updateDeep) {
+			if(this.body.getKinematic()) {
+				this.updateKinematic();
+			} else {
+				this.updateDynamic();
+			}
+		}
 	});
 	
 	PhysBone.prototype._get_local_coords = function() {
@@ -84,7 +93,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		}
 	};
 
-	PhysBone.prototype.update = function() {
+	PhysBone.prototype.updateDynamic = function() {
 		p.fromArray(this.body.getPosition());
 		q.fromArray(this.body.getQuaternion());		
 		o.copy(this.localOffset).applyQuaternion(q);
@@ -118,6 +127,26 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 
 	    Entity.prototype.update.call(this);
 	};
+
+	PhysBone.prototype.updateKinematic = function(updateDeep) {
+
+	    if(!this.sleep) {
+		    this.mesh.matrixWorld.decompose(p, q, s);
+		    var worldOffset = o.copy(this.localOffset).applyQuaternion(q).add(p)
+	        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
+	        this.body.setQuaternion([q.x, q.y, q.z, q.w]);
+		    if(this.debugMesh) {
+		    	this.debugMesh.position.copy(worldOffset);
+		    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
+		    	this.debugMesh.updateMatrixWorld();
+		    }
+		    //following doent exist yet?
+		    //this.body.body.saveKinematicState(dt);
+	    }
+	    //DyamicEntity.prototype.update.call(this, updateDeep);
+	    //Entity.prototype.update.call(this, updateDeep);
+	    Entity.prototype.update.call(this);
+	}
 
 	return PhysBone;
 });

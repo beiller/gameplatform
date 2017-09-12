@@ -427,17 +427,16 @@ define([
 	    return z_len;
 	};
 
-	AmmoPhysics.prototype.createPhysBone = function(bone, parentBody, parentMesh, z_len, options, game) {
+	AmmoPhysics.prototype.createPhysBone = function(bone, parentBody, parentMesh, z_len, options, game, useDynamicCollision) {
 		if(!options) {
 			options = {};
 		}
 	    var mass = 1.0;
 
 	    z_len = this.determineZLength(bone, options);
-
-	    //mass *= z_len;
 	    
 	    var transform = this.determineWorldPosition(bone, parentMesh, z_len);
+
 	    var shapeOptions = {
 	    	type: "box",
 	    	x: options.boxWidth || 0.02, y: options.boxDepth || 0.02, z: z_len/2, margin: 0.0001
@@ -447,42 +446,20 @@ define([
 	    	mass: options.mass || mass,
 	    	transform: transform,
 	    	options: {},
-	    	noContact: options.noContact || false
+	    	noContact: "noContact" in options ? options.noContact : true,
+	    	kinematic: "kinematic" in options ? options.kinematic : true
 	    };
 
 		var body = new Body(bodyOptions, shapeOptions);
 		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
 
-		options.localOffset = new THREE.Vector3(0, 0, z_len/2);
-
-		return new PhysBone(bone, body, parentBody, parentMesh, game, options);
-	};
-
-	AmmoPhysics.prototype.createCollisionBone = function(bone, parentMesh, z_len, options, game) {
-		if(!options) {
-			options = {};
+		if(useDynamicCollision) {
+			options.localOffset = new THREE.Vector3(0, 0, -z_len/2);
+			//return new DynamicCollisionEntity(bone, body, parentBody, parentMesh, game, options);
+		} else {
+			options.localOffset = new THREE.Vector3(0, 0, z_len/2);
 		}
-
-	    z_len = this.determineZLength(bone, options);
-
-	    var transform = this.determineWorldPosition(bone, parentMesh, z_len, options);
-
-	    var shapeOptions = { type: "box", x: 0.02, y: 0.02, z: z_len/2, margin: 0.0001 };
-
-	    var bodyOptions = {
-	    	mass: 0,
-	    	transform: transform,
-	    	options: {},
-	    	kinematic: true,
-	    	noContact: true
-	    };
-
-		var body = new Body(bodyOptions, shapeOptions);
-		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
-		
-		options.localOffset = new THREE.Vector3(0, 0, -z_len/2);
-		
-		return new DynamicCollisionEntity(bone, game, body, options);
+		return new PhysBone(bone, body, parentBody, parentMesh, game, options);
 	};
 
 	return AmmoPhysics;

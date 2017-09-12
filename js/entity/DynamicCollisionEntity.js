@@ -1,12 +1,11 @@
-define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
-	var dynamicEntitiesByBody = {};
+define(["lib/three", 'entity/DynamicEntity'], function(THREE, DynamicEntity) {
 
 	var position = new THREE.Vector3();
     var quaternion = new THREE.Quaternion();
     var scale = new THREE.Vector3();
     var tmpVec1 = new THREE.Vector3();
     
-	function DynamicCollisionEntity(mesh, game, body, options) {
+	function DynamicCollisionEntity(mesh, body, unused1, unused2, game, options) {
 		/*
 			The dynamic collision entity is a rigid body that follows the
 			position / rotation of another object (EG. a bone)
@@ -15,26 +14,13 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			game: game state
 			body: the rigid body
 		*/
-		Entity.call(this, mesh, game);
+		DynamicEntity.call(this, mesh, game, body);
 		
-	    this.body = body;
 	    this.sleep = false;
 	    this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
-
-    	dynamicEntitiesByBody[body] = this;
-	    var scope = this;
-		game.physicsWorld.addCollisionCallback(body.body, function(body1, body2, collisionPoint) { 
-			scope.dispatchEvent({
-				type: "COLLIDE",
-				entity1: dynamicEntitiesByBody[body1],
-				entity2: dynamicEntitiesByBody[body2],
-				collisionPoint: collisionPoint
-			});
-		});
-
 	}
 
-	DynamicCollisionEntity.prototype = Object.assign( Object.create( Entity.prototype ), {
+	DynamicCollisionEntity.prototype = Object.assign( Object.create( DynamicEntity.prototype ), {
 
 		constructor: DynamicCollisionEntity,
 		
@@ -53,11 +39,8 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			    //following doent exist yet?
 			    //this.body.body.saveKinematicState(dt);
 		    }
-		    Entity.prototype.update.call(this, updateDeep);
-		},
-		
-		getEntityByBody: function(body) {
-		    return dynamicEntitiesByBody[body];
+		    //DyamicEntity.prototype.update.call(this, updateDeep);
+		    //Entity.prototype.update.call(this, updateDeep);
 		}
 	});
 

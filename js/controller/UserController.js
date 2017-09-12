@@ -14,10 +14,15 @@ function(StateMachine, Controller) {
 	    	"f5", "f1", "f4", "f2", "f3"
 	    ];
 
+	    var poseLibFrame = 0;
+
 	    var keymap = {
 	        'keydown': {
 	            '87': function() { stateMachine.jump(); }, //W KEY
-	            '83': function() {  }, //S KEY
+	            '83': function() { 
+	            	character.stateMachine.playPose(poseLibFrame); 
+	            	poseLibFrame += 1;
+	            }, //S KEY
 	            '68': function() { mv.x += 1.0; stateMachine.run(); }, //A KEY
 	            '65': function() { mv.x -= 1.0; stateMachine.run(); },  //D KEY
 	            '32': function() { 
