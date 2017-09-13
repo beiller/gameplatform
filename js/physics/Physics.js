@@ -446,7 +446,7 @@ define([
 	    	mass: options.mass || mass,
 	    	transform: transform,
 	    	options: {},
-	    	noContact: "noContact" in options ? options.noContact : true,
+	    	noContact: "noContact" in options ? options.noContact : false,
 	    	kinematic: "kinematic" in options ? options.kinematic : true
 	    };
 
@@ -460,7 +460,6 @@ define([
 			options.localOffset = new THREE.Vector3(0, 0, z_len/2);
 		}
 		var physBone = new PhysBone(bone, body, parentBody, parentMesh, game, options);
-		physBone.update();
 		return physBone;
 	};
 

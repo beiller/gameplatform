@@ -1,10 +1,10 @@
 define([
-	"lib/three", "lib/zepto", "Character", "physics/Physics",
+	"lib/three", "lib/zepto", "Character", "physics/Physics", "PhysRig",
 	"entity/DynamicEntity", "entity/Camera", "Loader", 'controller/AIController', 'controller/UserController',
 	"PMREMGenerator", "PMREMCubeUVPacker"
 ], 
 function(
-		THREE, $, Character, Physics, DynamicEntity, Camera, Loader, AIController, UserController, PMREMGenerator, PMREMCubeUVPacker
+		THREE, $, Character, Physics, PhysRig, DynamicEntity, Camera, Loader, AIController, UserController, PMREMGenerator, PMREMCubeUVPacker
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -38,7 +38,7 @@ function(
 	
 	    this.cubemapRendered = false;
 	    
-	    this.debugPhysics = true;
+	    this.debugPhysics = false;
 	    
 	    this.physicsWorld = new Physics();
 	}
@@ -372,12 +372,12 @@ function(
 					rotationLimitsLow:  [-0.1,-0.1,-0.1],
 					rotationLimitsHigh: [ 0.1, 0.1, 0.1]
 				} },
-				{ bone: "DEF-upper_arm."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
+				{ bone: "DEF-upper_arm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
 					tailBone:"DEF-upper_arm."+side+".001",
 					rotationLimitsLow:  [-15.14,-15.14,-.50],
 					rotationLimitsHigh: [ 15.14, 15.14, .50]
 				} },
-				{ bone: "DEF-upper_arm."+side+".001", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
+				{ bone: "DEF-upper_arm."+side+".001", type: "DYNAMIC", radius: 0.08, connect_body: "DEF-upper_arm."+side, options: { 
 					tailBone:"DEF-forearm."+side,
 					rotationLimitsLow:  [ 0,0,0 ],
 					rotationLimitsHigh: [ 0,0,0 ]
@@ -450,17 +450,7 @@ function(
 		createLR("L");
 		createLR("R");
 
-
-		if(character.findBone("DEF-spine.006")) {
-			boneMap.forEach(function(e) {
-				//DEBUG!!!!
-				//e.type = "KINEMATIC";
-				//END DEBUG!!!!
-				if(e.bone) e.bone = character.findBone(e.bone); 
-				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
-				character.createPhysic(e, character.armature);
-			});
-		}
+		character.physRig.createFromMap(boneMap);
 
 	    return null;
 	
@@ -509,7 +499,6 @@ function(
 		        mesh.frustumCulled = !game.disableCull;
 		        mesh.castShadow = game.settings.enableShadows;
 		        mesh.receiveShadow = game.settings.enableShadows;
-		        mesh.visible = false;
 				var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
 				if(game.debugPhysics) {
 					var geometry = new THREE.SphereGeometry( 1, 64, 64 );

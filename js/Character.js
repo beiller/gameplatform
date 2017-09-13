@@ -1,9 +1,9 @@
 
 define([
-	"CharacterStats", "entity/DynamicEntity", "lib/three", "BaseStateMachine"
+	"CharacterStats", "entity/DynamicEntity", "lib/three", "BaseStateMachine", "PhysRig"
 	],
 
-function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
+function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	var tmpVec1 = new THREE.Vector3();
 	var tmpVec2 = new THREE.Vector3();
 	var tmpVec3 = new THREE.Vector3();
@@ -56,7 +56,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	    
 	    this.stateMachine = new BaseStateMachine(this, game);
 
-	    this.dynamics = [];
+		this.physRig = new PhysRig(this, game);
+
+		this.dynamics = [];
+		this.physicMap = {};
 
 	    /*this.skeletonHelper = new THREE.SkeletonHelper(this.armature);
 	    this.game.scene.add(this.skeletonHelper);*/
@@ -138,17 +141,17 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 
 	Character.prototype.updateKineticBones = function(delta) {
 	    //copy bones' locations to physics simulation if they are kinematic
-		for(var i in this.dynamics) {
-			if(this.dynamics[i].body.getKinematic()) {
-				this.dynamics[i].update(delta);
+		for(var i in this.physRig.dynamics) {
+			if(this.physRig.dynamics[i].body.getKinematic()) {
+				this.physRig.dynamics[i].update(delta);
 			}
 		}
 	};
 	Character.prototype.updateDynamicBones = function(delta) {
 	    //if the bones' are dynamic, copy their updated positions to the armature
-		for(var i in this.dynamics) {
-			if(!this.dynamics[i].body.getKinematic()) {
-				this.dynamics[i].update(delta);
+		for(var i in this.physRig.dynamics) {
+			if(!this.physRig.dynamics[i].body.getKinematic()) {
+				this.physRig.dynamics[i].update(delta);
 			}
 		}
 	};
@@ -288,10 +291,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 
 						}
 						if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
-						scope.createPhysic(e, mesh);
+						scope.physRig.createPhysic(e, mesh);
 					} catch(e) {
-						//console.log(e);
-						throw e;
+						console.log("Exception loading bone", e);
+						//throw e;
 					}
 				}
 				function createChainRecurse(c) {
@@ -339,6 +342,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        	}
 	        	scope.meshes[item.slot] = dynamic.mesh;
 
+	        	//This aligns with hands (approx) for sword?
 	        	dynamic.mesh.rotateX(1.57075);
 	        	dynamic.mesh.rotateZ(1.57075);
 	        	dynamic.mesh.position.set(-0.02, -0.2, -0.04);
@@ -353,79 +357,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine) {
 	        });
 		}
 	};
-	Character.prototype.createPhysic = function(physicInfo, parentMesh) {
-		var scope = this.game;
-
-		var doPhysDebug = function(physBone, radius, options) {
-			if(!options) {
-				options = {};
-			}
-			if(physBone.localOffset) {
-				radius = physBone.localOffset.z;
-			}
-	        var sphere = new THREE.Mesh(
-	        	//new THREE.SphereGeometry(radius, 12, 12), 
-	        	new THREE.BoxGeometry(options.boxWidth || 0.02, options.boxDepth || 0.02, radius*2),
-	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
-	        );
-	        
-	        var axisHelper = new THREE.AxisHelper( 0.2 );
-		
-        	sphere.add(axisHelper);
-        	scope.scene.add(sphere);
-	        physBone.debugMesh = sphere;
-		}
-
-		var globalBoneMap = this.physicMap;
-		var physBone = null;
-		if(!(parentMesh.id in globalBoneMap)) {
-			globalBoneMap[parentMesh.id] = {};
-		}
-		switch(physicInfo.type) {
-			default:
-				var connectBody = null;
-				if("connect_body" in physicInfo) {
-					if(physicInfo.connect_body in globalBoneMap[parentMesh.id]) {
-						connectBody = globalBoneMap[parentMesh.id][physicInfo.connect_body];
-					} else if(physicInfo.connect_body in globalBoneMap[this.armature.id]) {
-						connectBody = globalBoneMap[this.armature.id][physicInfo.connect_body];
-					} else {
-						console.log("Cannot find bone!", physicInfo.connect_body, globalBoneMap[parentMesh.id])
-						//throw "Cannot find bone!";
-					}
-				} else {
-					connectBody = {body: null};
-				}
-				physicInfo.options.kinematic = physicInfo.type == "KINEMATIC";
-				if(!("noContact" in physicInfo.options)) {
-					physicInfo.options.noContact = physicInfo.type == "KINEMATIC";
-				}
-				physBone = this.game.physicsWorld.createPhysBone(
-					physicInfo.bone, 
-					connectBody.body, 
-					parentMesh,
-					physicInfo.radius, 
-					physicInfo.options,
-					this.game,
-					physicInfo.type == "KINEMATIC"
-				);
-				this.dynamics.push(physBone);
-				/*
-				if(connectBody.body !== null) {
-					connectBody.add(physBone);
-				} else {
-					this.add(physBone);
-				}
-				//this.staticBones.push(physBone);*/
-				break;
-		}
-		globalBoneMap[parentMesh.id][physicInfo.bone.name] = physBone;
-
-		if(this.game.debugPhysics) {
-			doPhysDebug(physBone, physicInfo.radius, physicInfo.options);
-		}
-	};
-
+	
 	Character.prototype.calculateEffect = function(characterStats, weaponStats) {
 	    var magicDamage = 0;
 	    armors = ['chest', 'arms', 'head', 'legs', 'pants', 'boots', 'gloves'];

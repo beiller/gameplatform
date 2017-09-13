@@ -305,7 +305,7 @@
 	"npcs" : [
 	],
 	"player": {
-	    "character": "marie_rose", 
+	    "character": "miku", 
 	    "position": [0,0,0]
 	}
 }
