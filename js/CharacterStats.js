@@ -9,7 +9,7 @@ define(function() {
 	    this.damage = params.damage || 10;
 	
 	    //ATTACK cool down in MS
-	    this.attackCooldown = params.attackCooldown || 500;
+	    this.attackCooldown = params.attackCooldown || 1500;
 	    //Stun duration after hit in MS
 	    this.hitStunDuration = params.hitStunDuration || 5000;
 	    //force in some arbitrary unit

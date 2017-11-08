@@ -368,6 +368,71 @@
             ]
         }
     },
+    "miku_prisoner_pants": {"name": "miku_prisoner_pants",  "model": "models/miku_prisoner_pants.json", "slot": "pants", "options": { 
+            "material": [
+                {
+                    "roughness": 0.5, 
+                    "color": "0xFFFFFF", 
+                    "diffusePath": "models/prisoner_pants.png", 
+                    "normalPath": "models/prisoner_pants_normal.png", 
+                    "transparent": true
+                }
+            ]
+        }
+    },
+    "miku_prisoner_outfit": {"name": "miku_prisoner_outfit",  "model": "models/miku_prisoner_outfit.json", "slot": "outfit", "options": { 
+            "material": [
+                {
+                    "roughness": 0.5, 
+                    "color": "0xFFFFFF", 
+                    "diffusePath": "models/prisoner_pants.png", 
+                    "normalPath": "models/prisoner_pants_normal.png", 
+                    "transparent": true
+                }
+            ]
+        }
+    },
+    "miku_mage_apprentice": {"name": "miku_mage_apprentice",  "model": "models/miku_mage_apprentice.json", "slot": "outfit", "options": { 
+            "material": [
+                {
+                    "roughness": 0.5, 
+                    "color": "0xFFFFFF", 
+                    "diffusePath": "models/dress.png", 
+                    "normalPath": "models/dress_normal.png", 
+                    "transparent": true
+                },
+                {"roughness": 0.05, "color": "0xDDDDDD", "metalness": 1.0, "name": "metal" }
+            ]
+        }
+    },
+    "miku_hair_moonrise_dynamic": {"name": "miku_hair_moonrise_dynamic",  "model": "models/miku_hair_moonrise_dynamic.json", "slot": "hair1", 
+        "physicsChain" : [
+            {
+                "bone": "Bone.001", "connect_body": "head", "dof": 0.25, "mass": 0.001
+            },
+            {
+                "bone": "Bone.004", "connect_body": "head", "dof": 0.25, "mass": 0.001
+            }
+        ],
+        "physics": [
+            { 
+                "bone": "head", "type": "KINEMATIC", "radius": 0.02, "options": { 
+                    "moveTo": "head",
+                    "localOffset": [0,0,0.035]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {
+                    "roughness": 0.5, 
+                    "color": "0xFFFFFF", 
+                    "diffusePath": "models/hair_metropolis.png", 
+                    "transparent": true
+                }
+            ]
+        }
+    },
     "fairy1_hair2": {"name": "fairy1_hair2",  "model": "level2/fairy1_hair2.json", "slot": "hair", "options": { 
             "material": [
                 {"roughness": 0.8, "color": "0x000000" },

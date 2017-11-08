@@ -213,11 +213,13 @@
                 }
             ],
 	        "equipment": [
-	        	"miku_outfit1",
-	        	"miku_dynamic_hair"
+	        	"miku_prisoner_outfit",
+	        	"miku_hair_moonrise_dynamic"
 	        ],
 	        "inventory": [
+	        	"miku_mage_apprentice",
 	        	"miku_dynamic_hair",
+	        	"miku_outfit1",
 	        	"cross_earring",
 	        	"cross_earring2",
 	        	"chain_earring1",
@@ -228,7 +230,8 @@
 	        	"icestaff",
 	        	"icekatana",
 	        	"icesword",
-	        	"firekatana"
+	        	"firekatana",
+	        	"miku_prisoner_pants"
 	        ]
 	    },
 	    "miku_jelly": {
@@ -303,6 +306,14 @@
 	    }
 	},
 	"npcs" : [
+		{
+		    "character": "miku",
+		    "position": [-10,0,0]
+		},
+		{
+		    "character": "miku",
+		    "position": [15,0,0]
+		}
 	],
 	"player": {
 	    "character": "miku", 

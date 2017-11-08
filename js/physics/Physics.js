@@ -30,7 +30,7 @@ define([
 		this.callbacks = {};
 
 		this.stepHz = 240;
-		this.constraintSolverIterations = 60;
+		this.constraintSolverIterations = 200;
 
 		this.initPhysics();
 	}
@@ -122,36 +122,32 @@ define([
 	AmmoPhysics.prototype.createConstraint6DOF = function(bodyA, bodyB, localA, localB, options) {
 		var q1 = new THREE.Quaternion().fromArray(bodyA.getQuaternion()).inverse();
 		var q2 = new THREE.Quaternion().fromArray(bodyB.getQuaternion()).inverse();
+		var q3 = new THREE.Quaternion().setFromUnitVectors ( q1, q2 );
+		console.log("QUATERNIONDEBUG", q1, q2);
 		//var q1_i = new THREE.Quaternion().copy(q1).inverse();
 		//var q2_i = new THREE.Quaternion().copy(q2).inverse();
-		
-		var p1 = new THREE.Vector3().fromArray(localA);
-		var p2 = new THREE.Vector3().fromArray(localB);
+
 		//p1.applyQuaternion(q1);
 		//p2.applyQuaternion(q2);
 
-		var transA = temp_trans_1;
-		temp_vec3_1.setValue(p1.x, p1.y, p1.z);
+		temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
 		temp_quat_1.setValue(q1.x, q1.y, q1.z, q1.w);
-		transA.setIdentity();
-		transA.setRotation(temp_quat_1);
-		transA.setOrigin(temp_vec3_1);
-		
-		
-		var transB = temp_trans_2;
-		temp_vec3_1.setValue(p2.x, p2.y, p2.z);
-		temp_quat_1.setValue(q2.x, q2.y, q2.z, q2.w);
-		transB.setIdentity();
-		transB.setRotation(temp_quat_1);
-		transB.setOrigin(temp_vec3_1);
-		
+		temp_trans_1.setIdentity();
+		temp_trans_1.setRotation(temp_quat_1);
+		temp_trans_1.setOrigin(temp_vec3_1);
 
+		temp_vec3_2.setValue(localB[0], localB[1], localB[2]);
+		temp_quat_2.setValue(q2.x, q2.y, q2.z, q2.w);
+		temp_trans_2.setIdentity();
+		temp_trans_2.setRotation(temp_quat_2);
+		temp_trans_2.setOrigin(temp_vec3_2);
+		
 		var constraint = new Ammo.btGeneric6DofSpringConstraint(
 			bodyA.body, 
 			bodyB.body, 
-			transA, 
-			transB,
-			false
+			temp_trans_1, 
+			temp_trans_2,
+			true
 		);
 
 		if(!options) {
@@ -182,7 +178,7 @@ define([
 			temp_vec3_1.setValue(-dist, -dist, -0);
 			constraint.setAngularLowerLimit(temp_vec3_1);
 			temp_vec3_1.setValue(dist, dist, 0);
-			constraint.setAngularUpperLimit(temp_vec3_2);
+			constraint.setAngularUpperLimit(temp_vec3_1);
 		} else {
 			temp_vec3_1.setValue(0,0,0);
 			constraint.setLinearLowerLimit(temp_vec3_1);
@@ -300,7 +296,7 @@ define([
 		temp_vec3_1.setValue(0, height, 0);
 		temp_trans_1.setOrigin(temp_vec3_1);
 
-	    var shapeOptions = { type: "box", x: 100, y: 0.5, z: 6, margin: 0.0001 };
+	    var shapeOptions = { type: "box", x: 100, y: 0.5, z: 6, margin: 0.00001 };
 
 	    var bodyOptions = {
 	    	mass: 0,
@@ -350,7 +346,7 @@ define([
 			boxTransform.setIdentity();
 			boxTransform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
 
-		    var shapeOptions = { type: "box", x: bboxmax.x, y: bboxmax.y, z: bboxmax.z, margin: 0.0001 };
+		    var shapeOptions = { type: "box", x: bboxmax.x, y: bboxmax.y, z: bboxmax.z, margin: 0.00001 };
 
 		    var bodyOptions = {
 		    	mass: 0,
@@ -374,7 +370,7 @@ define([
 		boxTransform.setIdentity();
 		boxTransform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
 
-	    var shapeOptions = { type: "box", x: Math.abs(len.x), y: Math.abs(len.y), z: Math.abs(len.z), margin: 0.0001 };
+	    var shapeOptions = { type: "box", x: Math.abs(len.x), y: Math.abs(len.y), z: Math.abs(len.z), margin: 0.00001 };
 
 	    var bodyOptions = {
 	    	mass: mass,
@@ -439,7 +435,7 @@ define([
 
 	    var shapeOptions = {
 	    	type: "box",
-	    	x: options.boxWidth || 0.02, y: options.boxDepth || 0.02, z: z_len/2, margin: 0.0001
+	    	x: options.boxWidth || 0.02, y: options.boxDepth || 0.02, z: z_len/2, margin: 0.00001
 	    };
 
 	    var bodyOptions = {
