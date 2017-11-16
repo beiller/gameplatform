@@ -170,9 +170,9 @@ define([
 			constraint.setStiffness(4, options.stiffness || 5.0);
 			constraint.setStiffness(5, options.stiffness || 5.0);
 
-			//constraint.setDamping(3, options.damping || 100);
-			//constraint.setDamping(4, options.damping || 100);
-			//constraint.setDamping(5, options.damping || 100);
+			constraint.setDamping(3, options.damping || 15);
+			constraint.setDamping(4, options.damping || 15);
+			constraint.setDamping(5, options.damping || 15);
 
 			dist = options.distance || 1.5;
 			temp_vec3_1.setValue(-dist, -dist, -0);
@@ -319,7 +319,8 @@ define([
 		transform.setIdentity();
 		transform.setOrigin(temp_vec3_1);
 
-		var shapeOptions = { type: "sphere", radius: radius };
+		//var shapeOptions = { type: "sphere", radius: radius };
+		var shapeOptions = { type: "box", x: 0.25, y: radius, z: 0.25, margin: 0.00001 };
 
 	    var bodyOptions = {
 	    	mass: mass,
@@ -337,7 +338,7 @@ define([
 		return body;
 		
 	};
-	AmmoPhysics.prototype.addStaticPhysics = function(shape, mesh, position) {
+	AmmoPhysics.prototype.addStaticPhysics = function(shape, mesh, position, rotation) {
 		if (shape === 'box') {
 			if(position === undefined) position = [0,0,0];
 			mesh.geometry.computeBoundingBox();
@@ -345,6 +346,12 @@ define([
 			var boxTransform = temp_trans_1;
 			boxTransform.setIdentity();
 			boxTransform.setOrigin(new Ammo.btVector3(position[0], position[1], position[2]));
+
+			if(rotation !== undefined) {
+				var temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
+				temp_quat_1.setEuler(rotation[0], rotation[1], rotation[2]);
+				boxTransform.setRotation(temp_quat_1);
+			}
 
 		    var shapeOptions = { type: "box", x: bboxmax.x, y: bboxmax.y, z: bboxmax.z, margin: 0.00001 };
 
@@ -355,7 +362,7 @@ define([
 		    };
 
 			var body = new Body(bodyOptions, shapeOptions);
-			this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
+			this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD | this.collisionLayers.PLAYER);
 
 			return body;
 		}
@@ -447,7 +454,7 @@ define([
 	    };
 
 		var body = new Body(bodyOptions, shapeOptions);
-		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
+		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.PLAYER, this.collisionLayers.WORLD);
 
 		if(useDynamicCollision) {
 			options.localOffset = new THREE.Vector3(0, 0, -z_len/2);

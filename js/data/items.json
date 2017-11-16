@@ -18,7 +18,7 @@
                 "fire": 400
             },
             "health": 200,
-            "attackCooldown": 800
+            "attackCooldown": 300
         }
     },
 	"rustsword": {
@@ -36,7 +36,7 @@
         },
         "stats": {
             "damage": 15,
-            "attackCooldown": 600
+            "attackCooldown": 300
         }
     },
     "icesword": {
@@ -58,7 +58,7 @@
                 "water": 400
             },
             "health": 200,
-            "attackCooldown": 800
+            "attackCooldown": 300
         }
     },
     "icestaff": {
@@ -79,7 +79,7 @@
                 "water": 10000
             },
             "health": 200,
-            "attackCooldown": 800
+            "attackCooldown": 300
         }
     },
     "icekatana": {
@@ -100,7 +100,7 @@
                 "water": 255
             },
             "health": 200,
-            "attackCooldown": 500
+            "attackCooldown": 250
         }
     },
     "firekatana": {
@@ -142,7 +142,7 @@
                 "water": 255
             },
             "health": 200,
-            "attackCooldown": 500
+            "attackCooldown": 250
         }
     },
     "unholychestarmor": {
@@ -288,6 +288,18 @@
             ]
         }
     },
+    "marie_hair2": {"name": "marie_hair2",  "model": "mr/hair1.json", "slot": "hair1", "options": { 
+            "material": [
+                {"diffusePath": "mr/hair1.png", "transparent": true}
+            ]
+        }
+    },
+    "marie_bikini2": {"name": "marie_bikini2",  "model": "mr/bikini_small.json", "slot": "outfit", "options": { 
+            "material": [
+                {}
+            ]
+        }
+    },
     "marie_hair_dynamic": {"name": "marie_hair_dynamic",  "model": "models/marie_rose_hair_dynamic.json", "slot": "hair1", 
         "physicsChain" : [
             {
@@ -387,6 +399,18 @@
                     "color": "0xFFFFFF", 
                     "diffusePath": "models/prisoner_pants.png", 
                     "normalPath": "models/prisoner_pants_normal.png", 
+                    "transparent": true
+                }
+            ]
+        }
+    },
+    "beggar_dress_lg": {"name": "beggar_dress_lg",  "model": "mr/beggar_dress_lg.json", "slot": "outfit", "options": { 
+            "material": [
+                {
+                    "roughness": 0.7, 
+                    "color": "0xFFFFFF", 
+                    "diffusePath": "mr/beggar_dress.png", 
+                    "normalPath": "mr/beggar_dress_normal.png", 
                     "transparent": true
                 }
             ]

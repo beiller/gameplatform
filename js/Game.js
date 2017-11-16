@@ -146,7 +146,7 @@ function(
 				//var bulbLight = new THREE.RectAreaLight( 0xffee88, undefined,  width, height );
 				var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
 				bulbLight.intensity = bulbLuminousPowers["1700 lm (100W)"];
-				bulbMat = new THREE.MeshStandardMaterial( {
+				var bulbMat = new THREE.MeshStandardMaterial( {
 					emissive: 0xffffee,
 					emissiveIntensity: 1,
 					color: 0x000000
@@ -168,8 +168,39 @@ function(
 			}
 
 
-			this.scene.add(   createSpotLight([0.5, 0, 5], [0, -2.5, 0])    );
-			this.scene.add(   createSpotLight([0.5, 0, -5], [0, -2.5, 0])   );
+			this.spot1 = createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
+			this.spot2 = createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
+			this.scene.add(   this.spot1   );
+			this.scene.add(   this.spot2   );
+
+			/*var light1 = new THREE.PointLight( 0xffee88, 1, 100 );
+			var bulbMat = new THREE.MeshStandardMaterial( {
+				emissive: 0xffffee,
+				emissiveIntensity: 1,
+				color: 0x000000
+			});
+			light1.add( new THREE.Mesh( new THREE.SphereGeometry( 0.02, 16, 8 ), bulbMat ) );
+			light1.position.set(-1,-2,-0.7);
+			light1.intensity = 300;
+			light1.shadow.mapSize = new THREE.Vector2( scope.settings.shadowResolution, scope.settings.shadowResolution );
+			light1.shadow.camera.near = 0.1;
+			light1.shadow.camera.far = 10;
+			light1.castShadow = true;
+			//this.camera.mesh.add(light1);
+			this.scene.add(light1);
+			this.light1 = light1;
+
+			var light2 = new THREE.PointLight( 0xffee88, 1, 100 );
+			light2.add( new THREE.Mesh( new THREE.SphereGeometry( 0.02, 16, 8 ), bulbMat ) );
+			light2.position.set(1,-2,-0.7);
+			light2.intensity = 300;
+			light2.shadow.mapSize = new THREE.Vector2( scope.settings.shadowResolution, scope.settings.shadowResolution );
+			light2.shadow.camera.near = 0.1;
+			light2.shadow.camera.far = 10;
+			light2.castShadow = true;
+			//this.camera.mesh.add(light1);
+			this.scene.add(light2);
+			this.light2 = light2;*/
 
 			/*var shadowCameraHelper = new THREE.CameraHelper( bulbLight.shadow.camera );
 			this.scene.add( shadowCameraHelper );
@@ -177,7 +208,7 @@ function(
 			this.scene.add( lightHelper );*/
 			
 			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
-			hemiLight.intensity = hemiLuminousIrradiances["50 lx (Living Room)"];
+			hemiLight.intensity = hemiLuminousIrradiances["100 lx (Very Overcast)"];
 			this.scene.add( hemiLight );
 
 	};
@@ -249,7 +280,7 @@ function(
 	        if(onComplete !== undefined) onComplete(mesh);
 	    });
 	    //var geometry = new THREE.PlaneGeometry( 50, 5, 1, 1 );
-	    var geometry = new THREE.BoxGeometry(100, 0.5, 6);
+	    var geometry = new THREE.BoxGeometry(200, 1, 12);
 		var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa } );
 		var floor = new THREE.Mesh( geometry, material );
 		floor.position.y = -4.0;
@@ -400,13 +431,15 @@ function(
 
 
 				{ bone: "ORG-breast."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
-					tailBone:"DEF-breast."+side+".001",
-					//localOffset:[0,0,0.07] ,
+					//tailBone:"DEF-breast."+side+".001",
+					localOffset:[0,0,0.08] ,
 					rotationLimitsLow:  [0,0,0],
 					rotationLimitsHigh: [0,0,0],
 					spring: true,
-					stiffness: 0.001,
-					distance: 0.2,
+					stiffness: 1.5,
+					damping: 18.0,
+					distance: 0,
+					mass: 0.5
 				} },
 				/*{ bone: "DEF-breast."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-breast."+side, options: { 
 					localOffset:[0,0,0.02] ,
@@ -503,7 +536,7 @@ function(
 		        mesh.receiveShadow = game.settings.enableShadows;
 				var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
 				if(game.debugPhysics) {
-					var geometry = new THREE.SphereGeometry( 1, 64, 64 );
+					var geometry = new THREE.BoxGeometry( 0.5, radius*2, 0.5 );
 					var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
 					body.debugMesh = new THREE.Mesh( geometry, material );
 					game.scene.add(body.debugMesh);
@@ -694,7 +727,20 @@ function(
 	        mesh.castShadow = game.settings.enableShadows;
 	        mesh.receiveShadow = game.settings.enableShadows;
 	        game.scene.add(mesh);
-	        game.physicsWorld.addStaticPhysics(shape, mesh, position);
+	        game.physicsWorld.addStaticPhysics(shape, mesh, position, options.rotation);
+			if(game.debugPhysics) {
+				mesh.geometry.computeBoundingBox();
+				var bboxmax = mesh.geometry.boundingBox.max;
+
+				var geometry = new THREE.BoxGeometry( bboxmax.x*2, bboxmax.y*2, bboxmax.z*2 );
+				var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
+				var dmesh = new THREE.Mesh( geometry, material );
+				dmesh.position.fromArray(position);
+				if(options.rotation) {
+					dmesh.rotation.fromArray(options.rotation);
+				}
+				game.scene.add(dmesh);
+			}
 	        if (onComplete) onComplete(mesh);
 	    });
 	};
@@ -838,7 +884,7 @@ function(
 				console.log('no player specified');
 				return;
 			}
-			controllerConstructor = controllerConstructor ? controllerConstructor : AIController;
+			controllerConstructor = controllerConstructor || AIController;
 
 			game.loadCharacter(
 				player.model, {

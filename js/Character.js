@@ -13,26 +13,20 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		var rootMesh = new THREE.Object3D();
 		this.armature = mesh;
 		rootMesh.add(mesh);
-
+		//move the mesh to the bottom of our surrounding sphere (not center)
 		mesh.position.y -= mesh.geometry.boundingSphere.radius;
 		
 	    DynamicEntity.call(this, mesh, game, body);
 	    this.mesh = rootMesh;
 	
-	    this.sssMesh = sssMesh;
-	    this.controllers = [];
+	    //this.sssMesh = sssMesh;
+	    this.controller = null;
 	    this.name = name;
 	    if(!options || options === undefined) options = {};
 	
 	    this.movementDirection = new THREE.Vector3(0,0,0);
-	
-	    this.stunned = false;
-	    this.blocking = false;
 
 	    this.onGround = false;
-	
-	    this.attackAnimation = "DE_Combatpunch";
-	    //this.attackAnimation = "DE_Combatattack";
 	
 	    this.animations = {};
 	    this.animationMixer = new THREE.AnimationMixer(this.armature);
@@ -107,6 +101,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    if(this.animations[animationName] !== undefined) {
 	        var a = this.animations[animationName];
 	        a.loop = options.loop || THREE.LoopRepeat;
+	        a.clampWhenFinished = options.clampWhenFinished || false;
 	        a.timeScale = options.timeScale || 1.0;
 	        if(options.crossFade && this.animationMixer !== undefined && false) {
 	            a.weight = 0.0;
@@ -124,17 +119,17 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    }
 	};
 	Character.prototype.addController = function(controller) {
-	    this.controllers.push(controller);
+	    this.controller = controller;
 	};
 	var quaternion = new THREE.Quaternion();
 	Character.prototype.pointCharacter = function() {
 	    if(this.movementDirection.x > 0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / 2);
-	        quaternion.slerp(this.armature.quaternion, 0.9);
+	        quaternion.slerp(this.armature.quaternion, 0.90);
 	        this.armature.quaternion.copy(quaternion);
 	    } else if(this.movementDirection.x < -0.01) {
 	        quaternion.setFromAxisAngle(new THREE.Vector3(0, 1, 0), Math.PI / -2);
-	        quaternion.slerp(this.armature.quaternion, 0.9);
+	        quaternion.slerp(this.armature.quaternion, 0.90);
 	        this.armature.quaternion.copy(quaternion);
 	    }
 	};
@@ -156,6 +151,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		}
 	};
 	Character.prototype.update = function(delta) {
+		var c = this.stateMachine.current;
+
 		//I believe this will update the physics. 
 		// copies the bounding sphere's position to this mesh's (character)
 		DynamicEntity.prototype.update.call(this);
@@ -172,16 +169,14 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		}
 
 		//point character and update physics
-	    var c = this.stateMachine.current;
+	    
 	    if(c != 'playinganimation') {
 	    	if(c != 'dead' && c != 'blocking' && c != 'stunned') {
 	    		this.pointCharacter();
 	    	}
 		    //tick the AI or user controlled events...
 		    if(this.body) {
-		    	for(var i in this.controllers) {
-		    		this.controllers[i].update(delta);
-		    	}
+		    	this.controller.update(delta);
 		    }
 	    }
 
@@ -189,9 +184,6 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    this.updateKineticBones();
 	};
 	Character.prototype.unequip = function(slot) {
-		if(slot == "weapon") {
-			this.attackAnimation = "DE_Combatpunch";
-		}
 		if(this.equipment[slot]) {
 			this.addItem(this.equipment[slot]);
 			if(this.equipment[slot].bone) {
@@ -240,9 +232,6 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		this.characterStats.init(newStats);
 	};
 	Character.prototype.equip = function(item) {
-		if(item.slot == "weapon") {
-		    this.attackAnimation = "DE_Combatattack";
-		}
 		if(this.equipment[item.slot]) {
 			this.unequip(item.slot);
 		}
@@ -264,8 +253,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
 				function createFromPhysic(e) {
 					try {
-						//TODO a bone with the same name as the main armature will mess something up here.
-						//since the connect_body is looked up via bone name in createPhysics
+						//copy e!!! Assigning e.bone breaks shit.
+						var e = Object.assign({}, e); 
 						if(e.bone) e.bone = scope.findBone(e.bone, mesh.skeleton); 
 						//if there is some offset, move the main bone to that offset before attaching
 						//or if there is a move-to bone
@@ -345,7 +334,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	        	//This aligns with hands (approx) for sword?
 	        	dynamic.mesh.rotateX(1.57075);
 	        	dynamic.mesh.rotateZ(1.57075);
-	        	dynamic.mesh.position.set(-0.02, -0.2, -0.04);
+	        	// FOR miku
+	        	//dynamic.mesh.position.set(-0.02, -0.2, -0.04);
+	        	// FOR newmeshes
+	        	dynamic.mesh.position.set(-0.02, -0.15, -0.1);
 	        });
 		} else { //this item is not attached to bones but deformed by skeleton
 	        game.loadClothing(item.model, this.armature, item.options, function(mesh) {
@@ -408,7 +400,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    }
 	    var wstats = attackingCharacter.equipment.weapon ? attackingCharacter.equipment.weapon.stats : { damage: this.characterStats.strength };
 	    var damage = this.calculateEffect(attackingCharacter.characterStats, wstats);
-	    if(this.blocking || this.stateMachine.current == 'blocking') {
+	    if(this.stateMachine.current == 'blocking') {
 	        console.log(this.name + " blocked an attack!");
 	        this.game.displayText(tmpVec1.set(this.mesh.position.x, this.mesh.position.y, 1.0), "Blocked", 3000);
 	        damage = Math.round(damage * 0.1);

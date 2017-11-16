@@ -20,7 +20,9 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		'idle': 'idle',
 		'walk': 'walk',
 		'block': 'block',
-		'hit': 'hit'
+		'hit': 'hit',
+		'jump': 'jump',
+		'fall_backwards': 'fall_backwards'
 	}
 
 	var BaseStateMachine = function(character, game) {
@@ -28,13 +30,15 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		this.game = game;
 		this.blendAnimationDuration = 0.05;
 	    this.runBlendAnimationSpeed = 0.05;
-	    this.movementForce = 10.0;
-	    this.jumpForce = 100.0;
+	    this.movementForce = 25.0;
+	    this.jumpForce = 240.0;
+
+	    this.jumpTimer = new THREE.Clock();
 	    
 	    this.attackCoolDown = 0;
 		
 		var error = function(eventName, from, to, args, errorCode, errorMessage) {
-		    //console.log('event ' + eventName + ' was naughty :- ' + errorMessage);
+		    //console.error('event ' + eventName + ' was naughty :- ' + errorMessage);
 		};
 		var initial = 'initialized';
 		var events = [
@@ -60,7 +64,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			{ 
 				name: 'idle',
-				from: ['running', 'playinganimation', 'stunned'],
+				from: ['running', 'playinganimation', 'stunned', 'damaged'],
 				to: 'idling'
 			},
 			{ 
@@ -101,7 +105,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			{ 
 				name: 'hit',
 				from: ['idling', 'inair', 'attacking', 'stunned'],
-				to: 'stunned'
+				to: 'damaged'
 			},
 			{ 
 				name: 'stun',
@@ -170,6 +174,16 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			onexitstunned: function() {
 				clearTimeout(this.hitTimeout);
 			},
+			onenterdamaged: function() {
+				this.character.setAnimation(animationMap['hit']);
+				var scope = this;
+				this.hitTimeout = setTimeout(function(){
+				    scope.idle();
+				}, this.character.characterStats.damagedPauseLength);
+			},
+			onexitdamaged: function() {
+				clearTimeout(this.hitTimeout);
+			},
 			onenterrunning: function() {
 				this.character.setAnimation(animationMap['walk']);
 			},
@@ -190,19 +204,32 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			onendattack: function() {
 				this.character.setAnimation(animationMap['idle']);
 			},
-			onfall: function() {
+			onenterinair: function() {
 				console.log('falling');
+				//this.character.setAnimation(animationMap['jump']);
 			},
 			onidle: function(event, from, to, msg) {
 				console.log('idle');
 		        this.character.setAnimation(animationMap['idle']);
 			},
 			onjump: function(event, from, to, msg) {
-				console.log('Applying Impulse!', event, from, to, msg);
-				this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
+				if(!this.jumpTimer.running || this.jumpTimer.getElapsedTime() > 1.0) {
+					console.log('Applying Impulse!', event, from, to, msg);
+					if(this.character.movementDirection.x > 0.1 || this.character.movementDirection.x < -0.1) {
+						var halfJump = (this.jumpForce * 0.15);
+						this.character.body.applyImpulse([halfJump * this.character.movementDirection.x, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
+					} else {
+						this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
+					}
+					this.character.setAnimation(animationMap['jump']);
+					this.jumpTimer.start();
+				}
 			},
 		    onblock: function(event, from, to, msg) {
 		        this.character.setAnimation(animationMap['block']);
+		    },
+		    onenterdead: function() {
+		    	this.character.setAnimation(animationMap['fall_backwards'], {loop: THREE.LoopOnce, clampWhenFinished: true});
 		    },
 		    onattack: function(event, from, to, msg) {
 		    	/*if(this.attackCoolDown > 0.0) {
@@ -222,7 +249,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 							var dist = character.getDistance(me);
 							console.log("Enemy distance", dist);
 							if (dist < range) {
-								character.stateMachine.hit();
+								//character.stateMachine.hit();
 								character.hit(me);
 							}
 						}
@@ -244,8 +271,17 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	};
 	
 	BaseStateMachine.prototype.update = function(delta) {
+		if(this.current == 'dead') {
+			return;
+		}
 		//physics runs before this function. Read onGround attribute set by physics
 		var onGround = this.character.onGround;
+		if(this.jumpTimer.getElapsedTime() < 0.5) {  // if we just jumped (n seconds ago) do nothing
+			// this is needed because the phyics engine does not "lift off" fast enough to not be on the ground
+			// by the second frame
+			return;
+			this.character.onGround = false;
+		}
 		if(onGround && this.current == 'inair') {
 			this.land();
 		} 

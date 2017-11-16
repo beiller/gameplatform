@@ -6,7 +6,6 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
     var tmpVec2 = new THREE.Vector3(-.1, 0, 0);
 
 	function Camera(mesh, game, dof, ratio, clipNear, clipFar) {
-		Entity.call(this, mesh, game);
 	    var camera = new THREE.PerspectiveCamera(dof, ratio, clipNear, clipFar);
 	    camera.position.z = 5;
 	    camera.position.y = -3;
@@ -32,6 +31,8 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 
 	    var scope = this;
 	    //document.addEventListener("mousemove", function(e) { scope.defaultMouseMoveFunction(e, scope); }, false);
+	    //var cameraProxy = new THREE.Object3D();
+	    //cameraProxy.add(camera);
 		Entity.prototype.constructor.call(this, camera, game);
 
 		var orbitControls = null;
@@ -68,6 +69,7 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 		},
 		defaultCameraUpdateFunction: function () {
 			var game = this.game;
+			var camera = this.mesh;
 			if(this.trackingCharacter in game.characters) {
 				if(!this.disableYLock) {
 			        this.orbitControls.target.set(
@@ -77,9 +79,16 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 			        );
 		    	}
 		        if(game.characters[this.trackingCharacter].stateMachine.current != 'playinganimation' && !this.disableYLock) {
-		        	this.mesh.position.x = game.characters[this.trackingCharacter].body.getPositionX();
+		        	camera.position.x = game.characters[this.trackingCharacter].body.getPositionX();
 		    	}
-		        //this.mesh.position.y = game.characters[this.trackingCharacter].body.getPositionY();
+
+		    	game.spot1.position.copy(camera.position);
+	    		game.spot1.position.x += 0.5;
+		    	game.spot1.target.position.fromArray(game.characters[this.trackingCharacter].body.getPosition());
+
+	    		game.spot2.position.x = game.characters[this.trackingCharacter].body.getPositionX() + 0.5;
+	    		game.spot2.position.y = game.characters[this.trackingCharacter].body.getPositionY() + 1.0;
+		    	game.spot2.target.position.fromArray(game.characters[this.trackingCharacter].body.getPosition());
 	    	}
 	    	this.orbitControls.update();
 	    },

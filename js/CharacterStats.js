@@ -9,9 +9,12 @@ define(function() {
 	    this.damage = params.damage || 10;
 	
 	    //ATTACK cool down in MS
-	    this.attackCooldown = params.attackCooldown || 1500;
+	    this.attackCooldown = params.attackCooldown || 800;
 	    //Stun duration after hit in MS
 	    this.hitStunDuration = params.hitStunDuration || 5000;
+	    //Pause duration after taking a hit
+	    this.damagedPauseLength = 100;
+
 	    //force in some arbitrary unit
 	    this.jumpHeight = params.jumpHeight || 1;
 	    //chance to block
@@ -24,10 +27,10 @@ define(function() {
 	    //chance to stun opponent while blocking
 	    this.stunWhileBlockingChance = params.stunWhileBlockingChance || 0.05;
 	
-	    this.strength = params.strength || 10;
-	    this.magic = params.magic || 10;
-	    this.endurance = params.endurance || 10;
-	    this.magicResistance = params.magicResistance || 10;
+	    this.strength = params.strength || 1;
+	    this.magic = params.magic || 1;
+	    this.endurance = params.endurance || 1;
+	    this.magicResistance = params.magicResistance || 0;
 	};
 	return CharacterStats;
 });

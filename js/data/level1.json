@@ -1,73 +1,94 @@
 {
 	"staticObjects": [
 		{
-			"model": "models/big_brick.json",
+			"model": "models/temple.json",
 			"shape": "box",
-			"position": [0, -3.58, 0],
-			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+			"position": [0, -2, -3.5],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
 		},
 		{
-			"model": "models/big_brick.json",
+			"model": "models/temple.json",
 			"shape": "box",
-			"position": [0, -1.58, -2],
-			"options": { 
-				"material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ],
-				"rotation": [-1.57075, 0, 0] 
-			}
+			"position": [8.359, -2, -3.5],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
 		},
 		{
-			"model": "models/big_brick.json",
+			"model": "models/temple.json",
 			"shape": "box",
-			"position": [-2, -1.58, -2],
-			"options": { 
-				"material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ],
-				"rotation": [-1.57075, 0, 0] 
-			}
-		},	
-		{
-			"model": "models/big_brick.json",
-			"shape": "box",
-			"position": [2, -1.58, -2],
-			"options": { 
-				"material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ],
-				"rotation": [-1.57075, 0, 0] 
-			}
-		},		
-		{
-			"model": "models/big_brick.json",
-			"shape": "box",
-			"position": [-2,-3.58, 0],
-			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+			"position": [16.701, -2, -3.5],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
 		},
 		{
-			"model": "models/big_brick.json",
+			"model": "models/temple.json",
 			"shape": "box",
-			"position": [-4,-3.58, 0],
-			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+			"position": [-8.359, -2, -3.5],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
 		},
 		{
-			"model": "models/big_brick.json",
+			"model": "models/temple.json",
 			"shape": "box",
-			"position": [-6,-3.58, 0],
-			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+			"position": [-16.701, -2, -3.5],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
 		},
 		{
-			"model": "models/big_brick.json",
+			"model": "models/temple_floor.json",
 			"shape": "box",
-			"position": [ 2,-3.58, 0],
-			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+			"position": [0, -3.28, 2.15],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
 		},
 		{
-			"model": "models/big_brick.json",
+			"model": "models/temple_floor.json",
 			"shape": "box",
-			"position": [ 4,-3.58, 0],
-			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+			"position": [-10, -3.28, 2.15],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
 		},
 		{
-			"model": "models/big_brick.json",
+			"model": "models/temple_floor.json",
 			"shape": "box",
-			"position": [ 6,-3.58, 0],
-			"options": { "material": [ {"roughness": 0.5, "diffusePath": "models/concrete_floor_20131007_1557821133.jpg" } ] }
+			"position": [-20, -3.28, 2.15],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
+		},
+		{
+			"model": "models/temple_floor.json",
+			"shape": "box",
+			"position": [10, -3.28, 2.15],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
+		},
+		{
+			"model": "models/temple_floor.json",
+			"shape": "box",
+			"position": [20, -3.28, 2.15],
+			"options": { "material": [ 
+				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+			] }
 		}
 	],
 	"characters": {
@@ -174,6 +195,157 @@
 	        	"firekatana"
 	        ]
 	    },
+		"marie_rose_v2": {
+	        "model": "mr/mesh.json",
+	        "sss": false,
+	        "material": [
+	        	{
+                	"roughness": 0.25, "name": "mouth", "transparent": true,
+		        	"diffusePath": "mr/mouth.png"
+	        	},
+				{
+                	"roughness": 1.0, "name": "brows", "transparent": true,
+		        	"diffusePath": "mr/brow.png"
+	        	},
+	        	{
+                	"roughness": 0.15, "name": "eyes", "transparent": true,
+		        	"diffusePath": "mr/eyes_blue.png"
+	        	},
+	        	{
+                	"roughness": 0.7, "name": "hands",
+		        	"diffusePath": "mr/hands.png",
+		        	"roughnessPath": "mr/hands_roughness.png",
+		        	"normalPath": "mr/hands_normal.png"
+	        	},
+	        	{
+                	"roughness": 0.7, "name": "head",
+		        	"diffusePath": "mr/head.png",
+		        	"roughnessPath": "mr/head_roughness.png",
+		        	"normalPath": "mr/head_normal.png"
+	        	},
+                {
+                	"roughness": 0.7, "name": "body",
+		        	"diffusePath": "mr/body.png",
+		        	"roughnessPath": "mr/body_roughness.png",
+		        	"normalPath": "mr/body_normal.png"
+	        	}
+            ],
+	        "equipment": [
+	        	"marie_hair2",
+	        	"marie_bikini2"
+	        ],
+	        "inventory": [
+	        	"miku_hair_moonrise_dynamic",
+	        	"cross_earring",
+	        	"cross_earring2",
+	        	"firesword", 
+	        	"rustsword",
+	        	"icestaff",
+	        	"icekatana",
+	        	"icesword",
+	        	"firekatana"
+	        ]
+	    },
+	    "cicero": {
+	        "model": "mr/mesh_cicero.json",
+	        "sss": false,
+	        "material": [
+	        	{
+                	"roughness": 0.25, "name": "mouth", "transparent": true,
+		        	"diffusePath": "mr/mouth.png"
+	        	},
+				{
+                	"roughness": 1.0, "name": "brows", "transparent": true,
+		        	"diffusePath": "mr/brow.png"
+	        	},
+	        	{
+                	"roughness": 0.15, "name": "eyes", "transparent": true,
+		        	"diffusePath": "mr/eyes_blue.png"
+	        	},
+	        	{
+                	"roughness": 0.7, "name": "hands",
+		        	"diffusePath": "mr/hands.png",
+		        	"roughnessPath": "mr/hands_roughness.png",
+		        	"normalPath": "mr/hands_normal.png"
+	        	},
+	        	{
+                	"roughness": 0.7, "name": "head",
+		        	"diffusePath": "mr/head.png",
+		        	"roughnessPath": "mr/head_roughness.png",
+		        	"normalPath": "mr/head_normal.png"
+	        	},
+                {
+                	"roughness": 0.7, "name": "body",
+		        	"diffusePath": "mr/body.png",
+		        	"roughnessPath": "mr/body_roughness.png",
+		        	"normalPath": "mr/body_normal.png"
+	        	}
+            ],
+	        "equipment": [
+	        	"miku_hair_moonrise_dynamic",
+	        	"marie_bikini2"
+	        ],
+	        "inventory": [
+	        	"cross_earring",
+	        	"cross_earring2",
+	        	"firesword", 
+	        	"rustsword",
+	        	"icestaff",
+	        	"icekatana",
+	        	"icesword",
+	        	"firekatana"
+	        ]
+	    },
+		"sarah": {
+	        "model": "mr/mesh_sarah.json",
+	        "sss": false,
+	        "material": [
+	        	{
+                	"roughness": 0.25, "name": "mouth", "transparent": true,
+		        	"diffusePath": "mr/mouth.png"
+	        	},
+				{
+                	"roughness": 1.0, "name": "brows", "transparent": true,
+		        	"diffusePath": "mr/brow.png"
+	        	},
+	        	{
+                	"roughness": 0.15, "name": "eyes", "transparent": true,
+		        	"diffusePath": "mr/eyes_blue.png"
+	        	},
+	        	{
+                	"roughness": 0.7, "name": "hands",
+		        	"diffusePath": "mr/hands.png",
+		        	"roughnessPath": "mr/hands_roughness.png",
+		        	"normalPath": "mr/hands_normal.png"
+	        	},
+	        	{
+                	"roughness": 0.7, "name": "head",
+		        	"diffusePath": "mr/head.png",
+		        	"roughnessPath": "mr/head_roughness.png",
+		        	"normalPath": "mr/head_normal.png"
+	        	},
+                {
+                	"roughness": 0.7, "name": "body",
+		        	"diffusePath": "mr/body.png",
+		        	"roughnessPath": "mr/body_roughness.png",
+		        	"normalPath": "mr/body_normal.png"
+	        	}
+            ],
+	        "equipment": [
+	        	"miku_hair_moonrise_dynamic",
+	        	"beggar_dress_lg"
+	        ],
+	        "inventory": [
+	        	"cross_earring",
+	        	"cross_earring2",
+	        	"firesword", 
+	        	"rustsword",
+	        	"icestaff",
+	        	"icekatana",
+	        	"icesword",
+	        	"firekatana"
+	        ]
+	    },
 	    "miku": {
 	        "model": "models/miku_game_highres.json",
 	        "sss": false,
@@ -235,7 +407,7 @@
 	        ]
 	    },
 	    "miku_jelly": {
-	        "model": "models/miku_game.json",
+	        "model": "models/miku_game_highres.json",
 	        "sss": false,
 	        "material": [
                 {
@@ -307,16 +479,20 @@
 	},
 	"npcs" : [
 		{
-		    "character": "miku",
-		    "position": [-10,0,0]
+		    "character": "necker",
+		    "position": [-11,0,0]
 		},
 		{
-		    "character": "miku",
-		    "position": [15,0,0]
+		    "character": "necker",
+		    "position": [11,0,0]
+		},
+		{
+		    "character": "necker",
+		    "position": [20,0,0]
 		}
 	],
 	"player": {
-	    "character": "miku", 
+	    "character": "sarah", 
 	    "position": [0,0,0]
 	}
 }

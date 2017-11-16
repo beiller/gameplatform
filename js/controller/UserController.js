@@ -49,7 +49,12 @@ function(StateMachine, Controller) {
 					if (found === null) {
 						console.log('no char found')
 					} else {
-						for(var i in all_found) {
+						me.body.setPosition(found.body.getPosition());
+						me.body.setQuaternion(found.body.getQuaternion());
+						me.armature.quaternion.copy(found.armature.quaternion);
+						found.stateMachine.playAnimation("f1.1");
+						me.stateMachine.playAnimation("f1.2"); 
+						/*for(var i in all_found) {
 							var characterFound = all_found[i];
 							//move this character to my position
 							characterFound.body.setPosition(character.body.getPosition());
@@ -61,7 +66,7 @@ function(StateMachine, Controller) {
 							character.stateMachine.playAnimation(animations[animationIndex % animations.length]); 
 						}
 	            		animationIndex += 1; 	
-
+						*/
 					}
 
 	            }  //SPACEBAR
