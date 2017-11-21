@@ -29,8 +29,8 @@ define([
 
 		this.callbacks = {};
 
-		this.stepHz = 240;
-		this.constraintSolverIterations = 200;
+		this.stepHz = 180;
+		this.constraintSolverIterations = 100;
 
 		this.initPhysics();
 	}
@@ -454,7 +454,7 @@ define([
 	    };
 
 		var body = new Body(bodyOptions, shapeOptions);
-		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.PLAYER, this.collisionLayers.WORLD);
+		this.m_dynamicsWorld.addRigidBody(body.body, this.collisionLayers.WORLD, this.collisionLayers.WORLD);
 
 		if(useDynamicCollision) {
 			options.localOffset = new THREE.Vector3(0, 0, -z_len/2);

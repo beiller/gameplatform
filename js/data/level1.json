@@ -235,6 +235,7 @@
 	        	"marie_bikini2"
 	        ],
 	        "inventory": [
+	        	"member",
 	        	"miku_hair_moonrise_dynamic",
 	        	"cross_earring",
 	        	"cross_earring2",
@@ -336,6 +337,19 @@
 	        	"beggar_dress_lg"
 	        ],
 	        "inventory": [
+	        	"steel_bra1",
+	        	"steel_panty1",
+	        	"steel_neck1",
+	        	"steel_pauldron1",
+	        	"steel_helm1",
+	        	"steel_abs1",
+	        	"steel_legs1",
+	        	"steel_gauntlet1",
+	        	"steel_boots1",
+	        	"steel_armor_outfit",
+	        	"gold_armor_outfit",
+	        	"leather_armor_outfit",
+	        	"glass_armor_outfit",
 	        	"cross_earring",
 	        	"cross_earring2",
 	        	"firesword", 
@@ -343,7 +357,8 @@
 	        	"icestaff",
 	        	"icekatana",
 	        	"icesword",
-	        	"firekatana"
+	        	"firekatana",
+	        	"loincloth_lg"
 	        ]
 	    },
 	    "miku": {
@@ -483,7 +498,7 @@
 		    "position": [-11,0,0]
 		},
 		{
-		    "character": "necker",
+		    "character": "sarah",
 		    "position": [11,0,0]
 		},
 		{

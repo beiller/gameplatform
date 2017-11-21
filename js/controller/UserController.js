@@ -52,8 +52,8 @@ function(StateMachine, Controller) {
 						me.body.setPosition(found.body.getPosition());
 						me.body.setQuaternion(found.body.getQuaternion());
 						me.armature.quaternion.copy(found.armature.quaternion);
-						found.stateMachine.playAnimation("f1.1");
-						me.stateMachine.playAnimation("f1.2"); 
+						found.stateMachine.playAnimation("f2.2");
+						me.stateMachine.playAnimation("f2.1"); 
 						/*for(var i in all_found) {
 							var characterFound = all_found[i];
 							//move this character to my position

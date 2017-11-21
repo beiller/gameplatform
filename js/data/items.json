@@ -416,6 +416,188 @@
             ]
         }
     },
+    "gold_armor_outfit": {"name": "gold_armor_outfit",  "model": "mr/steel_armor_outfit.json", "slot": "outfit", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xd7db91", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xd7db91", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xd7db91", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xd7db91", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_bra1": {"name": "steel_bra1",  "model": "mr/bra1.json", "slot": "bra", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_panty1": {"name": "steel_panty1",  "model": "mr/panty1.json", "slot": "panty", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_neck1": {"name": "steel_neck1",  "model": "mr/neck1.json", "slot": "neck", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_pauldron1": {"name": "steel_pauldron1",  "model": "mr/pauldron1.json", "slot": "pauldron", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_helm1": {"name": "steel_helm1",  "model": "mr/helm1.json", "slot": "helm", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_abs1": {"name": "steel_abs1",  "model": "mr/abs1.json", "slot": "abs", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_legs1": {"name": "steel_legs1",  "model": "mr/legs1.json", "slot": "legs", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_gauntlet1": {"name": "steel_gauntlet1",  "model": "mr/gauntlet1.json", "slot": "gauntlet", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "steel_boots1": {"name": "steel_boots1",  "model": "mr/boots1.json", "slot": "boots", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "glass_armor_outfit": {"name": "glass_armor_outfit",  "model": "mr/steel_armor_outfit.json", "slot": "outfit", "options": { 
+            "material": [
+                { "roughness": 0.05, "color": "0xaaddaa", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0, "refractionRatio": 0.98, "transparent": true, "opacity": 0.75 },
+                { "roughness": 0.05, "color": "0xaaddaa", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0, "refractionRatio": 0.98, "transparent": true, "opacity": 0.75 },
+                { "roughness": 0.05, "color": "0xaaddaa", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0, "refractionRatio": 0.98, "transparent": true, "opacity": 0.75 },
+                { "roughness": 0.05, "color": "0x006D6D", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.05, "color": "0xaaddaa", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0, "refractionRatio": 0.98, "transparent": true, "opacity": 0.75 }
+            ]
+        }
+    },
+    "steel_armor_outfit": {"name": "steel_armor_outfit",  "model": "mr/steel_armor_outfit.json", "slot": "outfit", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+            ]
+        }
+    },
+    "leather_armor_outfit": {"name": "leather_armor_outfit",  "model": "mr/steel_armor_outfit.json", "slot": "outfit", "options": { 
+            "material": [
+                { "roughness": 0.4, "color": "0x110c08", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 0 },
+                { "roughness": 0.4, "color": "0x110c08", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 0 },
+                { "roughness": 0.4, "color": "0x110c08", 
+                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 0 },
+                { "roughness": 0.05, "color": "0x6D1515", "metalness": 1.0, "name": "gem2" },
+                { "roughness": 0.4, "color": "0x110c08", 
+                    "normalPath": "mr/boot1_normal.png", "metalness": 0 }
+            ]
+        }
+    },
     "miku_mage_apprentice": {"name": "miku_mage_apprentice",  "model": "models/miku_mage_apprentice.json", "slot": "outfit", "options": { 
             "material": [
                 {
@@ -453,6 +635,63 @@
                     "color": "0xFFFFFF", 
                     "diffusePath": "models/hair_metropolis.png", 
                     "transparent": true
+                }
+            ]
+        }
+    },
+    "loincloth_lg": {"name": "loincloth_lg",  "model": "mr/loincloth_lg.json", "slot": "loincloth", 
+        "physicsChain" : [
+            {
+                "bone": "Bone.005", "connect_body": "DEF-spine", "dof": 1.0, "mass": 0.01
+            }
+        ],
+        "physics": [
+            { 
+                "bone": "Bone", "type": "KINEMATIC", "radius": 0.01, "options": { 
+                    "moveTo": "DEF-spine",
+                    "localOffset": [0,0,0.035]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {
+                    "roughness": 0.8, 
+                    "color": "0xFF99AA"
+                }
+            ]
+        }
+    },
+    "member": {"name": "member",  "model": "models/member.json", "slot": "member", 
+        
+        "physics": [
+            { 
+                "bone": "Bone", "type": "KINEMATIC", "radius": 0.02, "options": { 
+                    "moveTo": "DEF-spine",
+                    "localOffset": [0,0,0.035]
+                } 
+            },
+            { 
+                "bone": "Bone.006", "type": "DYNAMIC", "radius": 0.08, "connect_body": "DEF-spine", 
+                "options": { 
+                    "localOffset":[0,0,0.08] ,
+                    "rotationLimitsLow":  [0,0,0],
+                    "rotationLimitsHigh": [0,0,0],
+                    "spring": true,
+                    "stiffness": 1.0,
+                    "damping": 18.0,
+                    "distance": 0,
+                    "mass": 0.5
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {
+                    "roughness": 0.7, "name": "body",
+                    "diffusePath": "mr/body.png",
+                    "roughnessPath": "mr/body_roughness.png",
+                    "normalPath": "mr/body_normal.png"
                 }
             ]
         }

@@ -1,10 +1,11 @@
 define([
 	"lib/three", "lib/zepto", "Character", "physics/Physics", "PhysRig",
 	"entity/DynamicEntity", "entity/Camera", "Loader", 'controller/AIController', 'controller/UserController',
-	"PMREMGenerator", "PMREMCubeUVPacker"
+	"PMREMGenerator", "PMREMCubeUVPacker", "EffectComposer"
 ], 
 function(
-		THREE, $, Character, Physics, PhysRig, DynamicEntity, Camera, Loader, AIController, UserController, PMREMGenerator, PMREMCubeUVPacker
+		THREE, $, Character, Physics, PhysRig, DynamicEntity, Camera, Loader, AIController, 
+		UserController, PMREMGenerator, PMREMCubeUVPacker, EffectComposer
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -39,6 +40,8 @@ function(
 	    this.cubemapRendered = false;
 	    
 	    this.debugPhysics = false;
+
+	    this.useSSAO = true;
 	    
 	    this.physicsWorld = new Physics();
 	}
@@ -252,12 +255,44 @@ function(
 	    this.cubeCamera = new THREE.CubeCamera( 0.01, 1000, this.settings.cubeMapResolution );
 
 	    this.scene.add( this.cubeCamera );
+
+
+		// Setup render pass
+		var renderPass = new THREE.RenderPass( this.scene, this.camera.mesh );
+
+		// Setup SSAO pass
+		ssaoPass = new THREE.SSAOPass( this.scene, this.camera.mesh );
+		ssaoPass.renderToScreen = true;
+
+		ssaoPass.uniforms["cameraNear"] = { value: 0.1 };
+		ssaoPass.uniforms["cameraFar"] = { value: 10 };
+		ssaoPass.uniforms["radius"] = { value: 64 };
+		ssaoPass.uniforms["onlyAO"] = { value: 0 };
+		ssaoPass.uniforms["aoClamp"] = { value: 0.0 };
+		ssaoPass.uniforms["lumInfluence"] = { value: 0.1 };
+
+		// Add pass to effect composer
+		effectComposer = new THREE.EffectComposer( this.renderer );
+		effectComposer.addPass( renderPass );
+		effectComposer.addPass( ssaoPass );
+
+		this.renderPass = renderPass;
+		this.ssaoPass = ssaoPass;
+		this.effectComposer = effectComposer;
+
 	
 	    var game = this;
 	    var onWindowResize = function() {
 	        game.camera.mesh.aspect = window.innerWidth / window.innerHeight;
 	        game.camera.mesh.updateProjectionMatrix();
 	        game.renderer.setSize( window.innerWidth, window.innerHeight );
+
+			// Resize renderTargets
+			game.ssaoPass.setSize( window.innerWidth, window.innerHeight );
+			var pixelRatio = game.renderer.getPixelRatio();
+			var newWidth  = Math.floor( window.innerWidth / pixelRatio ) || 1;
+			var newHeight = Math.floor( window.innerHeight / pixelRatio ) || 1;
+			game.effectComposer.setSize( newWidth, newHeight );
 	    };
 	    window.addEventListener( 'resize', onWindowResize, false );
 	};
@@ -436,7 +471,7 @@ function(
 					rotationLimitsLow:  [0,0,0],
 					rotationLimitsHigh: [0,0,0],
 					spring: true,
-					stiffness: 1.5,
+					stiffness: 1.0,
 					damping: 18.0,
 					distance: 0,
 					mass: 0.5
@@ -707,11 +742,16 @@ function(
 	    var loadedMesh = function(geometry, materials) {
 	    	console.log("MATERIALS IN", jsonFileName, materials);
 	    	var material = game.parseMaterial(options);
-	        var skinnedMesh = new THREE.SkinnedMesh(geometry, material);
-	        skinnedMesh.frustumCulled = !game.disableCull;
-	        skinnedMesh.castShadow = game.settings.enableShadows;
-	        skinnedMesh.receiveShadow = game.settings.enableShadows;
-	        if(onComplete) onComplete(skinnedMesh);
+	    	if(geometry.attributes.skinWeight) {
+	        	var mesh = new THREE.SkinnedMesh(geometry, material);
+	    	} else {
+	    		var mesh = new THREE.Mesh(geometry, material);
+	    	}
+			mesh.frustumCulled = !game.disableCull;
+	        mesh.castShadow = game.settings.enableShadows;
+	        mesh.receiveShadow = game.settings.enableShadows;
+	        if(onComplete) onComplete(mesh);
+
 	    };
 	    this.loadJsonMesh(jsonFileName, loadedMesh);
 	};
@@ -776,6 +816,9 @@ function(
 		        this.characters[i].update(delta);
 		    }
 		}
+		for(var i in this.dynamics) {
+	        this.dynamics[i].update(delta);
+	    }
 
 		//run the physics step
 		if(!skipPhysics) {
@@ -845,113 +888,96 @@ function(
 	};
 	Game.prototype.render = function() {
 	    this.renderer.clear();
-	    this.renderer.render( this.scene, this.camera.mesh );
+	    if(!this.useSSAO) {
+	    	this.effectComposer.render();
+	    } else {
+	    	this.renderer.render( this.scene, this.camera.mesh );
+	    }
 	};
 	Game.prototype.getCharacter = function(characterName) {
 	    return this.characters[characterName];
 	};
 
+	var spawnCounter = 0;
+	Game.prototype.spawnCharacter = function(characterName, position, name, controllerConstructor) {
+		if (!characterName in this.levelData.characters) {
+			console.error('no such character', characterName, this.levelData.characters);
+			return;
+		}
+		var characterData = this.levelData.characters[characterName];
+
+		if(!name) {
+			name = characterData.character + '.' + spawnCounter;
+			spawnCounter += 1;
+		}
+		controllerConstructor = controllerConstructor || AIController;
+
+		game.loadCharacter(
+			characterData.model, {
+				name: name,
+				sss: characterData.sss,
+				diffusePath: characterData.diffusePath,
+				specularPath: characterData.specularPath,
+				normalPath: characterData.normalPath,
+				position: position,
+				scale: characterData.scale,
+				material: characterData.material
+			},
+			function(characterObject) {
+				characterObject.addController(new controllerConstructor(characterObject, game));
+				characterData.equipment.forEach(function(itemName) {
+					characterObject.equip(game.itemData[itemName]);
+				});
+				if (characterData.inventory !== undefined) {
+					characterData.inventory.forEach(function(itemName) {
+						characterObject.inventory.push(game.itemData[itemName]);
+					});
+				}
+			}
+		);
+	}
+
+	Game.prototype.spawnItem = function(itemName, position) {
+		if(!(itemName in this.itemData)) {
+			console.error(itemName, "not in data", this.itemData);
+			return;
+		} 
+		var item = this.itemData[itemName];
+		var scope = this;
+		this.loadPhysItem(item.model, this, item.options, function(mesh) {
+			var body = scope.physicsWorld.addObjectPhysics(mesh, 1.0, position);
+			/*if(scope.debugPhysics) {
+				var geometry = new THREE.BoxGeometry( 0.5, radius*2, 0.5 );
+				var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
+				body.debugMesh = new THREE.Mesh( geometry, material );
+				scope.scene.add(body.debugMesh);
+			}*/
+			scope.scene.add(mesh);
+			var dynamic = new DynamicEntity(mesh, scope, body);
+			dynamic.item = item;
+			scope.dynamics.push(dynamic);
+		});
+	}
+
 	Game.runGame = function(gameSettings, levelData, itemData) {
 		var game = new Game(gameSettings);
 		game.initRendering();
-		var objectCount = 0;
-
-		/*var bricks = [];
-		for (var i = -50; i <= 50; i++) {
-			var randomHeight = (Math.random() - 0.5) * 0.25;
-			var slope = i * 0.05;
-			bricks.push({
-				model: 'models/big_brick.json',
-				shape: 'box',
-				position: [2 * i, -3 + randomHeight + slope, 0]
-			});
-			bricks.push({
-				model: 'models/stone_wall1.json',
-				shape: 'box',
-				position: [2 * i, -3 + randomHeight + slope, -2]
-			});
-			bricks.push({
-				model: 'models/stone_pillar.json',
-				shape: 'box',
-				position: [2 * i, -3 + randomHeight + slope, -1.6]
-			});
-		}*/
-		//levelData.staticObjects = [];
-		var id_counter = 0;
-
-		function spawn_npc(name, player, position, controllerConstructor) {
-			if (!player) {
-				console.log('no player specified');
-				return;
-			}
-			controllerConstructor = controllerConstructor || AIController;
-
-			game.loadCharacter(
-				player.model, {
-					name: name,
-					sss: player.sss,
-					diffusePath: player.diffusePath,
-					specularPath: player.specularPath,
-					normalPath: player.normalPath,
-					position: position,
-					scale: player.scale,
-					material: player.material
-				},
-				function(characterObject) {
-					characterObject.addController(new controllerConstructor(characterObject, game));
-					player.equipment.forEach(function(itemName) {
-						characterObject.equip(itemData[itemName]);
-					});
-					if (player.inventory !== undefined) {
-						player.inventory.forEach(function(itemName) {
-							characterObject.inventory.push(itemData[itemName]);
-						});
-					}
-				}
-			);
-
-		}
-
 		function loadLevel(levelData, itemData) {
 			//load player
-			var player = levelData.characters[levelData.player.character];
-			game.loadCharacter(
-				player.model, {
-					name: 'eve',
-					sss: player.sss,
-					diffusePath: player.diffusePath,
-					specularPath: player.specularPath,
-					normalPath: player.normalPath,
-					position: levelData.player.position,
-					scale: player.scale,
-					material: player.material
-				},
-				function(characterObject) {
-					characterObject.addController(new UserController(characterObject, game));
-					player.equipment.forEach(function(itemName) {
-						characterObject.equip(itemData[itemName]);
-					});
-					if (player.inventory !== undefined) {
-						player.inventory.forEach(function(itemName) {
-							characterObject.inventory.push(itemData[itemName]);
-						});
-					}
-				}
-			);
+			game.itemData = itemData;
+			game.levelData = levelData;
+
+			game.spawnCharacter(levelData.player.character, levelData.player.position, 'eve', UserController);
 
 			levelData.staticObjects.forEach(function(element) {
 				game.loadStaticObject(element.model, element.shape, element.position, element.options);
 			});
 
+			var id_counter = 0;
 			levelData.npcs.forEach(function(npc) {
-				spawn_npc('monster' + id_counter, levelData.characters[npc.character], npc.position);
+				game.spawnCharacter(npc.character, npc.position);
 				id_counter += 1;
 			});
-
-			/*setInterval(function() {
-    		spawn_npc('monster'+id_counter, levelData.characters.skeleton, [Math.random() * 200 - 100,0,0]);
-    		id_counter+=1;
-    	}, 12000);*/
 
 		}
 

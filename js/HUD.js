@@ -82,7 +82,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 					console.log("Looted item " + inventoryItem.name);
 					e.stopPropagation();
 					container.removeItem(inventoryItem);
-					this.character.addItem(inventoryItem);
+					scope.character.addItem(inventoryItem);
 					scope.showLootMenu(container);
 				});
 				invWindow.append(button);
@@ -96,7 +96,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 							e.stopPropagation();
 							container.unequip(inventoryItem.slot);
 							container.removeItem(inventoryItem);
-							this.character.addItem(inventoryItem);
+							scope.character.addItem(inventoryItem);
 							scope.showLootMenu(container);
 						});
 						invWindow.append(button);
@@ -159,6 +159,13 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				scope.game.camera.disableYLock = !scope.game.camera.disableYLock;
 			});
 			uiWindow.append(cameraLockedButton);
+
+			var useSSAOButton = $('<a href="#" class="button btn-togglecam">Toggle SSAO</a>');
+			useSSAOButton.on('click', function(e) {
+				e.stopPropagation();
+				scope.game.useSSAO = !scope.game.useSSAO;
+			});
+			uiWindow.append(useSSAOButton);
 
 
 			var loadLevelFunction = function(levelFileName) {
@@ -307,11 +314,32 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 						}
 					})(scope.game.characters[char_id]);
 				}
+				var itemsNear = [];
+				var dynamicsNear = []
+				for (var i in scope.game.dynamics) {
+					(function(dynamic) {
+						var dist = dynamic.getDistance(me);
+						if (dist < 1.0 && dynamic.item) {
+							itemsNear.push(dynamic.item);
+							dynamicsNear.push(dynamic);
+						}
+					})(scope.game.dynamics[i]);
+				}
 				if (found === null) {
 					$(".loot-menu").css('visibility', 'hidden');
+					if(itemsNear.length > 0) {
+						$(".loot-menu").css('visibility', 'visible');
+						scope.showLootMenu({'inventory': itemsNear, removeItem: function() {
+
+						}});
+					}
 				} else {
 					$(".loot-menu").css('visibility', 'visible');
-					scope.showLootMenu(found);
+					if(itemsNear.length > 0) {
+						scope.showLootMenu({'inventory': itemsNear.concat(found.equipment)});
+					} else {
+						scope.showLootMenu(found);
+					}
 				}
 				return false;
 			});

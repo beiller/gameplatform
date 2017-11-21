@@ -84,11 +84,19 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 
 		    	game.spot1.position.copy(camera.position);
 	    		game.spot1.position.x += 0.5;
-		    	game.spot1.target.position.fromArray(game.characters[this.trackingCharacter].body.getPosition());
+	    		game.spot1.position.z -= 1;
 
+		    	game.spot1.target.position.fromArray(game.characters[this.trackingCharacter].body.getPosition());
+		    	game.spot1.target.position.y = game.spot1.position.y;
+
+
+		    	//game.spot1.target.position.copy(game.spot1.position);
+				//game.spot1.target.position.z -= 1;
 	    		game.spot2.position.x = game.characters[this.trackingCharacter].body.getPositionX() + 0.5;
-	    		game.spot2.position.y = game.characters[this.trackingCharacter].body.getPositionY() + 1.0;
-		    	game.spot2.target.position.fromArray(game.characters[this.trackingCharacter].body.getPosition());
+	    		game.spot2.position.y = camera.position.y;
+		    	//game.spot2.target.position.fromArray(game.characters[this.trackingCharacter].body.getPosition());
+		    	game.spot2.target.position.copy(game.spot2.position);
+		    	game.spot2.target.position.z -= 2.0;
 	    	}
 	    	this.orbitControls.update();
 	    },
