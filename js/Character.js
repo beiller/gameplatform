@@ -186,13 +186,15 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	Character.prototype.unequip = function(slot) {
 		if(this.equipment[slot]) {
 			this.addItem(this.equipment[slot]);
-			if(this.equipment[slot].bone) {
-				this.findBone(this.equipment[slot].bone).remove(this.meshes[slot]);
+			if(this.equipment[slot].physBone) {
+				//this.equipment[slot].bone.remove(this.meshes[slot]);
+				
+				this.physRig.deletePhysic(this.equipment[slot].physBone);
 			} else {
 				this.armature.remove(this.meshes[slot]);
 			}
 			this.meshes[slot] = null;
-			//delete this.meshes[slot];
+			delete this.meshes[slot];
 
 			this.equipment[slot] = null;
 			delete this.equipment[slot];
@@ -216,6 +218,93 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	};
 
 	var newStats = new CharacterStats();
+	THREE.BufferGeometry.prototype.merge = function ( geometry, materialOffset ) {
+
+	    if ( geometry instanceof THREE.BufferGeometry === false ) {
+
+	        console.error( 'THREE.BufferGeometry.merge(): geometry not an instance of THREE.BufferGeometry.', geometry );
+	        return;
+
+	    }
+
+	    var attributes = this.attributes;
+
+	    if( this.index ){
+
+	        var indices = geometry.index.array;
+
+	        var offset = attributes[ 'position' ].count;
+
+	        for( var i = 0, il = indices.length; i < il; i++ ) {
+
+	            indices[i] = offset + indices[i];
+
+	        }
+
+	        this.index.array = Uint32ArrayConcat( this.index.array, indices );
+
+	    }
+
+	    var oldLen = attributes.position.count; // use vertex count
+
+	    for ( var key in attributes ) {
+
+	        if ( geometry.attributes[ key ] === undefined ) continue;
+
+	        attributes[ key ].array = Float32ArrayConcat( attributes[ key ].array, geometry.attributes[ key ].array );
+	        attributes[ key ].count = attributes[ key ].array.length / attributes[ key ].itemSize;
+
+	    }
+
+	    for(var i = 0; i < geometry.groups.length; i++) {
+	    	var oldGroup = geometry.groups[i];
+	    	var newGroup = {
+	    		start: oldLen + oldGroup.start,
+	    		count: oldGroup.count,
+	    		materialIndex: oldGroup.materialIndex + materialOffset
+	    	};
+	    	this.groups.push(newGroup);
+	    }
+
+	    return this;
+
+	    /***
+	     * @param {Float32Array} first
+	     * @param {Float32Array} second
+	     * @returns {Float32Array}
+	     * @constructor
+	     */
+	    function Float32ArrayConcat(first, second)
+	    {
+	        var firstLength = first.length,
+	            result = new Float32Array(firstLength + second.length);
+
+	        result.set(first);
+	        result.set(second, firstLength);
+
+	        return result;
+	    }
+
+	    /**
+	     * @param {Uint32Array} first
+	     * @param {Uint32Array} second
+	     * @returns {Uint32Array}
+	     * @constructor
+	     */
+	    function Uint32ArrayConcat(first, second)
+	    {
+	        var firstLength = first.length,
+	            result = new Uint32Array(firstLength + second.length);
+
+	        result.set(first);
+	        result.set(second, firstLength);
+
+	        return result;
+	    }
+
+	};
+
+
 	Character.prototype.updateCharacterStats = function() {
 		newStats.init(this.baseStats);
 		var scope = this;
@@ -235,9 +324,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		if(this.equipment[item.slot]) {
 			this.unequip(item.slot);
 		}
-	    this.equipment[item.slot] = item;
-		this.updateCharacterStats();
-	
+
 		var game = this.game;
 	    var scope = this;
 	    function addToBone(item, dynamic) {
@@ -249,7 +336,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 			dynamic.sleep = true;
 	    }
 		//load the mesh
-		if(item.physics) {
+		if(item.physics) {  // this item has some complex fucking physics
 	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
 				function createFromPhysic(e) {
 					try {
@@ -280,7 +367,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 						}
 						if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
-						scope.physRig.createPhysic(e, mesh);
+						item.physBone = scope.physRig.createPhysic(e, mesh);
 					} catch(e) {
 						console.log("Exception loading bone", e);
 						//throw e;
@@ -339,15 +426,33 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	        	// FOR newmeshes
 	        	dynamic.mesh.position.set(-0.02, -0.15, -0.1);
 	        });
-		} else { //this item is not attached to bones but deformed by skeleton
+		} else { //this item is not attached to bones but deformed by base skeleton
 	        game.loadClothing(item.model, this.armature, item.options, function(mesh) {
-	        	mesh.bind(scope.armature.skeleton, new THREE.Matrix4());
-				scope.armature.add(mesh);
-				scope.meshes[item.slot] = mesh;
-				//TODO optimize by update character clothing mesh (merge meshes?)
-				//....
+	        	//merge all meshes and update mesh DB
+	        	var singleGeometry = new THREE.BufferGeometry().copy(mesh.geometry);
+	        	var materials = new Array();
+	        	materials = materials.concat(mesh.material);
+
+	        	for(var key in scope.meshes) {
+	        		if(!(scope.equipment[key].bone || scope.equipment[key].physics)) {
+		        		singleGeometry.merge(
+		        			scope.meshes[key].geometry,
+		        			materials.length
+		        		);
+		        		materials = materials.concat(scope.meshes[key].material);
+	        		}
+	        	}
+
+	        	scope.meshes[item.slot] = mesh;
+	        	scope.armature.remove(scope.clothingMesh);
+	        	scope.clothingMesh = new THREE.SkinnedMesh(singleGeometry, materials);
+	        	scope.clothingMesh.bind(scope.armature.skeleton, new THREE.Matrix4());
+	        	scope.armature.add(scope.clothingMesh);
 	        });
 		}
+
+		this.equipment[item.slot] = item;
+		this.updateCharacterStats();
 	};
 	
 	Character.prototype.calculateEffect = function(characterStats, weaponStats) {

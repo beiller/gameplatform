@@ -291,6 +291,13 @@ define([
 
 		this.addGroundPlane(-4);
 	};
+	AmmoPhysics.prototype.removeBody = function(body) {
+		this.m_dynamicsWorld.removeRigidBody(body.body);
+	};
+	AmmoPhysics.prototype.removeConstraint = function(constraint) {
+		this.m_dynamicsWorld.removeConstraint(constraint);
+	};
+
 	AmmoPhysics.prototype.addGroundPlane = function(height) {
 		temp_trans_1.setIdentity();
 		temp_vec3_1.setValue(0, height, 0);

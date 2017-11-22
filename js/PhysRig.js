@@ -56,6 +56,12 @@ define(["lib/three"], function(THREE) {
 			});
 		},
 
+		deletePhysic: function(physBone) {
+			this.dynamics = this.dynamics.filter(e => e != physBone);
+			this.game.physicsWorld.removeConstraint(physBone.constraint);
+			this.game.physicsWorld.removeBody(physBone.body);
+		},
+
 		createPhysic: function(physicInfo, parentMesh) {
 			var globalBoneMap = this.physicMap;
 			var physBone = null;
@@ -93,6 +99,8 @@ define(["lib/three"], function(THREE) {
 			if(this.game.debugPhysics) {
 				this._doPhysDebug(physBone, physicInfo.radius, physicInfo.options);
 			}
+
+			return physBone;
 		}
 
 	});

@@ -493,18 +493,7 @@
 	    }
 	},
 	"npcs" : [
-		{
-		    "character": "necker",
-		    "position": [-11,0,0]
-		},
-		{
-		    "character": "sarah",
-		    "position": [11,0,0]
-		},
-		{
-		    "character": "necker",
-		    "position": [20,0,0]
-		}
+
 	],
 	"player": {
 	    "character": "sarah", 
