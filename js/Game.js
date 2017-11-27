@@ -97,7 +97,11 @@ function(
 	    var clock = new THREE.Clock( true );
 	    setTimeout(function() {
 	        var sprite = scope.makeTextSprite(text, {backgroundColor: { r:255, g:0, b:0, a:0.5 },borderColor:{ r:0, g:0, b:0, a:1.0 }});
-	        sprite.position.copy(position);
+	        if('fromArray' in position) {  // if this is a THREE vector
+	        	sprite.position.copy(position);
+	    	} else {
+	    		sprite.position.fromArray(position);
+	    	}
 	        //sprite.position.y = ((Math.sin(1.2) * 15) - 21) * 0.5;
 	        scope.scene.add(sprite);
 	        var interval = setInterval(function() {

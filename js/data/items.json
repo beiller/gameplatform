@@ -475,14 +475,11 @@
     "steel_pauldron1": {"name": "steel_pauldron1",  "model": "mr/pauldron1.json", "slot": "pauldron", "options": { 
             "material": [
                 { "roughness": 0.4, "color": "0xc4c7c7", 
-                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
-                { "roughness": 0.4, "color": "0xc4c7c7", 
-                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
-                { "roughness": 0.4, "color": "0xc4c7c7", 
                     "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
-                { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
                 { "roughness": 0.4, "color": "0xc4c7c7", 
-                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
+                { "roughness": 0.4, "color": "0xc4c7c7", 
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 }
             ]
         }
     },
@@ -490,13 +487,9 @@
             "material": [
                 { "roughness": 0.4, "color": "0xc4c7c7", 
                     "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
-                { "roughness": 0.4, "color": "0xc4c7c7", 
-                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 },
-                { "roughness": 0.4, "color": "0xc4c7c7", 
-                    "normalPath": "mr/gauntlet1_normal.png", "metalness": 1.0 },
                 { "roughness": 0.05, "color": "0x006D15", "metalness": 1.0, "name": "gem1" },
                 { "roughness": 0.4, "color": "0xc4c7c7", 
-                    "normalPath": "mr/boot1_normal.png", "metalness": 1.0 }
+                    "normalPath": "mr/armor1_normal.png", "metalness": 1.0 }
             ]
         }
     },
