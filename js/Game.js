@@ -300,24 +300,24 @@ function(
 	    };
 	    window.addEventListener( 'resize', onWindowResize, false );
 	};
-	Game.prototype.loadEnvironment = function(envMapPath, onComplete) {
-	    var game = this;
-	    this.loader.loadTexture(envMapPath).then(function(texture) {
-	        var mesh = new THREE.Mesh(
-	        	new THREE.SphereGeometry(50, 60, 40), 
-	        	new THREE.MeshStandardMaterial(
-	        		{
-	        			emissiveMap: texture,
-	        			emissiveIntensity: 100.0,
-	        			emissive: new THREE.Color( 0xFFFFFF )
-	        		}
-	        	)
-	        );
-	        //var mesh = new THREE.Mesh(new THREE.SphereGeometry(50, 60, 40), new THREE.MeshBasicMaterial({map: texture}));
-	        mesh.scale.x = -1.0;
-	        game.scene.add(mesh);
-	        if(onComplete !== undefined) onComplete(mesh);
-	    });
+	Game.prototype.loadEnvironment = async function(envMapPath, onComplete) {
+	    var texture = await this.loader.loadTexture(envMapPath);
+
+        var mesh = new THREE.Mesh(
+        	new THREE.SphereGeometry(50, 60, 40), 
+        	new THREE.MeshStandardMaterial(
+        		{
+        			emissiveMap: texture,
+        			emissiveIntensity: 100.0,
+        			emissive: new THREE.Color( 0xFFFFFF )
+        		}
+        	)
+        );
+        //var mesh = new THREE.Mesh(new THREE.SphereGeometry(50, 60, 40), new THREE.MeshBasicMaterial({map: texture}));
+        mesh.scale.x = -1.0;
+        this.scene.add(mesh);
+        if(onComplete !== undefined) onComplete(mesh);
+
 	    //var geometry = new THREE.PlaneGeometry( 50, 5, 1, 1 );
 	    var geometry = new THREE.BoxGeometry(200, 1, 12);
 		var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa } );
@@ -543,129 +543,68 @@ function(
 			delete this.characters[to_delete];
 		}
 	};
-	Game.prototype.loadCharacter = function(jsonFileName, options, onComplete) {
+	Game.prototype.loadCharacter = async function(jsonFileName, options) {
 	    var characterMass = 49.0; //50 KG
 	    var game = this;
-	    var position = options.position || [0,5,0];
-	    if(!options.name) return;
-	
-	    this.loadJsonMesh(jsonFileName, function( geometry, materials ) {
-	        if(!geometry.boundingSphere)
-	            geometry.computeBoundingSphere();
-	        console.log(materials);
-	        var radius = geometry.boundingSphere.radius;
-	        if(options.sss) {
-	            /*game.loadSSSMaterial(geometry, options.diffusePath, options.specularPath, options.normalPath, function(mesh, sss) {
-	                //create Character object
-	                mesh.position.set(position[0], position[1], position[2]);
-	                mesh.frustumCulled = !game.disableCull;
-	                var character = new Character(mesh, game, game.addCharacterPhysics(radius, characterMass, position), options.name, null, sss.object);
-	                game.characters[options.name] = character;
-	                if(options.scale) {
-	                    mesh.scale.x = mesh.scale.y = mesh.scale.z = options.scale;
-	                }
-	                game.loadPhysBones(character);
-	                if(onComplete !== undefined) onComplete(character);
-	            });*/
-	        } else {
-	        	var main_material = game.parseMaterial(options);
-		        var mesh = new THREE.SkinnedMesh(geometry, main_material);
-		        mesh.frustumCulled = !game.disableCull;
-		        mesh.castShadow = game.settings.enableShadows;
-		        mesh.receiveShadow = game.settings.enableShadows;
-				var body = game.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
-				if(game.debugPhysics) {
-					var geometry = new THREE.BoxGeometry( 0.5, radius*2, 0.5 );
-					var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
-					body.debugMesh = new THREE.Mesh( geometry, material );
-					game.scene.add(body.debugMesh);
-				}
-
-				var character = new Character(mesh, game, body, options.name);
-				character.addEventListener("COLLIDE", function(event) { 
-					//console.log("Character collided with", event); 
-					if(event.collisionPoint[1] - character.body.getPositionY() < 0.0000) {
-						character.onGround = true;
-					}
-				});
-				game.characters[options.name] = character;
-				game.scene.add( character.mesh );
-				game.loadPhysBones(character);
-				function timeout(mseconds) {
-					return new Promise(function(resolve, reject) {
-						setTimeout(resolve, mseconds);
-					});
-				}
-
-				console.log("Animations:", character.animations)
-
-				if("walk" in character.animations && false) {
-					function animation_loop() {
-						timeout(5000).then(function() {
-							console.log("ACTION1");
-							character.playAnimation("walk", {"crossFade": true });
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION2");
-							character.playAnimation("punch", {"crossFade": true });
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION3");
-							character.playAnimation("kick", {"crossFade": true });
-							return timeout(5000);
-						}).then(function(){
-							console.log("ACTION5");
-							character.playAnimation("idle", {"crossFade": true });
-							animation_loop();
-						});
-					}
-					animation_loop();
-				}
-
-				if(onComplete !== undefined) onComplete(character);
-	        }
-	    });
-	};
-	Game.prototype.loadJsonMesh = function(jsonFileName, loadedMesh, normalGeometry) {
-		normalGeometry = normalGeometry === undefined ? false : normalGeometry;
-	    if(this.meshCache[jsonFileName] !== undefined) {
-	    	var newMaterials = [];
-	    	if(!this.meshCache[jsonFileName].materials) {
-	    		newMaterials = null;
-	    	} else if(this.meshCache[jsonFileName].materials && !this.meshCache[jsonFileName].materials.clone) {
-	    		var oldMaterials = this.meshCache[jsonFileName].materials;
-	    		oldMaterials.forEach(function(m) {
-	    			newMaterials.push(m.clone());
-	    		});
-	    	} else if(this.meshCache[jsonFileName].materials && this.meshCache[jsonFileName].materials.clone) {
-	    		newMaterials = this.meshCache[jsonFileName].materials.clone();
-	    	}
-	        loadedMesh(this.meshCache[jsonFileName].geometry, newMaterials);
-	    } else {
-	    	//hack to implement sleep-wait
-	    	var scope = this;
-	    	if(scope.loaderBusy) {
-	    		setTimeout(function() {scope.loadJsonMesh(jsonFileName, loadedMesh, normalGeometry);}, 500);	
-	    		return;
-	    	}
-	        scope.loaderBusy = true;
-	        jsonFileNameNoCache = jsonFileName + '?cache=' + new Date().getTime();
-	        scope.jsonloader.load(jsonFileNameNoCache, function(geometry, materials) {
-	        	scope.loaderBusy = false;
-	        	if(!normalGeometry) {
-					var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
-					//THREE.js issue# 6869
-			    	bufferGeometry.animations = geometry.animations;
-			    	bufferGeometry.bones = geometry.bones;
-			        scope.meshCache[jsonFileName] = {geometry: bufferGeometry, materials: materials};
-			        geometry.dispose();
-			        loadedMesh(bufferGeometry, materials);
-				} else {
-					scope.meshCache[jsonFileName] = {geometry: geometry, materials: materials};
-					loadedMesh(geometry, materials);
-				} 
-	        });
+	    var position = options.position || [0,3,0];
+	    if(!options.name) {
+	    	console.error("Did not specify name for character", options);
+	    	return;
 	    }
+	    
+	    var jsonMesh = await this.loadJsonMesh(jsonFileName);
+	    var geometry = jsonMesh.geometry;
+	    var materials = jsonMesh.materials;
+
+        if(!geometry.boundingSphere) {
+            geometry.computeBoundingSphere();
+        }
+        console.log(materials);
+        var radius = geometry.boundingSphere.radius;
+
+    	var main_material = this.parseMaterial(options);
+        var mesh = new THREE.SkinnedMesh(geometry, main_material);
+        mesh.frustumCulled = !this.disableCull;
+        mesh.castShadow = this.settings.enableShadows;
+        mesh.receiveShadow = this.settings.enableShadows;
+		var body = this.physicsWorld.addCharacterPhysics(geometry.boundingSphere.radius, characterMass, position);
+		if(this.debugPhysics) {
+			var geometry = new THREE.BoxGeometry( 0.5, radius*2, 0.5 );
+			var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
+			body.debugMesh = new THREE.Mesh( geometry, material );
+			this.scene.add(body.debugMesh);
+		}
+
+		var character = new Character(mesh, this, body, options.name);
+		character.addEventListener("COLLIDE", function(event) { 
+			if(event.collisionPoint[1] - character.body.getPositionY() < 0.0000) {
+				character.onGround = true;
+			}
+		});
+		this.characters[options.name] = character;
+		this.scene.add( character.mesh );
+		this.loadPhysBones(character);
+
+		console.log("Animations:", character.animations)
+
+		return character;
+	};
+
+	var jsonLoadingPromises = {};
+	var jsonLoadingMeshCache = {};
+	Game.prototype.loadJsonMesh = async function(jsonFileName) {
+		return await this.loader.loadMesh(jsonFileName);
+	};
+	Game.prototype.parseMesh = function(geometry, materials) {
+		if(geometry.attributes.skinWeight) {
+        	var mesh = new THREE.SkinnedMesh(geometry, materials);
+    	} else {
+    		var mesh = new THREE.Mesh(geometry, materials);
+    	}
+		mesh.frustumCulled = !this.disableCull;
+        mesh.castShadow = this.settings.enableShadows;
+        mesh.receiveShadow = this.settings.enableShadows;
+        return mesh;
 	};
 	Game.prototype.parseMaterial = function(options, num_slots) {
 		var game = this;
@@ -734,81 +673,59 @@ function(
 		}
 		return material;
 	};
-	Game.prototype.loadClothing = function(jsonFileName, parent, options, onComplete) {
-	    this.loadItem(jsonFileName, parent, options, onComplete);
+	Game.prototype.loadClothing = async function(jsonFileName, parent, options, onComplete) {
+	    await this.loadItem(jsonFileName, parent, options, onComplete);
 	};
-	Game.prototype.loadPhysItem = function(jsonFileName, character, options, onComplete) {
-		this.loadItem(jsonFileName, character, options, onComplete);
+	Game.prototype.loadPhysItem = async function(jsonFileName, character, options, onComplete) {
+		await this.loadItem(jsonFileName, character, options, onComplete);
 	};
-	Game.prototype.loadItem = function(jsonFileName, parent, options, onComplete) {
-	    var game = this;
+	Game.prototype.loadItem = async function(jsonFileName, parent, options, onComplete) {
 	    if(!options) options = {};
-	    var loadedMesh = function(geometry, materials) {
-	    	console.log("MATERIALS IN", jsonFileName, materials);
-	    	var material = game.parseMaterial(options);
-	    	if(geometry.attributes.skinWeight) {
-	        	var mesh = new THREE.SkinnedMesh(geometry, material);
-	    	} else {
-	    		var mesh = new THREE.Mesh(geometry, material);
-	    	}
-			mesh.frustumCulled = !game.disableCull;
-	        mesh.castShadow = game.settings.enableShadows;
-	        mesh.receiveShadow = game.settings.enableShadows;
-	        if(onComplete) onComplete(mesh);
-
-	    };
-	    this.loadJsonMesh(jsonFileName, loadedMesh);
+	    var jsonMesh = await this.loadJsonMesh(jsonFileName);
+    	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
+    	if(onComplete) onComplete(mesh); //TODO remove callback hell
+    	return mesh;
 	};
-	Game.prototype.loadStaticObject = function(jsonFileName, shape, position, options, onComplete) {
-	    var game = this;
-	    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
-	    	var material = game.parseMaterial(options);
-	        var mesh = new THREE.Mesh(geometry, material);
-	        mesh.position.set(position[0], position[1], position[2]);
-	        if(options.rotation) {
-	        	mesh.rotation.set(options.rotation[0], options.rotation[1], options.rotation[2]);
-	        }
-	        mesh.castShadow = game.settings.enableShadows;
-	        mesh.receiveShadow = game.settings.enableShadows;
-	        game.scene.add(mesh);
-	        game.physicsWorld.addStaticPhysics(shape, mesh, position, options.rotation);
-			if(game.debugPhysics) {
-				mesh.geometry.computeBoundingBox();
-				var bboxmax = mesh.geometry.boundingBox.max;
-
-				var geometry = new THREE.BoxGeometry( bboxmax.x*2, bboxmax.y*2, bboxmax.z*2 );
-				var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
-				var dmesh = new THREE.Mesh( geometry, material );
-				dmesh.position.fromArray(position);
-				if(options.rotation) {
-					dmesh.rotation.fromArray(options.rotation);
-				}
-				game.scene.add(dmesh);
+	Game.prototype.loadStaticObject = async function(jsonFileName, shape, position, options, onComplete) {
+	    if(!options) options = {};
+	    var jsonMesh = await this.loadJsonMesh(jsonFileName);
+    	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
+    	mesh.position.fromArray(position);
+    	this.scene.add(mesh);
+        var body = this.physicsWorld.addStaticPhysics(shape, mesh, position, options.rotation);
+		if(this.debugPhysics) {
+			mesh.geometry.computeBoundingBox();
+			var bboxmax = mesh.geometry.boundingBox.max;
+			var geometry = new THREE.BoxGeometry( bboxmax.x*2, bboxmax.y*2, bboxmax.z*2 );
+			var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
+			var dmesh = new THREE.Mesh( geometry, material );
+			dmesh.position.fromArray(position);
+			if(options.rotation) {
+				dmesh.rotation.fromArray(options.rotation);
 			}
-	        if (onComplete) onComplete(mesh);
-	    });
+			this.scene.add(dmesh);
+		}
+    	if(onComplete) onComplete(mesh); //TODO remove callback hell
+    	return body;
 	};
-	Game.prototype.loadDynamicObject = function(jsonFileName, options, onComplete) {
+	Game.prototype.loadDynamicObject = async function(jsonFileName, options, onComplete) {
 	    if(!options) options = {};
 	    var mass = options.mass || 10.0;
 	    var position = options.position || [0,1,0];
-	    var game = this;
-	    this.loadJsonMesh( jsonFileName, function ( geometry, materials ) {
-	    	var material = game.parseMaterial(options);
-	        var mesh = new THREE.Mesh(geometry, material);
-	        position = [mesh.position.x, mesh.position.y, mesh.position.z];
-	        var physEnabled = options.enabled !== undefined ? options.enabled : true;
-	        var body = game.physicsWorld.addObjectPhysics(mesh, mass, position);
-		    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
-	        var dynamic = new DynamicEntity(mesh, game, body);
-	        dynamic.meshOffset = [len.x/2.0, len.y/2.0, len.z/2.0];
-	        dynamic.sleep = !physEnabled;
-	        game.dynamics.push(dynamic);
-	        mesh.castShadow = game.settings.enableShadows;
-	        mesh.receiveShadow = game.settings.enableShadows;
-	        game.scene.add(mesh);
-	        if (onComplete) onComplete(dynamic);
-	    });
+    	var jsonMesh = await this.loadJsonMesh(jsonFileName);
+    	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
+        
+        position = [mesh.position.x, mesh.position.y, mesh.position.z];
+        var physEnabled = options.enabled !== undefined ? options.enabled : true;
+        var body = this.physicsWorld.addObjectPhysics(mesh, mass, position);
+	    var len = mesh.geometry.boundingBox.max.sub(mesh.geometry.boundingBox.min);
+        var dynamic = new DynamicEntity(mesh, this, body);
+        dynamic.meshOffset = [len.x/2.0, len.y/2.0, len.z/2.0];
+        dynamic.sleep = !physEnabled;
+        this.dynamics.push(dynamic);
+        this.scene.add(mesh);
+        if (onComplete) onComplete(dynamic); //TODO remove callback hell
+        return dynamic;
 	};
 	Game.prototype.animate = function(skipPhysics, skipAnimation) {
 	    this.camera.update();
@@ -903,7 +820,7 @@ function(
 	};
 
 	var spawnCounter = 0;
-	Game.prototype.spawnCharacter = function(characterName, position, name, controllerConstructor) {
+	Game.prototype.spawnCharacter = async function(characterName, position, name, controllerConstructor) {
 		if (!characterName in this.levelData.characters) {
 			console.error('no such character', characterName, this.levelData.characters);
 			return;
@@ -911,12 +828,12 @@ function(
 		var characterData = this.levelData.characters[characterName];
 
 		if(!name) {
-			name = characterData.character + '.' + spawnCounter;
+			name = characterName + '.' + spawnCounter;
 			spawnCounter += 1;
 		}
 		controllerConstructor = controllerConstructor || AIController;
 
-		game.loadCharacter(
+		var character = await this.loadCharacter(
 			characterData.model, {
 				name: name,
 				sss: characterData.sss,
@@ -926,106 +843,71 @@ function(
 				position: position,
 				scale: characterData.scale,
 				material: characterData.material
-			},
-			function(characterObject) {
-				characterObject.addController(new controllerConstructor(characterObject, game));
-				characterData.equipment.forEach(function(itemName) {
-					characterObject.equip(game.itemData[itemName]);
-				});
-				if (characterData.inventory !== undefined) {
-					characterData.inventory.forEach(function(itemName) {
-						characterObject.inventory.push(game.itemData[itemName]);
-					});
-				}
 			}
 		);
+		character.addController(new controllerConstructor(character, this));
+		var scope = this;
+		characterData.equipment.forEach(function(itemName) {
+			character.equip(scope.itemData[itemName]);
+		});
+		if (characterData.inventory !== undefined) {
+			characterData.inventory.forEach(function(itemName) {
+				character.inventory.push(scope.itemData[itemName]);
+			});
+		}
+		return character;
 	}
 
-	Game.prototype.spawnItem = function(itemName, position) {
+	Game.prototype.spawnItem = async function(itemName, position) {
 		if(!(itemName in this.itemData)) {
 			console.error(itemName, "not in data", this.itemData);
 			return;
 		} 
 		var item = this.itemData[itemName];
-		var scope = this;
-		this.loadPhysItem(item.model, this, item.options, function(mesh) {
-			var body = scope.physicsWorld.addObjectPhysics(mesh, 1.0, position);
-			/*if(scope.debugPhysics) {
-				var geometry = new THREE.BoxGeometry( 0.5, radius*2, 0.5 );
-				var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
-				body.debugMesh = new THREE.Mesh( geometry, material );
-				scope.scene.add(body.debugMesh);
-			}*/
-			scope.scene.add(mesh);
-			var dynamic = new DynamicEntity(mesh, scope, body);
-			dynamic.item = item;
-			scope.dynamics.push(dynamic);
-		});
+		var mesh = await this.loadItem(item.model, this, item.options);
+		var body = this.physicsWorld.addObjectPhysics(mesh, 1.0, position);
+		/*if(this.debugPhysics) {
+			var geometry = new THREE.BoxGeometry( 0.5, radius*2, 0.5 );
+			var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa, wireframe: true } );
+			body.debugMesh = new THREE.Mesh( geometry, material );
+			this.scene.add(body.debugMesh);
+		}*/
+		this.scene.add(mesh);
+		var dynamic = new DynamicEntity(mesh, this, body);
+		dynamic.item = item;
+		this.dynamics.push(dynamic);
+		return dynamic;
 	}
 
-	Game.runGame = function(gameSettings, levelData, itemData) {
+	Game.loadLevel = async function(levelFileName) {
+		var loader = new Loader();
+		var gameSettings = await loader.loadJSON("js/data/settings.json");
 		var game = new Game(gameSettings);
+
+		game.levelData = await loader.loadJSON(levelFileName);
+		game.itemData = await loader.loadJSON("js/data/items.json");
+
 		game.initRendering();
-		function loadLevel(levelData, itemData) {
-			//load player
-			game.itemData = itemData;
-			game.levelData = levelData;
 
-			game.spawnCharacter(levelData.player.character, levelData.player.position, 'eve', UserController);
+		await game.spawnCharacter(game.levelData.player.character, game.levelData.player.position, 'eve', UserController);
 
-			levelData.staticObjects.forEach(function(element) {
-				game.loadStaticObject(element.model, element.shape, element.position, element.options);
-			});
-
-			var id_counter = 0;
-			levelData.npcs.forEach(function(npc) {
-				game.spawnCharacter(npc.character, npc.position);
-				id_counter += 1;
-			});
-
-		}
-
-		game.loadEnvironment("textures/forest_park.jpg", function(mesh) {
-			game.animate();
-			game.render();
-			game.updateCubeMap();
-			
-			loadLevel(levelData, itemData);
+		game.levelData.staticObjects.forEach(function(element) {
+			game.loadStaticObject(element.model, element.shape, element.position, element.options);
 		});
 
-		//game.addGroundPlane(-4);
-
-		//loadLevel(levelData, itemData);
-
-		/*setInterval(function() {
-			game.updateCubeMap();
-    	}, 1000);*/
-
-
-		/*var logicInterval = setInterval(function() {
-			game.animate();
-			logicCount++;
-		}, interval);*/
+		var id_counter = 0;
+		game.levelData.npcs.forEach(async function(npc) {
+			await game.spawnCharacter(npc.character, npc.position);
+			id_counter += 1;
+		});
+		await game.loadEnvironment("textures/forest_park.jpg");
+		
+		game.animate();
+		game.render();
+		game.updateCubeMap();
 
 		return game;
-	}
-
-	Game.loadLevel = function(levelFileName) {
-		var loader = new Loader();
-		return Promise.all([
-			loader.loadJSON("js/data/settings.json"),
-			loader.loadJSON(levelFileName),
-			loader.loadJSON("js/data/items.json")
-		]).then(function(arr) {
-			var gameSettings = arr[0],
-    			levelData = arr[1],
-    			itemData = arr[2];
-			var game = Game.runGame(gameSettings, levelData, itemData);
-			
-			return game;
-		}, function(e) { throw e; });
 	};
-
 
 	return Game;
 });

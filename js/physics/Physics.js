@@ -123,7 +123,7 @@ define([
 		var q1 = new THREE.Quaternion().fromArray(bodyA.getQuaternion()).inverse();
 		var q2 = new THREE.Quaternion().fromArray(bodyB.getQuaternion()).inverse();
 		var q3 = new THREE.Quaternion().setFromUnitVectors ( q1, q2 );
-		console.log("QUATERNIONDEBUG", q1, q2);
+		//console.log("QUATERNIONDEBUG", q1, q2);
 		//var q1_i = new THREE.Quaternion().copy(q1).inverse();
 		//var q2_i = new THREE.Quaternion().copy(q2).inverse();
 

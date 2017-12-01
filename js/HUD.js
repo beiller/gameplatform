@@ -168,14 +168,13 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			uiWindow.append(useSSAOButton);
 
 
-			var loadLevelFunction = function(levelFileName) {
+			var loadLevelFunction = async function(levelFileName) {
 				if(window.game) {
 					document.body.removeChild(window.game.container); 
 				}
-				Game.loadLevel(levelFileName).then(function(game) {
-					window.game = game;
-					scope.game = game;
-				});
+				var game = await Game.loadLevel(levelFileName);
+				window.game = game;
+				scope.game = game;
 			};
 			uiWindow.append(
 				$('<a href="#" class="button btn-loadlevel1">Load Level 1</a>').on('click', function(e) {
