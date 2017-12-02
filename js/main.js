@@ -72,6 +72,7 @@ requirejs(
 				return;
 			}
 			window.game.animate(skipPhysics, skipAnimation);
+			logicCount++;
 		}
 
 		function drawFunction() {

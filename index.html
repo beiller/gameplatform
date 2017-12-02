@@ -4,6 +4,7 @@
 		<title>mygame</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 		<style>
             @font-face {
                 font-family: 'MainFont';
@@ -30,19 +31,19 @@
             }
 
             div.button {
-                height: 100px;
+                
                 width: 60px;
-                border: solid 1px #000000;
-                background-color: #ffffff;
-                position: absolute;
-                top: 0px;
+                
+                
+                
+                
                 left: 0px;
             }
 		</style>
 	</head>
 
 	<body oncontextmenu="return false;">
-        <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:50px;background-color:white;color:black">Test</div>
+        <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:50px;background-color:white;color:black">0/0</div>
         <script data-main="js/main.js" src="js/lib/require.js"></script>
 		<style>
 			.window {
@@ -53,6 +54,7 @@
 			    height: 150px;
 			    background-color: rgba(255, 255, 255, 0.5);
 			    z-index: 100;
+			    overflow: auto;
 			}
 			.topright {
 				top: 0px;
@@ -75,7 +77,10 @@
 			.window-inventory {
 				visibility: hidden;
 			}
-			.button {
+			html body div.window a.btn {
+				font-size: 0.175rem;
+			}
+			/*.button {
 			    border-radius: 5px;
 			    border: 2px solid #73AD21;
 			    display: block;
@@ -90,10 +95,9 @@
 			}
 			.red {
 				background-color: #ffeeee !important;
-			}
+			}*/
 		</style>
 		<div class="window topright">
-			
 		</div>
 		<div class="window paneright window-inventory inventory-menu">
 		</div>

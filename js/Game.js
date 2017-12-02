@@ -41,7 +41,7 @@ function(
 	    
 	    this.physicsWorld = new Physics();
 	}
-	Game.prototype.makeTextSprite = function( message, parameters ) {
+	Game.prototype.makeTextTexture = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
 	    var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "MainFont";
 	    var fontsize = parameters.hasOwnProperty("fontsize") ? parameters["fontsize"] : 48;
@@ -50,8 +50,8 @@ function(
 	    var backgroundColor = parameters.hasOwnProperty("backgroundColor") ? parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
 	    //var spriteAlignment = THREE.SpriteAlignment.topLeft;
 	    var canvas = document.createElement('canvas');
-	    canvas.width = 512;
-	    canvas.height = 256;
+	    canvas.width = parameters.width || 512;
+	    canvas.height = parameters.height || 256;
 	    canvas.lineWidth = 1;
 	    var context = canvas.getContext('2d');
 	    context.font = fontsize + 'px ' + fontface;
@@ -81,6 +81,10 @@ function(
 	    // canvas contents will be used for a texture
 	    var texture = new THREE.Texture(canvas);
 	    texture.needsUpdate = true;
+	    return texture;
+	};
+	Game.prototype.makeTextSprite = function( message, parameters ) {
+		var texture = this.makeTextTexture(message, parameters);
 	    var spriteMaterial = new THREE.SpriteMaterial(
 	        { map: texture }
 	    );
@@ -849,6 +853,71 @@ function(
 		return dynamic;
 	}
 
+	Game.prototype.spawnParticles = async function(numParticles, position) {
+		position = position || [0,0,0];
+		// create the particle variables
+		//var heartTexture = this.makeTextTexture("♥", {width: 64, height: 64});
+		var heartTexture = this.makeTextTexture("💧", {width: 64, height: 64});
+		
+		var particleCount = numParticles,
+		    particles = new THREE.Geometry(),
+		    pMaterial = new THREE.PointsMaterial({
+		      color: new THREE.Color( 0xff0000 ),
+		      map: heartTexture,
+		      size: 1,
+		      alphaTest: 0.5, transparent: true
+		    });
+
+		// now create the individual particles
+		for (var p = 0; p < particleCount; p++) {
+
+		  // create a particle with random
+		  // position values, -250 -> 250
+		  var pX = Math.random() - 0.5,
+		      pY = Math.random() - 0.5,
+		      pZ = Math.random() - 0.5,
+		      particle = new THREE.Vector3(pX, pY, pZ);
+
+		  // add it to the geometry
+		  particles.vertices.push(particle);
+		}
+
+		// create the particle system
+		var particleSystem = new THREE.Points(
+		    particles,
+		    pMaterial);
+		particleSystem.position.fromArray(position);
+
+		// add it to the scene
+		this.scene.add(particleSystem);
+
+		var updateFunction = function() {
+			var pCount = particleCount;
+			  while (pCount--) {
+
+			    // get the particle
+			    var particle = particles.vertices[pCount];
+
+			    // check if we need to reset
+			    if (particle.y > 0.5) {
+			      particle.y = -0.5;
+			    }
+
+			    // update the velocity with
+			    // a splat of randomniz
+			    particle.y += Math.random() * .01;
+			    particle.x += (Math.random() * .01) - 0.005;
+			    particle.z += (Math.random() * .01) - 0.005;
+
+			    // and the position
+			    //particle.position.addSelf(
+			    //  particle.velocity);
+			  }
+			  particleSystem.geometry.verticesNeedUpdate = true;
+		};
+		setInterval(updateFunction, 30);
+	};
+
 	Game.loadLevel = async function(levelFileName) {
 		var loader = new Loader();
 		var gameSettings = await loader.loadJSON("js/data/settings.json");
@@ -858,6 +927,13 @@ function(
 		game.itemData = await loader.loadJSON("js/data/items.json");
 
 		game.initRendering();
+		game.render();
+		game.updateCubeMap();
+
+		//show loading progress
+		var interval = setInterval(function() {
+			document.getElementById("debugConsole").innerHTML = 'loading: '+game.loader.total+'/'+game.loader.pending;
+		}, 100);
 
 		await game.spawnCharacter(game.levelData.player.character, game.levelData.player.position, 'eve', UserController);
 
@@ -874,7 +950,9 @@ function(
 		
 		game.animate();
 		game.render();
-		game.updateCubeMap();
+
+		//stop showing loading progress
+		clearInterval(interval);
 
 		return game;
 	};

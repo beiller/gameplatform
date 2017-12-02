@@ -493,10 +493,6 @@
 	    }
 	},
 	"npcs" : [
-		{
-			"character": "marie_rose_v2", 
-	    	"position": [2,0,0]
-		}
 	],
 	"player": {
 	    "character": "sarah", 

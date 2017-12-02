@@ -12,7 +12,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			var scope = this;
 			invWindow.html("");
 			character.inventory.forEach(function(inventoryItem) {
-				var button = $("<a href='#' class='button'></a>");
+				var button = $("<a href='#' class='button btn btn-primary btn-sm'></a>");
 				button.html(inventoryItem.name).on('click', function(e) {
 					console.log("Equipping item " + inventoryItem.name);
 					e.stopPropagation();
@@ -24,7 +24,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			});
 			invWindow.append($("<hr />"));
 			Object.keys(character.equipment).forEach(function(key, index) {
-				var button = $("<a href='#' class='button'></a>");
+				var button = $("<a href='#' class='button btn btn-primary btn-sm'></a>");
 				button.html(character.equipment[key].name).on('click', function(e) {
 					console.log("Equipping item " + character.equipment[key].name);
 					e.stopPropagation();
@@ -41,7 +41,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			var scope = this;
 			invWindow.html("");
 			function createButton(name) {
-				var button = $("<a href='#' class='button'></a>");
+				var button = $("<a href='#' class='button btn btn-primary btn-sm'></a>");
 				button.html(name).on('click', function(e) {
 					e.stopPropagation();
 					character.playAnimation(name, {"timeScale": scope.animationSpeed});
@@ -58,7 +58,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			var scope = this;
 			invWindow.html("");
 			function createButton(name) {
-				var button = $("<a href='#' class='button'></a>");
+				var button = $("<a href='#' class='button btn btn-primary btn-sm'></a>");
 				var scopedName = name;
 				button.html(name).on('click', function(e) {
 					e.stopPropagation();
@@ -77,7 +77,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			var scope = this;
 			invWindow.html("<h1>LOOT!</h1>");
 			container.inventory.forEach(function(inventoryItem) {
-				var button = $("<a href='#' class='button'></a>");
+				var button = $("<a href='#' class='button btn btn-primary btn-sm'></a>");
 				button.html(inventoryItem.name).on('click', function(e) {
 					console.log("Looted item " + inventoryItem.name);
 					e.stopPropagation();
@@ -90,7 +90,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			if (container.equipment !== undefined) {
 				for (var slot in container.equipment) {
 					(function(inventoryItem) {
-						var button = $("<a href='#' class='button'></a>");
+						var button = $("<a href='#' class='button btn btn-primary btn-sm'></a>");
 						button.html(inventoryItem.name).on('click', function(e) {
 							console.log("Looted item " + inventoryItem.name);
 							e.stopPropagation();
@@ -110,7 +110,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 		init: function() {
 			var scope = this;
 			var uiWindow = $(".topright");
-			var toggleInventory = $('<a href="#" class="button btn-openinventory">Toggle Inventory</a>');
+			var toggleInventory = $('<a href="#" class="button btn btn-primary btn-sm btn-openinventory">Toggle Inventory</a>');
 			toggleInventory.on('click', function(e) {
 				e.stopPropagation();
 				var invWindow = $(".inventory-menu");
@@ -124,7 +124,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			});
 			uiWindow.append(toggleInventory);
 
-			var toggleAnimations = $('<a href="#" class="button btn-openanimations">Toggle Animations</a>');
+			var toggleAnimations = $('<a href="#" class="button btn btn-primary btn-sm btn-openanimations">Toggle Animations</a>');
 			toggleAnimations.on('click', function(e) {
 				e.stopPropagation();
 				var invWindow = $(".inventory-menu");
@@ -138,7 +138,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			});
 			uiWindow.append(toggleAnimations);
 
-			var toggleCharacter = $('<a href="#" class="button btn-opencharacters">Toggle Characters</a>');
+			var toggleCharacter = $('<a href="#" class="button btn btn-primary btn-sm btn-opencharacters">Toggle Characters</a>');
 			toggleCharacter.on('click', function(e) {
 				e.stopPropagation();
 				var invWindow = $(".inventory-menu");
@@ -153,14 +153,14 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			uiWindow.append(toggleCharacter);
 
 			var cameraLocked = true;
-			var cameraLockedButton = $('<a href="#" class="button btn-togglecam">Toggle Camera Locked</a>');
+			var cameraLockedButton = $('<a href="#" class="button btn btn-primary btn-sm btn-togglecam">Toggle Camera Locked</a>');
 			cameraLockedButton.on('click', function(e) {
 				e.stopPropagation();
 				scope.game.camera.disableYLock = !scope.game.camera.disableYLock;
 			});
 			uiWindow.append(cameraLockedButton);
 
-			var useSSAOButton = $('<a href="#" class="button btn-togglecam">Toggle SSAO</a>');
+			var useSSAOButton = $('<a href="#" class="button btn btn-primary btn-sm btn-togglecam">Toggle SSAO</a>');
 			useSSAOButton.on('click', function(e) {
 				e.stopPropagation();
 				scope.game.useSSAO = !scope.game.useSSAO;
@@ -171,31 +171,33 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			var loadLevelFunction = async function(levelFileName) {
 				if(window.game) {
 					document.body.removeChild(window.game.container); 
+					window.game = null;
+					delete window["game"];
 				}
 				var game = await Game.loadLevel(levelFileName);
 				window.game = game;
 				scope.game = game;
 			};
 			uiWindow.append(
-				$('<a href="#" class="button btn-loadlevel1">Load Level 1</a>').on('click', function(e) {
+				$('<a href="#" class="button btn btn-primary btn-sm btn-loadlevel1">Load Level 1</a>').on('click', function(e) {
 					loadLevelFunction("js/data/level1.json");
 					//document.body.webkitRequestFullscreen();
 				})
 			);
 			uiWindow.append(
-				$('<a href="#" class="button btn-loadlevel2">Load Level 2</a>').on('click', function(e) {
+				$('<a href="#" class="button btn btn-primary btn-sm btn-loadlevel2">Load Level 2</a>').on('click', function(e) {
 					loadLevelFunction("level2/level2.json");
 					//document.body.webkitRequestFullscreen();
 				})
 			);
 			uiWindow.append(
-				$('<a href="#" class="button btn-loadlevel4">Load Level 4</a>').on('click', function(e) {
+				$('<a href="#" class="button btn btn-primary btn-sm btn-loadlevel4">Load Level 4</a>').on('click', function(e) {
 					loadLevelFunction("level4/level4.json");
 					//document.body.webkitRequestFullscreen();
 				})
 			);
 			uiWindow.append(
-				$('<a href="#" class="button btn-loadlevel5">Load Level 5</a>').on('click', function(e) {
+				$('<a href="#" class="button btn btn-primary btn-sm btn-loadlevel5">Load Level 5</a>').on('click', function(e) {
 					loadLevelFunction("level5/level5.json");
 					//document.body.webkitRequestFullscreen();
 				})
@@ -285,7 +287,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			createSliderControl(0.00, 10.0, 0.01, 'none', function(e) { scope.animationSpeed = this.valueAsNumber });
 
 
-			var updateCubeMap = $('<a href="#" class="button">Update Cube</a>').on('click', function(e) {
+			var updateCubeMap = $('<a href="#" class="button btn btn-primary btn-sm">Update Cube</a>').on('click', function(e) {
 				e.stopPropagation();
 				scope.game.updateCubeMap();
 				return false;

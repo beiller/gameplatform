@@ -15,31 +15,37 @@ define(["lib/three"], function(THREE) {
 	}
 
 	function Loader() {
-
+		this.pending = 0;
+		this.total = 0;
 	}
 
 	var loaderPromise = {};
 	var loaderCache = {};
 
 	Loader.prototype.loadTexture = async function(url) {
+		this.pending += 1;
 		if(url in loaderPromise) {
 			await loaderPromise[url];
 		}
 		if(url in loaderCache) {
+			this.total += 1;
 			return loaderCache[url];
 		}
 	    loaderPromise[url] = new Promise(function (resolve, reject) {
 	        texloader.load(url + '?cache=' + new Date().getTime(), resolve);
 	    });
 	    loaderCache[url] = await loaderPromise[url];
+	    this.total += 1;
 	    return loaderCache[url];
 	};
 
 	Loader.prototype.loadMesh = async function(url) {
+		this.pending += 1;
 		if(url in loaderPromise) {
 			await loaderPromise[url];
 		}
 		if(url in loaderCache) {
+			this.total += 1;
 			return loaderCache[url];
 		}
 	    loaderPromise[url] = new Promise(function (resolve, reject) {
@@ -54,6 +60,7 @@ define(["lib/three"], function(THREE) {
 	        });
 	    });
 	    loaderCache[url] = await loaderPromise[url];
+	    this.total += 1;
 	    return loaderCache[url];
 	};
 	Loader.prototype.loadJSON = function(url) {
