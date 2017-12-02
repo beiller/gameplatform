@@ -25,7 +25,6 @@ function(
 	    this.clock = null;
 	
 	    this.jsonloader = null;
-	    this.loaderBusy = false;
 	
 	    this.timescale = 1.0;
 	
@@ -34,14 +33,11 @@ function(
 	
 	    this.dynamics = [];
 	
-	    this.meshCache = {};
-	    this.textureCache = {};
-	
 	    this.cubemapRendered = false;
 	    
 	    this.debugPhysics = false;
 
-	    this.useSSAO = true;
+	    this.useSSAO = false;
 	    
 	    this.physicsWorld = new Physics();
 	}
@@ -95,27 +91,27 @@ function(
 	Game.prototype.displayText = function(position, text, timeout) {
 	    var scope = this;
 	    var clock = new THREE.Clock( true );
-	    setTimeout(function() {
-	        var sprite = scope.makeTextSprite(text, {backgroundColor: { r:255, g:0, b:0, a:0.5 },borderColor:{ r:0, g:0, b:0, a:1.0 }});
-	        if('fromArray' in position) {  // if this is a THREE vector
-	        	sprite.position.copy(position);
-	    	} else {
-	    		sprite.position.fromArray(position);
-	    	}
-	        //sprite.position.y = ((Math.sin(1.2) * 15) - 21) * 0.5;
-	        scope.scene.add(sprite);
-	        var interval = setInterval(function() {
-	            var e = clock.getElapsedTime();
-	            //sprite.position.y = ((Math.sin((e*1.2)+1.2) * 15) - 21) * 0.5;
-	            sprite.position.y = sprite.position.y + (e * e * 0.003);
-	            //sprite.position.x += 0.017;
-	        }, 1000 / 60);
-	        setTimeout(function(){
-	            clearInterval(interval);
-	            scope.scene.remove(sprite);
-	            sprite.material.map.dispose();
-	        }, timeout);
-	    }, 100);
+	    
+        var sprite = scope.makeTextSprite(text, {backgroundColor: { r:255, g:0, b:0, a:0.5 },borderColor:{ r:0, g:0, b:0, a:1.0 }});
+        if('fromArray' in position) {  // if this is a THREE vector
+        	sprite.position.copy(position);
+    	} else {
+    		sprite.position.fromArray(position);
+    	}
+        //sprite.position.y = ((Math.sin(1.2) * 15) - 21) * 0.5;
+        scope.scene.add(sprite);
+        var interval = setInterval(function() {
+            var e = clock.getElapsedTime();
+            //sprite.position.y = ((Math.sin((e*1.2)+1.2) * 15) - 21) * 0.5;
+            sprite.position.y = sprite.position.y + (e * e * 0.003);
+            //sprite.position.x += 0.017;
+        }, 1000 / 60);
+        setTimeout(function(){
+            clearInterval(interval);
+            scope.scene.remove(sprite);
+            sprite.material.map.dispose();
+        }, timeout);
+
 	};
 	Game.prototype.setupLighting = function() {
 			// ref for lumens: http://www.power-sure.com/lumens.htm
@@ -328,23 +324,6 @@ function(
         floor.receiveShadow = this.settings.enableShadows;
 		this.scene.add( floor );
 	};
-	Game.prototype.loadSSSMaterial = function(geometry, diffusePath, specularPath, normalPath, onComplete) {
-	    var game = this;
-	    this.loadTextureFile(diffusePath, function(diffuseTexture) {
-	        game.loadTextureFile(specularPath, function(specularTexture) {
-	            game.loadTextureFile(normalPath, function(normalTexture) {
-	                var object = new THREE.SkinnedMesh( geometry );
-	                var options = {"disableSSSRenderFrame": !game.enableSSS};
-	                var sss = new SkinShaderPass(game.renderer, game.camera, geometry, object, diffuseTexture, specularTexture, normalTexture, options);
-	                object.material = sss.shader;
-	                //object.visible = false;
-	                game.scene.add(object);
-	                game.skinshaders.push(sss);
-	                if(onComplete !== undefined) onComplete(object, sss);
-	            });
-	        });
-	    });
-	};
 	Game.prototype.loadPhysBones = function(character) {
 		//return null;
 
@@ -529,8 +508,8 @@ function(
 	    return null;
 	
 	};
-	Game.prototype.removeCharacter = function(character) {
-		character.remove();
+	Game.prototype.removeCharacter = function(character) {	
+		character.dispose();
 		this.scene.remove(character.mesh);
 		var to_delete = null;
 		var scope = this;
@@ -552,7 +531,7 @@ function(
 	    	return;
 	    }
 	    
-	    var jsonMesh = await this.loadJsonMesh(jsonFileName);
+	    var jsonMesh = await this.loader.loadMesh(jsonFileName);
 	    var geometry = jsonMesh.geometry;
 	    var materials = jsonMesh.materials;
 
@@ -583,17 +562,15 @@ function(
 		});
 		this.characters[options.name] = character;
 		this.scene.add( character.mesh );
-		this.loadPhysBones(character);
+		try {
+			this.loadPhysBones(character);
+		} catch(e) {
+			console.error(e);
+		}
 
 		console.log("Animations:", character.animations)
 
 		return character;
-	};
-
-	var jsonLoadingPromises = {};
-	var jsonLoadingMeshCache = {};
-	Game.prototype.loadJsonMesh = async function(jsonFileName) {
-		return await this.loader.loadMesh(jsonFileName);
 	};
 	Game.prototype.parseMesh = function(geometry, materials) {
 		if(geometry.attributes.skinWeight) {
@@ -673,22 +650,15 @@ function(
 		}
 		return material;
 	};
-	Game.prototype.loadClothing = async function(jsonFileName, parent, options, onComplete) {
-	    await this.loadItem(jsonFileName, parent, options, onComplete);
-	};
-	Game.prototype.loadPhysItem = async function(jsonFileName, character, options, onComplete) {
-		await this.loadItem(jsonFileName, character, options, onComplete);
-	};
 	Game.prototype.loadItem = async function(jsonFileName, parent, options, onComplete) {
 	    if(!options) options = {};
-	    var jsonMesh = await this.loadJsonMesh(jsonFileName);
+	    var jsonMesh = await this.loader.loadMesh(jsonFileName);
     	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
-    	if(onComplete) onComplete(mesh); //TODO remove callback hell
     	return mesh;
 	};
 	Game.prototype.loadStaticObject = async function(jsonFileName, shape, position, options, onComplete) {
 	    if(!options) options = {};
-	    var jsonMesh = await this.loadJsonMesh(jsonFileName);
+	    var jsonMesh = await this.loader.loadMesh(jsonFileName);
     	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
     	mesh.position.fromArray(position);
     	this.scene.add(mesh);
@@ -712,7 +682,7 @@ function(
 	    if(!options) options = {};
 	    var mass = options.mass || 10.0;
 	    var position = options.position || [0,1,0];
-    	var jsonMesh = await this.loadJsonMesh(jsonFileName);
+    	var jsonMesh = await this.loader.loadMesh(jsonFileName);
     	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
         
         position = [mesh.position.x, mesh.position.y, mesh.position.z];
@@ -809,7 +779,7 @@ function(
 	};
 	Game.prototype.render = function() {
 	    this.renderer.clear();
-	    if(!this.useSSAO) {
+	    if(this.useSSAO) {
 	    	this.effectComposer.render();
 	    } else {
 	    	this.renderer.render( this.scene, this.camera.mesh );

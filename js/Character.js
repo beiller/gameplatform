@@ -185,21 +185,18 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	};
 	Character.prototype.unequip = function(slot) {
 		if(this.equipment[slot]) {
+			this.updateCharacterStats();
 			this.addItem(this.equipment[slot]);
-			if(this.equipment[slot].physBone) {
-				//this.equipment[slot].bone.remove(this.meshes[slot]);
-				
-				this.physRig.deletePhysic(this.equipment[slot].physBone);
-			} else {
-				this.armature.remove(this.meshes[slot]);
+			if(this.equipment[slot].physics || this.equipment[slot].physicsChain) {
+				this.physRig.deletePhysItem(this.meshes[slot]);
 			}
+			this.armature.remove(this.meshes[slot]);
 			this.meshes[slot] = null;
 			delete this.meshes[slot];
 
 			this.equipment[slot] = null;
 			delete this.equipment[slot];
 		}
-		this.updateCharacterStats();
 	};
 	Character.prototype.addItem = function(item) {
 		this.inventory.push(item);
@@ -320,14 +317,18 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		});
 		this.characterStats.init(newStats);
 	};
-	Character.prototype.equip = function(item) {
+	Character.prototype.equip = async function(item) {
 		if(this.equipment[item.slot]) {
 			this.unequip(item.slot);
 		}
 
+		this.equipment[item.slot] = item;
+		this.updateCharacterStats();
+
 		var game = this.game;
 	    var scope = this;
 	    function addToBone(item, dynamic) {
+	    	//TODO this is a terrible fucking hack...
 			game.scene.remove(dynamic.mesh);
 			var bone = scope.findBone(item.bone);
 			bone.add(dynamic.mesh);
@@ -337,122 +338,119 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    }
 		//load the mesh
 		if(item.physics) {  // this item has some complex fucking physics
-	        this.game.loadPhysItem(item.model, this, item.options, function(mesh) {
-				function createFromPhysic(e) {
-					try {
-						//copy e!!! Assigning e.bone breaks shit.
-						var e = Object.assign({}, e); 
-						if(e.bone) e.bone = scope.findBone(e.bone, mesh.skeleton); 
-						//if there is some offset, move the main bone to that offset before attaching
-						//or if there is a move-to bone
-						if(e.options && e.options.moveTo) {
+			var mesh = await this.game.loadItem(item.model, this, item.options);
+			function createFromPhysic(e) {
+				try {
+					//copy e!!! Assigning e.bone breaks shit.
+					var e = Object.assign({}, e); 
+					if(e.bone) e.bone = scope.findBone(e.bone, mesh.skeleton); 
+					//if there is some offset, move the main bone to that offset before attaching
+					//or if there is a move-to bone
+					if(e.options && e.options.moveTo) {
 
-							var moveTo = scope.findBone(e.options.moveTo);
-							moveTo.add(mesh);
-							moveTo.updateMatrixWorld(true);
-							mesh.updateMatrixWorld(true);
-							e.bone.position.set(0,0,0);
-							e.bone.quaternion.set(0,0,0,1);
-							//var q = new THREE.Quaternion();
-							//var s = new THREE.Vector3();
-							//moveTo.matrixWorld.decompose(e.bone.position, e.bone.quaternion, e.bone.scale);
-							e.bone.updateMatrixWorld(true);
+						var moveTo = scope.findBone(e.options.moveTo);
+						//moveTo.add(mesh);
+						moveTo.updateMatrixWorld(true);
+						mesh.matrixWorld.copy(moveTo.matrixWorld);
+						//mesh.updateMatrixWorld(true);
+						e.bone.position.set(0,0,0);
+						e.bone.quaternion.set(0,0,0,1);
+						//var q = new THREE.Quaternion();
+						//var s = new THREE.Vector3();
+						//moveTo.matrixWorld.decompose(e.bone.position, e.bone.quaternion, e.bone.scale);
+						e.bone.updateMatrixWorld(true);
 
-							//TODO this is a hack for some reason I have to set the parent. This relationship could
-							//incorrectly span multiple armatures, but that does not seem to be a problem yet...
-							//if(!e.bone.parent) {
-								e.bone.parent = moveTo;
-							//}
-							
+						//TODO this is a hack for some reason I have to set the parent. This relationship could
+						//incorrectly span multiple armatures, but that does not seem to be a problem yet...
+						//if(!e.bone.parent) {
+						e.bone.parent = moveTo;
+						//}
+						
 
-						}
-						if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
-						item.physBone = scope.physRig.createPhysic(e, mesh);
-					} catch(e) {
-						console.log("Exception loading bone", e);
-						//throw e;
 					}
+					if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
+					scope.physRig.createPhysic(e, mesh);
+				} catch(e) {
+					console.log("Exception loading bone", e);
+					//throw e;
 				}
-				function createChainRecurse(c) {
-					var boneName = c.bone
-					var connectBodyName = c.connect_body
-					var dof = c.dof;
-					var e = {}
-					var bone = scope.findBone(boneName, mesh.skeleton);
-					var child = bone.children[0];
+			}
+			function createChainRecurse(c) {
+				var boneName = c.bone
+				var connectBodyName = c.connect_body
+				var dof = c.dof;
+				var e = {}
+				var bone = scope.findBone(boneName, mesh.skeleton);
+				var child = bone.children[0];
 
-					e.bone = bone.name;
-					e.type = "DYNAMIC";
-					e.connect_body = connectBodyName;
-					e.options = {
-						"rotationLimitsLow":  [-dof,-dof,-dof],
-						"rotationLimitsHigh": [ dof, dof, dof],
-						"mass" : c.mass || 1.0
-					};
-					if(child) {
-						e.options.tailBone = child.name;
-					} else {
-						e.options.localOffset = [0,0,0.035];
-					}
-					createFromPhysic(e);
-					if(child) {
-						createChainRecurse({bone: child.name, connect_body: boneName, dof: dof});
-					}
+				e.bone = bone.name;
+				e.type = "DYNAMIC";
+				e.connect_body = connectBodyName;
+				e.options = {
+					"rotationLimitsLow":  [-dof,-dof,-dof],
+					"rotationLimitsHigh": [ dof, dof, dof],
+					"mass" : c.mass || 1.0
+				};
+				if(child) {
+					e.options.tailBone = child.name;
+				} else {
+					e.options.localOffset = [0,0,0.035];
 				}
+				createFromPhysic(e);
+				if(child) {
+					createChainRecurse({bone: child.name, connect_body: boneName, dof: dof});
+				}
+			}
 
-				scope.meshes[item.slot] = mesh;
+			this.meshes[item.slot] = mesh;
 
-				if(item.physics) {
-					item.physics.forEach(createFromPhysic);
-				}
-				if(item.physicsChain) {
-					item.physicsChain.forEach(createChainRecurse)
-				}
-	        });
+			if(item.physics) {
+				item.physics.forEach(createFromPhysic);
+			}
+			if(item.physicsChain) {
+				item.physicsChain.forEach(createChainRecurse)
+			}
+			this.armature.add(mesh);
 		} else if(item.bone) { //this item is static and attaches to bones
-	        game.loadDynamicObject(item.model, item.options, function(dynamic) {
-	        	try {
-	        		addToBone(item, dynamic);
-	        	} catch(e) {
-	        		console.log('Could not attach item to bone: '+item.bone, item, e);
-	        	}
-	        	scope.meshes[item.slot] = dynamic.mesh;
+	        var dynamic = await game.loadDynamicObject(item.model, item.options);
+        	try {
+        		//TODO this is a hack
+        		addToBone(item, dynamic);
+        	} catch(e) {
+        		console.log('Could not attach item to bone: '+item.bone, item, e);
+        	}
+        	this.meshes[item.slot] = dynamic.mesh;
 
-	        	//This aligns with hands (approx) for sword?
-	        	dynamic.mesh.rotateX(1.57075);
-	        	dynamic.mesh.rotateZ(1.57075);
-	        	// FOR miku
-	        	//dynamic.mesh.position.set(-0.02, -0.2, -0.04);
-	        	// FOR newmeshes
-	        	dynamic.mesh.position.set(-0.02, -0.15, -0.1);
-	        });
+        	//This aligns with hands (approx) for sword?
+        	dynamic.mesh.rotateX(1.57075);
+        	dynamic.mesh.rotateZ(1.57075);
+        	// FOR miku
+        	//dynamic.mesh.position.set(-0.02, -0.2, -0.04);
+        	// FOR sarah/ciciero/mr
+        	dynamic.mesh.position.set(-0.02, -0.15, -0.1);
 		} else { //this item is not attached to bones but deformed by base skeleton
-	        game.loadClothing(item.model, this.armature, item.options, function(mesh) {
-	        	//merge all meshes and update mesh DB
-	        	var singleGeometry = new THREE.BufferGeometry().copy(mesh.geometry);
-	        	var materials = new Array();
-	        	materials = materials.concat(mesh.material);
+			var mesh = await this.game.loadItem(item.model, this.armature, item.options);
+        	//merge all meshes and update mesh DB
+        	var singleGeometry = new THREE.BufferGeometry().copy(mesh.geometry);
+        	var materials = new Array();
+        	materials = materials.concat(mesh.material);
 
-	        	for(var key in scope.meshes) {
-	        		if(!(scope.equipment[key].bone || scope.equipment[key].physics)) {
-		        		singleGeometry.merge(
-		        			scope.meshes[key].geometry,
-		        			materials.length
-		        		);
-		        		materials = materials.concat(scope.meshes[key].material);
-	        		}
-	        	}
+        	for(var key in this.meshes) {
+        		if(!(this.equipment[key].bone || this.equipment[key].physics)) {
+	        		singleGeometry.merge(
+	        			this.meshes[key].geometry,
+	        			materials.length
+	        		);
+	        		materials = materials.concat(this.meshes[key].material);
+        		}
+        	}
 
-	        	scope.meshes[item.slot] = mesh;
-	        	scope.armature.remove(scope.clothingMesh);
-	        	scope.clothingMesh = new THREE.SkinnedMesh(singleGeometry, materials);
-	        	scope.clothingMesh.bind(scope.armature.skeleton, new THREE.Matrix4());
-	        	scope.armature.add(scope.clothingMesh);
-	        });
+        	this.meshes[item.slot] = mesh;
+        	this.armature.remove(this.clothingMesh);
+        	this.clothingMesh = new THREE.SkinnedMesh(singleGeometry, materials);
+        	this.clothingMesh.bind(this.armature.skeleton, new THREE.Matrix4());
+        	this.armature.add(this.clothingMesh);
 		}
-
-		this.equipment[item.slot] = item;
-		this.updateCharacterStats();
 	};
 	
 	Character.prototype.calculateEffect = function(characterStats, weaponStats) {
@@ -542,17 +540,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    }
 	    return null;
 	};
-	Character.prototype.remove = function() {
-		var scope = this;
-		Object.keys(this.equipment).forEach(function(slot) {
-			if(scope.equipment[slot]) {
-				scope.mesh.remove(scope.meshes[slot]);
-				scope.meshes[slot] = null;
-				delete scope.meshes[slot];
-				scope.equipment[slot] = null;
-				delete scope.equipment[slot];
-			}
-		});
+	Character.prototype.dispose = function() {
+		for(var slot in this.equipment) {
+			this.unequip(slot);
+		}
+		this.physRig.deletePhysItem(this.armature);
 	};
 	return Character;
 });

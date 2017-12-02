@@ -494,8 +494,8 @@
 	},
 	"npcs" : [
 		{
-			"character": "sarah", 
-	    	"position": [0,0,0]
+			"character": "marie_rose_v2", 
+	    	"position": [2,0,0]
 		}
 	],
 	"player": {

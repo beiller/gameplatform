@@ -62,6 +62,22 @@ define(["lib/three"], function(THREE) {
 			this.game.physicsWorld.removeBody(physBone.body);
 		},
 
+		deletePhysItem: function(mesh) {
+			/*
+				Given a mesh (clothing/hair/etc) that
+				has dynamic bones, destroy that items
+				dynamic bones (unequip for example)
+			*/
+			if(mesh.id in this.physicMap) {
+				for(var boneName in this.physicMap[mesh.id]) {
+					var physBone = this.physicMap[mesh.id][boneName];
+					this.deletePhysic(physBone);
+				}
+			}
+			this.physicMap[mesh.id] = null;
+			delete this.physicMap[mesh.id];
+		},
+
 		createPhysic: function(physicInfo, parentMesh) {
 			var globalBoneMap = this.physicMap;
 			var physBone = null;
