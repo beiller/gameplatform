@@ -855,65 +855,70 @@ function(
 
 	Game.prototype.spawnParticles = async function(numParticles, position) {
 		position = position || [0,0,0];
+		var force = 10.0;
 		// create the particle variables
-		//var heartTexture = this.makeTextTexture("♥", {width: 64, height: 64});
-		var heartTexture = this.makeTextTexture("💧", {width: 64, height: 64});
+		var heartTexture = this.makeTextTexture("♥", {width: 64, height: 64});
+		//var heartTexture = this.makeTextTexture("💧", {width: 64, height: 64});
 		
-		var particleCount = numParticles,
-		    particles = new THREE.Geometry(),
-		    pMaterial = new THREE.PointsMaterial({
-		      color: new THREE.Color( 0xff0000 ),
-		      map: heartTexture,
-		      size: 1,
-		      alphaTest: 0.5, transparent: true
-		    });
+		var particles = new THREE.Geometry();
+		var pMaterial = new THREE.PointsMaterial({
+			color: new THREE.Color( 0xff0000 ),
+			map: heartTexture,
+			size: 1,
+			alphaTest: 0.5, transparent: true
+		});
 
+		var size = 0.01;
+		var TIIIEEEGHTness = 1;
 		// now create the individual particles
-		for (var p = 0; p < particleCount; p++) {
-
-		  // create a particle with random
-		  // position values, -250 -> 250
-		  var pX = Math.random() - 0.5,
-		      pY = Math.random() - 0.5,
-		      pZ = Math.random() - 0.5,
-		      particle = new THREE.Vector3(pX, pY, pZ);
-
-		  // add it to the geometry
-		  particles.vertices.push(particle);
+		for (var p = 0; p < numParticles; p++) {
+		  	// add it to the geometry
+		  	particles.vertices.push(new THREE.Vector3(0,0,0));
+			// add random velocities
+			particles.colors.push(new THREE.Vector3(
+				((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
+				((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
+				((Math.random() - 0.5) * 2) * TIIIEEEGHTness
+			).normalize().multiplyScalar(force));
 		}
 
 		// create the particle system
-		var particleSystem = new THREE.Points(
-		    particles,
-		    pMaterial);
+		var particleSystem = new THREE.Points(particles, pMaterial);
 		particleSystem.position.fromArray(position);
 
 		// add it to the scene
 		this.scene.add(particleSystem);
 
 		var updateFunction = function() {
-			var pCount = particleCount;
-			  while (pCount--) {
+			var dt = 30/1000;
+			var pCount = numParticles;
+			var tmpVec1 = new THREE.Vector3(0,0,0);
+			while (pCount--) {
+				// get the particle
+				var particle = particles.vertices[pCount];
+				var velocity = particles.colors[pCount];
 
-			    // get the particle
-			    var particle = particles.vertices[pCount];
+				
+				particle.y -= 9.85 * dt;
+				tmpVec1.copy(velocity).multiplyScalar(dt);
+				// and the position
+				particle.add(
+					tmpVec1
+				);
+				velocity.multiplyScalar(0.9);
 
-			    // check if we need to reset
-			    if (particle.y > 0.5) {
-			      particle.y = -0.5;
-			    }
-
-			    // update the velocity with
-			    // a splat of randomniz
-			    particle.y += Math.random() * .01;
-			    particle.x += (Math.random() * .01) - 0.005;
-			    particle.z += (Math.random() * .01) - 0.005;
-
-			    // and the position
-			    //particle.position.addSelf(
-			    //  particle.velocity);
-			  }
-			  particleSystem.geometry.verticesNeedUpdate = true;
+				// check if we need to reset
+				if (particle.y < -5.0) {
+					particle.set(0,0,0)
+					velocity.set(
+						((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
+						((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
+						((Math.random() - 0.5) * 2) * TIIIEEEGHTness
+					).normalize().multiplyScalar(force);
+				}
+			}
+			particleSystem.geometry.verticesNeedUpdate = true;
+			//particleSystem.geometry.colorsNeedUpdate = true;
 		};
 		setInterval(updateFunction, 30);
 	};
@@ -935,18 +940,30 @@ function(
 			document.getElementById("debugConsole").innerHTML = 'loading: '+game.loader.total+'/'+game.loader.pending;
 		}, 100);
 
-		await game.spawnCharacter(game.levelData.player.character, game.levelData.player.position, 'eve', UserController);
+		var futures = [];
+		if(game.levelData.player) {
+			futures.push(
+				game.spawnCharacter(game.levelData.player.character, game.levelData.player.position, 'eve', UserController)
+			);
+		}
 
 		game.levelData.staticObjects.forEach(function(element) {
-			game.loadStaticObject(element.model, element.shape, element.position, element.options);
+			futures.push(
+				game.loadStaticObject(element.model, element.shape, element.position, element.options)
+			);
 		});
 
 		var id_counter = 0;
 		game.levelData.npcs.forEach(async function(npc) {
-			await game.spawnCharacter(npc.character, npc.position);
+			futures.push(game.spawnCharacter(npc.character, npc.position));
 			id_counter += 1;
 		});
-		await game.loadEnvironment("textures/forest_park.jpg");
+		futures.push(game.loadEnvironment("textures/forest_park.jpg"));
+
+		//wait for loading to finish
+		for(var i = 0; i < futures.length; i++) {
+			ret = await futures[i];
+		}
 		
 		game.animate();
 		game.render();

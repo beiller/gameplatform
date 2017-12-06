@@ -493,9 +493,5 @@
 	    }
 	},
 	"npcs" : [
-	],
-	"player": {
-	    "character": "sarah", 
-	    "position": [0,0,0]
-	}
+	]
 }

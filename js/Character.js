@@ -196,6 +196,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 			this.equipment[slot] = null;
 			delete this.equipment[slot];
+
+			this.refreshMesh();
 		}
 	};
 	Character.prototype.addItem = function(item) {
@@ -430,28 +432,42 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
         	dynamic.mesh.position.set(-0.02, -0.15, -0.1);
 		} else { //this item is not attached to bones but deformed by base skeleton
 			var mesh = await this.game.loadItem(item.model, this.armature, item.options);
-        	//merge all meshes and update mesh DB
-        	var singleGeometry = new THREE.BufferGeometry().copy(mesh.geometry);
-        	var materials = new Array();
-        	materials = materials.concat(mesh.material);
+			this.meshes[item.slot] = mesh;
+        	this.refreshMesh();
+		}
+	};
 
-        	for(var key in this.meshes) {
-        		if(!(this.equipment[key].bone || this.equipment[key].physics)) {
+	Character.prototype.refreshMesh = function() {
+		/*
+			Merge all meshes and update mesh DB
+		*/
+		var singleGeometry = null;
+    	var materials = new Array();
+
+    	for(var key in this.meshes) {
+    		if(!(this.equipment[key].bone || this.equipment[key].physics)) {
+	    		if(singleGeometry === null) {
+	    			singleGeometry = new THREE.BufferGeometry().copy(this.meshes[key].geometry);
+	    			materials = materials.concat(this.meshes[key].material);
+	    		} else {
 	        		singleGeometry.merge(
 	        			this.meshes[key].geometry,
 	        			materials.length
 	        		);
 	        		materials = materials.concat(this.meshes[key].material);
         		}
-        	}
+    		}
+    	}
 
-        	this.meshes[item.slot] = mesh;
-        	this.armature.remove(this.clothingMesh);
-        	this.clothingMesh = new THREE.SkinnedMesh(singleGeometry, materials);
-        	this.clothingMesh.bind(this.armature.skeleton, new THREE.Matrix4());
-        	this.armature.add(this.clothingMesh);
-		}
-	};
+    	this.armature.remove(this.clothingMesh);
+    	if(singleGeometry !== null) {
+	    	this.clothingMesh = new THREE.SkinnedMesh(singleGeometry, materials);
+	    	this.clothingMesh.bind(this.armature.skeleton, new THREE.Matrix4());
+	    	this.armature.add(this.clothingMesh);
+	    } else {
+	    	this.clothingMesh = null;
+	    }
+	}
 	
 	Character.prototype.calculateEffect = function(characterStats, weaponStats) {
 	    var magicDamage = 0;
