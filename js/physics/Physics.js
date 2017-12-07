@@ -147,7 +147,7 @@ define([
 			bodyB.body, 
 			temp_trans_1, 
 			temp_trans_2,
-			true
+			false
 		);
 
 		if(!options) {
@@ -449,7 +449,7 @@ define([
 
 	    var shapeOptions = {
 	    	type: "box",
-	    	x: options.boxWidth || 0.02, y: options.boxDepth || 0.02, z: z_len/2, margin: 0.00001
+	    	x: options.boxWidth || 0.05, y: options.boxDepth || 0.05, z: z_len/2, margin: 0.00001
 	    };
 
 	    var bodyOptions = {

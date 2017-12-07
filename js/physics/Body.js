@@ -89,7 +89,7 @@ define(["lib/ammo"], function(Ammo) {
 		/*
 			Flag Getters
 		*/
-		getKinematic: function(isKinematic) {
+		getKinematic: function() {
 			return this._getFlag(collisionFlags.CF_KINEMATIC_OBJECT);
 		},
 		getNoContact: function(isNoContact) {

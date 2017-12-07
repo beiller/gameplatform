@@ -13,6 +13,7 @@ define(["lib/three"], function(THREE) {
 		this.constraints = [];
 		this.physicMap = {};
 		this.dynamics = [];
+		this.boxSize = 0.04;
 	}
 
 	PhysRig.prototype = Object.assign( PhysRig, {
@@ -32,7 +33,7 @@ define(["lib/three"], function(THREE) {
 			}
 	        var sphere = new THREE.Mesh(
 	        	//new THREE.SphereGeometry(radius, 12, 12), 
-	        	new THREE.BoxGeometry(options.boxWidth || 0.02, options.boxDepth || 0.02, radius*2),
+	        	new THREE.BoxGeometry(options.boxWidth*2 || this.boxSize, options.boxDepth || this.boxSize*2, radius*2),
 	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
 	        );
 	        
@@ -48,7 +49,7 @@ define(["lib/three"], function(THREE) {
 			var scope = this;
 			boneMap.forEach(function(e) {
 				//DEBUG!!!!
-				//e.type = "KINEMATIC";
+				//e.type = "DYNAMIC";
 				//END DEBUG!!!!
 				if(e.bone) e.bone = character.findBone(e.bone); 
 				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
@@ -85,7 +86,8 @@ define(["lib/three"], function(THREE) {
 				globalBoneMap[parentMesh.id] = {};
 			}
 
-			var connectBody = null;
+			connectBody = { body: null };
+			//set the connect body, to create a constraint
 			if("connect_body" in physicInfo) {
 				if(physicInfo.connect_body in globalBoneMap[parentMesh.id]) {
 					connectBody = globalBoneMap[parentMesh.id][physicInfo.connect_body];
@@ -95,10 +97,10 @@ define(["lib/three"], function(THREE) {
 					console.log("Cannot find bone!", physicInfo.connect_body, globalBoneMap[parentMesh.id])
 					//throw "Cannot find bone!";
 				}
-			} else {
-				connectBody = { body: null };
 			}
 			physicInfo.options.kinematic = physicInfo.type == "KINEMATIC";
+			physicInfo.options.boxWidth = physicInfo.options.boxWidth || this.boxSize;
+			physicInfo.options.boxDepth = physicInfo.options.boxDepth || this.boxSize;
 			physBone = this.game.physicsWorld.createPhysBone(
 				physicInfo.bone, 
 				connectBody.body, 

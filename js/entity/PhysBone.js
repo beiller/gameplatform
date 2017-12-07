@@ -52,12 +52,12 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			copying the bone (kinematic)
 		*/
 		setKinematic: function(isKinematic) {
-			if(isKinematic) {
-				this.update = this.updateDynamic;
-			} else {
-				this.update = this.updateKinematic;
-			}
 			this.body.setKinematic(isKinematic);
+			if(this.body.getKinematic()) {
+				this.update = this.updateKinematic;
+			} else {
+				this.update = this.updateDynamic;
+			}
 		},
 
 		updateKinematic: function(updateDeep) {
