@@ -335,7 +335,7 @@ function(
 
 		var boneMap = [
 			//{ bone: "root", type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
-			{ bone: "ORG-spine", type: "KINEMATIC", radius: 0.08, options: { 
+			{ bone: "ORG-spine", type: "DYNAMIC", radius: 0.08, options: { 
 				tailBone:"DEF-spine.001",
 				rotationLimitsLow:  [-0.5,-0.5,-0.5],
 				rotationLimitsHigh: [ 0.5, 0.5, 0.5]
@@ -420,8 +420,8 @@ function(
 				*/
 				{ bone: "DEF-shoulder."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-upper_arm."+side,
-					rotationLimitsLow:  [-0.1,-0.1,-0.1],
-					rotationLimitsHigh: [ 0.1, 0.1, 0.1]
+					rotationLimitsLow:  [-0.01,-0.0,-0.01],
+					rotationLimitsHigh: [ 0.01, 0.0, 0.01]
 				} },
 				{ bone: "DEF-upper_arm."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-shoulder."+side, options: { 
 					tailBone:"DEF-upper_arm."+side+".001",
@@ -443,7 +443,7 @@ function(
 					rotationLimitsLow:  [-0,-0,-0],
 					rotationLimitsHigh: [ 0, 0, 0]
 				} },
-				{ bone: "DEF-hand."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
+				{ bone: "ORG-hand."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-forearm."+side+".001", options: { 
 					tailBone:"DEF-f_middle.01."+side,
 					rotationLimitsLow:  [-1,-1,-1],
 					rotationLimitsHigh: [ 1, 1, 1]

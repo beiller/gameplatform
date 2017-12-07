@@ -13,7 +13,7 @@ define(["lib/three"], function(THREE) {
 		this.constraints = [];
 		this.physicMap = {};
 		this.dynamics = [];
-		this.boxSize = 0.04;
+		this.boxSize = 0.015;
 	}
 
 	PhysRig.prototype = Object.assign( PhysRig, {
@@ -33,7 +33,7 @@ define(["lib/three"], function(THREE) {
 			}
 	        var sphere = new THREE.Mesh(
 	        	//new THREE.SphereGeometry(radius, 12, 12), 
-	        	new THREE.BoxGeometry(options.boxWidth*2 || this.boxSize, options.boxDepth || this.boxSize*2, radius*2),
+	        	new THREE.BoxGeometry(options.boxWidth*2 || this.boxSize*2, options.boxDepth*2 || this.boxDepth*2, radius*2),
 	        	new THREE.MeshBasicMaterial({wireframe: true, depthTest: false, color: new THREE.Color(0xFF0000)})
 	        );
 	        

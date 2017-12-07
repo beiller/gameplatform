@@ -28,6 +28,8 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		this.parentMesh = parentMesh;
 		this.options = options;
 
+		this.parentBone = this.boneMesh.parent;
+
 		this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
 
 		if(parentBody) {
@@ -35,11 +37,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			this.constraint = game.physicsWorld.createConstraint("6DOF", parentBody, this.body, coords.bALocalPosition, coords.bBLocalPosition, this.options);
 		}
 
-		if(this.body.getKinematic()) {
-			this.update = this.updateKinematic;
-		} else {
-			this.update = this.updateDynamic;
-		}
+		this.setKinematic(this.body.getKinematic());
 	}
 
 	PhysBone.prototype = Object.assign( Object.create( Entity.prototype ), {
@@ -53,7 +51,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		*/
 		setKinematic: function(isKinematic) {
 			this.body.setKinematic(isKinematic);
-			if(this.body.getKinematic()) {
+			if(isKinematic) {
 				this.update = this.updateKinematic;
 			} else {
 				this.update = this.updateDynamic;
@@ -63,7 +61,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		updateKinematic: function(updateDeep) {
 
 		    if(!this.sleep) {
-			    this.mesh.matrixWorld.decompose(p, q, s);
+			    this.boneMesh.matrixWorld.decompose(p, q, s);
 			    var worldOffset = o.copy(this.localOffset).applyQuaternion(q).add(p)
 		        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
 		        this.body.setQuaternion([q.x, q.y, q.z, q.w]);

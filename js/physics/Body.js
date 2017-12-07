@@ -53,11 +53,11 @@ define(["lib/ammo"], function(Ammo) {
 			this.body.setCollisionFlags(flagToSet);
 		},
 		_setFlag: function(flag, value) {
-			if(value && !(flag in this.collisionFlags)) {
+			if(value && !(this.collisionFlags.indexOf(flag) > -1)) {
 				this.collisionFlags.push(flag);
 				this._writeFlags();
 			}
-			if(!value && (flag in this.collisionFlags)) {
+			if(!value && (this.collisionFlags.indexOf(flag) > -1)) {
 				this.collisionFlags = this.collisionFlags.filter(function(item) { 
 				    return item !== flag;
 				});
