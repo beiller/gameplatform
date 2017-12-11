@@ -457,7 +457,8 @@ define([
 	    	transform: transform,
 	    	options: {},
 	    	noContact: "noContact" in options ? options.noContact : false,
-	    	kinematic: "kinematic" in options ? options.kinematic : true
+	    	kinematic: "kinematic" in options ? options.kinematic : true,
+	    	damping: options.damping
 	    };
 
 		var body = new Body(bodyOptions, shapeOptions);

@@ -40,15 +40,22 @@ define(["lib/three"], function(THREE) {
 	};
 
 	Loader.prototype.loadMesh = async function(url) {
+		/*
+		TODO this function, I had to disable cache because
+		the skeletons got passed by ref. We need duplicates
+		of some things apparently (hair was not "physicing" to multiple
+		meshes after first was created)
+
+		*/
 		this.pending += 1;
-		if(url in loaderPromise) {
+		/*if(url in loaderPromise) {
 			await loaderPromise[url];
 		}
 		if(url in loaderCache) {
 			this.total += 1;
 			return loaderCache[url];
-		}
-	    loaderPromise[url] = new Promise(function (resolve, reject) {
+		}*/
+	    var jsonMesh = await new Promise(function (resolve, reject) {
 	        jsonloader.load(url + '?cache=' + new Date().getTime(), function(geometry, materials) {
 				var bufferGeometry = new THREE.BufferGeometry().fromGeometry(geometry);
 				//THREE.js issue# 6869
@@ -59,9 +66,12 @@ define(["lib/three"], function(THREE) {
 	        	resolve({geometry: bufferGeometry, materials: materials});
 	        });
 	    });
-	    loaderCache[url] = await loaderPromise[url];
 	    this.total += 1;
-	    return loaderCache[url];
+	    return jsonMesh;
+	    
+	    /*loaderCache[url] = await loaderPromise[url];
+	    this.total += 1;
+	    return loaderCache[url];*/
 	};
 	Loader.prototype.loadJSON = function(url) {
 		return loadXHR(url).then(JSON.parse);

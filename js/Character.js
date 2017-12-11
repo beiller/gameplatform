@@ -28,6 +28,13 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 	    this.onGround = false;
 	
+		/*
+			DEBUG TEST - filter out all bones except something....
+		
+		for(var i in this.armature.geometry.animations) {
+			var animation = this.armature.geometry.animations[i];
+			animation.tracks = animation.tracks.filter(track => track.name.indexOf("DEF-") > -1 || track.name.indexOf("MCH-") > -1 || track.name.indexOf("-") < 0);
+		}*/
 	    this.animations = {};
 	    this.animationMixer = new THREE.AnimationMixer(this.armature);
 	    for ( var i in this.armature.geometry.animations ) {
@@ -330,6 +337,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		var game = this.game;
 	    var scope = this;
 	    function addToBone(item, dynamic) {
+	    	/*
+				Function is used to add a mesh directly as bone
+				parent EG.
+	    	*/
 	    	//TODO this is a terrible fucking hack...
 			game.scene.remove(dynamic.mesh);
 			var bone = scope.findBone(item.bone);
@@ -338,10 +349,12 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 			dynamic.mesh.rotation = new THREE.Quaternion();
 			dynamic.sleep = true;
 	    }
-		//load the mesh
+		
 		if(item.physics) {  // this item has some complex fucking physics
+			//load the mesh
 			var mesh = await this.game.loadItem(item.model, this, item.options);
-			function createFromPhysic(e) {
+			//the mesh is global to the below functions, as well as "scope"
+			var createFromPhysic = function(e) {
 				try {
 					//copy e!!! Assigning e.bone breaks shit.
 					var e = Object.assign({}, e); 
@@ -372,15 +385,16 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 					}
 					if(e.options && e.options.tailBone) e.options.tailBone = scope.findBone(e.options.tailBone, mesh.skeleton);
 					scope.physRig.createPhysic(e, mesh);
-				} catch(e) {
-					console.log("Exception loading bone", e);
+				} catch(ex) {
+					console.log("Exception loading bone", e, ex);
 					//throw e;
 				}
-			}
-			function createChainRecurse(c) {
+			};
+			var createChainRecurse = function(c) {
 				var boneName = c.bone
 				var connectBodyName = c.connect_body
 				var dof = c.dof;
+				var mass = c.mass || 1.0;
 				var e = {}
 				var bone = scope.findBone(boneName, mesh.skeleton);
 				var child = bone.children[0];
@@ -391,7 +405,8 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 				e.options = {
 					"rotationLimitsLow":  [-dof,-dof,-dof],
 					"rotationLimitsHigh": [ dof, dof, dof],
-					"mass" : c.mass || 1.0
+					"mass" : mass,
+					"damping": c.damping
 				};
 				if(child) {
 					e.options.tailBone = child.name;
@@ -400,9 +415,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 				}
 				createFromPhysic(e);
 				if(child) {
-					createChainRecurse({bone: child.name, connect_body: boneName, dof: dof});
+					createChainRecurse({bone: child.name, connect_body: boneName, dof: dof, mass: mass, damping: c.damping});
 				}
-			}
+			};
 
 			this.meshes[item.slot] = mesh;
 

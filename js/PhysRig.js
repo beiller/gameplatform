@@ -72,6 +72,9 @@ define(["lib/three"], function(THREE) {
 			if(mesh.id in this.physicMap) {
 				for(var boneName in this.physicMap[mesh.id]) {
 					var physBone = this.physicMap[mesh.id][boneName];
+					if(physBone.debugMesh) {
+						this.game.scene.remove(physBone.debugMesh);
+					}
 					this.deletePhysic(physBone);
 				}
 			}
@@ -86,7 +89,13 @@ define(["lib/three"], function(THREE) {
 				globalBoneMap[parentMesh.id] = {};
 			}
 
-			connectBody = { body: null };
+			if(physicInfo.type == "KINEMATIC" && physicInfo.options.moveTo) {
+				console.log("Attaching a magic bone to mesh id: ", this.character.armature.id);
+				//globalBoneMap[parentMesh.id][physicInfo.bone.name] = globalBoneMap[this.character.armature.id][physicInfo.options.moveTo];
+				return globalBoneMap[this.character.armature.id][physicInfo.options.moveTo]
+			}
+
+			var connectBody = { body: null };
 			//set the connect body, to create a constraint
 			if("connect_body" in physicInfo) {
 				if(physicInfo.connect_body in globalBoneMap[parentMesh.id]) {

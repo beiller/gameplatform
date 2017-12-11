@@ -40,7 +40,7 @@ define(["lib/ammo"], function(Ammo) {
 		this.setKinematic(bodyInfo.kinematic && true);
 
 		body_map[this.body.ptr] = this;
-		this.setDamping(0.7, 0.7);
+		this.setDamping(bodyInfo.damping || 0.7, bodyInfo.damping || 0.7);
 	}
 
 	Body.prototype = {
@@ -193,6 +193,7 @@ define(["lib/ammo"], function(Ammo) {
 		var btBody = new Ammo.btRigidBody(cInfo);
 		btBody.setActivationState(4); //disables sleep
 		btBody.setFriction(0.9);
+		btBody.setDamping(options.damping || 1.0, options.damping || 1.0);
 		//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);

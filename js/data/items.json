@@ -303,10 +303,10 @@
     "marie_hair_dynamic": {"name": "marie_hair_dynamic",  "model": "models/marie_rose_hair_dynamic.json", "slot": "hair1", 
         "physicsChain" : [
             {
-                "bone": "Bone.003", "connect_body": "head", "dof": 0.5, "mass": 1
+                "bone": "Bone.003", "connect_body": "head", "dof": 0.5, "mass": 0.001
             },
             {
-                "bone": "Bone.004", "connect_body": "head", "dof": 0.5, "mass": 1
+                "bone": "Bone.004", "connect_body": "head", "dof": 0.5, "mass": 0.001
             }
         ],
         "physics": [
@@ -329,7 +329,7 @@
     "miku_dynamic_hair": {"name": "miku_dynamic_hair",  "model": "models/miku_dynamic_hair.json", "slot": "hair1", 
         "physicsChain" : [
             {
-                "bone": "Bone.002", "connect_body": "head", "dof": 0.5, "mass": 1
+                "bone": "Bone.002", "connect_body": "head", "dof": 0.5, "mass": 0.001
             }
         ],
         "physics": [
@@ -350,10 +350,10 @@
     "marie_hair_dynamic_char1": {"name": "marie_hair_dynamic_char1",  "model": "level2/char1_hair1.json", "slot": "hair1", 
         "physicsChain" : [
             {
-                "bone": "Bone.003", "connect_body": "head", "dof": 0.5, "mass": 1
+                "bone": "Bone.003", "connect_body": "head", "dof": 0.5, "mass": 0.001
             },
             {
-                "bone": "Bone.004", "connect_body": "head", "dof": 0.5, "mass": 1
+                "bone": "Bone.004", "connect_body": "head", "dof": 0.5, "mass": 0.001
             }
         ],
         "physics": [
@@ -607,10 +607,10 @@
     "miku_hair_moonrise_dynamic": {"name": "miku_hair_moonrise_dynamic",  "model": "models/miku_hair_moonrise_dynamic.json", "slot": "hair1", 
         "physicsChain" : [
             {
-                "bone": "Bone.001", "connect_body": "head", "dof": 0.25, "mass": 2
+                "bone": "Bone.001", "connect_body": "head", "dof": 0.25, "mass": 0.001, "damping": 0.9
             },
             {
-                "bone": "Bone.004", "connect_body": "head", "dof": 0.25, "mass": 2
+                "bone": "Bone.004", "connect_body": "head", "dof": 0.25, "mass": 0.001, "damping": 0.9
             }
         ],
         "physics": [
@@ -840,7 +840,7 @@
                     "tailBone": "Bone.001",
                     "rotationLimitsLow":  [-0.8,-0.8,-0.35],
                     "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
-                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 1
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
                 } 
             },
             { 
@@ -848,7 +848,7 @@
                     "localOffset": [0,0,0.015],
                     "rotationLimitsLow":  [-0.8,-0.8,-0.35],
                     "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
-                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 1
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
                 } 
             },
             { 
@@ -856,7 +856,7 @@
                     "localOffset": [0,0,0.015],
                     "rotationLimitsLow":  [-0.8,-0.8,-0.35],
                     "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
-                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 1
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
                 } 
             },
             { 
@@ -864,7 +864,7 @@
                     "localOffset": [0,0,0.015],
                     "rotationLimitsLow":  [-0.8,-0.8,-0.35],
                     "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
-                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 1
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
                 } 
             }
         ],
@@ -886,7 +886,7 @@
                     "tailBone": "Bone.001",
                     "rotationLimitsLow":  [-0.8,-0.8,-0.35],
                     "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
-                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 1
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
                 } 
             },
             { 
@@ -894,7 +894,7 @@
                     "localOffset": [0,0,0.015],
                     "rotationLimitsLow":  [-0.8,-0.8,-0.35],
                     "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
-                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 1
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
                 } 
             },
             { 
@@ -902,7 +902,7 @@
                     "localOffset": [0,0,0.015],
                     "rotationLimitsLow":  [-0.8,-0.8,-0.35],
                     "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
-                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 1
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
                 } 
             },
             { 
@@ -910,7 +910,7 @@
                     "localOffset": [0,0,0.015],
                     "rotationLimitsLow":  [-0.8,-0.8,-0.35],
                     "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
-                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 1
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
                 } 
             }
         ],
