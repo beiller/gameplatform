@@ -467,6 +467,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 				item.physicsChain.forEach(createChainRecurse)
 			}
 			this.armature.add(mesh);
+			//HACK set inverse scale of root of armature cause UUNP is scaled way down
+			let scale = this.armature.skeleton.bones[0].scale.x;
+			mesh.skeleton.bones[0].scale.set(1/scale, 1/scale, 1/scale);
 		} else if(item.bone) { //this item is static and attaches to bones
 	        var dynamic = await game.loadDynamicObject(item.model, item.options);
         	try {
@@ -478,12 +481,16 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
         	this.meshes[item.slot] = dynamic.mesh;
 
         	//This aligns with hands (approx) for sword?
-        	dynamic.mesh.rotateX(1.57075);
-        	dynamic.mesh.rotateZ(1.57075);
+        	dynamic.mesh.quaternion.set(0.764, -0.1, -0.527, 0.561);
+        	//HACK set inverse scale of root of armature cause UUNP is scaled way down
+			let scale = this.armature.skeleton.bones[0].scale.x;
+        	dynamic.mesh.scale.set(1/scale, 1/scale, 1/scale);
+        	//dynamic.mesh.rotateX(1.57075);
+        	//dynamic.mesh.rotateZ(1.57075);
         	// FOR miku
-        	//dynamic.mesh.position.set(-0.02, -0.2, -0.04);
+        	dynamic.mesh.position.set(-8,-6,-2);
         	// FOR sarah/ciciero/mr
-        	dynamic.mesh.position.set(-0.02, -0.15, -0.1);
+        	//dynamic.mesh.position.set(-0.02, -0.15, -0.1);
 		} else { //this item is not attached to bones but deformed by base skeleton
 			var mesh = await this.game.loadItem(item.model, this.armature, item.options);
 			this.meshes[item.slot] = mesh;

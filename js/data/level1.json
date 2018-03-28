@@ -379,16 +379,25 @@
 				"uunp_hair1",
 				"uunp_stocking1",
 				"uunp_bikini_top1",
-				"uunp_bikini_bottom1"
+				"uunp_bikini_bottom1",
+				"uunp_cross_earring_r",
+				"uunp_cross_earring_l"
 	        ],
 	        "inventory": [
 	        	"uunp_boots1",
 	        	"uunp_hair2",
-	        	"uunp_cross_earring",
+	        	"uunp_belly_ring",
 	        	"uunp_corset1",
 	        	"uunp_bra1",
 	        	"uunp_shawl1",
-	        	"uunp_leg_armor1"
+	        	"uunp_leg_armor1",
+	        	"glasskatana",
+	        	"firesword", 
+	        	"rustsword",
+	        	"icestaff",
+	        	"icekatana",
+	        	"icesword",
+	        	"firekatana"
 	        ]
 	    },
 	    "miku": {

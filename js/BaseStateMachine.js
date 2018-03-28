@@ -225,7 +225,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 					this.character.setAnimation(animationMap['jump_up']);
 					let scope = this.character;
 					setTimeout(function() {
-						scope.setAnimation(animationMap['jump_down']);
+						scope.setAnimation(animationMap['jump_down'], {loop: THREE.LoopOnce, clampWhenFinished: true});
 					}, 700);
 					this.jumpTimer.start();
 				}

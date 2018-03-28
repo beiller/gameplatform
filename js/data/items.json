@@ -3,7 +3,7 @@
     	"name": "Ember Blade", 
         "model": "models/gold_sword.json",
         "slot": "weapon",
-        "bone": "DEF-hand.R",
+        "bone": "WEAPON",
         "options": { 
             "material": [
                 {"roughness": 0.2, "color": "0x343434", "name": "hilt", "metalness": 1.0},
@@ -25,7 +25,7 @@
 		"name": "Rusted Steel",
         "model": "models/gold_sword.json",
         "slot": "weapon",
-        "bone": "DEF-hand.R",
+        "bone": "WEAPON",
         "options": { 
             "material": [
                 {"roughness": 0.2, "color": "0xA7B200", "name": "hilt", "metalness": 1.0},
@@ -43,7 +43,7 @@
     	"name": "Glacial Edge",
         "model": "models/gold_sword.json", 
         "slot": "weapon",
-        "bone": "DEF-hand.R",
+        "bone": "WEAPON",
         "options": { 
             "material": [
                 {"roughness": 0.5, "color": "0xFFE39D", "name": "hilt", "metalness": 1.0},
@@ -65,7 +65,7 @@
     	"name": "Glacial Staff of Magic",
         "model": "models/staff.json", 
         "slot": "weapon",
-        "bone": "DEF-hand.R",
+        "bone": "WEAPON",
         "options": { 
             "material": [
                 {"roughness": 1, "color": "332222"},
@@ -86,7 +86,7 @@
         "name": "Glacial Katana",
         "model": "models/katana.json", 
         "slot": "weapon",
-        "bone": "DEF-hand.R",
+        "bone": "WEAPON",
         "options": {
             "material": [
                 {"roughness": 1, "color": "0x251C1D", "name": "grip"},
@@ -107,7 +107,7 @@
         "name": "Ember Katana",
         "model": "models/katana.json", 
         "slot": "weapon",
-        "bone": "DEF-hand.R",
+        "bone": "WEAPON",
         "options": {
             "material": [
                 {"roughness": 1, "color": "0x251C1D", "name": "grip"},
@@ -128,7 +128,7 @@
         "name": "Glass Katana",
         "model": "models/katana.json", 
         "slot": "weapon",
-        "bone": "DEF-hand.R",
+        "bone": "WEAPON",
         "options": {
             "material": [
                 {"roughness": 1, "color": "0x251C1D", "name": "grip"},
@@ -879,22 +879,88 @@
             ]
         }
     },
-    "uunp_cross_earring": {
-        "name": "cross_earring",  
+    "uunp_cross_earring_r": {
+        "name": "Cross Earring Right",  
         "model": "models/cross_earring.json", 
-        "slot": "earring", 
+        "slot": "earring_r", 
         "physics": [
             { 
-                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "NPC Spine [Spn0]", "options": {
-                    "moveTo": "NPC Belly",
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "NPC Head [Head]", "options": {
+                    "moveTo": "ear.R.002",
                     "localOffset": [0,0,0.035],
-                    "rotationLimitsLow":  [-15.14,-15.14,-0.5],
-                    "rotationLimitsHigh": [ 15.14, 15.14, 0.5]
+                    "rotationLimitsLow":  [-15.14,-15.14,-15.5],
+                    "rotationLimitsHigh": [ 15.14, 15.14, 15.5]
                 } 
             }
         ],
         "options": { 
             "material": [
+                {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" }
+            ]
+        }
+    },
+    "uunp_cross_earring_l": {
+        "name": "Cross Earring Left",  
+        "model": "models/cross_earring.json", 
+        "slot": "earring_l", 
+        "physics": [
+            { 
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "NPC Head [Head]", "options": {
+                    "moveTo": "ear.L.002",
+                    "localOffset": [0,0,0.035],
+                    "rotationLimitsLow":  [-15.14,-15.14,-15.5],
+                    "rotationLimitsHigh": [ 15.14, 15.14, 15.5]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" }
+            ]
+        }
+    },
+    "uunp_belly_ring": {
+        "name": "chain_earring1",  
+        "model": "models/marie_rose_gem_earring.json", 
+        "slot": "earring4", 
+        "physics": [
+            { 
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "NPC Spine [Spn0]", "options": {
+                    "moveTo": "NPC Belly",
+                    "tailBone": "Bone.001",
+                    "rotationLimitsLow":  [-15.14,-15.14,-15.5],
+                    "rotationLimitsHigh": [ 15.14, 15.14, 15.5],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.001", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.002", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.003", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" },
                 {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" }
             ]
         }
