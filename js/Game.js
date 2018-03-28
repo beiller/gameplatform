@@ -215,7 +215,7 @@ function(
 			this.scene.add( lightHelper );*/
 			
 			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
-			hemiLight.intensity = hemiLuminousIrradiances["100 lx (Very Overcast)"];
+			hemiLight.intensity = hemiLuminousIrradiances["25 lx (Shade)"];
 			this.scene.add( hemiLight );
 
 	};
@@ -332,55 +332,74 @@ function(
 		//return null;
 
 		var spinedof = 0.05;
+		/*
+		var nameMapping = {
+			"pel": "ORG-spine",
+			"sp1": "DEF-spine.001",
+			"sp2": "DEF-spine.002",
+			"sp3": "DEF-spine.003",
+			"sp4": "DEF-spine.004",
+			"sp5": "DEF-spine.005",
+			"hed": "head",
+			"clv": "DEF-shoulder.{LR}",
+			"am1": "DEF-upper_arm.{LR}",
+			"am2": "DEF-upper_arm.{LR}.001"
+			"am3": "DEF-forearm.{LR}",
+			"am4": "DEF-forearm.{LR}.001",
+			"hnd": "NPC Hand [Hnd].{LR}",
+			"lg1": "NPC Thigh [Thg].R",
+			"lg2": "NPC Calf [Clf].R",
+			"fot": "NPC Foot [ft ].R"
+		}*/
+		var nameMapping = {
+			"pel": "NPC Pelvis [Pelv]",
+			"sp1": "NPC Spine [Spn0]",
+			"sp2": "NPC Spine1 [Spn1]",
+			"sp3": "NPC Spine2 [Spn2]",
+			"sp4": "",
+			"sp5": "NPC Neck [Neck]",
+			"hed": "NPC Head [Head]",
+			"clv": "NPC Clavicle [Clv].{LR}",
+			"am1": "NPC UpperArm [Uar].{LR}",
+			"am2": "NPC Forearm [Lar].{LR}",
+			"hnd": "NPC Hand [Hnd].{LR}",
+			"lg1": "NPC Thigh [Thg].R",
+			"lg2": "NPC Calf [Clf].R",
+			"fot": "NPC Foot [ft ].R"
+		}
+		var np = function(k) { return nameMapping[k]; };
 
 		var boneMap = [
-			//{ bone: "root", type: "KINEMATIC", radius: 0.02, options: { localOffset:[0,0,0.02] } },
-			{ bone: "ORG-spine", type: "KINEMATIC", radius: 0.08, options: { 
-				tailBone:"DEF-spine.001",
+			{ bone: np('pel'), type: "KINEMATIC", radius: 0.08, options: { 
+				localOffset:[0,0,0.15],
 				rotationLimitsLow:  [-0.5,-0.5,-0.5],
 				rotationLimitsHigh: [ 0.5, 0.5, 0.5]
 			} },
-			{ bone: "DEF-spine", type: "KINEMATIC", radius: 0.08, connect_body: "ORG-spine", options: { 
-				tailBone:"DEF-spine.001",
+			{ bone: np('sp1'), type: "KINEMATIC", radius: 0.08, connect_body: np('pel'), options: { 
+				tailBone: np('sp2'),
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.001", type: "KINEMATIC", radius: 0.08, connect_body: "ORG-spine", options: { 
-				tailBone:"DEF-spine.002",
+			{ bone: np('sp2'), type: "KINEMATIC", radius: 0.08, connect_body: np('sp1'), options: { 
+				tailBone: np('sp3'),
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.002", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.001", options: { 
-				tailBone:"DEF-spine.003",
+			{ bone: np('sp3'), type: "KINEMATIC", radius: 0.08, connect_body: np('sp2'), options: { 
+				tailBone: np('sp5'),
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.003", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.002", options: { 
-				tailBone:"DEF-spine.004",
+			{ bone: np('sp5'), type: "KINEMATIC", radius: 0.08, connect_body: np('sp3'), options: { 
+				tailBone: np('hed'),
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
 			} },
-			{ bone: "DEF-spine.004", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
-				tailBone:"DEF-spine.005",
-				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
-				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
-			} },
-			{ bone: "DEF-spine.005", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.004", options: { 
-				tailBone:"head",
-				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
-				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
-			} },
-			{ bone: "head", type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.005", options: { 
+			{ bone: np('hed'), type: "KINEMATIC", radius: 0.08, connect_body: np('sp5'), options: { 
 				localOffset:[0,0,0.15],
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
 				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
-			} }/*,
-			{ bone: "DEF-spine.006", type: "DYNAMIC", radius: 0.08, connect_body: "head", options: { 
-				localOffset:[0,0,0.001],
-				rotationLimitsLow:  [-0.00,-0.00,-0.00],
-				rotationLimitsHigh: [ 0.00, 0.00, 0.00], 
-				noContact: true
-			} }*/
+			} }
 		];
 		function createLR(side) {
 			boneMap.push.apply(boneMap, [
@@ -393,32 +412,11 @@ function(
 				{ bone: "DEF-f_middle.02."+side, type: "KINEMATIC", radius: 0.02, options: { tailBone:"DEF-f_middle.03."+side } },
 				{ bone: "DEF-f_ring.02."+side, type: "KINEMATIC", radius: 0.02, options: { tailBone:"DEF-f_ring.03."+side } },
 				{ bone: "DEF-f_pinky.02."+side, type: "KINEMATIC", radius: 0.02, options: { tailBone:"DEF-f_pinky.03."+side } },*/
-				
-				/*
-					???
-				
-				{ bone: "DEF-lower_glute."+side, type: "DYNAMIC", radius: 0.08, connect_body: "ORG-spine", options: { 
-					localOffset:[0,0,0.07],
-					rotationLimitsLow:  [-0.01,-0.01,-0.01],
-					rotationLimitsHigh: [ 0.01, 0.01, 0.01]
-				} },
-				{ bone: "DEF-upper_glute."+side, type: "DYNAMIC", radius: 0.08, connect_body: "ORG-spine", options: { 
-					localOffset:[0,0,0.07],
-					rotationLimitsLow:  [-3.14, .0,-3.14],
-					rotationLimitsHigh: [ 3.14, .0, 3.14]
-				} },
-				{ bone: "DEF-hip_glute."+side, type: "DYNAMIC", radius: 0.08, connect_body: "ORG-spine", options: { 
-					localOffset:[0,0,0.07],
-					rotationLimitsLow:  [ .0,-0.25, .0],
-					rotationLimitsHigh: [ .0, 0.25, .0]
-				} },
-				*/
-
 
 				/*
 					ARMS!!!!!
 				*/
-				{ bone: "DEF-shoulder."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+				/*{ bone: "DEF-shoulder."+side, type: "KINEMATIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
 					tailBone:"DEF-upper_arm."+side,
 					rotationLimitsLow:  [-0.01,-0.0,-0.01],
 					rotationLimitsHigh: [ 0.01, 0.0, 0.01]
@@ -447,29 +445,35 @@ function(
 					tailBone:"DEF-f_middle.01."+side,
 					rotationLimitsLow:  [-1,-1,-1],
 					rotationLimitsHigh: [ 1, 1, 1]
-				} },
+				} },*/
 
 
-				{ bone: "ORG-breast."+side, type: "DYNAMIC", radius: 0.08, connect_body: "DEF-spine.003", options: { 
+				{ bone: "NPC Breast."+side, type: "DYNAMIC", radius: 0.08, connect_body: np('sp3'), options: { 
 					//tailBone:"DEF-breast."+side+".001",
 					localOffset:[0,0,0.08] ,
 					rotationLimitsLow:  [0,0,0],
 					rotationLimitsHigh: [0,0,0],
 					spring: true,
-					stiffness: 1.0,
-					distance: 0,
-					mass: 0.5
+					stiffness: 2.5,
+					distance: 6.0,
+					mass: 2.0
 				} },
-				/*{ bone: "DEF-breast."+side+".001", type: "DYNAMIC", radius: 0.02, connect_body: "DEF-breast."+side, options: { 
-					localOffset:[0,0,0.02] ,
-					rotationLimitsLow:  [-0.1,-0.05,-0.1],
-					rotationLimitsHigh: [ 0.2, 0.25, 0.2],
-				} },*/
+				{ bone: "NPC Butt."+side, type: "DYNAMIC", radius: 0.08, connect_body: np('pel'), options: { 
+					//tailBone:"DEF-breast."+side+".001",
+					localOffset:[0,0,0.08] ,
+					rotationLimitsLow:  [0,0,0],
+					rotationLimitsHigh: [0,0,0],
+					spring: true,
+					stiffness: 600,
+					distance: 6,
+					damping: 0.9,
+					mass: 600.0
+				} },
 
 				/*
 					LEGS!!!
 				*/
-				{ bone: "DEF-thigh."+side, type: "KINEMATIC", radius: 0.02, connect_body: "ORG-spine", options: { 
+				/*{ bone: "DEF-thigh."+side, type: "KINEMATIC", radius: 0.02, connect_body: "ORG-spine", options: { 
 					tailBone:"DEF-thigh."+side+".001" ,
 					rotationLimitsLow:  [-3.1,-0.0,-0.1],
 					rotationLimitsHigh: [ 3.1, 0.0, 0.1],
@@ -498,7 +502,7 @@ function(
 					localOffset:[0,0,0.05] ,
 					rotationLimitsLow:  [-0.5,-0.010,-0.010],
 					rotationLimitsHigh: [ 0.5, 0.010, 0.010],
-				} }
+				} }*/
 			]);
 		};
 		createLR("L");
@@ -601,7 +605,7 @@ function(
 		if(materialOptions) {
 			console.log(materialOptions);
 			var map = {
-				'normalScale' : new THREE.Vector2(1, 1),
+				'normalScale' : materialOptions.normalScale ? new THREE.Vector2(materialOptions.normalScale, materialOptions.normalScale) : new THREE.Vector2(1, 1),
 				'bumpScale': 'bumpScale' in materialOptions ? materialOptions.bumpScale : 0.0025,
 				'color': materialOptions.color ? new THREE.Color( parseInt(materialOptions.color, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'transparent': materialOptions.transparent ? materialOptions.transparent : false,
@@ -917,14 +921,54 @@ function(
 		};
 		setInterval(updateFunction, 30);
 	};
-
+	var resolveUrl = (jsonUrl, dataReference) => {
+		/*
+			Resolve a URL node eg. 
+			{
+				"material": [
+            		{ "$ref": "#/materials/materialname1" },
+            		{ "$ref": "#/materials/materialname2" }
+        		]
+        	}
+		*/
+		let fullUrl = jsonUrl.split('#/')[1];
+		let rootUrl = fullUrl.split('/')[0];
+		let objectUrl = fullUrl.split('/')[1];
+		if(rootUrl === 'materials') {
+			var objectRef = dataReference[objectUrl];
+			//copy the object
+			var objectInstance = JSON.parse(JSON.stringify(objectRef));
+			return objectInstance;
+		}
+	};
+	var findVal = (myObject, current, materialsData) => {
+		/*
+			Recursively replace ref keys.
+			Max recursion depth of n
+		*/
+		let MAX_RECUSION = 10;
+		current = current || 0;
+		for (let key in myObject) {
+			if(myObject[key].hasOwnProperty('$ref')) {
+				myObject[key] = resolveUrl(myObject[key]['$ref'], materialsData);
+			} else {
+				if(current < MAX_RECUSION) {
+					findVal(myObject[key], current+1, materialsData);
+				}
+			}
+		}
+		return myObject;
+	};
 	Game.loadLevel = async function(levelFileName) {
 		var loader = new Loader();
 		var gameSettings = await loader.loadJSON("js/data/settings.json");
 		var game = new Game(gameSettings);
 
-		game.levelData = await loader.loadJSON(levelFileName);
-		game.itemData = await loader.loadJSON("js/data/items.json");
+		
+		game.materialsData = await loader.loadJSON("js/data/materials.json");
+		var postProcess = (jsonData) => { return findVal(jsonData, 0, game.materialsData); }
+		game.levelData = await loader.loadJSON(levelFileName, postProcess);
+		game.itemData = await loader.loadJSON("js/data/items.json", postProcess);
 
 		game.initRendering();
 		game.render();

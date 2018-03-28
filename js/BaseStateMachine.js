@@ -17,11 +17,12 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 
 	var animationMap = {
 		'attack': 'attack',
-		'idle': 'idle',
-		'walk': 'walk',
+		'idle': 'XP32_NormalIddle',
+		'walk': 'XP32_NormalRun',
 		'block': 'block',
 		'hit': 'hit',
-		'jump': 'jump',
+		'jump_up': 'XP32_CombatJumpUp',
+		'jump_down': 'XP32_CombatJumpDown',
 		'fall_backwards': 'fall_backwards'
 	}
 
@@ -30,8 +31,8 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		this.game = game;
 		this.blendAnimationDuration = 0.05;
 	    this.runBlendAnimationSpeed = 0.05;
-	    this.movementForce = 25.0;
-	    this.jumpForce = 240.0;
+	    this.movementForce = 10.0;
+	    this.jumpForce = 200.0;
 
 	    this.jumpTimer = new THREE.Clock();
 	    
@@ -221,7 +222,11 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 					} else {
 						this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
 					}
-					this.character.setAnimation(animationMap['jump']);
+					this.character.setAnimation(animationMap['jump_up']);
+					let scope = this.character;
+					setTimeout(function() {
+						scope.setAnimation(animationMap['jump_down']);
+					}, 700);
 					this.jumpTimer.start();
 				}
 			},
@@ -279,8 +284,9 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		if(this.jumpTimer.getElapsedTime() < 0.5) {  // if we just jumped (n seconds ago) do nothing
 			// this is needed because the phyics engine does not "lift off" fast enough to not be on the ground
 			// by the second frame
-			return;
 			this.character.onGround = false;
+			return;
+			
 		}
 		if(onGround && this.current == 'inair') {
 			this.land();

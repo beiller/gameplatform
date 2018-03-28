@@ -22,7 +22,7 @@ define(function() {
 	    //range
 	    this.range = params.range || 1.0;
 	
-	    this.movementSpeed = params.movementSpeed || 1.0;
+	    this.movementSpeed = params.movementSpeed || 2.25;
 	
 	    //chance to stun opponent while blocking
 	    this.stunWhileBlockingChance = params.stunWhileBlockingChance || 0.05;

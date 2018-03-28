@@ -632,6 +632,49 @@
             ]
         }
     },
+    "as_3_hair": {"name": "as_3_hair",  "model": "level2/as_3_hair.json", "slot": "hair1", 
+        "physicsChain" : [
+            {
+                "bone": "c1", "connect_body": "head", "dof": 0.5, "mass": 0.1, "damping": 0.09
+            },
+            {
+                "bone": "c2", "connect_body": "head", "dof": 0.5, "mass": 0.1, "damping": 0.09
+            },
+            {
+                "bone": "c3", "connect_body": "head", "dof": 0.5, "mass": 0.1, "damping": 0.09
+            },
+            {
+                "bone": "c4", "connect_body": "head", "dof": 0.5, "mass": 0.1, "damping": 0.09
+            },
+            {
+                "bone": "c5", "connect_body": "head", "dof": 0.5, "mass": 0.1, "damping": 0.09
+            }
+        ],
+        "physics": [
+            { 
+                "bone": "Bone", "type": "KINEMATIC", "radius": 0.02, "options": { 
+                    "moveTo": "head",
+                    "localOffset": [0,0,0.035]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {
+                    "roughness": 0.5, 
+                    "color": "0xFFFFFF", 
+                    "diffusePath": "level2/ValCharmC_T01_ValCharmC_Tr.png", 
+                    "transparent": true
+                },
+                {
+                    "roughness": 0.5, 
+                    "color": "0xFFFFFF", 
+                    "diffusePath": "level2/ValCharmH_T01_ValCharmH_Tr.png", 
+                    "transparent": true
+                }
+            ]
+        }
+    },
     "loincloth_lg": {"name": "loincloth_lg",  "model": "mr/loincloth_lg.json", "slot": "loincloth", 
         "physicsChain" : [
             {
@@ -746,6 +789,113 @@
                 {"roughness": 0.8, "color": "0x020202" },
                 {"roughness": 0.8, "color": "0x020202" },
                 {"roughness": 0.1, "color": "0xEEEEEE", "metalness": 1.0 }
+            ]
+        }
+    },
+    "uunp_head1": {"name": "uunp_head1",  "model": "uunp_test/head1.json", "slot": "head", "options": { 
+            "material": [
+                { "$ref": "#/materials/eyes" },
+                { "$ref": "#/materials/head" },
+                {"roughness": 0.3, "color": "0xEFEFEF", "name": "teeth" },
+                { "$ref": "#/materials/body" },
+                { "$ref": "#/materials/eye_glass" },
+                {"roughness": 0.3, "color": "0xDD7777", "name": "mouth" },
+                { "$ref": "#/materials/brows" }
+
+            ]
+        }
+    },
+    "uunp_hands": {"name": "uunp_hands",  "model": "uunp_test/hands.json", "slot": "hands", "options": { 
+            "material": [
+                { "$ref": "#/materials/hands" }
+            ]
+        }
+    },
+    "uunp_boots1": {"name": "uunp_boots1",  "model": "uunp_test/boots1.json", "slot": "boots", "options": { 
+            "material": [
+                { "$ref": "#/materials/boots1" },
+                { "$ref": "#/materials/metal" }
+            ]
+        }
+    },
+    "uunp_corset1": {"name": "uunp_corset1",  "model": "uunp_test/corset1.json", "slot": "corset", "options": { 
+            "material": [
+                { "$ref": "#/materials/corset1" }
+            ]
+        }
+    },
+    "uunp_shawl1": {"name": "Fur Shawl",  "model": "uunp_test/shawl1.json", "slot": "shoulders", "options": { 
+            "material": [
+                { "$ref": "#/materials/corset1" }
+            ]
+        }
+    },
+    "uunp_bra1": {"name": "uunp_bra1",  "model": "uunp_test/bra1.json", "slot": "bra", "options": { 
+            "material": [
+                { "$ref": "#/materials/bra1" }
+            ]
+        }
+    },
+    "uunp_stocking1": {"name": "uunp_stocking1",  "model": "uunp_test/stocking1.json", "slot": "stocking", "options": { 
+            "material": [
+                { "$ref": "#/materials/corset1" }
+            ]
+        }
+    },
+    "uunp_leg_armor1": {"name": "uunp_leg_armor1",  "model": "uunp_test/leg_armor1.json", "slot": "Steel Leg Armor", "options": { 
+            "material": [
+                { "$ref": "#/materials/corset1_metal" }
+            ]
+        }
+    },
+    "uunp_boots2": {"name": "uunp_boots2",  "model": "uunp_test/boots2.json", "slot": "boots", "options": { 
+            "material": [
+                { "$ref": "#/materials/boots2" },
+                { "$ref": "#/materials/boots2_metal" }
+            ]
+        }
+    },
+    "uunp_hair1": {"name": "uunp_hair1",  "model": "uunp_test/hair1.json", "slot": "hair", "options": { 
+            "material": [
+                { "$ref": "#/materials/hair1" }
+            ]
+        }
+    },
+    "uunp_hair2": {"name": "uunp_hair2",  "model": "uunp_test/hair2.json", "slot": "hair", "options": { 
+            "material": [
+                { "$ref": "#/materials/hair1" }
+            ]
+        }
+    },
+    "uunp_bikini_top1": {"name": "Bikini Top 1",  "model": "uunp_test/bikini_top1.json", "slot": "top", "options": { 
+            "material": [
+                { "$ref": "#/materials/cloth1" }
+            ]
+        }
+    },
+    "uunp_bikini_bottom1": {"name": "Bikini Bottom 1",  "model": "uunp_test/bikini_bottom1.json", "slot": "bottom", "options": { 
+            "material": [
+                { "$ref": "#/materials/cloth1" }
+            ]
+        }
+    },
+    "uunp_cross_earring": {
+        "name": "cross_earring",  
+        "model": "models/cross_earring.json", 
+        "slot": "earring", 
+        "physics": [
+            { 
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "NPC Spine [Spn0]", "options": {
+                    "moveTo": "NPC Belly",
+                    "localOffset": [0,0,0.035],
+                    "rotationLimitsLow":  [-15.14,-15.14,-0.5],
+                    "rotationLimitsHigh": [ 15.14, 15.14, 0.5]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" }
             ]
         }
     },

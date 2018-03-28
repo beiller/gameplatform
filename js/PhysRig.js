@@ -53,7 +53,11 @@ define(["lib/three"], function(THREE) {
 				//END DEBUG!!!!
 				if(e.bone) e.bone = character.findBone(e.bone); 
 				if(e.options && e.options.tailBone) e.options.tailBone = character.findBone(e.options.tailBone);
-				scope.createPhysic(e, character.armature);
+				try{
+					scope.createPhysic(e, character.armature);
+				} catch(e) {
+					console.error(e);
+				}
 			});
 		},
 

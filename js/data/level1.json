@@ -5,9 +5,7 @@
 			"shape": "box",
 			"position": [0, -2, -3.5],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -15,9 +13,7 @@
 			"shape": "box",
 			"position": [8.359, -2, -3.5],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -25,9 +21,7 @@
 			"shape": "box",
 			"position": [16.701, -2, -3.5],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -35,9 +29,7 @@
 			"shape": "box",
 			"position": [-8.359, -2, -3.5],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -45,9 +37,7 @@
 			"shape": "box",
 			"position": [-16.701, -2, -3.5],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" },
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -55,7 +45,7 @@
 			"shape": "box",
 			"position": [0, -3.28, 2.15],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -63,7 +53,7 @@
 			"shape": "box",
 			"position": [-10, -3.28, 2.15],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -71,7 +61,7 @@
 			"shape": "box",
 			"position": [-20, -3.28, 2.15],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -79,7 +69,7 @@
 			"shape": "box",
 			"position": [10, -3.28, 2.15],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }
 			] }
 		},
 		{
@@ -87,7 +77,7 @@
 			"shape": "box",
 			"position": [20, -3.28, 2.15],
 			"options": { "material": [ 
-				{"roughness": 0.85, "diffusePath": "models/temple.png", "normalPath": "models/temple_normal.png" }
+				{ "$ref": "#/materials/temple" }
 			] }
 		}
 	],
@@ -140,6 +130,21 @@
                 {"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120}
             ],
 	        "equipment":  ["eve_v3_face"]
+	    },
+	    "alien": {
+	        "model": "uunp_test/alien.json",
+	        "sss": false,
+	        "material": [
+	        	{
+	        		"color": "0x888888", 
+	        		"diffusePath": "uunp_test/Alien_Necromorph_D.png",
+	        		"normalPath": "uunp_test/Alien_Necromorph_N.png",
+	        		"roughnessPath": "uunp_test/Alien_Necromorph_R.png"
+	        	},
+	        	{"color": "0x020202"},
+	        	{"color": "0x020202"}
+            ],
+	        "equipment":  []
 	    },
 	    "skeleton": {
 	        "model": "models/skeleton.json",
@@ -361,6 +366,31 @@
 	        	"loincloth_lg"
 	        ]
 	    },
+	    "uunp_test": {
+	        "model": "uunp_test/body.json",
+	        "sss": false,
+	        "material": [
+                { "$ref": "#/materials/body" }
+            ],
+	        "equipment": [
+				"uunp_head1",
+				"uunp_boots2",
+				"uunp_hands",
+				"uunp_hair1",
+				"uunp_stocking1",
+				"uunp_bikini_top1",
+				"uunp_bikini_bottom1"
+	        ],
+	        "inventory": [
+	        	"uunp_boots1",
+	        	"uunp_hair2",
+	        	"uunp_cross_earring",
+	        	"uunp_corset1",
+	        	"uunp_bra1",
+	        	"uunp_shawl1",
+	        	"uunp_leg_armor1"
+	        ]
+	    },
 	    "miku": {
 	        "model": "models/miku_game_highres.json",
 	        "sss": false,
@@ -493,5 +523,9 @@
 	    }
 	},
 	"npcs" : [
-	]
+	],
+	"player": {
+	    "character": "uunp_test", 
+	    "position": [0,0,0]
+	}
 }

@@ -202,6 +202,11 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 					//document.body.webkitRequestFullscreen();
 				})
 			);
+			uiWindow.append(
+				$('<a href="#" class="button btn btn-primary btn-sm btn-loadlevel5">Request Fullscreen</a>').on('click', function(e) {
+					document.body.webkitRequestFullscreen();
+				})
+			);
 
 			/*uiWindow.append(
 				$('<a href="#" class="button btn-uhh">Uhhhh</a>').on('click', function(e) {
@@ -284,7 +289,8 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			//createSliderControl(0, 1, 0.05, 'metalness');
 			createSliderControl(0, 1, 0.05, 'roughness', setMaterialProperty);
 			createSliderControl(0, 500, 0.05, 'envMapIntensity', setMaterialProperty);
-			createSliderControl(0.00, 10.0, 0.01, 'none', function(e) { scope.animationSpeed = this.valueAsNumber });
+			createSliderControl(0.00, 10.0, 0.1, 'Animation Speed', function(e) { scope.animationSpeed = this.valueAsNumber });
+			createSliderControl(0.00, 1.0, 0.05, 'Character Weight', function(e) { scope.game.characters.eve.setWeight(this.valueAsNumber);} );
 
 
 			var updateCubeMap = $('<a href="#" class="button btn btn-primary btn-sm">Update Cube</a>').on('click', function(e) {

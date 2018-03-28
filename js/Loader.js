@@ -73,8 +73,10 @@ define(["lib/three"], function(THREE) {
 	    this.total += 1;
 	    return loaderCache[url];*/
 	};
-	Loader.prototype.loadJSON = function(url) {
-		return loadXHR(url).then(JSON.parse);
+
+	Loader.prototype.loadJSON = function(url, postProcess) {
+		postProcess = postProcess || function(jsonData) { return jsonData; }
+		return loadXHR(url).then(JSON.parse).then(postProcess);
 	};
 
 	return Loader;

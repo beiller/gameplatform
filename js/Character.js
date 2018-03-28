@@ -30,11 +30,38 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	
 		/*
 			DEBUG TEST - filter out all bones except something....
-		
-		for(var i in this.armature.geometry.animations) {
-			var animation = this.armature.geometry.animations[i];
-			animation.tracks = animation.tracks.filter(track => track.name.indexOf("DEF-") > -1 || track.name.indexOf("MCH-") > -1 || track.name.indexOf("-") < 0);
-		}*/
+		*/
+		let names = [];
+		try {
+			function recurseFindChildBones(bone) {
+				for(let i in bone.children) {
+					if('name' in bone.children[i]) {
+						names.push(bone.children[i].name);
+						recurseFindChildBones(bone.children[i]);
+					}
+				}
+			}
+			recurseFindChildBones(this.findBone('NPC Head [Head]'));
+
+			for(var i in this.armature.geometry.animations) {
+
+				var animation = this.armature.geometry.animations[i];
+				if(animation.name.indexOf('face_') == 0) {
+					animation.tracks = animation.tracks.filter(track => names.includes(track.name.split('.bones[')[1].split('].')[0]));
+				} else {
+					animation.tracks = animation.tracks.filter(track => !names.includes(track.name.split('.bones[')[1].split('].')[0]));
+				}
+				if(animation.name != 'body_skinny' && animation.name != 'body_fat' && animation.name != 'body_normal') {
+					//animation.tracks = animation.tracks.filter(track => track.name.indexOf("DEF-") > -1 || track.name.indexOf("MCH-") > -1 || track.name.indexOf("-") < 0);
+					animation.tracks = animation.tracks.filter(track => track.name.indexOf(".scale") == -1);
+				} else {
+					animation.tracks = animation.tracks.filter(track => track.name.indexOf(".scale") > -1);
+				}
+			}
+		} catch(e) {
+			console.log('No head bone', e);
+		}	
+
 	    this.animations = {};
 	    this.animationMixer = new THREE.AnimationMixer(this.armature);
 	    for ( var i in this.armature.geometry.animations ) {
@@ -68,7 +95,19 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	Character.prototype = Object.assign( Object.create( DynamicEntity.prototype ), {
 		constructor: Character
 	});
-
+	Character.prototype.setWeight = function(weight) {
+		/*
+			Set the character's weight (skinny/fat)
+		*/
+	    var skinny = this.animations["body_skinny"];
+	    var fat = this.animations["body_fat"];
+	    skinny.stop();
+	    fat.stop();
+	    skinny.weight = (1.0 - weight);
+	    fat.weight = weight;
+	    fat.play();
+	    skinny.play();
+	};
 	Character.prototype.createHealthBar = function() {
 	    var sprite = new THREE.Sprite();
 	    var healthRatio = this.characterStats.health / this.characterStats.maxHealth;
@@ -463,6 +502,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
     		if(!(this.equipment[key].bone || this.equipment[key].physics)) {
 	    		if(singleGeometry === null) {
 	    			singleGeometry = new THREE.BufferGeometry().copy(this.meshes[key].geometry);
+
 	    			materials = materials.concat(this.meshes[key].material);
 	    		} else {
 	        		singleGeometry.merge(
@@ -476,7 +516,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
     	this.armature.remove(this.clothingMesh);
     	if(singleGeometry !== null) {
-	    	this.clothingMesh = new THREE.SkinnedMesh(singleGeometry, materials);
+	    	this.clothingMesh = this.game.parseMesh(singleGeometry, materials);
 	    	this.clothingMesh.bind(this.armature.skeleton, new THREE.Matrix4());
 	    	this.armature.add(this.clothingMesh);
 	    } else {

@@ -96,7 +96,7 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 
 			}
 
-			bone.matrix.decompose( bone.position, bone.quaternion, bone.scale );
+			bone.matrix.decompose( bone.position, bone.quaternion, p );
 
 		    if(this.debugMesh) {
 		    	this.debugMesh.position.fromArray(this.body.getPosition());

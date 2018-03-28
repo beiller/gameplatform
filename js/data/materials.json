@@ -1,0 +1,154 @@
+{
+	"temple": {
+		"color": "0xDDDDDD",
+		"diffusePath": "models/temple.png", 
+		"normalPath": "models/temple_normal.png",
+		"normalScale": 0.25,
+    	"roughness": 0.6,
+    	"metalness": 0.1,
+    	"transparent": false, 
+    	"name": "temple"
+	},
+	"black": {
+		"reflectivity": 0.25, "specular": "0x000000", "color": "0x000000", "shininess": 30,
+		"transparent": false, "name": "black"
+	},
+	"metal": {
+		"roughness": 0.05, "color": "0xDDDDDD", "metalness": 1.0, "name": "metal" 
+	},
+    "eye_glass": {
+        "roughness": 0.01, "transparent": true, "opacity": 0.15, "metalness": 1.0
+    },
+	"cloth1": {
+		"color": "0xDDDDDD",
+		"diffusePath": "uunp_test/bikini.png",
+    	"normalScale": 1.0,
+    	"roughness": 0.9,
+    	"transparent": true, 
+    	"name": "cloth1"
+	},
+	"body": {
+    	"roughness": 0.7, "name": "body",
+    	"diffusePath": "mr/body.png",
+    	"roughnessPath": "mr/body_roughness.png",
+    	"normalPath": "mr/body_normal.png",
+    	"normalScale": 0.5,
+    	"emissive": "0x806870", "emissiveIntensity": 3
+	},
+	"hands": {
+    	"roughness": 0.7, "name": "hands",
+    	"diffusePath": "mr/hands.png",
+    	"roughnessPath": "mr/hands_roughness.png",
+    	"normalPath": "mr/hands_normal.png",
+    	"normalScale": 0.5,
+    	"emissive": "806870", "emissiveIntensity": 3
+	},
+	"head": {
+    	"roughness": 0.7, "name": "head",
+    	"diffusePath": "mr/head.png",
+    	"roughnessPath": "mr/head_roughness.png",
+    	"normalPath": "mr/head_normal.png",
+    	"normalScale": 0.5,
+    	"emissive": "806870", "emissiveIntensity": 3
+	},
+	"eyes": {
+		"color": "0xFFFFFF",
+    	"roughness": 0.5, "name": "eyes", "transparent": true,
+    	"diffusePath": "mr/eyes_blue.png"
+	},
+	"brows": {
+    	"roughness": 1.0, "name": "brows", "transparent": true,
+    	"diffusePath": "mr/brow.png"
+	},
+	"boots1": {
+		"color": "0xDDDDDD",
+    	"diffusePath": "uunp_test/PC_Event_30_F_A.png",
+    	"normalPath": "uunp_test/PC_Event_30_F_A_n.png",
+    	"normalScale": 2.0,
+    	"name": "boots1",
+    	"roughness": 0.250
+	},
+	"boots2": {
+		"color": "0xDDDDDD",
+    	"diffusePath": "uunp_test/Castanic_F_L21_Leg.png",
+    	"normalPath": "uunp_test/Castanic_F_L21_Leg_n.png",
+    	"normalScale": 4.0,
+    	"roughness": 0.25,
+    	"transparent": false, 
+    	"name": "boots2"
+	},
+	"boots2_metal": {
+		"color": "0xFFFFFF",
+    	"normalPath": "uunp_test/Castanic_F_L21_Leg_n.png",
+    	"transparent": false, 
+    	"roughness": 0.2,
+    	"metalness": 1.0,
+    	"name": "boots2_metal"
+	},
+	"corset1": {
+		"color": "0xDDDDDD",
+    	"diffusePath": "uunp_test/Castanic_F_L21_Body.png",
+    	"normalPath": "uunp_test/Castanic_F_L21_Body_n.png",
+    	"normalScale": 8.0,
+    	"roughness": 0.6,
+    	"transparent": true, 
+    	"name": "corset1"
+	},
+	"corset1_metal": {
+		"color": "0xFFFFFF",
+    	"normalPath": "uunp_test/Castanic_F_L21_Body_n.png",
+    	"roughness": 0.2,
+    	"transparent": false,
+    	"metalness": 1.0, 
+    	"name": "corset1_metal"
+	},
+	"bra1": {
+		"color": "0xDDDDDD",
+    	"diffusePath": "uunp_test/Castanic_F_H20_Body_diff.png",
+    	"transparent": true, 
+    	"name": "bra1"
+	},
+	"hair1": {
+		"color": "0xDDDDDD",
+    	"diffusePath": "uunp_test/Angels.png",
+    	"transparent": true, 
+    	"name": "hair1"
+	},
+    "skin.Anna": {
+    	"color": "0xFFFFFF",
+    	"diffusePath": "level2/Anna-diffuse.png",
+    	"roughnessPath": "level2/Anna-roughness.png", 
+    	"bumpPath": "level2/Anna-bump.png", 
+    	"emissivePath": "level2/Chiyo_003.png", 
+    	"emissive": "0xFF0000",
+    	"emissiveIntensity": 0.25,
+    	"transparent": false, 
+    	"name": "skin.Anna"
+	},
+	"nails": {
+		"color": "0xFF4444",
+		"diffusePath": "level2/Chiyo-diffuse.png",
+		"roughness": 0.25,
+		"transparent": false, "name": "nails"
+	},
+	"nails.Black": {
+		"color": "0x000000",
+		"transparent": false, "name": "nails.Black", "roughness": 0.25, "metalness": 0.25
+	},
+	"gens": {
+		"color": "0xFFFFFF",
+		"diffusePath": "level2/Chiyo_001.png",
+		"roughnessPath": "level2/Anna-roughness.png", 
+		"bumpPath": "level2/Chiyo_000.png", 
+		"emissivePath": "level2/Chiyo_003.png", 
+		"emissive": "0xFF0000",
+		"emissiveIntensity": 0.25,
+		"transparent": false, 
+		"name": "gens"
+	},
+	"lashes": {
+		"opacity": 0.0, "transparent": true, "specular": "0xAAAABB", "color": "0x000000", "shininess": 30,
+		"alphaPath": "level2/Chiyo_001.png",
+		"transparent": true, "name": "lashes"
+	}
+}
