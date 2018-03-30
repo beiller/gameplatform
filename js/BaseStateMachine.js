@@ -243,7 +243,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		    	}*/
 		    	console.log("ATTACKING!", event, from, to, msg);
 		    	var attackCoolDown = this.character.characterStats.attackCooldown;
-		    	this.character.setAnimation(animationMap['attack'], { loop: THREE.LoopOnce, timeScale: 1.3 });
+		    	this.character.setAnimation(animationMap['attack'], { loop: THREE.LoopOnce, timeScale: 2.0 });
 		    	var scope = this;
 			    setTimeout(function() {
 			        var range = scope.character.characterStats.range;

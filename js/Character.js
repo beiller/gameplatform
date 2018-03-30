@@ -481,14 +481,15 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
         	this.meshes[item.slot] = dynamic.mesh;
 
         	//This aligns with hands (approx) for sword?
-        	dynamic.mesh.quaternion.set(0.764, -0.1, -0.527, 0.561);
+        	//dynamic.mesh.quaternion.set(0.764, -0.1, -0.527, 0.561);
+        	dynamic.mesh.rotation.set(1.5,-1,3);
         	//HACK set inverse scale of root of armature cause UUNP is scaled way down
 			let scale = this.armature.skeleton.bones[0].scale.x;
         	dynamic.mesh.scale.set(1/scale, 1/scale, 1/scale);
         	//dynamic.mesh.rotateX(1.57075);
         	//dynamic.mesh.rotateZ(1.57075);
         	// FOR miku
-        	dynamic.mesh.position.set(-8,-6,-2);
+        	dynamic.mesh.position.set(-8,-6,0);
         	// FOR sarah/ciciero/mr
         	//dynamic.mesh.position.set(-0.02, -0.15, -0.1);
 		} else { //this item is not attached to bones but deformed by base skeleton
