@@ -16,9 +16,9 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	}*/
 
 	var animationMap = {
-		'attack': 'attack',
-		'idle': 'XP32_NormalIddle',
-		'walk': 'XP32_NormalRun',
+		'attack': 'XP32_CombatAttack',
+		'idle': 'XP32_Combatiddle',
+		'walk': 'XP32_CombatRun',
 		'block': 'block',
 		'hit': 'hit',
 		'jump_up': 'XP32_CombatJumpUp',
@@ -186,7 +186,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				clearTimeout(this.hitTimeout);
 			},
 			onenterrunning: function() {
-				this.character.setAnimation(animationMap['walk']);
+				this.character.setAnimation(animationMap['walk'], {timeScale: 0.9});
 			},
 			onexitrunning: function() {
 				this.character.setAnimation(animationMap['idle']);
@@ -243,7 +243,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		    	}*/
 		    	console.log("ATTACKING!", event, from, to, msg);
 		    	var attackCoolDown = this.character.characterStats.attackCooldown;
-		    	this.character.setAnimation(animationMap['attack'], { loop: THREE.LoopOnce });
+		    	this.character.setAnimation(animationMap['attack'], { loop: THREE.LoopOnce, timeScale: 1.3 });
 		    	var scope = this;
 			    setTimeout(function() {
 			        var range = scope.character.characterStats.range;

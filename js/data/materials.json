@@ -29,23 +29,31 @@
 	},
 	"body": {
     	"roughness": 0.7, "name": "body",
-    	"diffusePath": "mr/body.png",
+    	"diffusePath": "uunp_test/femalebody_2.png",
     	"roughnessPath": "mr/body_roughness.png",
-    	"normalPath": "mr/body_normal.png",
-    	"normalScale": 0.5,
+    	"bumpPath": "uunp_test/femalebody_b.png",
+    	"bumpScale": 0.008,
     	"emissive": "0x806870", "emissiveIntensity": 3
+	},
+	"gens_f": {
+    	"roughness": 0.7, "name": "body",
+    	"diffusePath": "uunp_test/femalebody_2.png",
+    	"roughnessPath": "mr/body_roughness.png",
+    	"bumpPath": "uunp_test/femalebody_b.png",
+    	"bumpScale": 0.008,
+    	"emissive": "0x8F5860", "emissiveIntensity": 2
 	},
 	"hands": {
     	"roughness": 0.7, "name": "hands",
-    	"diffusePath": "mr/hands.png",
-    	"roughnessPath": "mr/hands_roughness.png",
+    	"diffusePath": "uunp_test/femalehands_1.png",
+    	"roughnessPath": "mr/body_roughness.png",
     	"normalPath": "mr/hands_normal.png",
     	"normalScale": 0.5,
-    	"emissive": "806870", "emissiveIntensity": 3
+    	"emissive": "0x806870", "emissiveIntensity": 3
 	},
 	"head": {
     	"roughness": 0.7, "name": "head",
-    	"diffusePath": "mr/head.png",
+    	"diffusePath": "uunp_test/femalehead.png",
     	"roughnessPath": "mr/head_roughness.png",
     	"normalPath": "mr/head_normal.png",
     	"normalScale": 0.5,

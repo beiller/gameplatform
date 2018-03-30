@@ -74,12 +74,13 @@ define(["lib/three", 'entity/Entity', "OrbitControls"], function(THREE, Entity, 
 				if(!this.disableYLock) {
 			        this.orbitControls.target.set(
 			        	game.characters[this.trackingCharacter].body.getPositionX(),
-			        	this.orbitControls.target.y,
+			        	game.characters[this.trackingCharacter].body.getPositionY() + 0.3,
 			        	game.characters[this.trackingCharacter].body.getPositionZ()
 			        );
 		    	}
 		        if(game.characters[this.trackingCharacter].stateMachine.current != 'playinganimation' && !this.disableYLock) {
 		        	camera.position.x = game.characters[this.trackingCharacter].body.getPositionX();
+		        	camera.position.y = game.characters[this.trackingCharacter].body.getPositionY() + 0.3;
 		    	}
 
 		    	game.spot1.position.copy(camera.position);
