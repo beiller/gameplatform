@@ -8,7 +8,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 	HUD.prototype = {
 		loadInventory: function() {
 			var character = this.character;
-			var invWindow = $(".inventory-menu");
+			var invWindow = $("#window2");
 			var scope = this;
 			invWindow.html("");
 			character.inventory.forEach(function(inventoryItem) {
@@ -37,7 +37,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 
 		loadAnimations: function() {
 			var character = this.character;
-			var invWindow = $(".inventory-menu");
+			var invWindow = $("#window3");
 			var scope = this;
 			invWindow.html("");
 			function createButton(name) {
@@ -54,7 +54,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 		},
 
 		loadCharacters: function() {
-			var invWindow = $(".inventory-menu");
+			var invWindow = $("#window4");
 			var scope = this;
 			invWindow.html("");
 			function createButton(name) {
@@ -73,7 +73,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 		},
 
 		showLootMenu: function(container) {
-			var invWindow = $(".loot-menu");
+			var invWindow = $("#window5");
 			var scope = this;
 			invWindow.html("<h1>LOOT!</h1>");
 			container.inventory.forEach(function(inventoryItem) {
@@ -103,54 +103,26 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 					})(container.equipment[slot]);
 				}
 			}
-
-			//this.loadInventory();
 		},
 
 		init: function() {
 			var scope = this;
 			var uiWindow = $(".topright");
-			var toggleInventory = $('<a href="#" class="button btn btn-primary btn-sm btn-openinventory">Toggle Inventory</a>');
-			toggleInventory.on('click', function(e) {
-				e.stopPropagation();
-				var invWindow = $(".inventory-menu");
-				if (invWindow.css('visibility') == 'hidden') {
-					invWindow.css('visibility', 'visible');
-				} else {
-					invWindow.css('visibility', 'hidden');
-				}
+
+			$("#window2").bind("dialogextendrestore", function(evt) {
 				scope.loadInventory();
 				return false;
 			});
-			uiWindow.append(toggleInventory);
 
-			var toggleAnimations = $('<a href="#" class="button btn btn-primary btn-sm btn-openanimations">Toggle Animations</a>');
-			toggleAnimations.on('click', function(e) {
-				e.stopPropagation();
-				var invWindow = $(".inventory-menu");
-				if (invWindow.css('visibility') == 'hidden') {
-					invWindow.css('visibility', 'visible');
-				} else {
-					invWindow.css('visibility', 'hidden');
-				}
+			$("#window3").bind("dialogextendrestore", function(evt) {
 				scope.loadAnimations();
 				return false;
 			});
-			uiWindow.append(toggleAnimations);
 
-			var toggleCharacter = $('<a href="#" class="button btn btn-primary btn-sm btn-opencharacters">Toggle Characters</a>');
-			toggleCharacter.on('click', function(e) {
-				e.stopPropagation();
-				var invWindow = $(".inventory-menu");
-				if (invWindow.css('visibility') == 'hidden') {
-					invWindow.css('visibility', 'visible');
-				} else {
-					invWindow.css('visibility', 'hidden');
-				}
+			$("#window4").bind("dialogextendrestore", function(evt) {
 				scope.loadCharacters();
 				return false;
 			});
-			uiWindow.append(toggleCharacter);
 
 			var cameraLocked = true;
 			var cameraLockedButton = $('<a href="#" class="button btn btn-primary btn-sm btn-togglecam">Toggle Camera Locked</a>');
@@ -208,54 +180,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				})
 			);
 
-			/*uiWindow.append(
-				$('<a href="#" class="button btn-uhh">Uhhhh</a>').on('click', function(e) {
-					var video = $('<video id="video" crossorigin="anonymous" style="width: 100%; height: 100%; visibility: visible;" preload="metadata" class=""><source src="https://dv.phncdn.com/videos/201602/05/67891491/720P_1500K_67891491.mp4?ttl=1501645018&amp;ri=1228800&amp;rs=1592&amp;hash=ffd376cf80ad39aae355539ce1a96381" type="video/mp4"></video>');
-					$(document.body).append(video);
-					var video = document.getElementById( 'video' );
-					video.currentTime = 300.0;
-					video.play();
-
-					var texture = new THREE.VideoTexture( video );
-					//texture.minFilter = THREE.LinearFilter;
-					texture.minFilter = THREE.LinearFilter;
-					texture.magFilter = THREE.LinearFilter;
-					texture.format = THREE.RGBFormat;
-
-					var geometry = new THREE.PlaneGeometry(0.215, 0.125, 12, 12);
-				    var material = new THREE.MeshStandardMaterial( { 
-				    	map: texture,
-				    	emissiveMap: texture, side: THREE.DoubleSide, emissiveIntensity: 100.0,
-				    	emissive: new THREE.Color( 0xFFFFFF ),
-				    	opacity: 0.75,
-				    	transparent: true
-				    } );
-				 
-				    mesh = new THREE.Mesh(geometry, material );		
-				    mesh.rotateX(1.6);
-				    mesh.scale.set(-1, -1, 1);
-
-				    var bone = game.characters.eve.findBone("eyes");
-
-				    bone.add( mesh );
-				})
-			);*/
-
-
-			/*var characterIndex = 0
-			var characterNames = [];
-			for(var characterName in scope.game.characters) {
-				uiWindow.append(
-					$('<a href="#" class="button">'+characterName+'</a>').on('click', function(e) {
-						var next = characterNames[characterIndex];
-						var tmp = scope.game.characters.eve;
-						scope.game.characters.eve = next;
-					})
-				);
-			}*/
-
-
-			var exposureControl = $('<input id="intNumber" type="range" min="1" max="20" step="0.1" />').on('change', function(e) {
+			var exposureControl = $('<span>Fstop</span><input id="intNumber" type="range" min="1" max="20" step="0.1" />').on('change', function(e) {
 				e.stopPropagation();
 				console.log("Setting exposure: " + this.valueAsNumber);
 				game.renderer.toneMappingExposure = Math.pow(0.31, 1.0 * this.valueAsNumber);
@@ -264,7 +189,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			uiWindow.append(exposureControl);
 
 			function createSliderControl(min, max, step, materialPropertyName, onChangeFunc) {
-				uiWindow.append($('<h3>' + materialPropertyName + '</h3>'));
+				uiWindow.append($('<span>' + materialPropertyName + '</span>'));
 				var data = {
 					"materialPropertyName" : materialPropertyName
 				}

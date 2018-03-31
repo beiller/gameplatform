@@ -5,6 +5,12 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+
+		<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+		<script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+		<script type="text/javascript" src="js/lib/jquery.dialogextend.js"></script>
+
+		<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/vader/jquery-ui.css">
 		<style>
             @font-face {
                 font-family: 'MainFont';
@@ -43,68 +49,45 @@
 	</head>
 
 	<body oncontextmenu="return false;">
-        <div id="debugConsole" style="position:absolute;top:0;left:0;width:200px;height:50px;background-color:white;color:black">0/0</div>
+        <div id="debugConsole" style="position:absolute;bottom:0;left:0;width:200px;height:50px;background-color:white;color:black">0/0</div>
         <script data-main="js/main.js" src="js/lib/require.js"></script>
-		<style>
-			.window {
-				position: absolute;
-			    border-radius: 5px;
-			    border: 2px solid #73AD21;
-			    width: 150px;
-			    height: 150px;
-			    background-color: rgba(255, 255, 255, 0.5);
-			    z-index: 100;
-			    overflow: auto;
-			}
-			.topright {
-				top: 0px;
-				right: 0px;
-				z-index: 100;
-				height: 100%;
-			}
-			.paneright {
-				right: 150px;
-				top: 0px;
-				height: 100%;
-				z-index: 101;
-			}
-			.paneleft {
-				left: 0px;
-				top: 0px;
-				height: 100%;
-				z-index: 101;
-			}
-			.window-inventory {
-				visibility: hidden;
-			}
-			html body div.window a.btn {
-				font-size: 0.5em;
-			}
-			/*.button {
-			    border-radius: 5px;
-			    border: 2px solid #73AD21;
-			    display: block;
-			    height: 15px;
-			    line-height: 15px;
-			    padding-left: 10px;
-			    background-color: rgba(255, 255, 255, 1.0);
-			    color: #000000;
-			    text-decoration: none;
-			    font-size: 0.75em;
-			    width: 91%;
-			}
-			.red {
-				background-color: #ffeeee !important;
-			}*/
-		</style>
-		<div class="window topright">
-		</div>
-		<div class="window paneright window-inventory inventory-menu">
-		</div>
-		<div class="window paneleft window-inventory loot-menu">
-			
+		<div class="topright" id="main" title="Main">
 		</div>
 
+		<div class="paneright window-inventory inventory-menu" id="window2" title="Inventory">
+		</div>
+		<div class="paneright window-inventory inventory-menu" id="window3" title="Animations">
+		</div>
+		<div class="paneright window-inventory inventory-menu" id="window4" title="Characters">
+		</div>
+		<div class="paneleft window-inventory loot-menu" id="window5" title="Loot">
+			
+		</div>
+		<script>
+		function makeWindow(idTag, open) {
+			$( idTag ).dialog({	
+
+			}).dialogExtend({
+		        "closable" : true,
+		        "maximizable" : true,
+		        "minimizable" : true,
+		        "collapsable" : true,
+		        "dblclick" : "collapse",
+		        "titlebar" : "transparent",
+		        "minimizeLocation" : "right"
+    		});
+    		if(!open) {
+    			$( idTag ).dialogExtend("minimize");
+    		}
+		}
+		$( function() {
+			makeWindow('#main', true);
+			makeWindow('#window2');
+			makeWindow('#window3');
+			makeWindow('#window4');
+			makeWindow('#window5');
+		} );
+		</script>
 
 	</body>
 </html>
