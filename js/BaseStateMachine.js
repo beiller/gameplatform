@@ -19,8 +19,8 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		'attack': 'XP32_CombatAttack',
 		'idle': 'XP32_Combatiddle',
 		'walk': 'XP32_CombatRun',
-		'block': 'block',
-		'hit': 'hit',
+		'block': 'XP32_CombatBlock',
+		'hit': 'XP32_CombatHit',
 		'jump_up': 'XP32_CombatJumpUp',
 		'jump_down': 'XP32_CombatJumpDown',
 		'fall_backwards': 'fall_backwards'
@@ -243,7 +243,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		    	}*/
 		    	console.log("ATTACKING!", event, from, to, msg);
 		    	var attackCoolDown = this.character.characterStats.attackCooldown;
-		    	this.character.setAnimation(animationMap['attack'], { loop: THREE.LoopOnce, timeScale: 2.0 });
+		    	this.character.setAnimation(animationMap['attack'], { loop: THREE.LoopOnce, timeScale: 1.0 });
 		    	var scope = this;
 			    setTimeout(function() {
 			        var range = scope.character.characterStats.range;

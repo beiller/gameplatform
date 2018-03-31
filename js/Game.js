@@ -854,12 +854,14 @@ function(
 
 	Game.prototype.spawnParticles = async function(numParticles, position) {
 		position = position || [0,0,0];
-		var force = 10.0;
+		var force = 7.0;
 		// create the particle variables
 		var heartTexture = this.makeTextTexture("♥", {width: 64, height: 64});
 		//var heartTexture = this.makeTextTexture("💧", {width: 64, height: 64});
 		
 		var particles = new THREE.Geometry();
+		particles.ages = new Array();
+		console.log(particles);
 		var pMaterial = new THREE.PointsMaterial({
 			color: new THREE.Color( 0xff0000 ),
 			map: heartTexture,
@@ -869,6 +871,7 @@ function(
 
 		var size = 0.01;
 		var TIIIEEEGHTness = 1;
+		var maxAge = 10;
 		// now create the individual particles
 		for (var p = 0; p < numParticles; p++) {
 		  	// add it to the geometry
@@ -879,6 +882,7 @@ function(
 				((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
 				((Math.random() - 0.5) * 2) * TIIIEEEGHTness
 			).normalize().multiplyScalar(force));
+			particles.ages.push(Math.round(Math.random() * maxAge) - 1); // used for age
 		}
 
 		// create the particle system
@@ -888,6 +892,9 @@ function(
 		// add it to the scene
 		this.scene.add(particleSystem);
 
+		let gravity = 9.85;
+		let wind = 0.1; //scale gravity by "wind" to make floaty
+
 		var updateFunction = function() {
 			var dt = 30/1000;
 			var pCount = numParticles;
@@ -896,9 +903,11 @@ function(
 				// get the particle
 				var particle = particles.vertices[pCount];
 				var velocity = particles.colors[pCount];
+				var age = particles.ages[pCount];
+				particles.ages[pCount] += 1;
 
 				
-				particle.y -= 9.85 * dt;
+				particle.y -= 9.85 * dt * wind;
 				tmpVec1.copy(velocity).multiplyScalar(dt);
 				// and the position
 				particle.add(
@@ -907,13 +916,14 @@ function(
 				velocity.multiplyScalar(0.9);
 
 				// check if we need to reset
-				if (particle.y < -5.0) {
+				if (age > maxAge) {
 					particle.set(0,0,0)
 					velocity.set(
 						((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
 						((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
 						((Math.random() - 0.5) * 2) * TIIIEEEGHTness
 					).normalize().multiplyScalar(force);
+					particles.ages[pCount] = 0;
 				}
 			}
 			particleSystem.geometry.verticesNeedUpdate = true;

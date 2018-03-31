@@ -861,6 +861,13 @@
             ]
         }
     },
+    "uunp_boots3": {"name": "Princess Boots",  "model": "uunp_test/boots3.json", "slot": "boots", "options": { 
+            "material": [
+                { "$ref": "#/materials/boots3" },
+                { "$ref": "#/materials/boots3_metal" }
+            ]
+        }
+    },
     "uunp_hair1": {"name": "uunp_hair1",  "model": "uunp_test/hair1.json", "slot": "hair", "options": { 
             "material": [
                 { "$ref": "#/materials/hair1" }
@@ -888,6 +895,52 @@
     "uunp_bikini_bottom1": {"name": "Bikini Bottom 1",  "model": "uunp_test/bikini_bottom1.json", "slot": "bottom", "options": { 
             "material": [
                 { "$ref": "#/materials/cloth1" }
+            ]
+        }
+    },
+    "uunp_armor1": {"name": "Princess Armor",  "model": "uunp_test/armor1.json", "slot": "top", "options": { 
+            "material": [
+                { "$ref": "#/materials/armor1" },
+                { "$ref": "#/materials/armor1_metal" }
+            ]
+        }
+    },
+    "uunp_panty1": {"name": "Princess Panties",  "model": "uunp_test/panty1.json", "slot": "bottom", "options": { 
+            "material": [
+                { "$ref": "#/materials/armor1" }
+            ]
+        }
+    },
+    "uunp_panty2": {"name": "Leather Panties",  "model": "uunp_test/panty2.json", "slot": "bottom", "options": { 
+            "material": [
+                { "$ref": "#/materials/leather_armor" }
+            ]
+        }
+    },
+    "uunp_skirt1": {"name": "Leather Skirt",  "model": "uunp_test/skirt1.json", "slot": "skirt", "options": { 
+            "material": [
+                { "$ref": "#/materials/leather_armor" },
+                { "$ref": "#/materials/metal" }
+            ]
+        }
+    },
+    "uunp_top1": {"name": "Leather Top",  "model": "uunp_test/top1.json", "slot": "top", "options": { 
+            "material": [
+                { "$ref": "#/materials/leather_armor" },
+                { "$ref": "#/materials/metal" }
+            ]
+        }
+    },
+    "uunp_belt1": {"name": "Leather Utility Belt",  "model": "uunp_test/belt1.json", "slot": "belt", "options": { 
+            "material": [
+                { "$ref": "#/materials/leather_armor" },
+                { "$ref": "#/materials/metal" }
+            ]
+        }
+    },
+    "uunp_pauldron1": {"name": "Princess Pauldron",  "model": "uunp_test/pauldron1.json", "slot": "shoulders", "options": { 
+            "material": [
+                { "$ref": "#/materials/armor1_metal" }
             ]
         }
     },
