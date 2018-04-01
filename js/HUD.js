@@ -44,7 +44,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				var button = $("<a href='#' class='button btn btn-primary btn-sm'></a>");
 				button.html(name).on('click', function(e) {
 					e.stopPropagation();
-					character.playAnimation(name, {"timeScale": scope.animationSpeed});
+					character.setAnimation(name);
 				});
 				invWindow.append(button);	
 			}
@@ -214,8 +214,8 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			//createSliderControl(0, 1, 0.05, 'metalness');
 			createSliderControl(0, 1, 0.05, 'roughness', setMaterialProperty);
 			createSliderControl(0, 500, 0.05, 'envMapIntensity', setMaterialProperty);
-			createSliderControl(0.00, 10.0, 0.1, 'Animation Speed', function(e) { scope.animationSpeed = this.valueAsNumber });
-			createSliderControl(0.00, 1.0, 0.05, 'Character Weight', function(e) { scope.game.characters.eve.setWeight(this.valueAsNumber);} );
+			createSliderControl(0.00, 10.0, 0.1, 'Animation Speed', function(e) { scope.game.characters[scope.game.camera.trackingCharacter].animationMixer.timeScale = this.valueAsNumber });
+			createSliderControl(0.00, 1.0, 0.05, 'Character Weight', function(e) { scope.game.characters[scope.game.camera.trackingCharacter].setWeight(this.valueAsNumber);} );
 
 
 			var updateCubeMap = $('<a href="#" class="button btn btn-primary btn-sm">Update Cube</a>').on('click', function(e) {

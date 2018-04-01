@@ -71,6 +71,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    //this.animationMixer.addAction( new THREE.AnimationAction( this.armature.geometry.animations[0] ) );
 	    this.playingAnimation = false;
 	    this.currentAnimation = null;
+	    this.currentFacialAnimation = null;
 	
 	    this.characterStats = new CharacterStats();
 	    this.baseStats = new CharacterStats();
@@ -118,10 +119,27 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    this.healthBarMesh = sprite;
 	};
 	Character.prototype.setAnimation = function(animationName, options) {
-	    if(this.currentAnimation != animationName) {
-	        this.playAnimation(animationName, options);
-	        this.currentAnimation = animationName;
-	    }
+		let animationType = animationName.split('_')[0];
+		if(animationType == 'face') {
+			if(this.currentFacialAnimation != animationName) {
+	        	if(this.currentFacialAnimation && this.animations[this.currentFacialAnimation]) {
+	        		this.animations[this.currentFacialAnimation].stop();
+	        	}
+	        	this.animations[animationName].play();
+	        	this.currentFacialAnimation = animationName;
+	    	}
+		} else {
+			if(this.currentAnimation != animationName) {
+	        	//this.playAnimation(animationName, options);
+	        	if(this.currentAnimation && this.animations[this.currentAnimation]) {
+	        		this.animations[this.currentAnimation].stop();
+	        	}
+	        	//this.animations[animationName].play();
+	        	this.playAnimation(animationName, options);
+	        	this.currentAnimation = animationName;
+	    	}
+		}
+	    
 	};
 	Character.prototype.playPose = function(poseIndex) {
 		/*
@@ -159,7 +177,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	            this.animationMixer.crossFade( crossFadeFrom, a, options.crossFadeDuration || 1.00, options.crossFadeWarp || false );
 	        } else {
 	            //this.animationMixer = new THREE.AnimationMixer(this.armature);
-	            this.animationMixer.stopAllAction();
+	            //this.animationMixer.stopAllAction();
 	            this.animations[animationName].play();
 	        }
 	    }

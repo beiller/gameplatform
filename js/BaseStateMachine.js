@@ -31,7 +31,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		this.game = game;
 		this.blendAnimationDuration = 0.05;
 	    this.runBlendAnimationSpeed = 0.05;
-	    this.movementForce = 10.0;
+	    this.movementForce = 25.0;
 	    this.jumpForce = 200.0;
 
 	    this.jumpTimer = new THREE.Clock();
