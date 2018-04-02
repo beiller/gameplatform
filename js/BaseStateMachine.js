@@ -15,17 +15,6 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		'hit': 'DE_Hit'
 	}*/
 
-	var animationMap = {
-		'attack': 'XP32_CombatAttack',
-		'idle': 'XP32_Combatiddle',
-		'walk': 'XP32_CombatRun',
-		'block': 'XP32_CombatBlock',
-		'hit': 'XP32_CombatHit',
-		'jump_up': 'XP32_CombatJumpUp',
-		'jump_down': 'XP32_CombatJumpDown',
-		'fall_backwards': 'fall_backwards'
-	}
-
 	var BaseStateMachine = function(character, game) {
 		this.character = character;
 		this.game = game;
@@ -37,6 +26,17 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 	    this.jumpTimer = new THREE.Clock();
 	    
 	    this.attackCoolDown = 0;
+
+	    this.animationMap = {
+			'attack': 'XP32_CombatAttack',
+			'idle': 'XP32_NormalIddle',
+			'walk': 'XP32_NormalRun',
+			'block': 'XP32_CombatBlock',
+			'hit': 'XP32_CombatHit',
+			'jump_up': 'XP32_CombatJumpUp',
+			'jump_down': 'XP32_CombatJumpDown',
+			'fall_backwards': 'XP32_NormalIddle'
+		}
 		
 		var error = function(eventName, from, to, args, errorCode, errorMessage) {
 		    //console.error('event ' + eventName + ' was naughty :- ' + errorMessage);
@@ -65,9 +65,15 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			{ 
 				name: 'idle',
-				from: ['running', 'playinganimation', 'stunned', 'damaged'],
+				from: ['running', 'playinganimation', 'damaged'],
 				to: 'idling'
 			},
+			{ 
+				name: 'endstun',
+				from: ['stunned'],
+				to: 'idling'
+			},
+
 			{ 
 				name: 'run',
 				from: ['idling', 'running'],
@@ -166,17 +172,17 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		        };*/
 			},
 			onenterstunned: function() {
-				this.character.setAnimation(animationMap['hit']);
+				this.character.setAnimation(this.animationMap['hit']);
 				var scope = this;
 				this.hitTimeout = setTimeout(function(){
-				    scope.idle();
+				    scope.endstun();
 				}, this.character.characterStats.hitStunDuration);
 			},
 			onexitstunned: function() {
 				clearTimeout(this.hitTimeout);
 			},
 			onenterdamaged: function() {
-				this.character.setAnimation(animationMap['hit']);
+				this.character.setAnimation(this.animationMap['hit']);
 				var scope = this;
 				this.hitTimeout = setTimeout(function(){
 				    scope.idle();
@@ -186,10 +192,10 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				clearTimeout(this.hitTimeout);
 			},
 			onenterrunning: function() {
-				this.character.setAnimation(animationMap['walk'], {timeScale: 0.9});
+				this.character.setAnimation(this.animationMap['walk'], {timeScale: 0.9});
 			},
 			onexitrunning: function() {
-				this.character.setAnimation(animationMap['idle']);
+				this.character.setAnimation(this.animationMap['idle']);
 			},
 			onland: function() {
 				console.log('landing');
@@ -197,21 +203,21 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 					this.run();
 					return false;
 				}
-				this.character.setAnimation(animationMap['idle']);
+				this.character.setAnimation(this.animationMap['idle']);
 			},
 			onenterattacking: function() {
-				this.character.setAnimation(animationMap['idle']);
+				this.character.setAnimation(this.animationMap['idle']);
 			},
 			onendattack: function() {
-				this.character.setAnimation(animationMap['idle']);
+				this.character.setAnimation(this.animationMap['idle']);
 			},
 			onenterinair: function() {
 				console.log('falling');
-				//this.character.setAnimation(animationMap['jump']);
+				//this.character.setAnimation(this.animationMap['jump']);
 			},
 			onidle: function(event, from, to, msg) {
 				console.log('idle');
-		        this.character.setAnimation(animationMap['idle']);
+		        this.character.setAnimation(this.animationMap['idle']);
 			},
 			onjump: function(event, from, to, msg) {
 				if(!this.jumpTimer.running || this.jumpTimer.getElapsedTime() > 1.0) {
@@ -222,19 +228,20 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 					} else {
 						this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
 					}
-					this.character.setAnimation(animationMap['jump_up']);
+					this.character.setAnimation(this.animationMap['jump_up']);
 					let scope = this.character;
+					let stateMachine = this;
 					setTimeout(function() {
-						scope.setAnimation(animationMap['jump_down'], {loop: THREE.LoopOnce, clampWhenFinished: true});
+						scope.setAnimation(stateMachine.animationMap['jump_down'], {loop: THREE.LoopOnce, clampWhenFinished: true});
 					}, 700);
 					this.jumpTimer.start();
 				}
 			},
 		    onblock: function(event, from, to, msg) {
-		        this.character.setAnimation(animationMap['block']);
+		        this.character.setAnimation(this.animationMap['block']);
 		    },
 		    onenterdead: function() {
-		    	this.character.setAnimation(animationMap['fall_backwards'], {loop: THREE.LoopOnce, clampWhenFinished: true});
+		    	this.character.setAnimation(this.animationMap['fall_backwards'], {loop: THREE.LoopOnce, clampWhenFinished: true});
 		    },
 		    onattack: function(event, from, to, msg) {
 		    	/*if(this.attackCoolDown > 0.0) {
@@ -243,7 +250,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		    	}*/
 		    	console.log("ATTACKING!", event, from, to, msg);
 		    	var attackCoolDown = this.character.characterStats.attackCooldown;
-		    	this.character.setAnimation(animationMap['attack'], { loop: THREE.LoopOnce, timeScale: 1.0 });
+		    	this.character.setAnimation(this.animationMap['attack'], { loop: THREE.LoopOnce, clampWhenFinished: true, timeScale: 1.0 });
 		    	var scope = this;
 			    setTimeout(function() {
 			        var range = scope.character.characterStats.range;

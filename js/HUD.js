@@ -64,6 +64,8 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 					e.stopPropagation();
 					scope.game.camera.trackingCharacter = scopedName;
 					scope.character = scope.game.characters[scopedName];
+					scope.loadInventory();
+					scope.loadAnimations();
 				});
 				invWindow.append(button);	
 			}

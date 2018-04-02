@@ -5,7 +5,7 @@ define(function() {
 	CharacterStats.prototype.init = function(params) {
 	    if(params === undefined) params = {};
 	    this.maxHealth = params.maxHealth || 100;
-	    this.health = this.maxHealth;
+	    this.health = params.health || this.maxHealth;
 	    this.damage = params.damage || 10;
 	
 	    //ATTACK cool down in MS

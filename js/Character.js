@@ -260,6 +260,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 			this.equipment[slot] = null;
 			delete this.equipment[slot];
+			if(slot == 'weapon') {
+				this.stateMachine.animationMap['walk'] = 'XP32_NormalRun';
+				this.stateMachine.animationMap['idle'] = 'XP32_NormalIddle';
+			}
 
 			this.refreshMesh();
 		}
@@ -280,7 +284,6 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		this.inventory = newInventory;
 	};
 
-	var newStats = new CharacterStats();
 	THREE.BufferGeometry.prototype.merge = function ( geometry, materialOffset ) {
 
 	    if ( geometry instanceof THREE.BufferGeometry === false ) {
@@ -367,9 +370,10 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 	};
 
-
+	var newStats = new CharacterStats();
 	Character.prototype.updateCharacterStats = function() {
 		newStats.init(this.baseStats);
+		newStats.health = this.characterStats.health;
 		var scope = this;
 		Object.keys(this.equipment).forEach(function(slot) {
 			var item = scope.equipment[slot];
@@ -390,6 +394,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 		this.equipment[item.slot] = item;
 		this.updateCharacterStats();
+
+		if(item.slot == 'weapon') {
+			this.stateMachine.animationMap['walk'] = 'XP32_CombatRun';
+			this.stateMachine.animationMap['idle'] = 'XP32_Combatiddle';
+		}
 
 		var game = this.game;
 	    var scope = this;
