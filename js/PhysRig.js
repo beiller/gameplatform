@@ -13,7 +13,7 @@ define(["lib/three"], function(THREE) {
 		this.constraints = [];
 		this.physicMap = {};
 		this.dynamics = [];
-		this.boxSize = 0.015;
+		this.boxSize = 0.025;
 	}
 
 	PhysRig.prototype = Object.assign( PhysRig, {

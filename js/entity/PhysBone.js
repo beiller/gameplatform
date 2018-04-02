@@ -40,6 +40,8 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		this.setKinematic(this.body.getKinematic());
 	}
 
+	var tWorldRot1 = new THREE.Quaternion();
+	var tWorldPos1 = new THREE.Vector3();
 	PhysBone.prototype = Object.assign( Object.create( Entity.prototype ), {
 		
 		constructor: PhysBone,
@@ -96,7 +98,13 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 
 			}
 
-			bone.matrix.decompose( bone.position, bone.quaternion, p );
+			//TODO I had to stop copying location to prevent messed up things
+			// due to UUNP scaling
+			// HACK slerp the rotation to avoid jankies
+			tWorldRot1.copy(bone.quaternion);
+			bone.matrix.decompose( p, bone.quaternion, p );
+			tWorldRot1.slerp(bone.quaternion, 0.25);
+			bone.quaternion.copy(tWorldRot1);
 
 		    if(this.debugMesh) {
 		    	this.debugMesh.position.fromArray(this.body.getPosition());

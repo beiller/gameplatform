@@ -19,6 +19,33 @@
     "eye_glass": {
         "roughness": 0.01, "transparent": true, "opacity": 0.15, "metalness": 1.0
     },
+    "pirate_shirt": {
+		"color": "0xDDDDDD",
+		"diffusePath": "uunp_test/shirt1.jpg",
+		"normalPath": "uunp_test/shirt1_n.jpg",
+    	"normalScale": 1.0,
+    	"roughness": 0.55,
+    	"transparent": true, 
+    	"name": "pirate_shirt"
+	},
+	"pirate_shoes": {
+		"color": "0xDDDDDD",
+		"diffusePath": "uunp_test/robes1.jpg",
+		"normalPath": "uunp_test/robes1_n.jpg",
+    	"normalScale": 1.0,
+    	"roughness": 0.55,
+    	"transparent": true, 
+    	"name": "pirate_shoes"
+	},
+	"pirate_shorts": {
+		"color": "0xDDDDDD",
+		"diffusePath": "uunp_test/pants1.jpg",
+		"normalPath": "uunp_test/pants1_n.jpg",
+    	"normalScale": 1.0,
+    	"roughness": 0.55,
+    	"transparent": true, 
+    	"name": "pirate_shorts"
+	},
 	"cloth1": {
 		"color": "0xDDDDDD",
 		"diffusePath": "uunp_test/bikini.png",

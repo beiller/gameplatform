@@ -374,24 +374,39 @@
             ],
 	        "equipment": [
 				"uunp_head1",
-				"uunp_boots2",
+
 				"uunp_hands",
-				"uunp_hair1",
-				"uunp_stocking1",
-				"uunp_corset1",
-	        	"uunp_bra1",
-	        	"uunp_leg_armor1",
+				"uunp_hair1_phys",
+				
+				
+				
+				"shorts1",
+				"shirt1",
+				"shoes1",
+	        	
+	        	
 				"uunp_cross_earring_r",
 				"uunp_cross_earring_l",
 				"uunp_gens_f"
 	        ],
 	        "inventory": [
+	        	"uunp_hair2_phys",
+	        	"uunp_hair1",
+				"pants1",
+				"shirt2",
+
+				"uunp_boots2",
+				"uunp_stocking1",
+				"uunp_bra1",
+				"uunp_leg_armor1",
+				"uunp_corset1",
+
 	        	"uunp_panty2",
 	        	"uunp_skirt1",
 	        	"uunp_belt1",
 	        	"uunp_top1",
 	        	"uunp_boots1",
-	        	
+
 	        	"uunp_boots3",
 	        	"uunp_armor1",
 				"uunp_panty1",

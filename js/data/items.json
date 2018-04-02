@@ -880,6 +880,52 @@
             ]
         }
     },
+    "uunp_hair2_phys": {"name": "Short Hair (physics)",  "model": "uunp_test/hair2_phys.json", "slot": "hair", 
+        "physicsChain" : [
+            {
+                "bone": "hair1", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9999
+            }
+        ],
+        "physics": [
+            { 
+                "bone": "head", "type": "KINEMATIC", "radius": 0.02, "options": { 
+                    "moveTo": "NPC Head [Head]",
+                    "localOffset": [0,0,0.035]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                { "$ref": "#/materials/hair1" }
+            ]
+        }
+    },
+    "uunp_hair1_phys": {"name": "Long Hair (physics)",  "model": "uunp_test/hair1_phys.json", "slot": "hair", 
+        "physicsChain" : [
+            {
+                "bone": "s1", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9999
+            },
+            {
+                "bone": "s2", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9999
+            },
+            {
+                "bone": "s3", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9999
+            }
+        ],
+        "physics": [
+            { 
+                "bone": "head", "type": "KINEMATIC", "radius": 0.02, "options": { 
+                    "moveTo": "NPC Head [Head]",
+                    "localOffset": [0,0,0.035]
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                { "$ref": "#/materials/hair1" }
+            ]
+        }
+    },
     "uunp_hair3": {"name": "uunp_hair3",  "model": "uunp_test/hair3.json", "slot": "hair", "options": { 
             "material": [
                 { "$ref": "#/materials/hair1" }
@@ -935,6 +981,36 @@
             "material": [
                 { "$ref": "#/materials/leather_armor" },
                 { "$ref": "#/materials/metal" }
+            ]
+        }
+    },
+    "shirt1": {"name": "Pirate Top",  "model": "uunp_test/shirt1.json", "slot": "shirt", "options": { 
+            "material": [
+                { "$ref": "#/materials/pirate_shirt" }
+            ]
+        }
+    },
+    "shoes1": {"name": "Pirate Shoes",  "model": "uunp_test/shoes1.json", "slot": "boots", "options": { 
+            "material": [
+                { "$ref": "#/materials/pirate_shoes" }
+            ]
+        }
+    },
+    "shorts1": {"name": "Pirate Shorts",  "model": "uunp_test/shorts1.json", "slot": "pants", "options": { 
+            "material": [
+                { "$ref": "#/materials/pirate_shorts" }
+            ]
+        }
+    },
+    "pants1": {"name": "Pirate Pants",  "model": "uunp_test/pants1.json", "slot": "pants", "options": { 
+            "material": [
+                { "$ref": "#/materials/pirate_shorts" }
+            ]
+        }
+    },
+    "shirt2": {"name": "Pirate Shirt",  "model": "uunp_test/shirt2.json", "slot": "shirt", "options": { 
+            "material": [
+                { "$ref": "#/materials/pirate_shirt" }
             ]
         }
     },

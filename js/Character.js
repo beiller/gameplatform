@@ -486,6 +486,9 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 			};
 
 			this.meshes[item.slot] = mesh;
+			//HACK set inverse scale of root of armature cause UUNP is scaled way down
+			let scale = this.armature.skeleton.bones[0].scale.x;
+			mesh.skeleton.bones[0].scale.set(1/scale, 1/scale, 1/scale);
 
 			if(item.physics) {
 				item.physics.forEach(createFromPhysic);
@@ -493,10 +496,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 			if(item.physicsChain) {
 				item.physicsChain.forEach(createChainRecurse)
 			}
-			this.armature.add(mesh);
 			//HACK set inverse scale of root of armature cause UUNP is scaled way down
-			let scale = this.armature.skeleton.bones[0].scale.x;
-			mesh.skeleton.bones[0].scale.set(1/scale, 1/scale, 1/scale);
+
+			
+			this.armature.add(mesh);
+
 		} else if(item.bone) { //this item is static and attaches to bones
 	        var dynamic = await game.loadDynamicObject(item.model, item.options);
         	try {

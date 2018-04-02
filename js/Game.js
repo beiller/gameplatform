@@ -368,37 +368,50 @@ function(
 			"fot": "NPC Foot [ft ].R"
 		}
 		var np = function(k) { return nameMapping[k]; };
+		var boneWidth = 0.035;
 
 		var boneMap = [
-			{ bone: np('pel'), type: "KINEMATIC", radius: 0.08, options: { 
+			{ bone: np('pel'), type: "KINEMATIC", radius: 0.7, options: { 
 				localOffset:[0,0,0.15],
 				rotationLimitsLow:  [-0.5,-0.5,-0.5],
-				rotationLimitsHigh: [ 0.5, 0.5, 0.5]
+				rotationLimitsHigh: [ 0.5, 0.5, 0.5],
+					boxWidth: boneWidth, 
+					boxHeight: boneWidth
 			} },
-			{ bone: np('sp1'), type: "KINEMATIC", radius: 0.08, connect_body: np('pel'), options: { 
+			{ bone: np('sp1'), type: "KINEMATIC", radius: 0.7, connect_body: np('pel'), options: { 
 				tailBone: np('sp2'),
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
-				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
+				rotationLimitsHigh: [ spinedof, spinedof, spinedof],
+					boxWidth: boneWidth, 
+					boxHeight: boneWidth
 			} },
-			{ bone: np('sp2'), type: "KINEMATIC", radius: 0.08, connect_body: np('sp1'), options: { 
+			{ bone: np('sp2'), type: "KINEMATIC", radius: 0.7, connect_body: np('sp1'), options: { 
 				tailBone: np('sp3'),
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
-				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
+				rotationLimitsHigh: [ spinedof, spinedof, spinedof],
+					boxWidth: boneWidth, 
+					boxHeight: boneWidth
 			} },
-			{ bone: np('sp3'), type: "KINEMATIC", radius: 0.08, connect_body: np('sp2'), options: { 
+			{ bone: np('sp3'), type: "KINEMATIC", radius: 0.7, connect_body: np('sp2'), options: { 
 				tailBone: np('sp5'),
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
-				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
+				rotationLimitsHigh: [ spinedof, spinedof, spinedof],
+					boxWidth: boneWidth, 
+					boxHeight: boneWidth
 			} },
-			{ bone: np('sp5'), type: "KINEMATIC", radius: 0.08, connect_body: np('sp3'), options: { 
+			{ bone: np('sp5'), type: "KINEMATIC", radius: 0.7, connect_body: np('sp3'), options: { 
 				tailBone: np('hed'),
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
-				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
+				rotationLimitsHigh: [ spinedof, spinedof, spinedof],
+					boxWidth: boneWidth, 
+					boxHeight: boneWidth
 			} },
-			{ bone: np('hed'), type: "KINEMATIC", radius: 0.08, connect_body: np('sp5'), options: { 
+			{ bone: np('hed'), type: "KINEMATIC", radius: 0.7, connect_body: np('sp5'), options: { 
 				localOffset:[0,0,0.15],
 				rotationLimitsLow:  [-spinedof,-spinedof,-spinedof],
-				rotationLimitsHigh: [ spinedof, spinedof, spinedof]
+				rotationLimitsHigh: [ spinedof, spinedof, spinedof],
+					boxWidth: boneWidth, 
+					boxHeight: boneWidth
 			} }
 		];
 		function createLR(side) {
@@ -448,7 +461,7 @@ function(
 				} },*/
 
 
-				{ bone: "NPC Breast."+side, type: "DYNAMIC", radius: 0.08, connect_body: np('sp3'), options: { 
+				{ bone: "NPC Breast."+side, type: "DYNAMIC", radius: 0.5, connect_body: np('sp3'), options: { 
 					//tailBone:"DEF-breast."+side+".001",
 					localOffset:[0,0,0.08] ,
 					rotationLimitsLow:  [0,0,0],
@@ -456,18 +469,21 @@ function(
 					spring: true,
 					stiffness: 2.5,
 					distance: 6.0,
-					mass: 2.0
+					mass: 2.0,
+					boxWidth: boneWidth, 
+					boxHeight: boneWidth
 				} },
-				{ bone: "NPC Butt."+side, type: "DYNAMIC", radius: 0.08, connect_body: np('pel'), options: { 
+				{ bone: "NPC Butt."+side, type: "DYNAMIC", connect_body: np('pel'), options: { 
 					//tailBone:"DEF-breast."+side+".001",
 					localOffset:[0,0,0.08] ,
 					rotationLimitsLow:  [0,0,0],
 					rotationLimitsHigh: [0,0,0],
 					spring: true,
-					stiffness: 600,
-					distance: 6,
-					damping: 0.9,
-					mass: 600.0
+					stiffness: 50.5,
+					distance: 600.01,
+					mass: 20.0,
+					boxWidth: boneWidth, 
+					boxHeight: boneWidth
 				} },
 
 				/*
