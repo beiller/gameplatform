@@ -241,7 +241,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		        this.character.setAnimation(this.animationMap['block']);
 		    },
 		    onenterdead: function() {
-		    	this.character.setAnimation(this.animationMap['fall_backwards'], {loop: THREE.LoopOnce, clampWhenFinished: true});
+		    	this.character.setAnimation(this.animationMap['fall_backwards']);
 		    },
 		    onattack: function(event, from, to, msg) {
 		    	/*if(this.attackCoolDown > 0.0) {

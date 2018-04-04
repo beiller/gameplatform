@@ -561,6 +561,14 @@
 	    }
 	},
 	"npcs" : [
+		{
+		    "character": "necker", 
+		    "position": [-11,0,0]
+		},
+		{
+		    "character": "necker", 
+		    "position": [ 11,0,0]
+		}
 	],
 	"player": {
 	    "character": "uunp_test", 
