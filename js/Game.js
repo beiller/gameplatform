@@ -309,7 +309,8 @@ function(
         		{
         			emissiveMap: texture,
         			emissiveIntensity: 100.0,
-        			emissive: new THREE.Color( 0xFFFFFF )
+        			emissive: new THREE.Color( 0xFFFFFF ),
+        			side: THREE.DoubleSide
         		}
         	)
         );
@@ -633,7 +634,8 @@ function(
 				'envMapIntensity': 100.0,
 				'emissive': materialOptions.emissive ? new THREE.Color( parseInt(materialOptions.emissive, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0,
-				'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.95
+				'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.95,
+				'side': THREE.DoubleSide
 				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0
 				//'side': THREE.DoubleSide
 			};
@@ -768,7 +770,7 @@ function(
 		this.cubeCamera.renderTarget.texture.needsUpdate = true;
 	    
 	    //this.renderer.clearTarget( this.cubeCamera.renderTarget, true, true, true );
-	    this.cubeCamera.updateCubeMap( this.renderer, this.scene );
+	    this.cubeCamera.update( this.renderer, this.scene );
 	    this.cubemapRendered = true;
 		//this.cubeCamera.renderTarget.texture.mapping = THREE.CubeRefractionMapping;
     	//this.cubeCamera.renderTarget.texture.encoding = THREE.GammaEncoding;

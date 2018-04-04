@@ -1036,7 +1036,7 @@
         ],
         "options": { 
             "material": [
-                {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" }
+                { "$ref": "#/materials/armor1_metal" }
             ]
         }
     },
@@ -1056,12 +1056,12 @@
         ],
         "options": { 
             "material": [
-                {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" }
+                { "$ref": "#/materials/armor1_metal" }
             ]
         }
     },
     "uunp_belly_ring": {
-        "name": "chain_earring1",  
+        "name": "Belly Ring",  
         "model": "models/marie_rose_gem_earring.json", 
         "slot": "earring4", 
         "physics": [
@@ -1101,8 +1101,100 @@
         ],
         "options": { 
             "material": [
-                {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" },
-                {"roughness": 0.2, "metalness": 1.0, "color": "0xAAAAAA" }
+                { "$ref": "#/materials/armor1_metal" },
+                { "$ref": "#/materials/armor1_metal" }
+            ]
+        }
+    },
+    "uunp_nipple_ring_l": {
+        "name": "Left Nipple Ring",  
+        "model": "models/marie_rose_gem_earring.json", 
+        "slot": "earring5", 
+        "physics": [
+            { 
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "NPC Breast.L", "options": {
+                    "moveTo": "NPC Breast01.L",
+                    "tailBone": "Bone.001",
+                    "rotationLimitsLow":  [-15.14,-15.14,-15.5],
+                    "rotationLimitsHigh": [ 15.14, 15.14, 15.5],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.001", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.002", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.003", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                { "$ref": "#/materials/armor1_metal" },
+                { "$ref": "#/materials/armor1_metal" }
+            ]
+        }
+    },
+    "uunp_nipple_ring_r": {
+        "name": "Right Nipple Ring",  
+        "model": "models/marie_rose_gem_earring.json", 
+        "slot": "earring6", 
+        "physics": [
+            { 
+                "bone": "Bone", "type": "DYNAMIC", "radius": 0.08, "connect_body": "NPC Breast.R", "options": {
+                    "moveTo": "NPC Breast01.R",
+                    "tailBone": "Bone.001",
+                    "rotationLimitsLow":  [-15.14,-15.14,-15.5],
+                    "rotationLimitsHigh": [ 15.14, 15.14, 15.5],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.001", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.002", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            },
+            { 
+                "bone": "Bone.003", "type": "DYNAMIC", "radius": 0.08, "connect_body": "Bone", "options": {
+                    "localOffset": [0,0,0.015],
+                    "rotationLimitsLow":  [-0.8,-0.8,-0.35],
+                    "rotationLimitsHigh": [ 0.8, 0.8, 0.35],
+                    "noContact": true, "boxWidth": 0.005, "boxDepth": 0.005, "mass": 0.01
+                } 
+            }
+        ],
+        "options": { 
+            "material": [
+                { "$ref": "#/materials/armor1_metal" },
+                { "$ref": "#/materials/armor1_metal" }
             ]
         }
     },

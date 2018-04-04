@@ -40,8 +40,10 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		this.setKinematic(this.body.getKinematic());
 	}
 
+	//temp variables
 	var tWorldRot1 = new THREE.Quaternion();
 	var tWorldPos1 = new THREE.Vector3();
+
 	PhysBone.prototype = Object.assign( Object.create( Entity.prototype ), {
 		
 		constructor: PhysBone,
@@ -64,11 +66,11 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 
 		    if(!this.sleep) {
 			    this.boneMesh.matrixWorld.decompose(p, q, s);
-			    var worldOffset = o.copy(this.localOffset).applyQuaternion(q).add(p)
-		        this.body.setPosition([worldOffset.x, worldOffset.y, worldOffset.z]);
+			    tWorldPos1.copy(this.localOffset).applyQuaternion(q).add(p)
+		        this.body.setPosition([tWorldPos1.x, tWorldPos1.y, tWorldPos1.z]);
 		        this.body.setQuaternion([q.x, q.y, q.z, q.w]);
 			    if(this.debugMesh) {
-			    	this.debugMesh.position.copy(worldOffset);
+			    	this.debugMesh.position.copy(tWorldPos1);
 			    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
 			    	this.debugMesh.updateMatrixWorld();
 			    }
@@ -85,26 +87,25 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			o.copy(this.localOffset).applyQuaternion(q);
 			p.add(o);
 			this.boneMesh.matrixWorld.compose(p, q, s);
+			if ( this.boneMesh.parent && this.boneMesh.parent.isBone ) {
 
-			var bone = this.boneMesh;
-			if ( bone.parent && bone.parent.isBone ) {
-
-				bone.matrix.getInverse( bone.parent.matrixWorld );
-				bone.matrix.multiply( bone.matrixWorld );
+				this.boneMesh.matrix.getInverse( this.boneMesh.parent.matrixWorld );
+				this.boneMesh.matrix.multiply( this.boneMesh.matrixWorld );
 
 			} else {
 
-				bone.matrix.copy( bone.matrixWorld );
+				this.boneMesh.matrix.copy( this.boneMesh.matrixWorld );
 
 			}
 
 			//TODO I had to stop copying location to prevent messed up things
 			// due to UUNP scaling
-			// HACK slerp the rotation to avoid jankies
-			tWorldRot1.copy(bone.quaternion);
-			bone.matrix.decompose( p, bone.quaternion, p );
-			tWorldRot1.slerp(bone.quaternion, 0.25);
-			bone.quaternion.copy(tWorldRot1);
+			//HACK slerp the rotation to avoid jankies. To fix I have to edit some
+			// bullet js to interpotale movement properly from kinematic bodies (I think)
+			tWorldRot1.copy(this.boneMesh.quaternion);
+			this.boneMesh.matrix.decompose( p, this.boneMesh.quaternion, p );
+			tWorldRot1.slerp(this.boneMesh.quaternion, 0.25);
+			this.boneMesh.quaternion.copy(tWorldRot1);
 
 		    if(this.debugMesh) {
 		    	this.debugMesh.position.fromArray(this.body.getPosition());

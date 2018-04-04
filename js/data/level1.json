@@ -390,6 +390,8 @@
 				"uunp_gens_f"
 	        ],
 	        "inventory": [
+	        	"uunp_nipple_ring_l",
+	        	"uunp_nipple_ring_r",
 	        	"uunp_hair2_phys",
 	        	"uunp_hair1",
 				"pants1",

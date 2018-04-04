@@ -19,6 +19,9 @@
     "eye_glass": {
         "roughness": 0.01, "transparent": true, "opacity": 0.15, "metalness": 1.0
     },
+    "glass": {
+        "roughness": 0.01, "transparent": true, "opacity": 0.15, "metalness": 1.0
+    },
     "pirate_shirt": {
 		"color": "0xDDDDDD",
 		"diffusePath": "uunp_test/shirt1.jpg",
@@ -191,14 +194,28 @@
 	},
     "skin.Anna": {
     	"color": "0xFFFFFF",
-    	"diffusePath": "level2/Anna-diffuse.png",
-    	"roughnessPath": "level2/Anna-roughness.png", 
-    	"bumpPath": "level2/Anna-bump.png", 
+    	"diffusePath": "level2/Anna_001.png",
+    	"roughnessPath": "level2/Anna_000.png", 
+    	"bumpPath": "level2/Anna_002.png", 
+    	"emissivePath": "level2/Anna_003.png", 
+    	"bumpScale": 0.004,
+    	"emissive": "0xFF0000",
+    	"emissiveIntensity": 0.25,
+    	"roughness": 1.5,
+    	"transparent": false, 
+    	"name": "skin.Anna"
+	},
+	"skin": {
+    	"color": "0xFFFFFF",
+    	"diffusePath": "level2/Chiyo_001.png",
+    	"roughnessPath": "level2/Chiyo_000.png", 
+    	"bumpPath": "level2/Chiyo_002.png", 
     	"emissivePath": "level2/Chiyo_003.png", 
+    	"bumpScale": 0.004,
     	"emissive": "0xFF0000",
     	"emissiveIntensity": 0.25,
     	"transparent": false, 
-    	"name": "skin.Anna"
+    	"name": "skin"
 	},
 	"nails": {
 		"color": "0xFF4444",
