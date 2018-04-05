@@ -44,7 +44,7 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 				var button = $("<a href='#' class='button btn btn-primary btn-sm'></a>");
 				button.html(name).on('click', function(e) {
 					e.stopPropagation();
-					character.setAnimation(name);
+					character.stateMachine.playAnimation(name);
 				});
 				invWindow.append(button);	
 			}

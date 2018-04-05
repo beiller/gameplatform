@@ -16,7 +16,7 @@ function(StateMachine, Controller) {
             if(!enemy) {
                 return;
             }
-            if(currentState == 'stunned' || currentState == 'playinganimation') {
+            if(currentState == 'stunned' || currentState == 'playinganimation' || currentState == 'dead') {
                 return;
             }
             var dist = enemy.mesh.position.x - this.character.mesh.position.x;

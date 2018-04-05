@@ -39,7 +39,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		}
 		
 		var error = function(eventName, from, to, args, errorCode, errorMessage) {
-		    //console.error('event ' + eventName + ' was naughty :- ' + errorMessage);
+		    console.error('event ' + eventName + ' was naughty :- ' + errorMessage);
 		};
 		var initial = 'initialized';
 		var events = [
@@ -106,7 +106,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			{ 
 				name: 'unblock',
-				from: ['blocking'],
+				from: 'blocking',
 				to: 'idling'
 			},
 			{ 
@@ -131,145 +131,114 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 				this.character.playPose(msg);
 			},
 			onplayAnimation: function(event, from, to, msg) {
-				console.log("Playing animation " + msg);
-				this.character.setAnimation(msg);
-				//var scope = this;
-				/*if(this.animationTimeout) {
-					cancelTimeout(this.animationTimeout);
+				if(msg.split('_')[0] == 'face') {
+					this.character.setAnimation(msg);
+				} else {
+					if(this.customAnimation) {
+						this.character.stopAnimation(this.customAnimation);
+					}
+					console.log("Playing animation ", msg);
+					this.customAnimation = msg;
+					this.character.playAnimation(this.customAnimation);
 				}
-				this.animationTimeout = setTimeout(function() { scope.idle(); }, 20000);*/
-				//var game = this.game;
-				//var character = this.character;
-		        /*game.cameraUpdateFunction = function () {
-		        	
-	                //game.camera.position.x = scope.characters['eve'].body.getPositionX();
-	                //game.camera.position.y = scope.characters['eve'].body.getPositionY();
-	                //bulbLight.position.x = scope.characters['eve'].body.getPositionX() + 2.5;
-	                //bulbLight.target.position.x = scope.characters['eve'].body.getPositionX();
-	                //bulbLight.target.updateMatrixWorld();
-	                //bulbLight.updateMatrixWorld();
-	                var bone = character.findBone('camera');
-	                var position = new THREE.Vector3();
-	                var rotation = new THREE.Quaternion();
-	                var rotation2 = new THREE.Quaternion();
-	                var scale = new THREE.Vector3();
-	                bone.matrixWorld.decompose(position, rotation, scale);
-	                game.camera.position.copy(position);
-
-	                //character.mesh.matrixWorld.decompose(position, rotation2, scale);
-	                game.camera.quaternion.copy(rotation);
-	                if(game.camera.targetQuaternion) {
-	                	game.camera.quaternion.slerp(game.camera.targetQuaternion, 0.25);
-	                };
-	                game.bulbLight.position.x = game.characters['eve'].body.getPositionX() + 2.5;
-	                game.bulbLight.target.position.x = game.characters['eve'].body.getPositionX();
-	                game.bulbLight.target.updateMatrixWorld();
-	                game.bulbLight.updateMatrixWorld();
-		            if(game.camera.offset) {
-		            	game.camera.position.y += game.camera.offset;
-		            }
-	                
-		        };*/
+			},
+			onleaveplayinganimation: function(event, from, to, msg) {
+				this.character.stopAnimation(this.customAnimation);
 			},
 			onenterstunned: function() {
-				this.character.setAnimation(this.animationMap['hit']);
+				this.character.playAnimation(this.animationMap['hit']);
 				var scope = this;
 				this.hitTimeout = setTimeout(function(){
 				    scope.endstun();
 				}, this.character.characterStats.hitStunDuration);
 			},
-			onexitstunned: function() {
+			onleavestunned: function() {
+				this.character.stopAnimation(this.animationMap['hit']);
 				clearTimeout(this.hitTimeout);
 			},
 			onenterdamaged: function() {
-				this.character.setAnimation(this.animationMap['hit']);
+				this.character.playAnimation(this.animationMap['hit']);
 				var scope = this;
 				this.hitTimeout = setTimeout(function(){
 				    scope.idle();
 				}, this.character.characterStats.damagedPauseLength);
 			},
-			onexitdamaged: function() {
+			onleavedamaged: function() {
 				clearTimeout(this.hitTimeout);
+				this.character.stopAnimation(this.animationMap['hit']);
 			},
 			onenterrunning: function() {
-				this.character.setAnimation(this.animationMap['walk'], {timeScale: 0.9});
+				this.character.playAnimation(this.animationMap['walk']);
 			},
-			onexitrunning: function() {
-				this.character.setAnimation(this.animationMap['idle']);
+			onleaverunning: function() {
+				this.character.stopAnimation(this.animationMap['walk']);
 			},
 			onland: function() {
-				console.log('landing');
 				if(Math.abs(this.character.movementDirection.x) > 0.1) {
 					this.run();
 					return false;
 				}
-				this.character.setAnimation(this.animationMap['idle']);
-			},
-			onenterattacking: function() {
-				this.character.setAnimation(this.animationMap['idle']);
-			},
-			onendattack: function() {
-				this.character.setAnimation(this.animationMap['idle']);
+				this.idle();
 			},
 			onenterinair: function() {
-				console.log('falling');
-				//this.character.setAnimation(this.animationMap['jump']);
+				this.character.playAnimation(this.animationMap['jump_up'], {loop: THREE.LoopOnce, clampWhenFinished: true});
+				this.jumpAnimation = this.animationMap['jump_up'];
+				let scope = this.character;
+				let stateMachine = this;
+				this.jumpAnimationTimeout = setTimeout(function() {
+					scope.stopAnimation(stateMachine.jumpAnimation);
+					scope.playAnimation(stateMachine.animationMap['jump_down'], {loop: THREE.LoopOnce, clampWhenFinished: true});
+					stateMachine.jumpAnimation = stateMachine.animationMap['jump_down'];
+				}, 700);
 			},
-			onidle: function(event, from, to, msg) {
-				console.log('idle');
-		        this.character.setAnimation(this.animationMap['idle']);
+			onleaveinair: function() {
+				this.character.stopAnimation(this.jumpAnimation);
+				clearTimeout(this.jumpAnimationTimeout);
 			},
 			onjump: function(event, from, to, msg) {
-				if(!this.jumpTimer.running || this.jumpTimer.getElapsedTime() > 1.0) {
-					console.log('Applying Impulse!', event, from, to, msg);
-					if(this.character.movementDirection.x > 0.1 || this.character.movementDirection.x < -0.1) {
-						var halfJump = (this.jumpForce * 0.15);
-						this.character.body.applyImpulse([halfJump * this.character.movementDirection.x, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
-					} else {
-						this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
-					}
-					this.character.setAnimation(this.animationMap['jump_up']);
-					let scope = this.character;
-					let stateMachine = this;
-					setTimeout(function() {
-						scope.setAnimation(stateMachine.animationMap['jump_down'], {loop: THREE.LoopOnce, clampWhenFinished: true});
-					}, 700);
-					this.jumpTimer.start();
+				if(this.character.movementDirection.x > 0.1 || this.character.movementDirection.x < -0.1) {
+					var halfJump = (this.jumpForce * 0.25);
+					this.character.body.applyImpulse([halfJump * this.character.movementDirection.x, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
+				} else {
+					this.character.body.applyImpulse([0, this.jumpForce * this.character.characterStats.jumpHeight, 0], this.character.body.getPosition());
 				}
+				this.character.onGround = false;
 			},
-		    onblock: function(event, from, to, msg) {
-		        this.character.setAnimation(this.animationMap['block']);
+		    onenteridling: function() {
+		    	this.character.playAnimation(this.animationMap['idle']);
+		    	this.idleAnimation = this.animationMap['idle'];
+		    },
+		    onleaveidling: function() {
+		    	this.character.stopAnimation(this.idleAnimation);
+		    },
+		    onenterblocking: function() {
+		    	this.character.playAnimation(this.animationMap['block']);
+		    },
+		    onleaveblocking: function() {
+		    	this.character.stopAnimation(this.animationMap['block']);
 		    },
 		    onenterdead: function() {
 		    	this.character.setAnimation(this.animationMap['fall_backwards']);
 		    },
+		    onenterattacking: function() {
+				this.character.playAnimation(this.animationMap['attack'], { loop: THREE.LoopOnce, clampWhenFinished: true });
+				this.attackingAnimation = this.animationMap['attack'];
+			},
+			onleaveattacking: function() {
+				this.character.stopAnimation(this.attackingAnimation);
+			},
 		    onattack: function(event, from, to, msg) {
-		    	/*if(this.attackCoolDown > 0.0) {
-		    		console.log("Can't attack, cooldown in effect", this.attackCoolDown);
-		    		return false;
-		    	}*/
-		    	console.log("ATTACKING!", event, from, to, msg);
-		    	var attackCoolDown = this.character.characterStats.attackCooldown;
-		    	this.character.setAnimation(this.animationMap['attack'], { loop: THREE.LoopOnce, clampWhenFinished: true, timeScale: 1.0 });
-		    	var scope = this;
-			    setTimeout(function() {
-			        var range = scope.character.characterStats.range;
-					var me = scope.character;
-					for (var char_id in game.characters) {
-						var character = game.characters[char_id];
-						if (character != me) {
-							var dist = character.getDistance(me);
-							console.log("Enemy distance", dist);
-							if (dist < range) {
-								//character.stateMachine.hit();
-								character.hit(me);
-							}
+				for (let char_id in game.characters) {
+					if (game.characters[char_id] != this.character) {
+						if (game.characters[char_id].getDistance(this.character) < this.character.characterStats.range) {
+							game.characters[char_id].hit(this.character);
 						}
 					}
-			    }, 100);
+				}
+				let scope = this;
 		        setTimeout(function() {
 		        	scope.endattack();
-		        }, attackCoolDown - 100);
+		        }, this.character.characterStats.attackCooldown);
 		    }
 		};
 		var fsm = StateMachine.create({
@@ -286,19 +255,10 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		if(this.current == 'dead') {
 			return;
 		}
-		//physics runs before this function. Read onGround attribute set by physics
-		var onGround = this.character.onGround;
-		if(this.jumpTimer.getElapsedTime() < 0.5) {  // if we just jumped (n seconds ago) do nothing
-			// this is needed because the phyics engine does not "lift off" fast enough to not be on the ground
-			// by the second frame
-			this.character.onGround = false;
-			return;
-			
-		}
-		if(onGround && this.current == 'inair') {
+		if(this.character.onGround && this.current == 'inair') {
 			this.land();
 		} 
-		if(!onGround && this.current != 'running' && this.current != 'idling' && this.current != 'inair') {
+		if(!this.character.onGround && this.current != 'running' && this.current != 'inair') {
 			this.fall();
 		}
 		if(this.current == 'running') {
@@ -308,13 +268,17 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		//physics runs pre-update. Reset onGround attribute
 		this.character.onGround = false;
 	};	
-	var forceVec = new THREE.Vector3();
+
+	let forceVec = new THREE.Vector3();
 	BaseStateMachine.prototype.applyForces = function(delta) {
+		if(this.current != 'running') {
+			return;
+		}
 	    if(Math.abs(this.character.body.getVelocityX()) < this.character.characterStats.movementSpeed) {
 		    forceVec.copy(this.character.movementDirection);
-		    forceVec = forceVec.normalize();
-		    var f = forceVec.multiplyScalar(this.movementForce);
-		    this.character.body.applyImpulse([f.x, f.y, f.z], this.character.body.getPosition());
+		    forceVec.normalize();
+		    forceVec.multiplyScalar(this.movementForce);
+		    this.character.body.applyImpulse([forceVec.x, forceVec.y, forceVec.z], this.character.body.getPosition());
 	    }
 	};
 

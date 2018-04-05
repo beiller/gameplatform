@@ -100,14 +100,22 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		/*
 			Set the character's weight (skinny/fat)
 		*/
-	    var skinny = this.animations["body_skinny"];
-	    var fat = this.animations["body_fat"];
-	    skinny.stop();
-	    fat.stop();
-	    skinny.weight = (1.0 - weight);
-	    fat.weight = weight;
-	    fat.play();
-	    skinny.play();
+	    this.animations["body_skinny"].stop();
+	    this.animations["body_normal"].stop();
+	    this.animations["body_fat"].stop();
+	    if(weight >= 0.5) {
+	    	weight = (weight - 0.5) * 2.0;
+	    	this.animations["body_normal"].weight = (1.0 - weight);
+	    	this.animations["body_normal"].play();
+	    	this.animations["body_fat"].weight = weight;
+	    	this.animations["body_fat"].play();
+	    } else {
+	    	weight = weight * 2.0;
+	    	this.animations["body_skinny"].weight = (1.0 - weight);
+	    	this.animations["body_skinny"].play();
+	    	this.animations["body_normal"].weight = weight;
+	    	this.animations["body_normal"].play();
+	    }
 	};
 	Character.prototype.createHealthBar = function() {
 	    var sprite = new THREE.Sprite();
@@ -181,6 +189,11 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	            this.animations[animationName].play();
 	        }
 	    }
+	};
+	Character.prototype.stopAnimation = function(animationName) {
+		if(this.animations[animationName] !== undefined) {
+			this.animations[animationName].stop();
+		}
 	};
 	Character.prototype.addController = function(controller) {
 	    this.controller = controller;
