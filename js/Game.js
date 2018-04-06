@@ -146,38 +146,66 @@ function(
 			};
 			
 			var scope = this;
-			function createSpotLight(pos, tar) {
+			function createRectLight(pos) {
+				var width = .5;
+				var height = .5;
+				var bulbLight = new THREE.RectAreaLight( 0xffee88, 1, width, height );
+				//bulbLight.rotation.y = Math.PI;
+				var rectLightMesh = new THREE.Mesh( new THREE.PlaneBufferGeometry(), new THREE.MeshBasicMaterial() );
+				rectLightMesh.scale.x = bulbLight.width;
+				rectLightMesh.scale.y = bulbLight.height;
+				bulbLight.add( rectLightMesh );
+				var rectLightMeshBack = new THREE.Mesh( new THREE.PlaneBufferGeometry(), new THREE.MeshBasicMaterial( { color: 0x080808 } ) );
+				rectLightMeshBack.rotation.y = Math.PI;
+				rectLightMesh.add( rectLightMeshBack );	
+				return bulbLight;
+			}
+			function createPointLight(pos) {
+				var bulbLight = new THREE.PointLight( 0xffee88, 1, 100, 2 );
 				var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
-				//var width = 2;
-				//var height = 10;
-				//var bulbLight = new THREE.RectAreaLight( 0xffee88, undefined,  width, height );
-				var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
-				bulbLight.intensity = bulbLuminousPowers["1700 lm (100W)"];
 				var bulbMat = new THREE.MeshStandardMaterial( {
 					emissive: 0xffffee,
 					emissiveIntensity: 1,
 					color: 0x000000
 				});
 				bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
-				bulbLight.position.set( pos[0], pos[1], pos[2] );
-				bulbLight.target.position.set( tar[0], tar[1], tar[2] );
-				bulbLight.castShadow = true;
-				bulbLight.shadow.mapSize = new THREE.Vector2( scope.settings.shadowResolution, scope.settings.shadowResolution );
-				bulbLight.angle = 150.0;
-				bulbLight.shadow.camera.fov = 1.0;
-				bulbLight.shadow.camera.near = 0.1;
-				bulbLight.shadow.camera.far = 10;
-				bulbLight.distance = 10;
+				if(scope.settings.enableShadows) {
+					setupShadows(bulbLight);
+				}
+				return bulbLight;
+			}
+			function setupShadows(light) {
+				
+				light.castShadow = true;
+				light.shadow.mapSize = new THREE.Vector2( scope.settings.shadowResolution, scope.settings.shadowResolution );
+				
+				light.shadow.camera.fov = 1.0;
+				light.shadow.camera.near = 0.1;
+				light.shadow.camera.far = 10;
 				//bulbLight.shadow.bias = 0.00001;
-				scope.scene.add( bulbLight.target );
+			}
+			function createSpotLight(pos, tar) {
+				
+				//var bulbLight = createRectLight(pos);
+				var bulbLight = createPointLight(pos);
+				
+				bulbLight.intensity = bulbLuminousPowers["3500 lm (300W)"];
+		
+				bulbLight.position.set( pos[0], pos[1], pos[2] );
+				//bulbLight.target.position.set( tar[0], tar[1], tar[2] );
+				bulbLight.distance = 100;
+				//bulbLight.angle = 150.0;
+				//scope.scene.add( bulbLight.target );
 				scope.bulbLight = bulbLight;
 				return bulbLight;
 			}
 
 
-			this.spot1 = createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
+			this.spot1 = createSpotLight([0.5, 0, -10], [0, -2.5, 0]);
 			this.spot2 = createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
-			this.scene.add(   this.spot1   );
+			//this.scene.add(   this.spot1   );
+			
+			this.spot2.add(this.spot1);
 			this.scene.add(   this.spot2   );
 
 			/*var light1 = new THREE.PointLight( 0xffee88, 1, 100 );

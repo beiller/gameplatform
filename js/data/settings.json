@@ -4,7 +4,7 @@
 	"enableAA": false,
 	"enableShadows": false,
 	"shadowResolution": 1024,
-	"cubeMapResolution": 128,
-	"softShadows": true
+	"cubeMapResolution": 32,
+	"softShadows": false
 }
 
