@@ -5,7 +5,7 @@ function(StateMachine, Controller) {
         Controller.call(this, character, game);
 		this.target = 'eve';
 		this.viewDistance = 10.0;
-		this.blockPercent = 0.95;
+		this.blockPercent = 0.99;
 	}
 	
     AIController.prototype = Object.assign( Object.create( Controller.prototype ), {
@@ -16,7 +16,7 @@ function(StateMachine, Controller) {
             if(!enemy) {
                 return;
             }
-            if(currentState == 'stunned' || currentState == 'playinganimation' || currentState == 'dead') {
+            if(currentState == 'stunned' || currentState == 'playinganimation' || currentState == 'dead' || currentState == 'attacking') {
                 return;
             }
             var dist = enemy.mesh.position.x - this.character.mesh.position.x;
@@ -38,6 +38,9 @@ function(StateMachine, Controller) {
                 	this.character.movementDirection.x = 1;
                 } else {
                 	this.character.movementDirection.x = -1;
+                }
+                if(currentState == 'blocking') {
+                    this.character.stateMachine.unblock();
                 }
                 this.character.stateMachine.run();
             } else if(currentState != 'idling' && currentState != 'attacking' && currentState != 'blocking') {

@@ -16,7 +16,7 @@ define(function() {
 	    this.damagedPauseLength = 100;
 
 	    //force in some arbitrary unit
-	    this.jumpHeight = params.jumpHeight || 1.5;
+	    this.jumpHeight = params.jumpHeight || 1;
 	    //chance to block
 	    this.blockRatio = params.blockRatio || 0.2;
 	    //range

@@ -707,10 +707,33 @@ function(
     	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
     	return mesh;
 	};
+
+	var staticObjectCache = {};
+	var staticObjectCacheLock = {};
+	var staticInstanceCache = {};
 	Game.prototype.loadStaticObject = async function(jsonFileName, shape, position, options, onComplete) {
 	    if(!options) options = {};
-	    var jsonMesh = await this.loader.loadMesh(jsonFileName);
-    	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
+
+	    if(jsonFileName in staticObjectCacheLock || jsonFileName in staticObjectCache) {
+	    	if(jsonFileName in staticObjectCacheLock) {
+	    		await staticObjectCacheLock[jsonFileName];
+	    	}
+	    	var jsonMesh = staticObjectCache[jsonFileName];
+	    } else {
+    		var future = this.loader.loadMesh(jsonFileName);
+    		staticObjectCacheLock[jsonFileName] = future;
+    		staticObjectCache[jsonFileName] = await future;
+    		var jsonMesh = staticObjectCache[jsonFileName];
+    	}
+    	if(jsonFileName in staticInstanceCache) {
+    		var geometry = staticInstanceCache[jsonFileName].clone();
+    	} else {
+    		staticInstanceCache[jsonFileName] = new THREE.BufferGeometry();
+    		staticInstanceCache[jsonFileName].copy(jsonMesh.geometry);
+    		var geometry = staticInstanceCache[jsonFileName].clone();
+    	}
+		var mesh = this.parseMesh(geometry, this.parseMaterial(options), true);
+		
     	mesh.position.fromArray(position);
     	this.scene.add(mesh);
         var body = this.physicsWorld.addStaticPhysics(shape, mesh, position, options.rotation);
@@ -726,12 +749,14 @@ function(
 			}
 			this.scene.add(dmesh);
 		}
-    	return body;
+    	return new DynamicEntity(mesh, this, body);
 	};
+	
 	Game.prototype.loadDynamicObject = async function(jsonFileName, options, onComplete) {
 	    if(!options) options = {};
 	    var mass = options.mass || 10.0;
 	    var position = options.position || [0,1,0];
+	    
     	var jsonMesh = await this.loader.loadMesh(jsonFileName);
     	var mesh = this.parseMesh(jsonMesh.geometry, this.parseMaterial(options));
         
@@ -1047,6 +1072,76 @@ function(
 				game.loadStaticObject(element.model, element.shape, element.position, element.options)
 			);
 		});
+		let brick = {
+			"model": "models/big_brick.json",
+			"shape": "box",
+			"position": [0, -3.28, 0],
+			"options": { "material": [ 
+				{ "$ref": "#/materials/temple" }
+			] }
+		};
+		let lowest = -3.28;
+		let roomHeight = 5.25;
+		let brickWidth = 2.0;
+		let drawBackWall = function(height, index) {
+			//back wall
+			futures.push(
+				game.loadStaticObject(brick.model, brick.shape, [index * brickWidth, lowest + (height * roomHeight) + 2, -1], brick.options).then(function(e) { 
+					console.log(e);
+					e.body.setQuaternion([0.7071, 0,0,0.7071]);
+					e.mesh.rotation.x = Math.PI / 2;
+				})
+			);
+		}
+		let drawFloor = function(height, index) {
+			//floor
+			futures.push(
+				game.loadStaticObject(brick.model, brick.shape, [index * brickWidth, lowest + (height * roomHeight), 0], brick.options).then(function(e) { 
+					e.mesh.scale.z = 0.5;
+				})
+			);
+
+		}
+		let drawCeiling = function(height, index) {
+			//ceiling
+			futures.push(
+				game.loadStaticObject(brick.model, brick.shape, [index * brickWidth, lowest + ((height+1) * roomHeight), 0], brick.options).then(function(e) { 
+					e.mesh.scale.z = 0.5;
+				})
+			);
+		}
+		let drawLedge = function(height, index) {
+			//floor
+			futures.push(
+				game.loadStaticObject(brick.model, brick.shape, [(index+1) * brickWidth, lowest + (height * roomHeight) + 2, 0], brick.options).then(function(e) { 
+					e.mesh.scale.z = 0.5;
+				})
+			);
+			futures.push(
+				game.loadStaticObject(brick.model, brick.shape, [index * brickWidth, lowest + (height * roomHeight) + 3, 0], brick.options).then(function(e) { 
+					e.mesh.scale.z = 0.5;
+				})
+			);
+		}
+		for(let k = 0; k < 2; k++) {
+
+			for(let i = -12; i < 12; i++) {
+				if(k == 0) {
+					drawFloor(k, i);
+				}		
+				drawBackWall(k, i);
+				if(i % 3 + k - 1 == 0) {
+					drawLedge(k, i);
+				} else {
+					if(i % 3 + k == 0 || i % 3 + k - 2 == 0) {
+
+					} else {
+						drawCeiling(k, i);	
+					}
+				}
+			}
+		}
+		
 
 		var id_counter = 0;
 		game.levelData.npcs.forEach(async function(npc) {

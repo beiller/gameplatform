@@ -13,6 +13,7 @@
         "normals": 1317,
         "generator": "io_three"
     },
+    "materials": [{}],
     "influencesPerVertex": 4,
     "name": "Cube.001Geometry",
     "animations": [{

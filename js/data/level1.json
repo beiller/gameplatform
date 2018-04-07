@@ -1,85 +1,6 @@
 {
 	"staticObjects": [
-		{
-			"model": "models/temple.json",
-			"shape": "box",
-			"position": [0, -2, -3.5],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple.json",
-			"shape": "box",
-			"position": [8.359, -2, -3.5],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple.json",
-			"shape": "box",
-			"position": [16.701, -2, -3.5],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple.json",
-			"shape": "box",
-			"position": [-8.359, -2, -3.5],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple.json",
-			"shape": "box",
-			"position": [-16.701, -2, -3.5],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }, { "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple_floor.json",
-			"shape": "box",
-			"position": [0, -3.28, 2.15],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple_floor.json",
-			"shape": "box",
-			"position": [-10, -3.28, 2.15],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple_floor.json",
-			"shape": "box",
-			"position": [-20, -3.28, 2.15],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple_floor.json",
-			"shape": "box",
-			"position": [10, -3.28, 2.15],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }
-			] }
-		},
-		{
-			"model": "models/temple_floor.json",
-			"shape": "box",
-			"position": [20, -3.28, 2.15],
-			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }
-			] }
-		}
+
 	],
 	"characters": {
 	    "evil_eve": {
@@ -146,17 +67,25 @@
             ],
 	        "equipment":  []
 	    },
+	    "drip": {
+	        "model": "models/drip.json",
+	        "sss": false,
+	        "material": [
+	        	{
+	        		"color": "0x888888", 
+	        		"roughness": 0.2,
+	        		"opacity": 0.5,
+	        		"transparent": true
+
+	        	}
+            ],
+	        "equipment":  []
+	    },
 	    "skeleton": {
 	        "model": "models/skeleton.json",
 	        "sss": false,
 	        "material": [
-                {
-                	"reflectivity": 0.00001, "specular": "0xEEEEFF", "color": "0xFFFFFF", "shininess": 70,
-		        	"diffusePath": "models/neweveskin.jpg",
-		        	"specularPath": "models/neweveskin_specular_2.jpg",
-		        	"normalPath": "models/neweveskin_normal.jpg"
-	        	},
-                {"reflectivity": 0.00001, "specular": "0xAAAAAA", "color": "0x020202", "shininess": 120}
+                {"color": "0xAAAAAA", "roughness": 0.4}
             ],
 	        "equipment":  [ 
 	        	"rustsword"
@@ -562,7 +491,7 @@
 	},
 	"npcs" : [
 		{
-		    "character": "necker", 
+		    "character": "skeleton", 
 		    "position": [-11,0,0]
 		},
 		{
