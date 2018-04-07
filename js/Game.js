@@ -1129,7 +1129,9 @@ function(
 				if(k == 0) {
 					drawFloor(k, i);
 				}		
-				drawBackWall(k, i);
+				if(Math.random() > 0.5) {
+					drawBackWall(k, i);
+				}
 				if(i % 3 + k - 1 == 0) {
 					drawLedge(k, i);
 				} else {
