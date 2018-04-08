@@ -262,7 +262,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 		if(!this.character.onGround && this.current != 'running' && this.current != 'inair') {
 			this.fall();
 		}
-		if(this.current == 'running') {
+		if(this.current == 'running' || this.current == 'inair') {
 			this.applyForces(delta);
 		}
 		this.attackCoolDown -= (delta * 1000.0);
@@ -272,9 +272,6 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 
 	let forceVec = new THREE.Vector3();
 	BaseStateMachine.prototype.applyForces = function(delta) {
-		if(this.current != 'running') {
-			return;
-		}
 	    if(Math.abs(this.character.body.getVelocityX()) < this.character.characterStats.movementSpeed) {
 		    forceVec.copy(this.character.movementDirection);
 		    forceVec.normalize();
