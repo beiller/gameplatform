@@ -216,7 +216,16 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 			//createSliderControl(0, 1, 0.05, 'metalness');
 			createSliderControl(0, 1, 0.05, 'roughness', setMaterialProperty);
 			createSliderControl(0, 500, 0.05, 'envMapIntensity', setMaterialProperty);
-			createSliderControl(0.00, 10.0, 0.1, 'Animation Speed', function(e) { scope.game.characters[scope.game.camera.trackingCharacter].animationMixer.timeScale = this.valueAsNumber });
+			createSliderControl(0.00, 10.0, 0.1, 'Animation Speed', function(e) { 
+				for(let c in scope.game.characters) { 
+					if(scope.game.characters[c].stateMachine.current == 'playinganimation') {
+						if(scope.game.characters[c].stateMachine.customAnimation) {
+							scope.game.characters[c].animations[scope.game.characters[c].stateMachine.customAnimation].timeScale = this.valueAsNumber;
+						}
+						//scope.game.characters[c].animationMixer.timeScale = this.valueAsNumber;
+					}
+				}
+			});
 			createSliderControl(0.00, 1.0, 0.05, 'Character Weight', function(e) { scope.game.characters[scope.game.camera.trackingCharacter].setWeight(this.valueAsNumber);} );
 
 

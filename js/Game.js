@@ -150,7 +150,7 @@ function(
 				var width = .5;
 				var height = .5;
 				var bulbLight = new THREE.RectAreaLight( 0xffee88, 1, width, height );
-				//bulbLight.rotation.y = Math.PI;
+				bulbLight.position.set( pos[0], pos[1], pos[2] );
 				var rectLightMesh = new THREE.Mesh( new THREE.PlaneBufferGeometry(), new THREE.MeshBasicMaterial() );
 				rectLightMesh.scale.x = bulbLight.width;
 				rectLightMesh.scale.y = bulbLight.height;
@@ -162,16 +162,40 @@ function(
 			}
 			function createPointLight(pos) {
 				var bulbLight = new THREE.PointLight( 0xffee88, 1, 100, 2 );
+				bulbLight.position.set( pos[0], pos[1], pos[2] );
 				var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
 				var bulbMat = new THREE.MeshStandardMaterial( {
 					emissive: 0xffffee,
 					emissiveIntensity: 1,
 					color: 0x000000
 				});
-				bulbLight.add( new THREE.Mesh( bulbGeometry, bulbMat ) );
+				var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
+				mesh.castShadow = false;
+				mesh.receiveShadow = false;
+				bulbLight.add( mesh );
 				if(scope.settings.enableShadows) {
 					setupShadows(bulbLight);
 				}
+				return bulbLight;
+			}
+			function createSpotLight(pos, tar) {
+				var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
+				bulbLight.position.set( pos[0], pos[1], pos[2] );
+				bulbLight.target.position.set( tar[0], tar[1], tar[2] );
+				var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
+				var bulbMat = new THREE.MeshStandardMaterial( {
+					emissive: 0xffffee,
+					emissiveIntensity: 1,
+					color: 0x000000
+				});
+				var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
+				mesh.castShadow = false;
+				mesh.receiveShadow = false;
+				bulbLight.add( mesh );
+				if(scope.settings.enableShadows) {
+					setupShadows(bulbLight);
+				}
+				bulbLight.angle = 150.0;
 				return bulbLight;
 			}
 			function setupShadows(light) {
@@ -181,32 +205,32 @@ function(
 				
 				light.shadow.camera.fov = 1.0;
 				light.shadow.camera.near = 0.1;
-				light.shadow.camera.far = 10;
-				//bulbLight.shadow.bias = 0.00001;
+				light.shadow.camera.far = 4;
+				//light.shadow.bias = 0.00001;
 			}
-			function createSpotLight(pos, tar) {
+			function createLight(pos, tar) {
 				
 				//var bulbLight = createRectLight(pos);
-				var bulbLight = createPointLight(pos);
+				//var bulbLight = createPointLight(pos);
+				var bulbLight = createSpotLight(pos, tar);
 				
 				bulbLight.intensity = bulbLuminousPowers["3500 lm (300W)"];
-		
-				bulbLight.position.set( pos[0], pos[1], pos[2] );
-				//bulbLight.target.position.set( tar[0], tar[1], tar[2] );
 				bulbLight.distance = 100;
-				//bulbLight.angle = 150.0;
+				//
 				//scope.scene.add( bulbLight.target );
 				scope.bulbLight = bulbLight;
 				return bulbLight;
 			}
 
 
-			this.spot1 = createSpotLight([0.5, 0, -10], [0, -2.5, 0]);
-			this.spot2 = createSpotLight([0.5, 0, 5], [0, -2.5, 0]);
+			this.spot1 = createLight([0.5, 0, -4], [0, -2.5, 0]);
+			this.spot2 = createLight([0.5, 0, 2], [0, -2.5, 0]);
 			//this.scene.add(   this.spot1   );
 			
-			this.spot2.add(this.spot1);
+			//this.spot2.add(this.spot1);
+			//this.spot2.add(this.spot1.target);
 			this.scene.add(   this.spot2   );
+			this.scene.add(   this.spot2.target   );
 
 			/*var light1 = new THREE.PointLight( 0xffee88, 1, 100 );
 			var bulbMat = new THREE.MeshStandardMaterial( {
@@ -663,7 +687,6 @@ function(
 				'emissive': materialOptions.emissive ? new THREE.Color( parseInt(materialOptions.emissive, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0,
 				'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.95,
-				'side': THREE.DoubleSide
 				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0
 				//'side': THREE.DoubleSide
 			};

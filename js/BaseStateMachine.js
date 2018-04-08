@@ -144,6 +144,7 @@ define(['lib/state-machine', 'lib/three'], function(StateMachine, THREE) {
 			},
 			onleaveplayinganimation: function(event, from, to, msg) {
 				this.character.stopAnimation(this.customAnimation);
+				this.character.animationMixer.timeScale = 1.0;
 			},
 			onenterstunned: function() {
 				this.character.playAnimation(this.animationMap['hit']);

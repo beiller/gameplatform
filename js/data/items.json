@@ -884,7 +884,7 @@
     "uunp_hair2_phys": {"name": "Short Hair (physics)",  "model": "uunp_test/hair2_phys.json", "slot": "hair", 
         "physicsChain" : [
             {
-                "bone": "hair1", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9999
+                "bone": "hair1", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9
             }
         ],
         "physics": [
@@ -904,13 +904,13 @@
     "uunp_hair1_phys": {"name": "Long Hair (physics)",  "model": "uunp_test/hair1_phys.json", "slot": "hair", 
         "physicsChain" : [
             {
-                "bone": "s1", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9999
+                "bone": "s1", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9
             },
             {
-                "bone": "s2", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9999
+                "bone": "s2", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9
             },
             {
-                "bone": "s3", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9999
+                "bone": "s3", "connect_body": "NPC Head [Head]", "dof": 0.5, "mass": 0.1, "damping": 0.9
             }
         ],
         "physics": [

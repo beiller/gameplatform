@@ -102,7 +102,8 @@
     	"diffusePath": "uunp_test/femalebody_2.png",
     	"roughnessPath": "uunp_test/body_roughness.png",
     	"bumpPath": "uunp_test/femalebody_b.png",
-    	"bumpScale": 0.01
+    	"bumpScale": 0.0003,
+    	"emissive": "0xFF2266", "emissiveIntensity": 2
 	},
 	"gens_f": {
     	"roughness": 0.6, "name": "body",
@@ -114,20 +115,23 @@
     	"diffusePath": "uunp_test/femalehands_1.png",
     	"roughnessPath": "uunp_test/hands_roughness.png",
     	"normalPath": "mr/hands_normal.png",
-    	"normalScale": 1
+    	"normalScale": 1,
+    	"emissive": "0xFF2266", "emissiveIntensity": 2
 	},
 	"head": {
     	"roughness": 1, "name": "head",
     	"diffusePath": "uunp_test/femalehead.png",
     	"roughnessPath": "uunp_test/head_roughness.png",
     	"bumpPath": "uunp_test/head_bump.png",
-    	"bumpScale": 0.0005
+    	"bumpScale": 0.0005,
+    	"emissive": "0xFF2266", "emissiveIntensity": 2
 	},
 	"eyes": {
 		"color": "0xFFFFFF",
     	"name": "eyes", "transparent": false,
     	"roughnessPath": "mr/eyes_roughness.png",
-    	"diffusePath": "mr/eyes_blue.png"
+    	"diffusePath": "mr/eyes_blue.png",
+    	"emissive": "0xFFFFFF", "emissiveIntensity": 1
 	},
 	"eyes.lashes": {
 		"color": "0xFFFFFF",
