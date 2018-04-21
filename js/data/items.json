@@ -792,17 +792,17 @@
             ]
         }
     },
-    "uunp_head1": {"name": "uunp_head1",  "model": "uunp_test/head1.json", "slot": "head", "options": { 
+    "uunp_head1": {"name": "uunp_head1",  "model": "uunp_test/head1_ultra.json", "slot": "head", "options": { 
             "material": [
                 { "$ref": "#/materials/eyes.lashes" },
-                { "$ref": "#/materials/eyes" },
+                {"roughness": 1, "color": "0x000000", "name": "eye_black" },
                 { "$ref": "#/materials/head" },
-                {"roughness": 0.2, "color": "0xE8E8E8", "name": "teeth" },
+                {"roughness": 0.2, "color": "0xDDDDDD", "name": "teeth" },
+                { "$ref": "#/materials/eyes" },
                 { "$ref": "#/materials/body" },
                 { "$ref": "#/materials/eye_glass" },
                 {"roughness": 0.2, "color": "0xBB6666", "name": "mouth" },
                 { "$ref": "#/materials/brows" }
-
             ]
         }
     },

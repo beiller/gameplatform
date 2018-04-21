@@ -296,7 +296,7 @@
 	        ]
 	    },
 	    "uunp_test": {
-	        "model": "uunp_test/body.json",
+	        "model": "uunp_test/body_ultra.json",
 	        "sss": false,
 	        "material": [
                 { "$ref": "#/materials/body" }
@@ -326,7 +326,7 @@
 
 				"shorts1",
 				"shirt1",
-				
+
 				"uunp_boots2",
 				"uunp_stocking1",
 				"uunp_bra1",

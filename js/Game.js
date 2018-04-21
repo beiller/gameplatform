@@ -1,11 +1,13 @@
 define([
 	"lib/three", "lib/zepto", "Character", "physics/Physics", "PhysRig",
 	"entity/DynamicEntity", "entity/Camera", "Loader", 'controller/AIController', 'controller/UserController',
-	"PMREMGenerator", "PMREMCubeUVPacker", "EffectComposer"
+	"PMREMGenerator", "PMREMCubeUVPacker", "EffectComposer", "EquiangularToCubeGenerator", "EXRLoader",
+	"HDRCubeTextureLoader"
 ], 
 function(
 		THREE, $, Character, Physics, PhysRig, DynamicEntity, Camera, Loader, AIController, 
-		UserController, PMREMGenerator, PMREMCubeUVPacker, EffectComposer
+		UserController, PMREMGenerator, PMREMCubeUVPacker, EffectComposer, EquiangularToCubeGenerator, EXRLoader,
+		HDRCubeTextureLoader
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -40,6 +42,14 @@ function(
 	    this.useSSAO = false;
 	    
 	    this.physicsWorld = new Physics();
+
+	    var toneMappingOptions = {
+			None: THREE.NoToneMapping,
+			Linear: THREE.LinearToneMapping,
+			Reinhard: THREE.ReinhardToneMapping,
+			Uncharted2: THREE.Uncharted2ToneMapping,
+			Cineon: THREE.CineonToneMapping
+		};
 	}
 	Game.prototype.makeTextTexture = function( message, parameters ) {
 	    if ( parameters === undefined ) parameters = {};
@@ -126,6 +136,7 @@ function(
 				"800 lm (60W)": 800,
 				"400 lm (40W)": 400,
 				"180 lm (25W)": 180,
+				"75 lm (15W)": 75,
 				"20 lm (4W)": 20,
 				"Off": 0
 			};
@@ -214,14 +225,13 @@ function(
 				//var bulbLight = createPointLight(pos);
 				var bulbLight = createSpotLight(pos, tar);
 				
-				bulbLight.intensity = bulbLuminousPowers["3500 lm (300W)"];
+				bulbLight.intensity = bulbLuminousPowers["75 lm (15W)"];
 				bulbLight.distance = 100;
 				//
 				//scope.scene.add( bulbLight.target );
 				scope.bulbLight = bulbLight;
 				return bulbLight;
 			}
-
 
 			this.spot1 = createLight([0.5, 0, -4], [0, -2.5, 0]);
 			this.spot2 = createLight([0.5, 0, 2], [0, -2.5, 0]);
@@ -266,9 +276,9 @@ function(
 			var lightHelper = new THREE.SpotLightHelper( bulbLight );
 			this.scene.add( lightHelper );*/
 			
-			hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
+			/*hemiLight = new THREE.HemisphereLight( 0xddeeff, 0x0f0e0d, 0.02 );
 			hemiLight.intensity = hemiLuminousIrradiances["25 lx (Shade)"];
-			this.scene.add( hemiLight );
+			this.scene.add( hemiLight );*/
 
 	};
 
@@ -295,8 +305,9 @@ function(
 		this.renderer.gammaInput = true;
 		this.renderer.gammaOutput = true;
 		this.renderer.shadowMap.enabled = true;
-		this.renderer.toneMapping = THREE.ReinhardToneMapping;
-		this.exposureSetting = 3.0;
+		this.renderer.toneMapping = THREE.Uncharted2ToneMapping;
+		//this.exposureSetting = 3.0;
+		this.renderer.toneMappingExposure = Math.pow(0.31, 3.0);
 	    this.renderer.setClearColor( 0x050505 );
 	    this.renderer.setPixelRatio( window.devicePixelRatio );
 	    this.renderer.setSize( window.innerWidth, window.innerHeight );
@@ -308,9 +319,9 @@ function(
 	
 	    this.container.appendChild( this.renderer.domElement );
 	    
-	    this.cubeCamera = new THREE.CubeCamera( 0.01, 1000, this.settings.cubeMapResolution );
+	    //this.cubeCamera = new THREE.CubeCamera( 0.01, 1000, this.settings.cubeMapResolution );
 
-	    this.scene.add( this.cubeCamera );
+	    //this.scene.add( this.cubeCamera );
 
 
 		// Setup render pass
@@ -613,7 +624,7 @@ function(
             geometry.computeBoundingSphere();
         }
         console.log(materials);
-        var radius = geometry.boundingSphere.radius;
+        let radius = geometry.boundingSphere.radius;
 
     	var main_material = this.parseMaterial(options);
         var mesh = new THREE.SkinnedMesh(geometry, main_material);
@@ -630,7 +641,7 @@ function(
 
 		var character = new Character(mesh, this, body, options.name);
 		character.addEventListener("COLLIDE", function(event) { 
-			if(event.collisionPoint[1] - character.body.getPositionY() < 0.0000) {
+			if(event.collisionPoint[1] - (character.body.getPositionY()-radius) < 0.05) {
 				character.onGround = true;
 			}
 		});
@@ -683,7 +694,7 @@ function(
 				'metalness': 'metalness' in materialOptions ? materialOptions.metalness : 0.0,
 				'roughness': 'roughness' in materialOptions ? materialOptions.roughness : 1.0,
 				'skinning': true,
-				'envMapIntensity': 100.0,
+				//'envMapIntensity': 100.0,
 				'emissive': materialOptions.emissive ? new THREE.Color( parseInt(materialOptions.emissive, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0,
 				'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.95,
@@ -694,6 +705,8 @@ function(
 			if(this.cubeCamera) {
 				map['envMap'] = this.cubeCamera.renderTarget.texture;
 				//map['envMap'] = this.pmremCubeUVPacker.CubeUVRenderTarget.texture;
+			} else {
+				console.error("No cube camera");
 			}
 			console.log("Roughness", map.roughness);
 			if('specular' in map || 'specularPath' in map) {
@@ -820,6 +833,49 @@ function(
 		}
 
 	    //this.render();
+	};
+	Game.prototype.loadEXRMap = function () {
+		var renderer = this.renderer;
+		return new Promise(function(resolve) { 
+			var genCubeUrls = function( prefix, postfix ) {
+				return [
+					prefix + 'px' + postfix, prefix + 'nx' + postfix,
+					prefix + 'py' + postfix, prefix + 'ny' + postfix,
+					prefix + 'pz' + postfix, prefix + 'nz' + postfix
+				];
+			};
+			var hdrUrls = genCubeUrls( 'https://threejs.org/examples/textures/cube/pisaHDR/', '.hdr' );
+			new THREE.HDRCubeTextureLoader().load( THREE.UnsignedByteType, hdrUrls, function ( hdrCubeMap ) {
+
+				var pmremGenerator = new THREE.PMREMGenerator( hdrCubeMap );
+				pmremGenerator.update( renderer );
+
+				var pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( pmremGenerator.cubeLods );
+				pmremCubeUVPacker.update( renderer );
+
+				hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
+
+				hdrCubeMap.dispose();
+				//pmremGenerator.dispose();
+				//pmremCubeUVPacker.dispose();
+				resolve(pmremCubeUVPacker.CubeUVRenderTarget);
+
+			} );
+
+			/*new THREE.EXRLoader().load( "textures/uffizi-large-uncompressed.exr", function ( texture ) {
+				texture.minFilter = THREE.NearestFilter;
+				texture.magFilter = THREE.NearestFilter;
+				texture.encoding = THREE.LinearEncoding;
+				var cubemapGenerator = new THREE.EquiangularToCubeGenerator( texture, 512 );
+				var cubeMapTexture = cubemapGenerator.generate( renderer );
+				var pmremGenerator = new THREE.PMREMGenerator( cubeMapTexture );
+				pmremGenerator.update( renderer );
+				var pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( pmremGenerator.cubeLods );
+				pmremCubeUVPacker.update( renderer );
+				//exrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
+				resolve(pmremCubeUVPacker.CubeUVRenderTarget);
+			} );*/
+		});
 	};
 	Game.prototype.updateCubeMap = function() {
 		if(this.camera.trackingCharacter) {
@@ -1025,82 +1081,21 @@ function(
 		};
 		setInterval(updateFunction, 30);
 	};
-	var resolveUrl = (jsonUrl, dataReference) => {
-		/*
-			Resolve a URL node eg. 
-			{
-				"material": [
-            		{ "$ref": "#/materials/materialname1" },
-            		{ "$ref": "#/materials/materialname2" }
-        		]
-        	}
-		*/
-		let fullUrl = jsonUrl.split('#/')[1];
-		let rootUrl = fullUrl.split('/')[0];
-		let objectUrl = fullUrl.split('/')[1];
-		if(rootUrl === 'materials') {
-			var objectRef = dataReference[objectUrl];
-			//copy the object
-			var objectInstance = JSON.parse(JSON.stringify(objectRef));
-			return objectInstance;
-		}
-	};
-	var findVal = (myObject, current, materialsData) => {
-		/*
-			Recursively replace ref keys.
-			Max recursion depth of n
-		*/
-		let MAX_RECUSION = 10;
-		current = current || 0;
-		for (let key in myObject) {
-			if(myObject[key].hasOwnProperty('$ref')) {
-				myObject[key] = resolveUrl(myObject[key]['$ref'], materialsData);
-			} else {
-				if(current < MAX_RECUSION) {
-					findVal(myObject[key], current+1, materialsData);
-				}
-			}
-		}
-		return myObject;
-	};
-	Game.loadLevel = async function(levelFileName) {
-		var loader = new Loader();
-		var gameSettings = await loader.loadJSON("js/data/settings.json");
-		var game = new Game(gameSettings);
-
-		
-		game.materialsData = await loader.loadJSON("js/data/materials.json");
-		var postProcess = (jsonData) => { return findVal(jsonData, 0, game.materialsData); }
-		game.levelData = await loader.loadJSON(levelFileName, postProcess);
-		game.itemData = await loader.loadJSON("js/data/items.json", postProcess);
-
-		game.initRendering();
-		game.render();
-		game.updateCubeMap();
-
-		//show loading progress
-		var interval = setInterval(function() {
-			document.getElementById("debugConsole").innerHTML = 'loading: '+game.loader.total+'/'+game.loader.pending;
-		}, 100);
-
-		var futures = [];
-		if(game.levelData.player) {
-			futures.push(
-				game.spawnCharacter(game.levelData.player.character, game.levelData.player.position, 'eve', UserController)
-			);
-		}
-
-		game.levelData.staticObjects.forEach(function(element) {
-			futures.push(
-				game.loadStaticObject(element.model, element.shape, element.position, element.options)
-			);
-		});
+	Game.prototype.generateProceduralLevel = function(futures) {
+		let game = this;
 		let brick = {
 			"model": "models/big_brick.json",
 			"shape": "box",
 			"position": [0, -3.28, 0],
 			"options": { "material": [ 
-				{ "$ref": "#/materials/temple" }
+				{
+					"color": "0xDDDDDD",
+					"diffusePath": "models/concrete_floor_20131007_1557821133.jpg", 
+			    	"roughness": 0.4,
+			    	"metalness": 0.1,
+			    	"transparent": false, 
+			    	"name": "stone"
+				}
 			] }
 		};
 		let lowest = -3.28;
@@ -1110,7 +1105,6 @@ function(
 			//back wall
 			futures.push(
 				game.loadStaticObject(brick.model, brick.shape, [index * brickWidth, lowest + (height * roomHeight) + 2, -1], brick.options).then(function(e) { 
-					console.log(e);
 					e.body.setQuaternion([0.7071, 0,0,0.7071]);
 					e.mesh.rotation.x = Math.PI / 2;
 				})
@@ -1166,14 +1160,92 @@ function(
 				}
 			}
 		}
+	}
+	var resolveUrl = (jsonUrl, dataReference) => {
+		/*
+			Resolve a URL node eg. 
+			{
+				"material": [
+            		{ "$ref": "#/materials/materialname1" },
+            		{ "$ref": "#/materials/materialname2" }
+        		]
+        	}
+		*/
+		let fullUrl = jsonUrl.split('#/')[1];
+		let rootUrl = fullUrl.split('/')[0];
+		let objectUrl = fullUrl.split('/')[1];
+		if(rootUrl === 'materials') {
+			var objectRef = dataReference[objectUrl];
+			//copy the object
+			var objectInstance = JSON.parse(JSON.stringify(objectRef));
+			return objectInstance;
+		}
+	};
+	var findVal = (myObject, current, materialsData) => {
+		/*
+			Recursively replace ref keys.
+			Max recursion depth of n
+		*/
+		let MAX_RECUSION = 10;
+		current = current || 0;
+		for (let key in myObject) {
+			if(myObject[key].hasOwnProperty('$ref')) {
+				myObject[key] = resolveUrl(myObject[key]['$ref'], materialsData);
+			} else {
+				if(current < MAX_RECUSION) {
+					findVal(myObject[key], current+1, materialsData);
+				}
+			}
+		}
+		return myObject;
+	};
+	Game.loadLevel = async function(levelFileName) {
+		var loader = new Loader();
+		var gameSettings = await loader.loadJSON("js/data/settings.json");
+		var game = new Game(gameSettings);
+
 		
+		game.materialsData = await loader.loadJSON("js/data/materials.json");
+		var postProcess = (jsonData) => { return findVal(jsonData, 0, game.materialsData); }
+		game.levelData = await loader.loadJSON(levelFileName, postProcess);
+		game.itemData = await loader.loadJSON("js/data/items.json", postProcess);
+
+		game.initRendering();
+		game.render();
+		//game.updateCubeMap();
+		var cubemap = await game.loadEXRMap();
+		game.cubeCamera = {
+			renderTarget: {
+				texture: cubemap.texture
+			}
+		};
+
+		//show loading progress
+		var interval = setInterval(function() {
+			document.getElementById("debugConsole").innerHTML = 'loading: '+game.loader.total+'/'+game.loader.pending;
+		}, 100);
+
+		var futures = [];
+		if(game.levelData.player) {
+			futures.push(
+				game.spawnCharacter(game.levelData.player.character, game.levelData.player.position, 'eve', UserController)
+			);
+		}
+
+		game.levelData.staticObjects.forEach(function(element) {
+			futures.push(
+				game.loadStaticObject(element.model, element.shape, element.position, element.options)
+			);
+		});
+		
+		game.generateProceduralLevel(futures);
 
 		var id_counter = 0;
 		game.levelData.npcs.forEach(async function(npc) {
 			futures.push(game.spawnCharacter(npc.character, npc.position));
 			id_counter += 1;
 		});
-		futures.push(game.loadEnvironment("textures/forest_park.jpg"));
+		//futures.push(game.loadEnvironment("textures/forest_park.jpg"));
 
 		//wait for loading to finish
 		for(var i = 0; i < futures.length; i++) {

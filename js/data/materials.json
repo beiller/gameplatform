@@ -14,10 +14,10 @@
 		"transparent": false, "name": "black"
 	},
 	"metal": {
-		"roughness": 0.05, "color": "0xDDDDDD", "metalness": 1.0, "name": "metal" 
+		"roughness": 0.05, "color": "0xAAAAAA", "metalness": 1.0, "name": "metal" 
 	},
     "eye_glass": {
-        "roughness": 0.01, "transparent": true, "opacity": 0.15, "metalness": 1.0
+        "roughness": 0.01, "transparent": true, "opacity": 0.25, "metalness": 1.0
     },
     "glass": {
         "roughness": 0.01, "transparent": true, "opacity": 0.15, "metalness": 1.0
@@ -58,7 +58,7 @@
     	"name": "cloth1"
 	},
 	"armor1": {
-		"color": "0xEEEEEE",
+		"color": "0xAAAAAA",
 		"diffusePath": "uunp_test/Human_F_L27_Body_diff.jpg",
 		"normalPath": "uunp_test/Human_F_L27_Body_norm.jpg",
     	"normalScale": 1.0,
@@ -67,7 +67,7 @@
     	"name": "armor1"
 	},
 	"armor1_metal": {
-		"color": "0xEEEEEE",
+		"color": "0xAAAAAA",
 		"normalPath": "uunp_test/Human_F_L27_Body_norm.jpg",
     	"roughness": 0.20,
     	"metalness": 1,
@@ -83,7 +83,7 @@
     	"name": "leather_armor"
 	},
 	"boots3": {
-		"color": "0xFFFFFF",
+		"color": "0xAAAAAA",
 		"diffusePath": "uunp_test/Human_F_L27_Leg_diff.jpg",
 		"normalPath": "uunp_test/Human_F_L27_Leg_norm.jpg",
     	"roughness": 0.25,
@@ -91,7 +91,7 @@
     	"name": "armor1_metal"
 	},
 	"boots3_metal": {
-		"color": "0xEEEEEE",
+		"color": "0xAAAAAA",
 		"normalPath": "uunp_test/Human_F_L27_Leg_norm.jpg",
     	"roughness": 0.20,
     	"metalness": 1,
@@ -101,40 +101,36 @@
     	"roughness": 1, "name": "body",
     	"diffusePath": "uunp_test/femalebody_2.png",
     	"roughnessPath": "uunp_test/body_roughness.png",
-    	"bumpPath": "uunp_test/femalebody_b.png",
-    	"bumpScale": 0.0003,
-    	"emissive": "0xFF2266", "emissiveIntensity": 2
+    	"normalPath": "uunp_test/femalebody_n.png",
+    	"normalScale": 0.9,
+    	"bumpScale": 0.0003
 	},
 	"gens_f": {
     	"roughness": 0.6, "name": "body",
-    	"diffusePath": "uunp_test/femalebody_2.png",
-    	"emissive": "0xFF2222", "emissiveIntensity": 2
+    	"diffusePath": "uunp_test/femalebody_2.png"
 	},
 	"hands": {
     	"roughness": 1, "name": "hands",
     	"diffusePath": "uunp_test/femalehands_1.png",
     	"roughnessPath": "uunp_test/hands_roughness.png",
     	"normalPath": "mr/hands_normal.png",
-    	"normalScale": 1,
-    	"emissive": "0xFF2266", "emissiveIntensity": 2
+    	"normalScale": 1
 	},
 	"head": {
     	"roughness": 1, "name": "head",
     	"diffusePath": "uunp_test/femalehead.png",
     	"roughnessPath": "uunp_test/head_roughness.png",
-    	"bumpPath": "uunp_test/head_bump.png",
-    	"bumpScale": 0.0005,
-    	"emissive": "0xFF2266", "emissiveIntensity": 2
+    	"normalPath": "uunp_test/head_normal.png",
+    	"normalScale": 2.0,
+    	"bumpScale": 0.0005
 	},
 	"eyes": {
 		"color": "0xFFFFFF",
     	"name": "eyes", "transparent": false,
-    	"roughnessPath": "mr/eyes_roughness.png",
-    	"diffusePath": "mr/eyes_blue.png",
-    	"emissive": "0xFFFFFF", "emissiveIntensity": 1
+    	"roughness": 1.0,
+    	"diffusePath": "mr/eyes_blue.png"
 	},
 	"eyes.lashes": {
-		"color": "0xFFFFFF",
     	"name": "eyes", "transparent": true,
     	"diffusePath": "mr/eyes_blue.png"
 	},
@@ -160,7 +156,7 @@
     	"name": "boots2"
 	},
 	"boots2_metal": {
-		"color": "0xFFFFFF",
+		"color": "0xAAAAAA",
     	"normalPath": "uunp_test/Castanic_F_L21_Leg_n.png",
     	"transparent": false, 
     	"roughness": 0.2,
@@ -177,7 +173,7 @@
     	"name": "corset1"
 	},
 	"corset1_metal": {
-		"color": "0xFFFFFF",
+		"color": "0xAAAAAA",
     	"normalPath": "uunp_test/Castanic_F_L21_Body_n.png",
     	"roughness": 0.2,
     	"transparent": false,
