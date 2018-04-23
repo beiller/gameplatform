@@ -412,25 +412,29 @@ function(
 	    window.addEventListener( 'resize', onWindowResize, false );
 	};
 	Game.prototype.loadEnvironment = async function(envMapPath, onComplete) {
-	    var texture = await this.loader.loadTexture(envMapPath);
+	    //var texture = await this.loader.loadTexture(envMapPath);
 
         var mesh = new THREE.Mesh(
         	new THREE.SphereGeometry(50, 60, 40), 
         	new THREE.MeshStandardMaterial(
         		{
-        			emissiveMap: texture,
-        			emissiveIntensity: 100.0,
-        			emissive: new THREE.Color( 0xFFFFFF ),
-        			side: THREE.DoubleSide
+        			//emissiveMap: texture,
+        			//emissiveIntensity: 100.0,
+        			//emissive: new THREE.Color( 0xFFFFFF ),
+        			envMap: this.cubeCamera.renderTarget.texture,
+        			envMapIntensity: 15000.0,
+        			side: THREE.BackSide,
+        			roughness: 0,
+        			metalness: 1
         		}
         	)
         );
         //var mesh = new THREE.Mesh(new THREE.SphereGeometry(50, 60, 40), new THREE.MeshBasicMaterial({map: texture}));
-        mesh.scale.x = -1.0;
+        //mesh.scale.x = -1;
         this.scene.add(mesh);
         if(onComplete !== undefined) onComplete(mesh);
 
-	    //var geometry = new THREE.PlaneGeometry( 50, 5, 1, 1 );
+	    /*//var geometry = new THREE.PlaneGeometry( 50, 5, 1, 1 );
 	    var geometry = new THREE.BoxGeometry(200, 1, 12);
 		var material = new THREE.MeshPhongMaterial( { color: 0xaaaaaa } );
 		var floor = new THREE.Mesh( geometry, material );
@@ -438,7 +442,7 @@ function(
 		//floor.material.side = THREE.DoubleSide;
 		floor.castShadow = this.settings.enableShadows;
         floor.receiveShadow = this.settings.enableShadows;
-		this.scene.add( floor );
+		this.scene.add( floor );*/
 	};
 	Game.prototype.loadPhysBones = function(character) {
 		//return null;
@@ -1293,7 +1297,7 @@ function(
 			futures.push(game.spawnCharacter(npc.character, npc.position));
 			id_counter += 1;
 		});
-		//futures.push(game.loadEnvironment("textures/forest_park.jpg"));
+		futures.push(game.loadEnvironment());
 
 		//wait for loading to finish
 		for(var i = 0; i < futures.length; i++) {
