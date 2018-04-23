@@ -209,6 +209,32 @@ function(
 				bulbLight.angle = 150.0;
 				return bulbLight;
 			}
+			function createDirectionLight(pos) {
+				var light = new THREE.DirectionalLight( 0xffee88, 1.75 );
+				light.position.set( pos[0], pos[1], pos[2] );
+
+				if(scope.settings.enableShadows) {
+					setupShadows(light);
+				}
+				/*light.castShadow = true;
+				light.shadow.mapSize.width = 4096;
+				light.shadow.mapSize.height = 4096;
+				light.shadow.camera.near = 2;
+				light.shadow.camera.far = 10;*/
+				/*light.shadow.camera.left = -2;
+				light.shadow.camera.right = 2;
+				light.shadow.camera.top = 2;
+				light.shadow.camera.bottom = -2;*/
+
+				var helper = new THREE.DirectionalLightHelper( light );
+				light.add(helper);
+
+				//light.intensity = bulbLuminousPowers["20 lm (4W)"];
+				light.intensity = 50000;
+				light.distance = 100;
+
+				return light;
+			}
 			function setupShadows(light) {
 				
 				light.castShadow = true;
@@ -216,16 +242,17 @@ function(
 				
 				light.shadow.camera.fov = 1.0;
 				light.shadow.camera.near = 0.1;
-				light.shadow.camera.far = 4;
+				light.shadow.camera.far = 6;
 				//light.shadow.bias = 0.00001;
 			}
 			function createLight(pos, tar) {
 				
 				//var bulbLight = createRectLight(pos);
 				//var bulbLight = createPointLight(pos);
-				var bulbLight = createSpotLight(pos, tar);
+				var bulbLight = createDirectionLight(pos, tar);
 				
-				bulbLight.intensity = bulbLuminousPowers["75 lm (15W)"];
+				//bulbLight.intensity = bulbLuminousPowers["75 lm (15W)"];
+				bulbLight.intensity = 50000;
 				bulbLight.distance = 100;
 				//
 				//scope.scene.add( bulbLight.target );
@@ -233,14 +260,15 @@ function(
 				return bulbLight;
 			}
 
-			this.spot1 = createLight([0.5, 0, -4], [0, -2.5, 0]);
-			this.spot2 = createLight([0.5, 0, 2], [0, -2.5, 0]);
+			//this.spot1 = createLight([0.5, 0, -4], [0, -2.5, 0]);
+			//this.spot2 = createLight([0.5, 0, 2], [0, -2.5, 0]);
+			this.spot2 = createLight([2, 1, 4], [0,0,0])
 			//this.scene.add(   this.spot1   );
 			
 			//this.spot2.add(this.spot1);
 			//this.spot2.add(this.spot1.target);
 			this.scene.add(   this.spot2   );
-			this.scene.add(   this.spot2.target   );
+			//this.scene.add(   this.spot2.target   );
 
 			/*var light1 = new THREE.PointLight( 0xffee88, 1, 100 );
 			var bulbMat = new THREE.MeshStandardMaterial( {
@@ -284,6 +312,26 @@ function(
 
 
 	Game.prototype.initRendering = function() {
+		if(this.settings.usePCSS) {
+			// overwrite shadowmap code
+
+			var shader = THREE.ShaderChunk.shadowmap_pars_fragment;
+
+			shader = shader.replace(
+				'#ifdef USE_SHADOWMAP',
+				'#ifdef USE_SHADOWMAP' +
+				document.getElementById( 'PCSS' ).textContent
+			);
+
+			shader = shader.replace(
+				'#if defined( SHADOWMAP_TYPE_PCF )',
+				document.getElementById( 'PCSSGetShadow' ).textContent +
+				'#if defined( SHADOWMAP_TYPE_PCF )'
+			);
+
+			THREE.ShaderChunk.shadowmap_pars_fragment = shader;
+		}
+
 		this.renderer = new THREE.WebGLRenderer( { antialias: this.settings.enableAA } );
 	    this.clock = new THREE.Clock;
 	
@@ -694,7 +742,7 @@ function(
 				'metalness': 'metalness' in materialOptions ? materialOptions.metalness : 0.0,
 				'roughness': 'roughness' in materialOptions ? materialOptions.roughness : 1.0,
 				'skinning': true,
-				//'envMapIntensity': 100.0,
+				'envMapIntensity': 5000.0,
 				'emissive': materialOptions.emissive ? new THREE.Color( parseInt(materialOptions.emissive, 16) ) : new THREE.Color( 0xFFFFFF ),
 				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0,
 				'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.95,

@@ -5,6 +5,7 @@
 	"enableShadows": true,
 	"shadowResolution": 4096,
 	"cubeMapResolution": 32,
-	"softShadows": false
+	"softShadows": true,
+	"usePCSS": false
 }
 
