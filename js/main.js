@@ -16,9 +16,9 @@ requirejs.config({
 // Start the main app logic.
 requirejs(
 	[
-		'HUD', 'lib/three'
+		'HUD', 'lib/three', 'Game'
 	],
-	function(HUD, THREE) {
+	function(HUD, THREE, Game) {
 	/**
 	 * Uniforms library for RectAreaLight shared webgl shaders
 	 * @author abelnation
@@ -86,21 +86,38 @@ requirejs(
 		   return suppressErrorAlert;
 		};
 		*/
+		// Registering component in foo-component.js
+		AFRAME.registerComponent('mygame', {
+			schema: {},
+			init: function () {
+				
+				var scene = this.el.sceneEl.object3D;
+				var renderer = this.el.sceneEl.renderer;
+				console.log(scene, renderer);
+				var scope = this;
+				Game.loadLevel("js/data/level1.json", scene, renderer).then(function(game) {
+					scope.game = game;
+				});
+				
+			},
+			update: function () {},
+			tick: function () {
+				if(this.game) {
+					this.game.animate();
+				}
+			},
+			remove: function () {},
+			pause: function () {},
+			play: function () {}
+		});
 
-		
-		/*var loader = new Loader();
-		Promise.all([
-			loader.loadJSON("js/data/settings.json"),
-			loader.loadJSON("level2/level2.json"),
-			loader.loadJSON("js/data/items.json")
-		]).then(function(arr) {
-			var gameSettings = arr[0],
-    			levelData = arr[1],
-    			itemData = arr[2];
-			runGame(gameSettings, levelData, itemData);
-		}, function(e) { throw e; });*/
+		/*setTimeout(function() {
+			var sphereEl = document.createElement('a-entity');
+			sphereEl.setAttribute('mygame', '');
+			document.querySelector('a-scene').appendChild(sphereEl);
+		}, 5000);*/
+
 		var hud = new HUD(null);
-
 		var fps = 60;
 		var interval = 1000 / fps;
 		var frameTime = 1.0 / fps;
@@ -141,9 +158,6 @@ requirejs(
 			}
 			
 			drawFunction();
-			//if(drawTimer.getElapsedTime() >= frameTime) {
-			//	
-			//}
 			
 			if (frameTimer.getElapsedTime() >= 1.0) {
 				tickerInfo[1] = frameCount;
@@ -158,10 +172,5 @@ requirejs(
 
 		draw();
 
-
-		/*setTimeout(function() {
-			skipPhysics = false;
-			skipAnimation = false;
-		}, 10);*/
 	}
 );

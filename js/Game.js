@@ -252,7 +252,7 @@ function(
 				var bulbLight = createDirectionLight(pos, tar);
 				
 				//bulbLight.intensity = bulbLuminousPowers["75 lm (15W)"];
-				bulbLight.intensity = 50000;
+				bulbLight.intensity = 20000;
 				bulbLight.distance = 100;
 				//
 				//scope.scene.add( bulbLight.target );
@@ -896,7 +896,8 @@ function(
 					prefix + 'pz' + postfix, prefix + 'nz' + postfix
 				];
 			};
-			var hdrUrls = genCubeUrls( 'https://threejs.org/examples/textures/cube/pisaHDR/', '.hdr' );
+			//var hdrUrls = genCubeUrls( 'https://threejs.org/examples/textures/cube/pisaHDR/', '.hdr' );
+			var hdrUrls = genCubeUrls( '/textures/room1_', '.hdr' );
 			new THREE.HDRCubeTextureLoader().load( THREE.UnsignedByteType, hdrUrls, function ( hdrCubeMap ) {
 
 				var pmremGenerator = new THREE.PMREMGenerator( hdrCubeMap );
@@ -1263,7 +1264,7 @@ function(
 		game.itemData = await loader.loadJSON("js/data/items.json", postProcess);
 
 		game.initRendering();
-		game.render();
+		//game.render();
 		//game.updateCubeMap();
 		var cubemap = await game.loadEXRMap();
 		game.cubeCamera = {
@@ -1304,8 +1305,8 @@ function(
 			ret = await futures[i];
 		}
 		
-		game.animate();
-		game.render();
+		//game.animate();
+		//game.render();
 
 		//stop showing loading progress
 		clearInterval(interval);
