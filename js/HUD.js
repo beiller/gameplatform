@@ -181,6 +181,11 @@ define(["lib/three", "lib/zepto", "Game"], function(THREE, $, Game) {
 					document.body.webkitRequestFullscreen();
 				})
 			);
+			uiWindow.append(
+				$('<a href="#" class="button btn btn-primary btn-sm">Request VR</a>').on('click', function(e) {
+					game.renderer.vr.enabled = true;
+				})
+			);
 
 			var exposureControl = $('<span>Fstop</span><input id="intNumber" type="range" min="1" max="20" step="0.1" />').on('change', function(e) {
 				e.stopPropagation();

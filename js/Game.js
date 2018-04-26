@@ -2,12 +2,12 @@ define([
 	"lib/three", "lib/zepto", "Character", "physics/Physics", "PhysRig",
 	"entity/DynamicEntity", "entity/Camera", "Loader", 'controller/AIController', 'controller/UserController',
 	"PMREMGenerator", "PMREMCubeUVPacker", "EffectComposer", "EquiangularToCubeGenerator", "EXRLoader",
-	"HDRCubeTextureLoader"
+	"HDRCubeTextureLoader", "GLTFLoader"
 ], 
 function(
 		THREE, $, Character, Physics, PhysRig, DynamicEntity, Camera, Loader, AIController, 
 		UserController, PMREMGenerator, PMREMCubeUVPacker, EffectComposer, EquiangularToCubeGenerator, EXRLoader,
-		HDRCubeTextureLoader
+		HDRCubeTextureLoader, GLTFLoader
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -252,7 +252,7 @@ function(
 				var bulbLight = createDirectionLight(pos, tar);
 				
 				//bulbLight.intensity = bulbLuminousPowers["75 lm (15W)"];
-				bulbLight.intensity = 20000;
+				bulbLight.intensity = 0;
 				bulbLight.distance = 100;
 				//
 				//scope.scene.add( bulbLight.target );
@@ -340,7 +340,7 @@ function(
 
 	    this.scene = new THREE.Scene();
 
-	    this.camera = new Camera(null, this, 37.8, window.innerWidth/window.innerHeight, 0.01, 100);
+	    this.camera = new Camera(null, this, 70, window.innerWidth/window.innerHeight, 0.01, 100);
 
 	    this.setupLighting();
 	
@@ -394,7 +394,7 @@ function(
 		this.renderPass = renderPass;
 		this.ssaoPass = ssaoPass;
 		this.effectComposer = effectComposer;
-
+		document.body.appendChild( WEBVR.createButton( this.renderer ) );
 	
 	    var game = this;
 	    var onWindowResize = function() {
@@ -1252,6 +1252,43 @@ function(
 		}
 		return myObject;
 	};
+	async function LoadRoom() {
+		// Instantiate a loader
+		var loader = new THREE.GLTFLoader();
+		return new Promise(function(resolve) { 
+			// Load a glTF resource
+			loader.load(
+				// resource URL
+				'/environments/room2.gltf',
+				// called when the resource is loaded
+				function ( gltf ) {
+
+					console.log( gltf );
+
+					gltf.animations; // Array<THREE.AnimationClip>
+					gltf.scene; // THREE.Scene
+					gltf.scenes; // Array<THREE.Scene>
+					gltf.cameras; // Array<THREE.Camera>
+					gltf.asset; // Object
+
+					resolve(gltf);
+
+				},
+				// called when loading is in progresses
+				function ( xhr ) {
+
+					console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+
+				},
+				// called when loading has errors
+				function ( error ) {
+
+					console.log( 'An error happened' );
+
+				}
+			);
+		});
+	}
 	Game.loadLevel = async function(levelFileName) {
 		var loader = new Loader();
 		var gameSettings = await loader.loadJSON("js/data/settings.json");
@@ -1273,6 +1310,17 @@ function(
 			}
 		};
 
+		let gltf = await LoadRoom();
+		gltf.scene.traverse( function ( child ) {
+			if ( child.isMesh ) {
+				child.material.envMap = cubemap.texture;
+				child.material.roughness = 0.01;
+				console.log("GLTF MATERIAL: ", child.material);
+			}
+		} );
+		//game.scene.add( gltf.scene );
+		
+
 		//show loading progress
 		var interval = setInterval(function() {
 			document.getElementById("debugConsole").innerHTML = 'loading: '+game.loader.total+'/'+game.loader.pending;
@@ -1291,7 +1339,7 @@ function(
 			);
 		});
 		
-		game.generateProceduralLevel(futures);
+		//game.generateProceduralLevel(futures);
 
 		var id_counter = 0;
 		game.levelData.npcs.forEach(async function(npc) {

@@ -289,7 +289,7 @@ define([
 		this.m_dynamicsWorld.setGravity(temp_vec3_1);
 
 
-		this.addGroundPlane(-4);
+		this.addGroundPlane(0);
 	};
 	AmmoPhysics.prototype.removeBody = function(body) {
 		this.m_dynamicsWorld.removeRigidBody(body.body);

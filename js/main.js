@@ -86,7 +86,7 @@ requirejs(
 		   return suppressErrorAlert;
 		};
 		*/
-		// Registering component in foo-component.js
+		/*// Registering component in foo-component.js
 		AFRAME.registerComponent('mygame', {
 			schema: {},
 			init: function () {
@@ -109,7 +109,7 @@ requirejs(
 			remove: function () {},
 			pause: function () {},
 			play: function () {}
-		});
+		});*/
 
 		/*setTimeout(function() {
 			var sphereEl = document.createElement('a-entity');
