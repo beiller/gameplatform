@@ -896,8 +896,7 @@ function(
 					prefix + 'pz' + postfix, prefix + 'nz' + postfix
 				];
 			};
-			//var hdrUrls = genCubeUrls( 'https://threejs.org/examples/textures/cube/pisaHDR/', '.hdr' );
-			var hdrUrls = genCubeUrls( '/textures/room1_', '.hdr' );
+			var hdrUrls = genCubeUrls( '/textures/factory/', '.hdr' );
 			new THREE.HDRCubeTextureLoader().load( THREE.UnsignedByteType, hdrUrls, function ( hdrCubeMap ) {
 
 				var pmremGenerator = new THREE.PMREMGenerator( hdrCubeMap );
@@ -1314,8 +1313,10 @@ function(
 		gltf.scene.traverse( function ( child ) {
 			if ( child.isMesh ) {
 				child.material.envMap = cubemap.texture;
-				child.material.roughness = 0.01;
+				child.material.envMapIntensity = 5000.0;
+				child.material.roughness = 0.75;
 				console.log("GLTF MATERIAL: ", child.material);
+				//child.material.color.setRGB(0.8, 0.8, 0.8);
 			}
 		} );
 		//game.scene.add( gltf.scene );
