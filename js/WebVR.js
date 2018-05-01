@@ -24,8 +24,13 @@ WEBVR = {
 			button.onmouseleave = function () { button.style.opacity = '0.5'; };
 
 			button.onclick = function () {
-
-				display.isPresenting ? display.exitPresent() : display.requestPresent( [ { source: renderer.domElement } ] );
+				if(display.isPresenting) {
+					display.exitPresent();
+					renderer.vr.enabled = false;
+				} else {
+					renderer.vr.enabled = true;
+					display.requestPresent( [ { source: renderer.domElement } ] );
+				}
 
 			};
 

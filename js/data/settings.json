@@ -2,10 +2,10 @@
 	"enableSSS": 	true, 
 	"disableCull": 	true,
 	"enableAA": false,
-	"enableShadows": false,
-	"shadowResolution": 1024,
+	"enableShadows": true,
+	"shadowResolution": 2048,
 	"cubeMapResolution": 32,
-	"softShadows": false,
+	"softShadows": true,
 	"usePCSS": false
 }
 

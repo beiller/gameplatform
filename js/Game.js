@@ -221,10 +221,10 @@ function(
 				light.shadow.mapSize.height = 4096;
 				light.shadow.camera.near = 2;
 				light.shadow.camera.far = 10;*/
-				/*light.shadow.camera.left = -2;
+				light.shadow.camera.left = -2;
 				light.shadow.camera.right = 2;
 				light.shadow.camera.top = 2;
-				light.shadow.camera.bottom = -2;*/
+				light.shadow.camera.bottom = -2;
 
 				var helper = new THREE.DirectionalLightHelper( light );
 				light.add(helper);
@@ -243,7 +243,8 @@ function(
 				light.shadow.camera.fov = 1.0;
 				light.shadow.camera.near = 0.1;
 				light.shadow.camera.far = 6;
-				//light.shadow.bias = 0.00001;
+				light.shadow.bias = 0.00075;
+				light.shadow.radius = 1;
 			}
 			function createLight(pos, tar) {
 				
@@ -252,7 +253,7 @@ function(
 				var bulbLight = createDirectionLight(pos, tar);
 				
 				//bulbLight.intensity = bulbLuminousPowers["75 lm (15W)"];
-				bulbLight.intensity = 0;
+				bulbLight.intensity = 50000;
 				bulbLight.distance = 100;
 				//
 				//scope.scene.add( bulbLight.target );
@@ -751,7 +752,8 @@ function(
 				'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0,
 				'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.95,
 				//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0
-				//'side': THREE.DoubleSide
+				'side': THREE.DoubleSide,
+				'shadowSide': THREE.BackSide,
 			};
 
 			if(this.cubeCamera) {

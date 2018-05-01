@@ -806,7 +806,7 @@
             ]
         }
     },
-    "uunp_hands": {"name": "uunp_hands",  "model": "uunp_test/hands.json", "slot": "hands", "options": { 
+    "uunp_hands": {"name": "uunp_hands",  "model": "uunp_test/hands_ultra.json", "slot": "hands", "options": { 
             "material": [
                 { "$ref": "#/materials/hands" }
             ]
