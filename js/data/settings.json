@@ -2,7 +2,7 @@
 	"enableSSS": 	true, 
 	"disableCull": 	true,
 	"enableAA": false,
-	"enableShadows": true,
+	"enableShadows": false,
 	"shadowResolution": 2048,
 	"cubeMapResolution": 32,
 	"softShadows": true,

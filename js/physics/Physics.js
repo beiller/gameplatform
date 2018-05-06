@@ -185,8 +185,6 @@ define([
 			constraint.setLinearUpperLimit(temp_vec3_1);	
 		}
 
-		
-
 		this.m_dynamicsWorld.addConstraint(constraint, true);
 		return {
 			bodyA: bodyA,
@@ -296,6 +294,12 @@ define([
 	};
 	AmmoPhysics.prototype.removeConstraint = function(constraint) {
 		this.m_dynamicsWorld.removeConstraint(constraint);
+	};
+
+	AmmoPhysics.prototype.addBody = function(body, layer, collisionLayer) {
+		if(!layer) layer = this.collisionLayers.WORLD;
+		if(!collisionLayer) collisionLayer = this.collisionLayers.WORLD | this.collisionLayers.PLAYER
+		this.m_dynamicsWorld.addRigidBody(body.body, layer, collisionLayer);
 	};
 
 	AmmoPhysics.prototype.addGroundPlane = function(height) {

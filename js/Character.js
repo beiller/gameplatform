@@ -92,6 +92,14 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 	    /*this.skeletonHelper = new THREE.SkeletonHelper(this.armature);
 	    this.game.scene.add(this.skeletonHelper);*/
+
+	    var scope = this;
+	    this.armature.onBeforeRender = function ( renderer, scene, camera, geometry, material, group ) {
+			for(var i in scope.physRig.dynamics) {
+				scope.physRig.dynamics[i].update(0.001);
+			}
+
+		};
 	}
 	Character.prototype = Object.assign( Object.create( DynamicEntity.prototype ), {
 		constructor: Character
@@ -213,18 +221,18 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 	Character.prototype.updateKineticBones = function(delta) {
 	    //copy bones' locations to physics simulation if they are kinematic
-		for(var i in this.physRig.dynamics) {
+		/*for(var i in this.physRig.dynamics) {
 			if(this.physRig.dynamics[i].body.getKinematic()) {
 				this.physRig.dynamics[i].update(delta);
 			}
-		}
+		}*/
 	};
 	Character.prototype.updateDynamicBones = function(delta) {
 	    //if the bones' are dynamic, copy their updated positions to the armature
 		for(var i in this.physRig.dynamics) {
-			if(!this.physRig.dynamics[i].body.getKinematic()) {
+			//if(!this.physRig.dynamics[i].body.getKinematic()) {
 				this.physRig.dynamics[i].update(delta);
-			}
+			//}
 		}
 	};
 	Character.prototype.update = function(delta) {
@@ -232,7 +240,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 		//I believe this will update the physics. 
 		// copies the bounding sphere's position to this mesh's (character)
-		DynamicEntity.prototype.update.call(this);
+		//DynamicEntity.prototype.update.call(this);
 
 		//tick the character's state machine
 		this.stateMachine.update(delta);
@@ -241,13 +249,13 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    var l = Math.abs(this.mesh.position.x - this.game.camera.mesh.position.x);
 	    if(l < 8.0) {
 		    if(this.animationMixer) {
-		        this.animationMixer.update(delta);
+		        //this.animationMixer.update(delta);
 		    }
 		}
 
 		//point character and update physics
 	    
-	    if(c != 'playinganimation') {
+	    /*if(c != 'playinganimation') {
 	    	if(c != 'dead' && c != 'blocking' && c != 'stunned') {
 	    		this.pointCharacter();
 	    	}
@@ -255,7 +263,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		    if(this.body) {
 		    	this.controller.update(delta);
 		    }
-	    }
+	    }*/
 
 	    //send the bones' position to physics simulation
 	    this.updateKineticBones();

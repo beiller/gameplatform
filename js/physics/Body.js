@@ -21,26 +21,28 @@ define(["lib/ammo"], function(Ammo) {
 	var body_map = new Map();
 
 	function Body(bodyInfo, shapeInfo) {
+		this.bodyInfo = bodyInfo;
+		this.shapeInfo = shapeInfo;
 		this.collisionFlags = [];
 
-		this.shape = this.createShape(shapeInfo);
+		this.shape = this.createShape(this.shapeInfo);
 
-		if(bodyInfo.kinematic) {
-	    	bodyInfo.mass = 0;
+		if(this.bodyInfo.kinematic) {
+	    	this.bodyInfo.mass = 0;
 	    }
 		this.body = this.localCreateRigidBody(
-			bodyInfo.mass, 
-			bodyInfo.transform, 
+			this.bodyInfo.mass, 
+			this.bodyInfo.transform, 
 			this.shape, 
-			bodyInfo.options
+			this.bodyInfo.options
 		);
 
-		this.setNoContact(bodyInfo.noContact && true);
-		this.setStatic(bodyInfo.staticObject && true);
-		this.setKinematic(bodyInfo.kinematic && true);
+		this.setNoContact(this.bodyInfo.noContact && true);
+		this.setStatic(this.bodyInfo.staticObject && true);
+		this.setKinematic(this.bodyInfo.kinematic && true);
 
 		body_map[this.body.ptr] = this;
-		this.setDamping(bodyInfo.damping || 0.7, bodyInfo.damping || 0.7);
+		this.setDamping(this.bodyInfo.damping || 0.7, this.bodyInfo.damping || 0.7);
 	}
 
 	Body.prototype = {
@@ -193,7 +195,7 @@ define(["lib/ammo"], function(Ammo) {
 		var btBody = new Ammo.btRigidBody(cInfo);
 		btBody.setActivationState(4); //disables sleep
 		btBody.setFriction(0.9);
-		btBody.setDamping(options.damping || 1.0, options.damping || 1.0);
+		//btBody.setDamping(options.damping || 1.0, options.damping || 1.0);
 		//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 		//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);

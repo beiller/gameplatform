@@ -305,7 +305,7 @@
 				"uunp_head1",
 
 				"uunp_hands",
-				"uunp_hair1_phys",
+
 				
 				
 				"pants1",
@@ -313,9 +313,7 @@
 
 				"shoes1",
 	        	
-	        	
-				"uunp_cross_earring_r",
-				"uunp_cross_earring_l",
+
 				"uunp_gens_f"
 	        ],
 	        "inventory": [
@@ -491,14 +489,7 @@
 	    }
 	},
 	"npcs" : [
-		{
-		    "character": "skeleton", 
-		    "position": [-11,0,0]
-		},
-		{
-		    "character": "necker", 
-		    "position": [ 11,0,0]
-		}
+
 	],
 	"player": {
 	    "character": "uunp_test", 

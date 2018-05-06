@@ -7,6 +7,8 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	var p1 = new THREE.Vector3();
 	var p2 = new THREE.Vector3();
 
+	var q1 = new THREE.Quaternion();
+
 	function DynamicEntity(mesh, game, body) {
 		Entity.call(this, mesh, game);
 

@@ -28,6 +28,17 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		this.parentMesh = parentMesh;
 		this.options = options;
 
+		this.boneMeshRestMatrix = new THREE.Matrix4().copy(this.boneMesh.matrixWorld);
+		p.fromArray(this.body.getPosition());
+		q.fromArray(this.body.getQuaternion());
+
+		this.boneBodyRestMatrix = new THREE.Matrix4().compose(p, q, s);
+		this.boneMeshRestMatrix.decompose(p, q, o);
+
+		this.boneMeshRestPosition = new THREE.Vector3().copy(this.boneMesh.position);
+		this.boneBodyRestPosition = new THREE.Vector3().fromArray(this.body.getPosition());
+		console.log("Body Rest position", this.boneBodyRestPosition, "Bone Rest position", p);
+
 		this.parentBone = this.boneMesh.parent;
 
 		this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
@@ -81,12 +92,17 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		    Entity.prototype.update.call(this);
 		},
 
+
 		updateDynamic: function(updateDeep) {
+
 			p.fromArray(this.body.getPosition());
-			q.fromArray(this.body.getQuaternion());		
-			o.copy(this.localOffset).applyQuaternion(q);
-			p.add(o);
+			q.fromArray(this.body.getQuaternion());	
+			//o.copy(this.localOffset).applyQuaternion(q);
+			//p.add(o);
+			p.multiplyScalar(83.333333);
+
 			this.boneMesh.matrixWorld.compose(p, q, s);
+
 			if ( this.boneMesh.parent && this.boneMesh.parent.isBone ) {
 
 				this.boneMesh.matrix.getInverse( this.boneMesh.parent.matrixWorld );
@@ -97,15 +113,63 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 				this.boneMesh.matrix.copy( this.boneMesh.matrixWorld );
 
 			}
+			this.boneMesh.matrix.decompose( 
+				this.boneMesh.position,
+				this.boneMesh.quaternion, 
+				o
+			);
+
+
+			//o.copy(this.localOffset).applyQuaternion(q);
+			//p.add(o);
+			//p.sub(this.boneBodyRestPosition);
+			//tmat1.multiply(this.boneMesh.parent.matrixWorld);
+			//tmat1.decompose(p2, q2, s2);
+			//console.log("bodypos", this.body.getPosition(), "bonepos", p2);
+			/*this.boneMesh.matrixWorld.compose(p, q, s);
+
+			this.boneMesh.matrix.getInverse( this.boneMeshRestMatrix );
+			this.boneMesh.matrix.multiply( this.boneMesh.matrixWorld );
+			
+			this.boneMesh.matrix.decompose( 
+				this.boneMesh.position,
+				this.boneMesh.quaternion, 
+				o
+			);*/
+			//this.boneMesh.worldToLocal(p);
+			//this.boneMesh.position.copy(p);
+
+			
+
+			/*this.boneMesh.matrixAutoUpdate = false;
+			this.boneMesh.matrixWorldNeedsUpdate = false;
+			this.boneMesh.matrixWorld.compose(p, q, s);
+			this.boneMesh.matrixAutoUpdate = false;
+			this.boneMesh.matrixWorldNeedsUpdate = false;*/
+			/*if ( this.boneMesh.parent && this.boneMesh.parent.isBone ) {
+
+				this.boneMesh.matrix.getInverse( this.boneMesh.parent.matrixWorld );
+				this.boneMesh.matrix.multiply( this.boneMesh.matrixWorld );
+
+			} else {
+
+				this.boneMesh.matrix.copy( this.boneMesh.matrixWorld );
+
+			}*/
 
 			//TODO I had to stop copying location to prevent messed up things
 			// due to UUNP scaling
 			//HACK slerp the rotation to avoid jankies. To fix I have to edit some
 			// bullet js to interpotale movement properly from kinematic bodies (I think)
-			tWorldRot1.copy(this.boneMesh.quaternion);
-			this.boneMesh.matrix.decompose( p, this.boneMesh.quaternion, p );
-			tWorldRot1.slerp(this.boneMesh.quaternion, 0.25);
-			this.boneMesh.quaternion.copy(tWorldRot1);
+			//tWorldRot1.copy(this.boneMesh.quaternion);
+			/*this.boneMesh.matrix.decompose( p, this.boneMesh.quaternion, p );
+			this.boneMesh.position.fromArray(this.body.getPosition());
+			this.boneMesh.position.x *= 83.33333333;
+			this.boneMesh.position.y *= 83.33333333;
+			this.boneMesh.position.z *= 83.33333333;*/
+
+			//tWorldRot1.slerp(this.boneMesh.quaternion, 0.25);
+			//this.boneMesh.quaternion.copy(tWorldRot1);
 
 		    if(this.debugMesh) {
 		    	this.debugMesh.position.fromArray(this.body.getPosition());
@@ -152,14 +216,14 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		localPositionParent.applyMatrix4(parentMatrixWorldInv);
 		localPositionChild.applyMatrix4(childMatrixWorldInv);
 
-		if(this.game.debugPhysics && !this.jointdebug) {
+		/*if(this.game.debugPhysics && !this.jointdebug) {
 			var newChildLocation = new THREE.Vector3().copy(localPositionChild).applyQuaternion(childQuaternion);
 			var childWorldLocation = new THREE.Vector3().fromArray(this.body.getPosition());
 			var jointWorldLocation = new THREE.Vector3().copy(childWorldLocation).add(newChildLocation);
     		this.jointdebug = makeDebugSphereOfChaos(this.game.scene, jointWorldLocation, 0.003, 0x00FF00);
     		this.game.scene.add(this.jointdebug);
     		//this.boneMesh.add(this.jointdebug);
-    	}
+    	}*/
 
 		return {
 			bALocalPosition: localPositionParent.toArray(),

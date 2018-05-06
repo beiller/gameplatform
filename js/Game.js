@@ -2,12 +2,12 @@ define([
 	"lib/three", "lib/zepto", "Character", "physics/Physics", "PhysRig",
 	"entity/DynamicEntity", "entity/Camera", "Loader", 'controller/AIController', 'controller/UserController',
 	"PMREMGenerator", "PMREMCubeUVPacker", "EffectComposer", "EquiangularToCubeGenerator", "EXRLoader",
-	"HDRCubeTextureLoader", "GLTFLoader"
+	"HDRCubeTextureLoader", "GLTFLoader", "physics/System"
 ], 
 function(
 		THREE, $, Character, Physics, PhysRig, DynamicEntity, Camera, Loader, AIController, 
 		UserController, PMREMGenerator, PMREMCubeUVPacker, EffectComposer, EquiangularToCubeGenerator, EXRLoader,
-		HDRCubeTextureLoader, GLTFLoader
+		HDRCubeTextureLoader, GLTFLoader, System
 	) {
 	function Game(gameSettings) {
 	    if ( gameSettings === undefined ) gameSettings = {};
@@ -484,8 +484,15 @@ function(
 			"lg2": "NPC Calf [Clf].R",
 			"fot": "NPC Foot [ft ].R"
 		}
-		var np = function(k) { return nameMapping[k]; };
-		var boneWidth = 0.035;
+		var np = function(k, side) { 
+			if(side) {
+				return nameMapping[k].replace('{LR}', side);
+			}
+			return nameMapping[k]; 
+		};
+		var bW = 0.035;
+		var bh = 0.035;
+		var boneWidth = bW;
 
 		var boneMap = [
 			{ bone: np('pel'), type: "KINEMATIC", radius: 0.7, options: { 
@@ -638,10 +645,14 @@ function(
 				} }*/
 			]);
 		};
-		createLR("L");
+		/*createLR("L");
 		createLR("R");
 
-		character.physRig.createFromMap(boneMap);
+		character.physRig.createFromMap(boneMap);*/
+
+		var system = new System(this);
+		system.createFromMap({}, character.armature.skeleton);
+		character.physRig = system;
 
 	    return null;
 	
