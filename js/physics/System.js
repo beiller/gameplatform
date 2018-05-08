@@ -32,8 +32,13 @@ define([
 	        var sphere = new THREE.Mesh(
 	        	//new THREE.SphereGeometry(radius, 12, 12), 
 	        	new THREE.BoxGeometry(body.shapeInfo.x*2, body.shapeInfo.y*2, body.shapeInfo.z*2),
-	        	new THREE.MeshStandardMaterial({color: new THREE.Color(0xFF0000)})
+	        	new THREE.MeshStandardMaterial({
+	        		depthTest: false, 
+	        		depthWrite: false,
+	        		color: new THREE.Color(0xFF0000)
+	        	})
 	        );
+	        sphere.renderOrder = 9999;
 	        
 	        var axesHelper = new THREE.AxesHelper( 0.2 );
 		
@@ -70,13 +75,13 @@ define([
 			var bH = 0.015;
 
 			var boneData = [
-				{ name: np('pel'), length: 0.15, width: bW, height: bH, kinematic: false },
-				{ name: np('sp1'), width: bW, height: bH, child: np('sp2'), kinematic: false },
+				{ name: np('pel'), length: 0.15, width: bW, height: bH, kinematic: true },
+				{ name: np('sp1'), width: bW, height: bH, child: np('sp2'), kinematic: true },
 				{ name: np('sp2'), width: bW, height: bH, child: np('sp3'), kinematic: false },
 				{ name: np('sp3'), width: bW, height: bH, child: np('sp5'), kinematic: false },
 				{ name: np('sp5'), width: bW, height: bH, child: np('hed'), kinematic: false },
-				{ name: np('hed'), length: 0.15, width: bW, height: bH, kinematic: false }
-				/*{ name: np('clv', 'L'), width: bW, height: bH, child: np('am1', 'L') },
+				{ name: np('hed'), length: 0.15, width: bW, height: bH, kinematic: false },
+				{ name: np('clv', 'L'), width: bW, height: bH, child: np('am1', 'L') },
 				{ name: np('clv', 'R'), width: bW, height: bH, child: np('am1', 'R') },
 				{ name: np('am1', 'L'), width: bW, height: bH, child: np('am2', 'L') },
 				{ name: np('am1', 'R'), width: bW, height: bH, child: np('am2', 'R') },
@@ -89,7 +94,7 @@ define([
 				{ name: np('lg2', 'L'), width: bW, height: bH, child: np('fot', 'L') },
 				{ name: np('lg2', 'R'), width: bW, height: bH, child: np('fot', 'R') },
 				{ name: np('fot', 'L'), length: 0.15, width: bW, height: bH, },
-				{ name: np('fot', 'R'), length: 0.15, width: bW, height: bH, }*/
+				{ name: np('fot', 'R'), length: 0.15, width: bW, height: bH, }
 			];
 
 			let mVec3_1 = new THREE.Vector3();
@@ -145,7 +150,7 @@ define([
 				dE.debugMesh = this.createDebugMesh(boneBody);
 				this.dynamics.push(dE);
 				let pW = this.game.physicsWorld;
-				//pW.addBody(boneBody, pW.collisionLayers.WORLD, pW.collisionLayers.WORLD);
+				pW.addBody(boneBody, pW.collisionLayers.WORLD, pW.collisionLayers.WORLD);
 			}
 		}
 	};

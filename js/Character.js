@@ -14,7 +14,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 		this.armature = mesh;
 		rootMesh.add(mesh);
 		//move the mesh to the bottom of our surrounding sphere (not center)
-		mesh.position.y -= mesh.geometry.boundingSphere.radius;
+		//mesh.position.y -= mesh.geometry.boundingSphere.radius;
 		
 	    DynamicEntity.call(this, mesh, game, body);
 	    this.mesh = rootMesh;
@@ -249,7 +249,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    var l = Math.abs(this.mesh.position.x - this.game.camera.mesh.position.x);
 	    if(l < 8.0) {
 		    if(this.animationMixer) {
-		        //this.animationMixer.update(delta);
+		        this.animationMixer.update(delta);
 		    }
 		}
 
