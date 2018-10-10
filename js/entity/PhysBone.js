@@ -26,20 +26,13 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 		this.boneMesh = boneMesh;
 		this.parentBody = parentBody;
 		this.parentMesh = parentMesh;
-		this.options = options;
+		this.options = options || {};
 
-		this.boneMeshRestMatrix = new THREE.Matrix4().copy(this.boneMesh.matrixWorld);
+		/*this.boneMeshRestMatrix = new THREE.Matrix4().copy(this.boneMesh.matrixWorld);
 		p.fromArray(this.body.getPosition());
 		q.fromArray(this.body.getQuaternion());
 
-		this.boneBodyRestMatrix = new THREE.Matrix4().compose(p, q, s);
-		this.boneMeshRestMatrix.decompose(p, q, o);
-
-		this.boneMeshRestPosition = new THREE.Vector3().copy(this.boneMesh.position);
-		this.boneBodyRestPosition = new THREE.Vector3().fromArray(this.body.getPosition());
-		console.log("Body Rest position", this.boneBodyRestPosition, "Bone Rest position", p);
-
-		this.parentBone = this.boneMesh.parent;
+		this.boneBodyRestMatrix = new THREE.Matrix4().compose(p, q, s);*/
 
 		this.localOffset = options && options.localOffset ? options.localOffset : new THREE.Vector3(0,0,0);
 
@@ -54,6 +47,9 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 	//temp variables
 	var tWorldRot1 = new THREE.Quaternion();
 	var tWorldPos1 = new THREE.Vector3();
+	var tVec3_1 = new THREE.Vector3();
+	var tVec3_2 = new THREE.Vector3();
+	var tMat4_1 = new THREE.Matrix4();
 
 	PhysBone.prototype = Object.assign( Object.create( Entity.prototype ), {
 		
@@ -73,51 +69,70 @@ define(["lib/three", 'entity/Entity'], function(THREE, Entity) {
 			}
 		},
 
-		updateKinematic: function(updateDeep) {
+		updateKinematic: function(delta) {
 
 		    if(!this.sleep) {
+		    	/*tMat4_1.copy(this.boneMesh.matrixWorld);
+				
+				if ( (this.boneMesh.parent && this.boneMesh.parent.isBone) || this.parentMesh ) {
+					this.boneMesh.matrix.multiply( 
+						(this.boneMesh.parent || this.parentMesh).matrixWorld 
+					);
+				}*/
+
 			    this.boneMesh.matrixWorld.decompose(p, q, s);
-			    tWorldPos1.copy(this.localOffset).applyQuaternion(q).add(p)
-		        this.body.setPosition([tWorldPos1.x, tWorldPos1.y, tWorldPos1.z]);
-		        this.body.setQuaternion([q.x, q.y, q.z, q.w]);
+			    tWorldPos1.set(
+			    	-this.localOffset.x,
+			    	-this.localOffset.y,
+			    	-this.localOffset.z,
+			    ).applyQuaternion(q).add(p);
+			    tVec3_1.fromArray(this.body.getPosition()).lerp(tWorldPos1, 0.5);
+		        this.body.setPosition([tVec3_1.x, tVec3_1.y, tVec3_1.z], delta);
+		        this.body.setQuaternion([q.x, q.y, q.z, q.w], delta);
+
+		        //set velocity?
+		        tVec3_2.copy(tWorldPos1).sub(tVec3_1).multiplyScalar(delta);
+		        this.body.setVelocity([tVec3_2.x, tVec3_2.y, tVec3_2.z]);
+
 			    if(this.debugMesh) {
 			    	this.debugMesh.position.copy(tWorldPos1);
 			    	this.debugMesh.quaternion.fromArray(this.body.getQuaternion());
-			    	this.debugMesh.updateMatrixWorld();
 			    }
 			    //following doent exist yet?
-			    //this.body.body.saveKinematicState(dt);
+			    //this.body.saveKinematicState(delta);
 		    }
 
 		    Entity.prototype.update.call(this);
 		},
 
 
-		updateDynamic: function(updateDeep) {
+		updateDynamic: function(delta) {
+			//get the body position and rotation from physics engine
 			p.fromArray(this.body.getPosition());
-			q.fromArray(this.body.getQuaternion());		
+			q.fromArray(this.body.getQuaternion());	
+			//add offset (IE half the length) if offsets dont match
+			//eg for bones, we move half the length.	
 			o.copy(this.localOffset).applyQuaternion(q);
 			p.add(o);
 			this.boneMesh.matrixWorld.compose(p, q, s);
-			if ( this.boneMesh.parent && this.boneMesh.parent.isBone ) {
-
-				this.boneMesh.matrix.getInverse( this.boneMesh.parent.matrixWorld );
+			//translate into local space re: parent
+			if ( (this.boneMesh.parent && this.boneMesh.parent.isBone) || this.parentMesh ) {
+				this.boneMesh.matrix.getInverse( 
+					(this.boneMesh.parent || this.parentMesh).matrixWorld 
+				);
 				this.boneMesh.matrix.multiply( this.boneMesh.matrixWorld );
-
 			} else {
-
 				this.boneMesh.matrix.copy( this.boneMesh.matrixWorld );
-
 			}
 
-			//TODO I had to stop copying location to prevent messed up things
-			// due to UUNP scaling
-			//HACK slerp the rotation to avoid jankies. To fix I have to edit some
-			// bullet js to interpotale movement properly from kinematic bodies (I think)
-			tWorldRot1.copy(this.boneMesh.quaternion);
-			this.boneMesh.matrix.decompose( p, this.boneMesh.quaternion, p );
-			tWorldRot1.slerp(this.boneMesh.quaternion, 0.25);
-			this.boneMesh.quaternion.copy(tWorldRot1);
+			//Strange scaling seems to break things. Make sure armature is 1 scale?
+			
+			this.boneMesh.matrix.decompose( 
+				this.boneMesh.position, 
+				this.boneMesh.quaternion, 
+				o
+			);
+			//this.boneMesh.quaternion.slerp(q, 0.75);
 
 		    if(this.debugMesh) {
 		    	this.debugMesh.position.fromArray(this.body.getPosition());

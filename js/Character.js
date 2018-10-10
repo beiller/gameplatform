@@ -221,18 +221,18 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 
 	Character.prototype.updateKineticBones = function(delta) {
 	    //copy bones' locations to physics simulation if they are kinematic
-		/*for(var i in this.physRig.dynamics) {
+		for(var i in this.physRig.dynamics) {
 			if(this.physRig.dynamics[i].body.getKinematic()) {
 				this.physRig.dynamics[i].update(delta);
 			}
-		}*/
+		}
 	};
 	Character.prototype.updateDynamicBones = function(delta) {
 	    //if the bones' are dynamic, copy their updated positions to the armature
 		for(var i in this.physRig.dynamics) {
-			//if(!this.physRig.dynamics[i].body.getKinematic()) {
+			if(!this.physRig.dynamics[i].body.getKinematic()) {
 				this.physRig.dynamics[i].update(delta);
-			//}
+			}
 		}
 	};
 	Character.prototype.update = function(delta) {
@@ -266,7 +266,7 @@ function(CharacterStats, DynamicEntity, THREE, BaseStateMachine, PhysRig) {
 	    }*/
 
 	    //send the bones' position to physics simulation
-	    this.updateKineticBones();
+	    //this.updateKineticBones();
 	};
 	Character.prototype.unequip = function(slot) {
 		if(this.equipment[slot]) {

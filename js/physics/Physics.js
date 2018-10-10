@@ -29,7 +29,7 @@ define([
 
 		this.callbacks = {};
 
-		this.stepHz = 60;
+		this.stepHz = 120;
 		this.constraintSolverIterations = 10;
 
 		this.initPhysics();
@@ -38,6 +38,7 @@ define([
 		this.callbacks[body.ptr] = func;
 	};
 	AmmoPhysics.prototype.step = function(dt) {
+		dt = Math.min(dt, 0.05);
 		var numIterations = this.stepHz / 60;
 		//var dt = 1/60;
 		for(var i = 0; i < numIterations; i++) {
@@ -287,7 +288,7 @@ define([
 		this.m_dynamicsWorld.setGravity(temp_vec3_1);
 
 
-		this.addGroundPlane(-0.75);
+		this.addGroundPlane(-0.6);
 	};
 	AmmoPhysics.prototype.removeBody = function(body) {
 		this.m_dynamicsWorld.removeRigidBody(body.body);

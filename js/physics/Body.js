@@ -26,10 +26,8 @@ define(["lib/ammo"], function(Ammo) {
 		this.collisionFlags = [];
 
 		this.shape = this.createShape(this.shapeInfo);
+		this.mass = this.bodyInfo.mass;
 
-		if(this.bodyInfo.kinematic) {
-	    	this.bodyInfo.mass = 0;
-	    }
 		this.body = this.localCreateRigidBody(
 			this.bodyInfo.mass, 
 			this.bodyInfo.transform, 
@@ -75,10 +73,16 @@ define(["lib/ammo"], function(Ammo) {
 		*/
 		setKinematic: function(isKinematic) {
 			this._setFlag(collisionFlags.CF_KINEMATIC_OBJECT, isKinematic);
+			temp_vec3_1.setValue(0,0,0);
 			if(isKinematic) {
-				temp_vec3_1.setValue(0,0,0)
 				this.body.setLinearVelocity(temp_vec3_1);
 				this.body.setAngularVelocity(temp_vec3_1);
+				//this.body.getCollisionShape().calculateLocalInertia( this.mass, temp_vec3_1 );
+				this.body.setMassProps(0, temp_vec3_1);
+
+			} else {
+				this.body.getCollisionShape().calculateLocalInertia( this.mass, temp_vec3_1 );
+				this.body.setMassProps(this.mass, temp_vec3_1);
 			}
 		},
 		setNoContact: function(isNoContact) {
@@ -111,14 +115,15 @@ define(["lib/ammo"], function(Ammo) {
 		getPositionX: function() { return this.body.getWorldTransform().getOrigin().x(); },
 		getPositionY: function() { return this.body.getWorldTransform().getOrigin().y(); },
 		getPositionZ: function() { return this.body.getWorldTransform().getOrigin().z(); },
-		setPosition: function(positionArray) {
+		setPosition: function(positionArray, dT) {
 			//console.log(this.body.getMotionState().getWorldTransform(temp_trans_1));
 			//temp_trans_1.setIdentity();
-			//var t = this.body.getWorldTransform();
 			var t = this.body.getWorldTransform();
+			//var t = this.body.getWorldTransform();
 			temp_vec3_1.setValue(positionArray[0], positionArray[1], positionArray[2]);
 			t.setOrigin(temp_vec3_1);
-			this.body.getMotionState().setWorldTransform(this.body.getWorldTransform());
+			this.body.getMotionState().setWorldTransform(t);
+			//this.body.saveKinematicState(dT || 0.01);
 			
 			//temp_trans_1.setRotation(this.body.getWorldTransform().getRotation());
 			//this.body.getMotionState().setWorldTransform(temp_trans_1);
@@ -132,6 +137,14 @@ define(["lib/ammo"], function(Ammo) {
 		getVelocityX: function() { return this.body.getLinearVelocity().x(); },
 		getVelocityY: function() { return this.body.getLinearVelocity().y(); },
 		getVelocityZ: function() { return this.body.getLinearVelocity().z(); },
+		setVelocity: function(linearVelocity, angularVelocity) {
+			temp_vec3_1.setValue(linearVelocity[0], linearVelocity[1], linearVelocity[2]);
+			this.body.setLinearVelocity(temp_vec3_1);
+			if(angularVelocity) {
+				temp_vec3_1.setValue(angularVelocity[0], angularVelocity[1], angularVelocity[2]);
+				this.body.setLinearVelocity(temp_vec3_1);
+			}
+		},
 		
 		getQuaternion: function() {
 			var q = this.body.getWorldTransform().getRotation();
@@ -141,14 +154,15 @@ define(["lib/ammo"], function(Ammo) {
 		getQuaternionY: function() { return this.body.getWorldTransform().getRotation().y(); },	
 		getQuaternionZ: function() { return this.body.getWorldTransform().getRotation().z(); },	
 		getQuaternionW: function() { return this.body.getWorldTransform().getRotation().w(); },	
-		setQuaternion: function(positionArray) {
+		setQuaternion: function(positionArray, dT) {
 			//temp_trans_1.setIdentity();
 			var t = this.body.getWorldTransform();
 			//temp_trans_1.setOrigin(this.body.getWorldTransform().getOrigin());
 			temp_quat_1.setValue(positionArray[0], positionArray[1], positionArray[2], positionArray[3]);
 			t.setRotation(temp_quat_1);
-			this.body.getMotionState().setWorldTransform(this.body.getWorldTransform());
+			this.body.getMotionState().setWorldTransform(t);
 			//this.body.getMotionState().setWorldTransform(temp_trans_1);
+			//this.body.saveKinematicState(dT || 0.01);
 		},
 		
 		applyImpulse: function(f, p) {

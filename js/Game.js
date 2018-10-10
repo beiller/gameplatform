@@ -268,7 +268,7 @@ function(
 			
 			//this.spot2.add(this.spot1);
 			//this.spot2.add(this.spot1.target);
-			this.scene.add(   this.spot2   );
+			//this.scene.add(   this.spot2   );
 			//this.scene.add(   this.spot2.target   );
 
 			/*var light1 = new THREE.PointLight( 0xffee88, 1, 100 );
@@ -649,6 +649,9 @@ function(
 		createLR("R");
 
 		character.physRig.createFromMap(boneMap);*/
+		for(let i in character.armature.skeleton.bones) {
+			console.log(character.armature.skeleton.bones[i].name);
+		}
 
 		var system = new System(this);
 		system.createFromMap({}, character.armature.skeleton);
@@ -880,11 +883,10 @@ function(
 	    if(!skipAnimation) {
 		    for(var i in this.characters) {
 		        this.characters[i].update(delta);
+		        this.characters[i].armature.skeleton.bones[0].updateMatrixWorld(true);
+		        this.characters[i].updateKineticBones(delta);
 		    }
 		}
-		for(var i in this.dynamics) {
-	        this.dynamics[i].update(delta);
-	    }
 
 		//run the physics step
 		if(!skipPhysics) {
@@ -892,10 +894,17 @@ function(
 	    }
 
 	    if(!skipAnimation) {
+
+			//and all objects
+			for(var i in this.dynamics) {
+		        this.dynamics[i].update(delta);
+		    }
 		    for(var i in this.characters) {
+		    	//this will copy dyanmic bones' positions from physics
 		        this.characters[i].updateDynamicBones(delta);
 		    }
 		}
+
 
 	    //this.render();
 	};
@@ -909,7 +918,7 @@ function(
 					prefix + 'pz' + postfix, prefix + 'nz' + postfix
 				];
 			};
-			var hdrUrls = genCubeUrls( '/textures/factory/', '.hdr' );
+			var hdrUrls = genCubeUrls( '/textures/park1/', '.hdr' );
 			new THREE.HDRCubeTextureLoader().load( THREE.UnsignedByteType, hdrUrls, function ( hdrCubeMap ) {
 
 				var pmremGenerator = new THREE.PMREMGenerator( hdrCubeMap );
@@ -1367,6 +1376,20 @@ function(
 			ret = await futures[i];
 		}
 		
+		//game.characters.eve.unequip("shirt");
+		//game.characters.eve.unequip("pants");
+		/*var sarah = await game.spawnCharacter("sarah");
+		sarah.stateMachine.playAnimation("f1.2");
+		var member = game.itemData["member"];
+		sarah.inventory.push(member);
+		sarah.equip(member);
+		game.characters.eve.stateMachine.playAnimation("f1.1");
+		game.characters.eve.unequip("outfit");
+		sarah.unequip("outfit");
+		setTimeout(function() {
+			sarah.physRig.dynamicsMap["DEF-foot.R"].setKinematic(true);
+		}, 5000);*/
+
 		//game.animate();
 		//game.render();
 

@@ -98,10 +98,10 @@
     	"name": "armor1_metal"
 	},
 	"body": {
-    	"roughness": 1, "name": "body",
+    	"roughness": 1.5, "name": "body",
     	"diffusePath": "uunp_test/femalebody_2.png",
     	"roughnessPath": "uunp_test/body_roughness.png",
-    	"normalPath": "uunp_test/femalebody_n.png",
+        "bumpPath": "uunp_test/femalebody_b.png",
     	"normalScale": 0.9,
     	"bumpScale": 0.0003
 	},
@@ -110,14 +110,14 @@
     	"diffusePath": "uunp_test/femalebody_2.png"
 	},
 	"hands": {
-    	"roughness": 1, "name": "hands",
+    	"roughness": 1.5, "name": "hands",
     	"diffusePath": "uunp_test/femalehands_1.png",
     	"roughnessPath": "uunp_test/hands_roughness.png",
     	"normalPath": "mr/hands_normal.png",
     	"normalScale": 1
 	},
 	"head": {
-    	"roughness": 1, "name": "head",
+    	"roughness": 1.5, "name": "head",
     	"diffusePath": "uunp_test/femalehead.png",
     	"roughnessPath": "uunp_test/head_roughness.png",
     	"normalPath": "uunp_test/head_normal.png",
