@@ -299,22 +299,32 @@ function render_fn(sceneData, scene, camera, useSSAO) {
 	return render;
 }
 
-function applyMove(state, id) {
-	state.object.position.set(state.x, state.y, state.z);
-	return {};
+function applyEntity(state, id) {
+	return state;
 }
 
-function applySpawn(state, id) {
-	console.log("Spawning", state);
-	state['scene'].add(state.object);
-	return {};
+function applyMove(state, id) {
+	return state;
 }
 
 function applyAnimation(state, id) {
-	if(state.animation) {
-		state.mixer.clipAction( state.animation ).play();
+	return state;
+}
+
+function applyRenderGlobals(object3dList, animationMixerList, scene) {
+	return function applyRender(state, id) {
+		let newState = { ...state }; 
+		if(newState.spawnItem) {
+			console.log("Spawning", newState);
+			scene.add(object3dList[id]);
+			object3dList[id].position.set(newState.x, newState.y, newState.z);
+			newState = { ...newState, spawnItem: false };
+		}
+		if(newState.animation) {
+			animationMixerList[id].update(0.01);
+		}
+		//object3dList[id].position.set(state.x, state.y, state.z);
 	}
-	return {};
 }
 
 // returns a new object with the values at each key mapped using mapFn(value)
@@ -327,61 +337,49 @@ function objectMap(object, mapFn) {
 
 var events = [];
 
-function emitEvent(systemName, id, state, defaultState) {
+function emitEvent(systemName, id, state) {
 	events.push({system: systemName, state: state, id: id});
 }
 
 function nextState(gameState) {
-	let newState = {"systems": {...gameState.systems}, "state": {}};
+	let newGameState = {"systems": {...gameState.systems}, "state": {}};
 	for(var i in events) {
 		var event = events[i];
-		if(!(event.system in newState.state)) {
-			newState.state[event.system] = {};
-		}
-		newState["state"][event.system][event.id] = event.state;
+		newGameState["state"][event.id] = {...newGameState["state"][event.id], ...event.state};
 	}
 	events = [];
 
 	for(var i in gameState.systems) {
 		var system = gameState.systems[i];
-		if(system.name in gameState.state) {
-			var newObject = objectMap(gameState.state[system.name], system.func);
-			for(var id in newObject) {
-				for(var systemName in newObject[id]) {
-					if(!(systemName in newState.state)) {
-						newState.state[systemName] = {};
-					}
-					newState.state[systemName][id] = newObject[id][systemName];
-				}
-			}
-		}
+		var newState = objectMap(newGameState.state, system.func);
+		newGameState.state = newState;
 	}
-	return newState;
+	return newGameState;
 }
 
 function main() {
+	var object3dList = {};
+	var animationMixerList = {};
+	var scene = new THREE.Scene();
+
 	var initialState = {
 		"systems": [
-			{ name: "spawn", func: applySpawn },
+			{ name: "entity", func: applyEntity },
 			{ name: "move", func: applyMove },
-			{ name: "animation", func: applyAnimation }
+			{ name: "animation", func: applyAnimation },
+			{ name: "render", func: applyRenderGlobals(object3dList, animationMixerList, scene) },
 		],
 		"state": {}
 	};
-
-	var scene = new THREE.Scene();
 	
 	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
 	camera.targetQuaternion = new THREE.Quaternion();
-	//camera.position.set(0, 3, 5);
-	emitEvent("spawn", "camera1", {
-		object: camera,
-		scene: scene
+	object3dList["camera1"] = camera;
+	emitEvent("entity", "camera1", {
+		x: 0, y: 3, z: 15
 	});
-	emitEvent("move", "camera1", {
-		x: 0, y: 3, z: 15, object: camera
-	});
-	
+	emitEvent("render", "camera1", { spawnItem: true });
+
 	var settings = {};
 	var sceneData = initRendering(scene, settings, camera);
 	sceneData.gameState = initialState;
@@ -398,17 +396,20 @@ function main() {
 	mesh.receiveShadow = false;
 	scene.add(mesh);
 	function loaderCallback( gltf ) {
-		emitEvent("spawn", "character1", {
-			object: gltf.scene,
-			scene: scene
+		emitEvent("entity", "character1", {
+			x: 0, y: 0, z: 0
 		});
 
 		var characterMesh = gltf.scene.children[1];
 		characterMesh.animations = gltf.animations;
 		var mixer = new THREE.AnimationMixer( characterMesh );
 		sceneData.animationMixers.push(mixer);
+		object3dList["character1"] = gltf.scene;
+		mixer.clipAction( 'DE_Shy' ).play();
+		animationMixerList["character1"] = mixer;
+		emitEvent("animation", "character1", { animation: 'DE_Shy' });
+		emitEvent("render", "character1", { spawnItem: true });
 
-		emitEvent("animation", "character1", { animation: 'DE_Shy', mixer: mixer });
 
 		/*spawn(sceneData.gameState, function() { 
 			scene.add(gltf.scene);
@@ -437,6 +438,3 @@ function debugInfo() {
 }
 window.emitEvent = emitEvent;
 export { emitEvent }
-
-
-
