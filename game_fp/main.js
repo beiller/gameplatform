@@ -1,5 +1,6 @@
 import * as THREE from './three.module.js';
 import * as Effects from './Effects.js';
+import * as Loader from './Loader.js';
 
 //welcome!
 
@@ -173,7 +174,7 @@ function createLight(pos, tar) {
 	bulbLight.distance = 100;
 	return bulbLight;
 }
-function initRendering(scene, settings) {
+function initRendering(scene, settings, camera) {
 	if(settings.usePCSS) {
 		// overwrite shadowmap code
 
@@ -198,13 +199,6 @@ function initRendering(scene, settings) {
     var container = document.createElement( 'div' );
     document.body.appendChild( container );
 
-    //this.camera = new Camera(null, this, 70, window.innerWidth/window.innerHeight, 0.01, 100);
-	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
-    camera.position.z = 5;
-    camera.position.y = -3;
-    camera.position.x = 0;
-    camera.targetQuaternion = new THREE.Quaternion();
-
     setupLighting();
 
     // this.jsonloader = new THREE.JSONLoader();
@@ -216,8 +210,9 @@ function initRendering(scene, settings) {
 	renderer.gammaOutput = true;
 	renderer.shadowMap.enabled = true;
 	renderer.toneMapping = THREE.Uncharted2ToneMapping;
-	//this.exposureSetting = 3.0;
-	renderer.toneMappingExposure = Math.pow(0.31, 3.0);
+	
+	//renderer.toneMappingExposure = Math.pow(0.31, 8.0);  // if you want to see
+	renderer.toneMappingExposure = Math.pow(0.31, 1.0);
     renderer.setClearColor( 0x050505 );
     renderer.setPixelRatio( window.devicePixelRatio );
     renderer.setSize( window.innerWidth, window.innerHeight );
@@ -268,12 +263,12 @@ function initRendering(scene, settings) {
 
     return {
     	renderer: renderer, 
-    	camera: camera,
     	container: container, 
     	cubeCamera: cubeCamera, 
     	renderPass: renderPass,
     	ssaoPass: ssaoPass,
-    	effectComposer: effectComposer
+    	effectComposer: effectComposer,
+    	animationMixers: []
     };
 };
 
@@ -283,24 +278,165 @@ function setupLighting() {
 	return createLight([2, 1, 4], [0,0,0]);
 }
 
-var myScene = new THREE.Scene();
-var settings = {};
-var sceneData = initRendering(myScene, settings);
-var myLight = setupLighting();
-myScene.add(myLight);
+function render_fn(sceneData, scene, camera, useSSAO) {
+	function render() {
+		for(var i in sceneData.animationMixers) {
+			sceneData.animationMixers[i].update(0.01);
+		}
+		// OK garbage collection will destroy the following line beware
+		sceneData.gameState = nextState(sceneData.gameState);
 
-function render(useSSAO, scene) {
-    sceneData.renderer.clear();
-    if(useSSAO) {
-    	sceneData.effectComposer.render();
-    } else {
-    	sceneData.renderer.render( scene, sceneData.camera );
-    }
-    requestAnimationFrame(function() {render(false, myScene);})
+	    sceneData.renderer.clear();
+	    if(useSSAO) {
+	    	sceneData.effectComposer.render();
+	    } else {
+	    	sceneData.renderer.render( scene, camera );
+	    }
+	    //setTimeout(function() {
+	    	requestAnimationFrame(render);
+		//}, 1500);
+	};
+	return render;
 }
 
+function applyMove(state, id) {
+	state.object.position.set(state.x, state.y, state.z);
+	return {};
+}
+
+function applySpawn(state, id) {
+	console.log("Spawning", state);
+	state['scene'].add(state.object);
+	return {};
+}
+
+function applyAnimation(state, id) {
+	if(state.animation) {
+		state.mixer.clipAction( state.animation ).play();
+	}
+	return {};
+}
+
+// returns a new object with the values at each key mapped using mapFn(value)
+function objectMap(object, mapFn) {
+    return Object.keys(object).reduce(function(result, key) {
+        result[key] = mapFn(object[key], key)
+        return result
+    }, {})
+}
+
+var events = [];
+
+function emitEvent(systemName, id, state, defaultState) {
+	events.push({system: systemName, state: state, id: id});
+}
+
+function nextState(gameState) {
+	let newState = {"systems": {...gameState.systems}, "state": {}};
+	for(var i in events) {
+		var event = events[i];
+		if(!(event.system in newState.state)) {
+			newState.state[event.system] = {};
+		}
+		newState["state"][event.system][event.id] = event.state;
+	}
+	events = [];
+
+	for(var i in gameState.systems) {
+		var system = gameState.systems[i];
+		if(system.name in gameState.state) {
+			var newObject = objectMap(gameState.state[system.name], system.func);
+			for(var id in newObject) {
+				for(var systemName in newObject[id]) {
+					if(!(systemName in newState.state)) {
+						newState.state[systemName] = {};
+					}
+					newState.state[systemName][id] = newObject[id][systemName];
+				}
+			}
+		}
+	}
+	return newState;
+}
+
+function main() {
+	var initialState = {
+		"systems": [
+			{ name: "spawn", func: applySpawn },
+			{ name: "move", func: applyMove },
+			{ name: "animation", func: applyAnimation }
+		],
+		"state": {}
+	};
+
+	var scene = new THREE.Scene();
+	
+	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
+	camera.targetQuaternion = new THREE.Quaternion();
+	//camera.position.set(0, 3, 5);
+	emitEvent("spawn", "camera1", {
+		object: camera,
+		scene: scene
+	});
+	emitEvent("move", "camera1", {
+		x: 0, y: 3, z: 15, object: camera
+	});
+	
+	var settings = {};
+	var sceneData = initRendering(scene, settings, camera);
+	sceneData.gameState = initialState;
+	var light = setupLighting();
+	scene.add(light);
+	var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 2.0 );
+	var bulbMat = new THREE.MeshStandardMaterial( {
+		emissive: 0xffffee,
+		emissiveIntensity: 1,
+		color: 0x000000
+	});
+	var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
+	mesh.castShadow = false;
+	mesh.receiveShadow = false;
+	scene.add(mesh);
+	function loaderCallback( gltf ) {
+		emitEvent("spawn", "character1", {
+			object: gltf.scene,
+			scene: scene
+		});
+
+		var characterMesh = gltf.scene.children[1];
+		characterMesh.animations = gltf.animations;
+		var mixer = new THREE.AnimationMixer( characterMesh );
+		sceneData.animationMixers.push(mixer);
+
+		emitEvent("animation", "character1", { animation: 'DE_Shy', mixer: mixer });
+
+		/*spawn(sceneData.gameState, function() { 
+			scene.add(gltf.scene);
+			return {"myGameObject1": {...defaultMoveState, object: gltf.scene }};
+		});*/
+		//scene.add( gltf.scene );
+		/*gltf.animations; // Array<THREE.AnimationClip>
+		gltf.scene; // THREE.Scene
+		gltf.scenes; // Array<THREE.Scene>
+		gltf.cameras; // Array<THREE.Camera>
+		gltf.asset; // Object*/
+		console.log(gltf.scenes);//[0].play();
+	}
+	Loader.loadGLTF("asdf", loaderCallback);
+
+	requestAnimationFrame(render_fn(sceneData, scene, camera));
+
+	return sceneData;
+}
+
+var sceneData = main();
 console.log('hello world');
-console.log(sceneData);
-requestAnimationFrame(function() {render(false, myScene);})
+
+function debugInfo() {
+	console.log(sceneData);
+}
+window.emitEvent = emitEvent;
+export { emitEvent }
+
 
 
