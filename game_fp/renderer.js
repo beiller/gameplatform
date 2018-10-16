@@ -30,6 +30,9 @@ function dataCallback(gltf, state) {
 	//characterMesh.animations = gltf.animations;
 	//var mixer = new THREE.AnimationMixer( characterMesh );
 	GLOBAL_SCENE.add(gltf.scene);
+	for(var i in gltf.animations) {
+		console.log(gltf.animations[i].name);
+	}
 	if('objectName' in state) {
 		state.object3d = gltf.scene.children.filter(mesh => mesh.name == state.objectName)[0];
 		state.object3d.animations = gltf.animations;
@@ -333,21 +336,12 @@ function setupLighting() {
 
 function render_fn(sceneData, scene, camera, useSSAO) {
 	function render() {
-		for(var i in sceneData.animationMixers) {
-			sceneData.animationMixers[i].update(0.01);
-		}
-		// OK garbage collection will destroy the following line beware
-		sceneData.gameState = ENGINE.nextState(sceneData.gameState);
-
 	    sceneData.renderer.clear();
 	    if(useSSAO) {
 	    	sceneData.effectComposer.render();
 	    } else {
 	    	sceneData.renderer.render( scene, camera );
 	    }
-	    
-	    requestAnimationFrame(render);
-		
 	};
 	return render;
 }
@@ -360,24 +354,37 @@ function updateObject(state, id, deps) {
 	state.object3d.position.set(deps["entity"].x, deps["entity"].y, deps["entity"].z);
 }
 
-let animationTracker = {};
-
-function animateObject(state, id, deps, prevState) {
-	if(!(id in animationTracker)) {
-		animationTracker[id] = {
-			animationMixer: new THREE.AnimationMixer(state.object3d.children[1]),
-			currentAnimation: deps["animation"].animationName
-		}
+function animateObject(state, id, deps) {
+	if(!('animationTracker' in state)) {
+		var mixer = new THREE.AnimationMixer(state.object3d.children[1]);
+		var clip = mixer.clipAction(deps['animation'].animationName);
+		clip.play();
+		return {
+			...state,
+			animationTracker: {
+				mixer: mixer, currentAnimation: deps["animation"].animationName, currentClip: clip
+			}
+		};
 	}
-	//if(prevState.animation.animationName !== deps['animation'].animationName) {
-		animationTracker[id].animationMixer.clipAction(deps['animation'].animationName).play();	
-	//}
-	animationTracker[id].animationMixer.update(0.01);
+	if(state.animationTracker.currentAnimation !== deps['animation'].animationName) {
+		state.animationTracker.currentClip.stop();
+		var newClip = state.animationTracker.mixer.clipAction(deps['animation'].animationName)
+		newClip.play();
+		
+		return {
+			...state,
+			animationTracker: {
+				...state.animationTracker, currentClip: newClip, currentAnimation: deps['animation'].animationName
+			}
+		};
+	}
+	state.animationTracker.mixer.update(0.016);
+	return state;
 }
 
-function render(state, id, deps, prevState) {
+function renderObject(state, id, deps) {
 	
-	if(!GLOBAL_CAMERA) return state;
+	if(!GLOBAL_CAMERA) return state;  // we have not yet been initialized
 
 	if(!state.object3d) {
 		if(state.loading) {
@@ -396,7 +403,10 @@ function render(state, id, deps, prevState) {
 	//}
 
 	if('animation' in deps)	{
-		animateObject(state, id, deps, prevState);
+		var newState = animateObject(state, id, deps);
+		if(newState !== state) {
+			return newState;
+		}
 	}
 	// may cause garbage collection issues
 	//previousDeps[id] = deps;
@@ -428,7 +438,7 @@ function init(initialState) {
 	mesh.receiveShadow = false;
 	scene.add(mesh);
 
-	requestAnimationFrame(render_fn(sceneData, scene, camera));
+	return render_fn(sceneData, scene, camera)
 }
 
-export { render, init };
+export { renderObject, init };

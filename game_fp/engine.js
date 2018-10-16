@@ -7,10 +7,19 @@ function objectMap(object, mapFn) {
     }, {})
 }
 
-var events = [];
+var events = {
+	'all': []
+};
 
-function emitEvent(systemName, id, state) {
-	events.push({system: systemName, state: state, id: id});
+function emitEvent(fromId, message, toId) {
+	//events.push({system: systemName, state: state, id: id});
+	if(toId) {
+		if(!(toId in events)) { events[toId] = []; }
+		events[toId].push(message);
+		return;
+	}
+	events['all'].push(message);
+	return;
 }
 
 function copyObject(obj) {
@@ -21,15 +30,18 @@ function copyObject(obj) {
     }
     return copy;
 }
+function handleErrors(fn, ...rest) {
+	try {
+		return fn(...rest);
+	} catch(e) {
+		console.log(e)
+		return rest[0];
+	}
+}
 
 function nextState(gameState) {
 	let newGameState = {"systems": [...gameState.systems]};
-	/*for(var i in events) {
-		var event = events[i];
-		newGameState["state"][event.id] = {...newGameState["state"][event.id], ...event.state};
-	}
-	events = [];*/
-	
+
 	//calculate new state
 	newGameState["state"] = objectMap(gameState.state, (value, id)=>(
 		Object.assign.apply({}, gameState.systems
@@ -37,14 +49,16 @@ function nextState(gameState) {
 				s => s.name in gameState.state[id]
 			)
 			.map(sys => 
-			({[sys.name]: sys.func(
+			({[sys.name]: handleErrors(sys.func,
 				gameState.state[id][sys.name], 
 				id, 
-				copyObject(gameState.state[id])
+				copyObject(gameState.state[id]),
+				id in events ? events[id].concat(events['all']) : events['all']
 			)})
 		))
 	));
+	events = {'all': []};
 	return newGameState;
 }
 
-export { nextState }
+export { nextState, emitEvent }

@@ -11,6 +11,25 @@ function applyInput(state, id) {
 	return state;
 }
 
+function applyAI(state, id, deps) {
+	if(Math.random() > 0.95) {
+		//if(Math.random() > 0.95) {
+			// send event?
+			// //TODO
+		//}
+		if(Math.random() > 0.5) {
+			return {...state, x: 0};
+		} else {
+			if(Math.random() > 0.5) {
+				return {...state, x: 1.0};
+			} else {
+				return {...state, x: -1.0};
+			}
+		}
+	}
+	return state;
+}
+
 function applyMotion(state, id, deps) {
 	if('input' in deps && 'x' in deps.input && 'y' in deps.input) {
 		return {
@@ -19,15 +38,17 @@ function applyMotion(state, id, deps) {
 			fy: deps['input'].y * 0.1
 		}
 	}
+	if('ai' in deps && 'x' in deps.ai) {
+		return { ...state, fx: deps['ai'].x * 0.1 }
+	}
 	return state;
 }
 
 function applyPhysics(state, id, deps) {
 	if('motion' in deps) {
 		return {
-			x: state.x + deps["motion"].fx,
-			y: state.y + deps["motion"].fy,
-			z: state.z + deps["motion"].fz,
+			...state,
+			x: state.x + deps["motion"].fx
 		};
 	}
 	return state;
@@ -54,18 +75,28 @@ function applyEntity(state, id, deps) {
 	return state;
 }
 
-function applyAnimation(state, id, deps) {
-	if(Math.abs(deps['input'].x) > 0.0 && state.animationName != 'DE_NormalRun') {
-		return {...state, animationName: 'DE_NormalRun'};
+function applyAnimation(state, id, deps, inbox) {
+	if(inbox.length > 0) {
+		for(var i = 0; i < inbox.length; i++) {
+			var newState = {...state, playingAnimation: true, animationName: inbox[i]['animationName']};
+		}
+		return newState;
 	}
-	if(Math.abs(deps['input'].x) < 0.1 && state.animationName != 'DE_Shy') {
-		return {...state, animationName: 'DE_Shy'};
+	if('playingAnimation' in state) {
+		return state;
+	} else {
+		if(Math.abs(deps['motion'].fx) > 0.01 && state.animationName != 'DE_NormalRun') {
+			return {...state, animationName: 'DE_NormalRun'};
+		}
+		if(Math.abs(deps['motion'].fx) < 0.01 && state.animationName != 'DE_Shy') {
+			return {...state, animationName: 'DE_Shy'};
+		}
 	}
 	return state;
 }
 
-function applyRender(state, id, deps, prevState) {
-	return RENDERER.render(state, id, deps, prevState);
+function applyRender(state, id, deps) {
+	return RENDERER.renderObject(state, id, deps);
 }
 
 function randomMotion(state, id, deps) {
@@ -77,10 +108,23 @@ function randomMotion(state, id, deps) {
 	};
 }
 
+function testMiddleware(nextStateFn) {
+	function newMiddleware(state) {
+		if(Math.random() > 0.99) {
+			console.log(state);
+		}
+		var nextState = nextStateFn(state);
+		//console.log(nextState);
+		return nextState;
+	}
+	return newMiddleware;
+}
+
 function main() {
 	var initialState = {
 		"systems": [	
 			{ name: "input", func: applyInput },
+			{ name: "ai", func: applyAI },
 			{ name: "motion", func: applyMotion },
 			{ name: "physics", func: applyPhysics },
 			{ name: "randomMotion", func: randomMotion },
@@ -117,13 +161,27 @@ function main() {
 				type: "animatedMesh", filename: "DefenderLingerie00.glb", 
 				//objectName: "DE_Lingerie00_Body"
 			},
-			"input": { "controllerId": "1" },
+			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},
 			"physics": {x: xPos, y: 0, z: 0}
 		}
 	}
+	var middleware = [testMiddleware];
 	console.log(initialState);
-	RENDERER.init(initialState);
+	window.gameState = initialState;
+	var renderFunction = RENDERER.init(initialState);
+	var nextStateFn = ENGINE.nextState;
+	for(var i = 0; i < middleware.length; i++) {
+		nextStateFn = middleware[i](nextStateFn);
+	}
+	window.emitEvent = ENGINE.emitEvent;
+	function tick() {
+		//window.gameState = ENGINE.nextState(window.gameState);
+		window.gameState = nextStateFn(window.gameState);
+		renderFunction();
+		requestAnimationFrame(tick);
+	}
+	requestAnimationFrame(tick);
 }
 
 main();
