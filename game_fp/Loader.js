@@ -12,7 +12,7 @@ function loadGLTF(filename, callback) {
 	// Load a glTF resource
 	loader.load(
 		// resource URL
-		'DefenderLingerie00.glb',
+		filename,
 		// called when the resource is loaded
 		callback,
 		// called while loading is progressing
