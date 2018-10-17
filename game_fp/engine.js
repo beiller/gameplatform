@@ -10,20 +10,11 @@ function objectMap(object, mapFn) {
 var events = null;
 
 function emitEvent(fromId, message, toId) {
-	var newMessage = {...message, fromId: fromId};
-	if(toId) {
-		if(!(toId in events)) {
-			events = { all: [...events['all']], [toId]: [newMessage] }; 
-		} else {
-			events = { all: [...events['all']], [toId]: [...events[toId], newMessage] }; 
-		}
-		return;
-	}
-	events = { ...events, all: [...events['all'], newMessage] };	
-	return;
+	//events = [...events, {...message, from: fromId, to: toId || 'all'}];  /// TOO MUCH GC
+	events.push({...message, from: fromId, to: toId || 'all'});
 }
 function clearEvents() {
-	events = {'all': []};
+	events = [];
 }
 clearEvents();
 
@@ -35,6 +26,7 @@ function copyObject(obj) {
     }
     return copy;
 }
+
 function handleErrors(fn, ...rest) {
 	try {
 		return fn(...rest);
@@ -46,34 +38,30 @@ function handleErrors(fn, ...rest) {
 
 
 function nextState(gameState) {
-	let newGameState = {"systems": [...gameState.systems]};
-
 	const eventsCopy = events;
 	//optimization for less GC
-	if(Object.keys(events).length == 1 && events['all'].length == 0) {
-
-	} else {
-		console.log('clearing events');
+	if(events.length > 0) {
 		clearEvents();
 	}
-
-	//calculate new state
-	newGameState["state"] = objectMap(gameState.state, (value, id)=>(
-		Object.assign.apply({}, gameState.systems
-			.filter(
-				s => s.name in gameState.state[id]
-			)
-			.map(sys => 
-			({[sys.name]: handleErrors(sys.func,
-				gameState.state[id][sys.name], 
-				id, 
-				copyObject(gameState.state[id]),
-				id in eventsCopy ? eventsCopy[id].concat(eventsCopy['all']) : eventsCopy['all']
-			)})
+	const stateCopy = copyObject(gameState.state);
+	return {
+		systems: [...gameState.systems], 
+		state: objectMap(gameState.state, (value, id)=>(
+			Object.assign.apply({}, gameState.systems
+				.filter(
+					s => s.name in gameState.state[id]
+				)
+				.map(sys => 
+				({[sys.name]: handleErrors(sys.func,
+					gameState.state[id][sys.name], 
+					id, 
+					stateCopy[id],
+					eventsCopy
+				)})
+			))
 		))
-	));
-	
-	return newGameState;
+	};
+
 }
 
 export { nextState, emitEvent }
