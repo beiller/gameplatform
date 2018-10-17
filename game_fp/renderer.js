@@ -352,6 +352,13 @@ function loadAssets(state) {
 
 function updateObject(state, id, deps) {
 	state.object3d.position.set(deps["entity"].x, deps["entity"].y, deps["entity"].z);
+	if('rotation' in deps["entity"]) {
+		state.object3d.rotation.set(
+			deps["entity"].rotation.x,
+			deps["entity"].rotation.y,
+			deps["entity"].rotation.z,
+		);
+	}
 }
 
 function animateObject(state, id, deps) {
@@ -418,7 +425,6 @@ function init(initialState) {
 	var animationMixerList = {};
 	var scene = new THREE.Scene();
 	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
-	camera.targetQuaternion = new THREE.Quaternion();
 	GLOBAL_CAMERA = camera;
 	GLOBAL_SCENE = scene;
 

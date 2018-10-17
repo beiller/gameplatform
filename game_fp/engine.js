@@ -7,20 +7,25 @@ function objectMap(object, mapFn) {
     }, {})
 }
 
-var events = {
-	'all': []
-};
+var events = null;
 
 function emitEvent(fromId, message, toId) {
-	//events.push({system: systemName, state: state, id: id});
+	var newMessage = {...message, fromId: fromId};
 	if(toId) {
-		if(!(toId in events)) { events[toId] = []; }
-		events[toId].push(message);
+		if(!(toId in events)) {
+			events = { all: [...events['all']], [toId]: [newMessage] }; 
+		} else {
+			events = { all: [...events['all']], [toId]: [...events[toId], newMessage] }; 
+		}
 		return;
 	}
-	events['all'].push(message);
+	events = { ...events, all: [...events['all'], newMessage] };	
 	return;
 }
+function clearEvents() {
+	events = {'all': []};
+}
+clearEvents();
 
 function copyObject(obj) {
 	//return objectMap(object, (k, i)=>({...k[i]}));
@@ -39,8 +44,18 @@ function handleErrors(fn, ...rest) {
 	}
 }
 
+
 function nextState(gameState) {
 	let newGameState = {"systems": [...gameState.systems]};
+
+	const eventsCopy = events;
+	//optimization for less GC
+	if(Object.keys(events).length == 1 && events['all'].length == 0) {
+
+	} else {
+		console.log('clearing events');
+		clearEvents();
+	}
 
 	//calculate new state
 	newGameState["state"] = objectMap(gameState.state, (value, id)=>(
@@ -53,11 +68,11 @@ function nextState(gameState) {
 				gameState.state[id][sys.name], 
 				id, 
 				copyObject(gameState.state[id]),
-				id in events ? events[id].concat(events['all']) : events['all']
+				id in eventsCopy ? eventsCopy[id].concat(eventsCopy['all']) : eventsCopy['all']
 			)})
 		))
 	));
-	events = {'all': []};
+	
 	return newGameState;
 }
 

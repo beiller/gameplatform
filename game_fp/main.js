@@ -5,18 +5,15 @@ import * as INPUT from './input.js';
 //welcome!
 
 function applyInput(state, id) {
-	if(state !== INPUT.getControllerState(state.controllerId)) {
-		return {...state, ...INPUT.getControllerState(state.controllerId)};
+	var newState = {...state, ...INPUT.getControllerState(state.controllerId)};
+	if(newState.buttons[0] === true && state.buttons[0] === false) {
+		emitEvent(id, {animationName: "DE_Dance"}, id);
 	}
-	return state;
+	return newState;
 }
 
 function applyAI(state, id, deps) {
 	if(Math.random() > 0.95) {
-		//if(Math.random() > 0.95) {
-			// send event?
-			// //TODO
-		//}
 		if(Math.random() > 0.5) {
 			return {...state, x: 0};
 		} else {
@@ -24,6 +21,17 @@ function applyAI(state, id, deps) {
 				return {...state, x: 1.0};
 			} else {
 				return {...state, x: -1.0};
+			}
+		}
+	}
+	if(Math.random() > 0.95) {
+		if(Math.random() > 0.5) {
+			return {...state, y: 0};
+		} else {
+			if(Math.random() > 0.5) {
+				return {...state, y: 1.0};
+			} else {
+				return {...state, y: -1.0};
 			}
 		}
 	}
@@ -35,11 +43,11 @@ function applyMotion(state, id, deps) {
 		return {
 			...state,
 			fx: deps['input'].x * 0.1,
-			fy: deps['input'].y * 0.1
+			fz: deps['input'].y * -0.1
 		}
 	}
-	if('ai' in deps && 'x' in deps.ai) {
-		return { ...state, fx: deps['ai'].x * 0.1 }
+	if('ai' in deps && 'x' in deps.ai && 'y' in deps.ai) {
+		return { ...state, fx: deps['ai'].x * 0.1, fz: deps['ai'].y * -0.1 }
 	}
 	return state;
 }
@@ -48,7 +56,8 @@ function applyPhysics(state, id, deps) {
 	if('motion' in deps) {
 		return {
 			...state,
-			x: state.x + deps["motion"].fx
+			x: state.x + deps["motion"].fx,
+			z: state.z + deps["motion"].fz
 		};
 	}
 	return state;
@@ -77,21 +86,27 @@ function applyEntity(state, id, deps) {
 
 function applyAnimation(state, id, deps, inbox) {
 	if(inbox.length > 0) {
-		for(var i = 0; i < inbox.length; i++) {
-			var newState = {...state, playingAnimation: true, animationName: inbox[i]['animationName']};
+		for(var i = inbox.length-1; i >= 0; i--) {
+			if('animationName' in inbox[i]) {
+				console.log("Triggering animation", inbox[i]['animationName']);
+				return {...state, playingAnimation: true, animationName: inbox[i]['animationName']};
+			}
 		}
-		return newState;
 	}
-	if('playingAnimation' in state) {
+	if('playingAnimation' in state && state.playingAnimation === true) {
+		if('motion' in deps && Math.abs(deps['motion'].fx) > 0.0001) {
+			return {...state, playingAnimation: false};	
+		}
 		return state;
-	} else {
-		if(Math.abs(deps['motion'].fx) > 0.01 && state.animationName != 'DE_NormalRun') {
-			return {...state, animationName: 'DE_NormalRun'};
-		}
-		if(Math.abs(deps['motion'].fx) < 0.01 && state.animationName != 'DE_Shy') {
-			return {...state, animationName: 'DE_Shy'};
-		}
 	}
+	var totalMotion = Math.abs(deps['motion'].fx) + Math.abs(deps['motion'].fz);
+	if(totalMotion > 0.0001 && state.animationName != 'DE_NormalRun') {
+		return {...state, animationName: 'DE_NormalRun'};
+	}
+	if(totalMotion < 0.0001 && state.animationName != 'DE_NormalIddle') {
+		return {...state, animationName: 'DE_NormalIddle'};
+	}
+	
 	return state;
 }
 
@@ -134,7 +149,7 @@ function main() {
 		],
 		"state": {
 			"camera1": {
-				"entity": {x: 0, y: 3, z: 7},
+				"entity": {x: 0, y: 8, z: 3, rotation: {x: -0.95, y: 0.0, z: 0.0}},
 				"randomMotion": { speed: 0.025, x: 0, y: 0, z: 0 },
 				"render": {type: "camera"}
 			},
@@ -143,8 +158,7 @@ function main() {
 				"animation": { animationName: 'DE_Shy' },
 				"render": { 
 					type: "animatedMesh", 
-					filename: "DefenderLingerie00.glb",
-					//objectName: "DE_Lingerie00_Body"
+					filename: "DefenderLingerie00.glb"
 				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
@@ -158,8 +172,7 @@ function main() {
 			"entity": {x: xPos, y: 0, z: 0},
 			"animation": { animationName: 'DE_Dance' },
 			"render": { 
-				type: "animatedMesh", filename: "DefenderLingerie00.glb", 
-				//objectName: "DE_Lingerie00_Body"
+				type: "animatedMesh", filename: "DefenderLingerie00.glb"
 			},
 			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},
