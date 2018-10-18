@@ -29,6 +29,9 @@ function dataCallback(gltf, state) {
 	//characterMesh = characterMesh.clone();
 	//characterMesh.animations = gltf.animations;
 	//var mixer = new THREE.AnimationMixer( characterMesh );
+	if('scale' in state) {
+		gltf.scene.scale.set(state.scale, state.scale, state.scale);
+	}
 	GLOBAL_SCENE.add(gltf.scene);
 	for(var i in gltf.animations) {
 		console.log(gltf.animations[i].name);
@@ -360,11 +363,19 @@ function updateObject(state, id, deps) {
 		);
 	}
 }
+let cache = {}
+function getAnimationClip(id, animationName, mixer) {
+  if((id+animationName) in cache) {
+  	return cache[(id+animationName)];
+  }
+  return cache[(id+animationName)] = cache[(id+animationName)] || mixer.clipAction(animationName);
+}
+
 
 function animateObject(state, id, deps) {
 	if(!('animationTracker' in state)) {
 		var mixer = new THREE.AnimationMixer(state.object3d.children[1]);
-		var clip = mixer.clipAction(deps['animation'].animationName);
+		var clip = getAnimationClip(id, deps['animation'].animationName, mixer);
 		clip.play();
 		return {
 			...state,
@@ -375,7 +386,7 @@ function animateObject(state, id, deps) {
 	}
 	if(state.animationTracker.currentAnimation !== deps['animation'].animationName) {
 		state.animationTracker.currentClip.stop();
-		var newClip = state.animationTracker.mixer.clipAction(deps['animation'].animationName)
+		var newClip = getAnimationClip(id, deps['animation'].animationName, state.animationTracker.mixer);
 		newClip.play();
 		
 		return {

@@ -167,9 +167,7 @@ function testMiddleware(nextStateFn) {
 		if(Math.random() > 0.999) {
 			console.log('Random event occurred! Now showing state:', state);
 		}
-		var nextState = nextStateFn(state);
-		//console.log(nextState);
-		return nextState;
+		return nextStateFn(state);
 	}
 	return newMiddleware;
 }
@@ -199,7 +197,8 @@ function main() {
 				"animation": { animationName: 'DE_Shy' },
 				"render": { 
 					type: "animatedMesh", 
-					filename: "DefenderLingerie00.glb"
+					filename: "DefenderLingerie00.glb",
+					scale: 0.7
 				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
@@ -207,14 +206,25 @@ function main() {
 			}
 		}
 	};
-	for(var i = 0; i < 25; i++) {
+	var numTiles = 25;
+	for(var x = 0; x < numTiles; x++) {
+		for(var y = 0; y < numTiles; y++) {
+			initialState['state']["ground"+x+"-"+y] = {
+				"entity": {x: (x*10)-(numTiles*10/2), y: 0, z: (y*10)-(numTiles*10/2)},
+				"render": { 
+					type: "animatedMesh", filename: "grass_tile.glb"
+				}
+			}	
+		}
+	}
+	for(var i = 0; i < 5; i++) {
 		var xPos = (Math.random()-0.5)*2*30;
 		var zPos = (Math.random()-0.5)*2*30;
 		initialState['state']["character"+(i+999)] = {
 			"entity": {x: xPos, y: 0, z: zPos},
 			"animation": { animationName: 'DE_Dance' },
 			"render": { 
-				type: "animatedMesh", filename: "DefenderLingerie00.glb"
+				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.7
 			},
 			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},
