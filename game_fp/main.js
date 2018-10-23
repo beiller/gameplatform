@@ -4,71 +4,74 @@ import * as INPUT from './input.js';
 
 //welcome!
 
-function applyInput(state, id, deps, inbox) {
+function applyInput(state, id, deps, eventHandler) {
 	var newState = {...state, ...INPUT.getControllerState(state.controllerId)};
 	if(newState.buttons[0] === true && state.buttons[0] === false) {
-		emitEvent(id, {animationName: "DE_Dance"}, id);
+		eventHandler.emitEvent(id, {animationName: "DE_Dance"}, id);
 	}
 	return newState;
 }
 
-function applyAI(state, id, deps, inbox) {
-	if(Math.random() > 0.95) {
+function changeDirections(state, fieldName) {
+	if(Math.random() > 0.95) { // 5% chance to change behavioud
 		if(Math.random() > 0.5) {
-			return {...state, x: 0};
+			return {...state, [fieldName]: 0}; //50% chance to stop
 		} else {
-			if(Math.random() > 0.5) {
-				return {...state, x: 1.0};
+			if(Math.random() > 0.5) { //50% chance to move
+				return {...state, [fieldName]: 1.0};
 			} else {
-				return {...state, x: -1.0};
-			}
-		}
-	}
-	if(Math.random() > 0.95) {
-		if(Math.random() > 0.5) {
-			return {...state, y: 0};
-		} else {
-			if(Math.random() > 0.5) {
-				return {...state, y: 1.0};
-			} else {
-				return {...state, y: -1.0};
+				return {...state, [fieldName]: -1.0};
 			}
 		}
 	}
 	return state;
 }
+function applyAI(state, id, deps, eventHandler) {
+	var newState = changeDirections(state, "x");
+	if(newState !== state) {
+		return newState;
+	}
+	var newState = changeDirections(state, "y");
+	if(newState !== state) {
+		return newState;
+	}
+	return state;
+}
 
-function applyMotion(state, id, deps, inbox) {
+function applyMotion(state, id, deps, eventHandler) {
+	var dep = null;
 	if('input' in deps && 'x' in deps.input && 'y' in deps.input) {
-		return {
-			...state,
-			fx: deps['input'].x * 0.1,
-			fz: deps['input'].y * -0.1
-		}
+		dep = deps['input'];
 	}
 	if('ai' in deps && 'x' in deps.ai && 'y' in deps.ai) {
-		return { ...state, fx: deps['ai'].x * 0.1, fz: deps['ai'].y * -0.1 }
+		dep = deps['ai'];
 	}
-	return state;
-}
-
-function applyPhysics(state, id, deps, inbox) {
-	if('motion' in deps) {
-		emitEvent(id, {newPosition: {
-			x: state.x + deps["motion"].fx,
-			y: state.y,
-			z: state.z + deps["motion"].fz,
-		}}, id);
+	if(dep) {
+		var normalized = normalize2D(dep);
 		return {
 			...state,
-			x: state.x + deps["motion"].fx,
-			z: state.z + deps["motion"].fz
+			fx: normalized.x, 
+			fz: -normalized.y
 		};
 	}
 	return state;
 }
 
-function normalize(point) {
+const movementSpeed = 0.05;
+function applyPhysics(state, id, deps, eventHandler) {
+	if('motion' in deps) {
+		const newState = {
+			...state, 
+			x: state.x + (deps.motion.fx * movementSpeed),
+			z: state.z + (deps.motion.fz * movementSpeed),
+		}
+		eventHandler.emitEvent(id, {newPosition: newState}, id);
+		return newState;
+	}
+	return state;
+}
+
+function normalize2D(point) {
 	var norm = Math.sqrt(point.x * point.x + point.y * point.y);
 	if (norm != 0) { // as3 return 0,0 for a point of zero length
 		return {x: point.x / norm, y: point.y / norm};
@@ -76,11 +79,11 @@ function normalize(point) {
 	return {x: 0, y: 0};
 }
 
-function applyEntity(state, id, deps, inbox) {
+function applyEntity(state, id, deps, eventHandler) {
 	if('physics' in deps) {
 		if('randomMotion' in deps) {
 			return {
-				...state,
+				...pointCharacter(state, id, deps),
 				x: deps['physics'].x + deps['randomMotion'].x,
 				y: deps['physics'].y + deps['randomMotion'].y,
 				z: deps['physics'].z + deps['randomMotion'].z
@@ -88,7 +91,7 @@ function applyEntity(state, id, deps, inbox) {
 		}
 		if(deps.physics.x != state.x || deps.physics.y != state.y || deps.physics.z != state.z) {
 			return {
-				...state,
+				...pointCharacter(state, id, deps),
 				x: deps['physics'].x,
 				y: deps['physics'].y,
 				z: deps['physics'].z
@@ -96,35 +99,45 @@ function applyEntity(state, id, deps, inbox) {
 		}
 	}
 	if('followEntity' in deps) {
-		if(inbox.length > 0) {
-			for(var i = inbox.length-1; i >= 0; i--) {
-				if(inbox[i].from == deps.followEntity.entityName) {
-					return {...state, x: inbox[i].newPosition.x, z: inbox[i].newPosition.z + 3};
+		if(eventHandler.events.length > 0) {
+			for(var i = eventHandler.events.length-1; i >= 0; i--) {
+				if(eventHandler.events[i].from == deps.followEntity.entityName) {
+					return {
+						...pointCharacter(state, id, deps), 
+						x: eventHandler.events[i].newPosition.x, 
+						y: 4.0, 
+						z: eventHandler.events[i].newPosition.z + 2
+					};
 				}
 			}
 		}
 	}
+	return state;
+}
+function pointCharacter(state, id, deps) {
 	if('motion' in deps) {
-		//point character
-		return {
-			...state,
-			rotation: {
-				x: 0, 
-				y: normalize({x: deps['motion'].fx, y: deps['motion'].fz}).x * (Math.PI / 2.0),
-				z: 0
-			}
-		};
+	//point character
+		if(Math.abs(deps.motion.fx)+Math.abs(deps.motion.fz) > 0) {
+			var rotation = Math.atan2(deps.motion.fx,deps.motion.fz);
+			return {
+				...state,
+				rotation: {
+					x: 0, 
+					y: rotation,
+					z: 0
+				}
+			};
+		}
 	}
-
 	return state;
 }
 
-function applyAnimation(state, id, deps, inbox) {
-	if(inbox.length > 0) {
-		for(var i = inbox.length-1; i >= 0; i--) {
-			if('animationName' in inbox[i]) {
-				console.log("Triggering animation", inbox[i]['animationName']);
-				return {...state, playingAnimation: true, animationName: inbox[i]['animationName']};
+function applyAnimation(state, id, deps, eventHandler) {
+	if(eventHandler.events.length > 0) {
+		for(var i = eventHandler.events.length-1; i >= 0; i--) {
+			if('animationName' in eventHandler.events[i]) {
+				console.log("Triggering animation", eventHandler.events[i]['animationName']);
+				return {...state, playingAnimation: true, animationName: eventHandler.events[i]['animationName']};
 			}
 		}
 	}
@@ -134,22 +147,25 @@ function applyAnimation(state, id, deps, inbox) {
 		}
 		return state;
 	}
-	var totalMotion = Math.abs(deps['motion'].fx) + Math.abs(deps['motion'].fz);
-	if(totalMotion > 0.0001 && state.animationName != 'DE_NormalRun') {
-		return {...state, animationName: 'DE_NormalRun'};
+	if('render' in deps && deps['render']['filename'] == 'soccer_char1_gltf.glb') {
+		return state;
 	}
-	if(totalMotion < 0.0001 && state.animationName != 'DE_NormalIddle') {
-		return {...state, animationName: 'DE_NormalIddle'};
+	var totalMotion = Math.abs(deps['motion'].fx) + Math.abs(deps['motion'].fz);
+	if(totalMotion > 0.0001 && state.animationName != 'DE_CombatRun') {
+		return {...state, animationName: 'DE_CombatRun'};
+	}
+	if(totalMotion < 0.0001 && state.animationName != 'DE_Combatiddle') {
+		return {...state, animationName: 'DE_Combatiddle'};
 	}
 	
 	return state;
 }
 
-function applyRender(state, id, deps, inbox) {
+function applyRender(state, id, deps, eventHandler) {
 	return RENDERER.renderObject(state, id, deps);
 }
 
-function randomMotion(state, id, deps, inbox) {
+function randomMotion(state, id, deps, eventHandler) {
 	return {
 		...state,
 		x: ((Math.random() * state.speed) - state.speed / 2.0),
@@ -158,14 +174,40 @@ function randomMotion(state, id, deps, inbox) {
 	};
 }
 
-function applyFollowEntity(state, id, deps, inbox) {
+function applyFollowEntity(state, id, deps, eventHandler) {
 	return state;
+}
+
+var element = null;
+var doUpdateFunc = createUIDiv;
+function createUIDiv(state){
+    var container = document.createElement( 'div' );
+    /*container.style = {
+    	...container.style,
+    	position: "absolute", top: "0px", left: "0px", width: "200px", height: "200px",
+    	border: "solid 1px"
+    }*/
+    container.style.position = "absolute";
+    container.style.left = "0px";
+    container.style.top = "0px";
+    container.style.width = "500px";
+    container.style.height = "500px";
+    container.style.overflow = "none";
+    container.innerHTML = "TEST";
+    element = container;
+    document.body.appendChild( container );
+    doUpdateFunc = updateUIDiv;
+}
+function updateUIDiv(state){
+	element.innerHTML = JSON.stringify(state.state.character1, null, 2);
 }
 
 function testMiddleware(nextStateFn) {
 	function newMiddleware(state) {
-		if(Math.random() > 0.999) {
-			console.log('Random event occurred! Now showing state:', state);
+		
+		if(Math.random() > 0.00000) {
+			//console.log('Random event occurred! Now showing state:', state);
+			doUpdateFunc(state);
 		}
 		return nextStateFn(state);
 	}
@@ -185,20 +227,19 @@ function main() {
 			{ name: "animation", func: applyAnimation },
 			{ name: "render", func: applyRender },
 		],
+		"events": [],
 		"state": {
 			"camera1": {
-				"entity": {x: 0, y: 8, z: 3, rotation: {x: -0.95, y: 0.0, z: 0.0}},
+				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
 				"randomMotion": { speed: 0.025, x: 0, y: 0, z: 0 },
 				"render": {type: "camera"},
 				"followEntity": {entityName: "character1"}
 			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0},
-				"animation": { animationName: 'DE_Shy' },
+				"animation": { animationName: 'DE_Dance' },
 				"render": { 
-					type: "animatedMesh", 
-					filename: "DefenderLingerie00.glb",
-					scale: 0.7
+					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.23
 				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
@@ -217,14 +258,14 @@ function main() {
 			}	
 		}
 	}
-	for(var i = 0; i < 5; i++) {
+	for(var i = 0; i < 25; i++) {
 		var xPos = (Math.random()-0.5)*2*30;
 		var zPos = (Math.random()-0.5)*2*30;
 		initialState['state']["character"+(i+999)] = {
 			"entity": {x: xPos, y: 0, z: zPos},
 			"animation": { animationName: 'DE_Dance' },
 			"render": { 
-				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.7
+				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.23
 			},
 			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},
@@ -239,7 +280,7 @@ function main() {
 	for(var i = 0; i < middleware.length; i++) {
 		nextStateFn = middleware[i](nextStateFn);
 	}
-	window.emitEvent = ENGINE.emitEvent;
+	//window.emitEvent = ENGINE.emitEvent;
 	function tick() {
 		//window.gameState = ENGINE.nextState(window.gameState);
 		window.gameState = nextStateFn(window.gameState);

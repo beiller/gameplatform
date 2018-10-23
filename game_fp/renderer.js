@@ -12,16 +12,12 @@ const loaders = {
 }
 
 function loadCamera(state) {
-	//var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
-	//camera.targetQuaternion = new THREE.Quaternion();
-	state.object3d = GLOBAL_CAMERA;
-	GLOBAL_SCENE.add(state.object3d);
+	state.object3d = GLOBAL_CAMERA.uuid;
+	GLOBAL_SCENE.add(GLOBAL_CAMERA);
 }
 
 
-var gltfCache = {
-
-};
+var loadedObjects = {};
 var loaderCallbackFunction = null;
 
 function dataCallback(gltf, state) {
@@ -36,25 +32,21 @@ function dataCallback(gltf, state) {
 	for(var i in gltf.animations) {
 		console.log(gltf.animations[i].name);
 	}
-	if('objectName' in state) {
-		state.object3d = gltf.scene.children.filter(mesh => mesh.name == state.objectName)[0];
-		state.object3d.animations = gltf.animations;
-	} else {
-		state.object3d = gltf.scene;
-		for(var i in state.object3d.children) {
-			state.object3d.children[i].animations = gltf.animations;
-		}
-		
+	for(var i in gltf.scene.children) {
+		gltf.scene.children[i].animations = gltf.animations;
 	}
+	loadedObjects[gltf.scene.uuid] = gltf.scene;
+	state.object3d = gltf.scene.uuid;
+	
 }
 function loadGLTF(state) {
 	function loaderCallback( gltf ) {
-		gltfCache[state.filename] = gltf;
+		loadedObjects[state.filename] = gltf;
 		dataCallback(gltf, state);
 	}
 	function loaderCallbackWaitCache( gltf ) {
-		if(state.filename in gltfCache) {
-			dataCallback(gltfCache[state.filename], state);
+		if(state.filename in loadedObjects) {
+			dataCallback(loadedObjects[state.filename], state);
 		} else {
 			setTimeout(loaderCallbackWaitCache, 500);
 		}
@@ -353,50 +345,55 @@ function loadAssets(state) {
 	loaders[state.type](state);
 }
 
+function createCache(fn) {
+	let cache = {}
+	function getFromCache(...args) {
+		let id = args.join(':');
+		if(id in cache) {
+			return cache[id];
+		}
+		return cache[id] = cache[id] || fn(...args);
+	}
+	return getFromCache;
+}
+function createMixer(id) {
+	return new THREE.AnimationMixer(loadedObjects[id].children[1]);
+}
+let getAnimationMixer = createCache(createMixer);
+
+function createClip(id, animationName) {
+	return getAnimationMixer(id).clipAction(animationName);
+}
+let getAnimationClip = createCache(createClip);
+
 function updateObject(state, id, deps) {
-	state.object3d.position.set(deps["entity"].x, deps["entity"].y, deps["entity"].z);
+	loadedObjects[state.object3d].position.set(deps["entity"].x, deps["entity"].y, deps["entity"].z);
 	if('rotation' in deps["entity"]) {
-		state.object3d.rotation.set(
+		loadedObjects[state.object3d].rotation.set(
 			deps["entity"].rotation.x,
 			deps["entity"].rotation.y,
 			deps["entity"].rotation.z,
 		);
 	}
 }
-let cache = {}
-function getAnimationClip(id, animationName, mixer) {
-  if((id+animationName) in cache) {
-  	return cache[(id+animationName)];
-  }
-  return cache[(id+animationName)] = cache[(id+animationName)] || mixer.clipAction(animationName);
-}
-
 
 function animateObject(state, id, deps) {
-	if(!('animationTracker' in state)) {
-		var mixer = new THREE.AnimationMixer(state.object3d.children[1]);
-		var clip = getAnimationClip(id, deps['animation'].animationName, mixer);
-		clip.play();
+	if(!('currentAnimation' in state)) {
+		getAnimationClip(state.object3d, deps['animation'].animationName).play();
 		return {
 			...state,
-			animationTracker: {
-				mixer: mixer, currentAnimation: deps["animation"].animationName, currentClip: clip
-			}
+			currentAnimation: deps["animation"].animationName
 		};
 	}
-	if(state.animationTracker.currentAnimation !== deps['animation'].animationName) {
-		state.animationTracker.currentClip.stop();
-		var newClip = getAnimationClip(id, deps['animation'].animationName, state.animationTracker.mixer);
-		newClip.play();
-		
+	if(state.currentAnimation !== deps['animation'].animationName) {
+		getAnimationClip(state.object3d, state.currentAnimation).stop();
+		getAnimationClip(state.object3d, deps['animation'].animationName).play();
 		return {
 			...state,
-			animationTracker: {
-				...state.animationTracker, currentClip: newClip, currentAnimation: deps['animation'].animationName
-			}
+			currentAnimation: deps["animation"].animationName
 		};
 	}
-	state.animationTracker.mixer.update(0.016);
+	getAnimationMixer(state.object3d).update(0.016);
 	return state;
 }
 
@@ -437,6 +434,7 @@ function init(initialState) {
 	var scene = new THREE.Scene();
 	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
 	GLOBAL_CAMERA = camera;
+	loadedObjects[camera.uuid] = camera;
 	GLOBAL_SCENE = scene;
 
 	var settings = {};

@@ -7,16 +7,11 @@ function objectMap(object, mapFn) {
     }, {})
 }
 
-var events = null;
-
-function emitEvent(fromId, message, toId) {
+function emitEvent(eventList, fromId, message, toId) {
 	//events = [...events, {...message, from: fromId, to: toId || 'all'}];  /// TOO MUCH GC
-	events.push({...message, from: fromId, to: toId || 'all'});
+	// we mutate the events for performance
+	eventList.push({...message, from: fromId, to: toId || 'all'});
 }
-function clearEvents() {
-	events = [];
-}
-clearEvents();
 
 function copyObject(obj) {
 	//return objectMap(object, (k, i)=>({...k[i]}));
@@ -32,20 +27,26 @@ function handleErrors(fn, ...rest) {
 		return fn(...rest);
 	} catch(e) {
 		console.log(e)
-		return rest[0];
+		return rest[0]; // returns the initial state on error
 	}
 }
 
 
 function nextState(gameState) {
-	const eventsCopy = events;
-	//optimization for less GC
-	if(events.length > 0) {
-		clearEvents();
-	}
-	const stateCopy = copyObject(gameState.state);
+	const eventsCopy = gameState.events;
+	const stateCopy = gameState.state;
+	var newEvents = [];
+
+	const eventHandler = {
+		events: gameState.events,
+		emitEvent: function(fromId, message, toId) {
+			return emitEvent(newEvents, fromId, message, toId);
+		}
+	};
+
 	return {
 		systems: [...gameState.systems], 
+		events: newEvents,
 		state: objectMap(gameState.state, (value, id)=>(
 			Object.assign.apply({}, gameState.systems
 				.filter(
@@ -55,8 +56,8 @@ function nextState(gameState) {
 				({[sys.name]: handleErrors(sys.func,
 					gameState.state[id][sys.name], 
 					id, 
-					stateCopy[id],
-					eventsCopy
+					gameState.state[id],  // is mutable so danger
+					eventHandler
 				)})
 			))
 		))
@@ -64,4 +65,4 @@ function nextState(gameState) {
 
 }
 
-export { nextState, emitEvent }
+export { nextState }
