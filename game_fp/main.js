@@ -239,7 +239,7 @@ function main() {
 				"entity": {x: 0, y: 0, z: 0},
 				"animation": { animationName: 'DE_Dance' },
 				"render": { 
-					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.23
+					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.333
 				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
@@ -258,14 +258,14 @@ function main() {
 			}	
 		}
 	}
-	for(var i = 0; i < 25; i++) {
+	for(var i = 0; i < 5; i++) {
 		var xPos = (Math.random()-0.5)*2*30;
 		var zPos = (Math.random()-0.5)*2*30;
 		initialState['state']["character"+(i+999)] = {
 			"entity": {x: xPos, y: 0, z: zPos},
 			"animation": { animationName: 'DE_Dance' },
 			"render": { 
-				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.23
+				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.333
 			},
 			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},

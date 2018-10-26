@@ -31,6 +31,76 @@ function handleErrors(fn, ...rest) {
 	}
 }
 
+const Map = Immutable.Map;
+const List = Immutable.List;
+const Stack = Immutable.Stack;
+
+function addBehaviour(gameState, behaviourName, objectId, initialState) {
+	return gameState.set("state", 
+		gameState.get("state").set(behaviourName,
+			gameState.get("state").get(behaviourName, Map()).set(objectId, Map(initialState))
+		)
+	);
+}
+
+function addSystem(gameState, systemName, func) {
+	return gameState.set("systems",
+		gameState.get("systems").push(Map({"name": systemName, "func": func}))
+	);
+}
+
+function addEventListener(gameState, objectId, systemId) {
+	return gameState.set("events", gameState.get("events").set(
+		objectId, 
+		gameState.get("events").get(objectId, Map()).set(
+			systemId, Stack()
+		)
+	));
+}
+
+function myNextState(gameState) {
+	return gameState.set("state", 
+		gameState.get("systems").map(system=>
+			([
+				system.get("name"),
+				gameState.get("state").get(system.get("name")).map((state, objectId)=>
+					system.get("func")(
+						objectId, 
+						state,
+						gameState.get("state").map((states, systemName)=>states.get(objectId))
+					)
+				)
+			])
+		).reduce((acc, item)=>acc.set(item[0], item[1]), Map())
+	);
+}
+function emitEvents(gameState) {
+	return gameState.set("events", 
+		gameState.get("events").map((systems, objectId)=>
+			systems.map((data, systemName)=>
+				gameState.get("state").get(systemName).get(objectId)
+			)
+		)
+	);
+}
+
+function myStateProcess(objectId, state, deps) {
+	return state.set('a', state.get('a')+1);
+}
+
+var gameState = Map({
+	systems: List(),
+	events: Map(),
+	state: Map()
+});
+gameState = addSystem(gameState, "dummy", myStateProcess);
+gameState = addBehaviour(gameState, "dummy", "myobject1", {a: 1, b: 2});
+gameState = addBehaviour(gameState, "dummy", "myobject2", {a: 1, b: 2});
+gameState = addEventListener(gameState, "myobject1", "dummy");
+console.log(JSON.stringify(gameState, null, " "));
+gameState = emitEvents(myNextState(gameState));
+console.log(JSON.stringify(gameState, null, " "));
+
 
 function nextState(gameState) {
 	const eventsCopy = gameState.events;
