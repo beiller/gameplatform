@@ -6,52 +6,34 @@ import * as ENGINE from './engine.js';
 var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
 
+var loadedObjects = {};
+var loaderCallbackFunction = null;
+
 const loaders = {
 	"camera": loadCamera,
 	"animatedMesh": loadGLTF
 }
 
-function loadCamera(state) {
-	state.object3d = GLOBAL_CAMERA.uuid;
-	GLOBAL_SCENE.add(GLOBAL_CAMERA);
+function loadCamera(state, id) {
+	loadedObjects[id] = GLOBAL_CAMERA
 }
 
-
-var loadedObjects = {};
-var loaderCallbackFunction = null;
-
-function dataCallback(gltf, state) {
-	//var characterMesh = gltf.scene.children.filter(mesh => mesh.name == state.objectName)[0];
-	//characterMesh = characterMesh.clone();
-	//characterMesh.animations = gltf.animations;
-	//var mixer = new THREE.AnimationMixer( characterMesh );
+function dataCallback(gltf, state, id) {
 	if('scale' in state) {
 		gltf.scene.scale.set(state.scale, state.scale, state.scale);
 	}
-	GLOBAL_SCENE.add(gltf.scene);
 	for(var i in gltf.animations) {
 		console.log(gltf.animations[i].name);
 	}
 	for(var i in gltf.scene.children) {
 		gltf.scene.children[i].animations = gltf.animations;
 	}
-	loadedObjects[gltf.scene.uuid] = gltf.scene;
-	state.object3d = gltf.scene.uuid;
-	
+	loadedObjects[id] = gltf.scene;
 }
-function loadGLTF(state) {
+function loadGLTF(state, id) {
 	function loaderCallback( gltf ) {
-		loadedObjects[state.filename] = gltf;
-		dataCallback(gltf, state);
+		dataCallback(gltf, state, id);
 	}
-	function loaderCallbackWaitCache( gltf ) {
-		if(state.filename in loadedObjects) {
-			dataCallback(loadedObjects[state.filename], state);
-		} else {
-			setTimeout(loaderCallbackWaitCache, 500);
-		}
-	}
-	//loaderCallbackFunction = loaderCallbackFunction === null ? loaderCallback : loaderCallbackWaitCache;
 	Loader.loadGLTF(state.filename, loaderCallback);
 }
 
@@ -341,8 +323,8 @@ function render_fn(sceneData, scene, camera, useSSAO) {
 	return render;
 }
 
-function loadAssets(state) {
-	loaders[state.type](state);
+function loadAssets(state, id) {
+	loaders[state.type](state, id);
 }
 
 function createCache(fn) {
@@ -366,65 +348,63 @@ function createClip(id, animationName) {
 }
 let getAnimationClip = createCache(createClip);
 
-function updateObject(state, id, deps) {
-	loadedObjects[state.object3d].position.set(deps["entity"].x, deps["entity"].y, deps["entity"].z);
-	if('rotation' in deps["entity"]) {
-		loadedObjects[state.object3d].rotation.set(
-			deps["entity"].rotation.x,
-			deps["entity"].rotation.y,
-			deps["entity"].rotation.z,
+function updateObject(state, id, entity) {
+	loadedObjects[id].position.set(entity.x, entity.y, entity.z);
+	if('rotation' in entity) {
+		loadedObjects[id].rotation.set(
+			entity.rotation.x,
+			entity.rotation.y,
+			entity.rotation.z,
 		);
 	}
 }
 
 function animateObject(state, id, deps) {
 	if(!('currentAnimation' in state)) {
-		getAnimationClip(state.object3d, deps['animation'].animationName).play();
+		getAnimationClip(id, deps['animation'].animationName).play();
 		return {
 			...state,
 			currentAnimation: deps["animation"].animationName
 		};
 	}
 	if(state.currentAnimation !== deps['animation'].animationName) {
-		getAnimationClip(state.object3d, state.currentAnimation).stop();
-		getAnimationClip(state.object3d, deps['animation'].animationName).play();
+		getAnimationClip(id, state.currentAnimation).stop();
+		getAnimationClip(id, deps['animation'].animationName).play();
 		return {
 			...state,
 			currentAnimation: deps["animation"].animationName
 		};
 	}
-	getAnimationMixer(state.object3d).update(0.016);
+	getAnimationMixer(id).update(0.016);
 	return state;
 }
 
+var previousEntity = {};
 function renderObject(state, id, deps) {
 	
-	if(!GLOBAL_CAMERA) return state;  // we have not yet been initialized
+	if(!GLOBAL_CAMERA || !GLOBAL_SCENE) return state;  // we have not yet been initialized
 
-	if(!state.object3d) {
+	if(!(id in loadedObjects)) {
 		if(state.loading) {
 			return state;
 		}
 		let newState = {...state, ...{loading: true}};
-		loadAssets(newState);
+		loadAssets(newState, id);
 		return newState;
 	}
-	if(state.object3d && state.loading) {
+	if((id in loadedObjects) && state.loading) {
+		GLOBAL_SCENE.add(loadedObjects[id]);
 		return {...state, ...{loading: false}};
 	}
 	//compare states of deps (memory address compare)
-	//if(!(id in previousDeps) || previousDeps[id]['entity'] != deps['entity']) {
-	updateObject(state, id, deps);
-	//}
+	if(!(id in previousEntity) || previousEntity[id] !== deps['entity']) {
+		updateObject(state, id, deps['entity']);
+		previousEntity[id] = deps['entity'];
+	}
 
 	if('animation' in deps)	{
-		var newState = animateObject(state, id, deps);
-		if(newState !== state) {
-			return newState;
-		}
+		state = animateObject(state, id, deps);
 	}
-	// may cause garbage collection issues
-	//previousDeps[id] = deps;
 	return state;
 }
 
@@ -434,7 +414,6 @@ function init(initialState) {
 	var scene = new THREE.Scene();
 	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
 	GLOBAL_CAMERA = camera;
-	loadedObjects[camera.uuid] = camera;
 	GLOBAL_SCENE = scene;
 
 	var settings = {};

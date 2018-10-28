@@ -1,138 +1,92 @@
 
-// returns a new object with the values at each key mapped using mapFn(value)
-function objectMap(object, mapFn) {
-    return Object.keys(object).reduce(function(result, key) {
-        result[key] = mapFn(object[key], key)
-        return result
-    }, {})
+
+//function v2() {	
+function addSystem(gameState, systemName, func) {
+	if(!("systems" in gameState)) gameState["systems"] = [];
+	gameState["systems"].push({"name": systemName, "func": func});
 }
 
-function emitEvent(eventList, fromId, message, toId) {
-	//events = [...events, {...message, from: fromId, to: toId || 'all'}];  /// TOO MUCH GC
-	// we mutate the events for performance
-	eventList.push({...message, from: fromId, to: toId || 'all'});
+function addBehaviour(gameState, behaviourName, objectId, initialState) {
+	if(!("state" in gameState)) gameState["state"] = {};
+	if(!(behaviourName in gameState["state"])) gameState["state"][behaviourName] = {};
+	gameState["state"][behaviourName][objectId] = initialState
 }
 
-function copyObject(obj) {
-	//return objectMap(object, (k, i)=>({...k[i]}));
-    var copy = obj.constructor();
-    for (var attr in obj) {
-        if (obj.hasOwnProperty(attr)) copy[attr] = {...obj[attr]};
-    }
-    return copy;
+function addEventListener(gameState, systemName, objectId) {
+	if(!("events" in gameState)) gameState["events"] = {};
+	if(!(systemName in gameState["events"])) gameState["events"][systemName] = {};
+	gameState["events"][systemName][objectId] = null;
 }
 
-function handleErrors(fn, ...rest) {
-	try {
-		return fn(...rest);
-	} catch(e) {
-		console.log(e)
-		return rest[0]; // returns the initial state on error
+function emitEvent(events, objectId, systemId, state) {
+	if(objectId in events && systemId in events[objectId]) {
+		events[objectId][systemId] = state;
 	}
 }
 
-const Map = Immutable.Map;
-const List = Immutable.List;
-const Stack = Immutable.Stack;
+var deps = {}; 
+var events = {};
 
-function addBehaviour(gameState, behaviourName, objectId, initialState) {
-	return gameState.set("state", 
-		gameState.get("state").set(behaviourName,
-			gameState.get("state").get(behaviourName, Map()).set(objectId, Map(initialState))
-		)
-	);
+function gatherEvent(state) {
+	/*if(state.has('events')) {
+		events = events.merge(state.get("events"));
+		return state.delete("events");
+	}*/
+	return state;
+}
+function gatherDeps(state, objectId, systemName) {
+	if(systemName == "render") return state; //skip passing deps from render its last.
+	//deps = deps.set(objectId, deps.get(objectId, Map()).set(systemName, state));
+	if(!(objectId in deps))
+		deps[objectId] = {}
+	deps[objectId][systemName] = state;
+	return state;
 }
 
-function addSystem(gameState, systemName, func) {
-	return gameState.set("systems",
-		gameState.get("systems").push(Map({"name": systemName, "func": func}))
-	);
-}
-
-function addEventListener(gameState, objectId, systemId) {
-	return gameState.set("events", gameState.get("events").set(
-		objectId, 
-		gameState.get("events").get(objectId, Map()).set(
-			systemId, Stack()
-		)
-	));
-}
-
-function myNextState(gameState) {
-	return gameState.set("state", 
-		gameState.get("systems").map(system=>
-			([
-				system.get("name"),
-				gameState.get("state").get(system.get("name")).map((state, objectId)=>
-					system.get("func")(
-						objectId, 
-						state,
-						gameState.get("state").map((states, systemName)=>states.get(objectId))
-					)
-				)
-			])
-		).reduce((acc, item)=>acc.set(item[0], item[1]), Map())
-	);
-}
-function emitEvents(gameState) {
-	return gameState.set("events", 
-		gameState.get("events").map((systems, objectId)=>
-			systems.map((data, systemName)=>
-				gameState.get("state").get(systemName).get(objectId)
+function doStateTransition(state, objectId, systemName, systemFunc) {
+	return gatherDeps(
+		gatherEvent(
+			systemFunc(
+				state,
+				objectId, 
+				//deps.get(objectId, Map()),
+				objectId in deps ? deps[objectId] : {},
+				events
 			)
+		), objectId, systemName
+	)
+}
+function processSystem(systemStates, system) {
+	for(var objectId in systemStates) {
+		systemStates[objectId] = doStateTransition(
+			systemStates[objectId], objectId, system["name"], system["func"]
 		)
-	);
+	}
 }
-
-function myStateProcess(objectId, state, deps) {
-	return state.set('a', state.get('a')+1);
-}
-
-var gameState = Map({
-	systems: List(),
-	events: Map(),
-	state: Map()
-});
-gameState = addSystem(gameState, "dummy", myStateProcess);
-gameState = addBehaviour(gameState, "dummy", "myobject1", {a: 1, b: 2});
-gameState = addBehaviour(gameState, "dummy", "myobject2", {a: 1, b: 2});
-gameState = addEventListener(gameState, "myobject1", "dummy");
-console.log(JSON.stringify(gameState, null, " "));
-gameState = emitEvents(myNextState(gameState));
-console.log(JSON.stringify(gameState, null, " "));
-
 
 function nextState(gameState) {
-	const eventsCopy = gameState.events;
-	const stateCopy = gameState.state;
-	var newEvents = [];
-
-	const eventHandler = {
-		events: gameState.events,
-		emitEvent: function(fromId, message, toId) {
-			return emitEvent(newEvents, fromId, message, toId);
-		}
-	};
-
-	return {
-		systems: [...gameState.systems], 
-		events: newEvents,
-		state: objectMap(gameState.state, (value, id)=>(
-			Object.assign.apply({}, gameState.systems
-				.filter(
-					s => s.name in gameState.state[id]
-				)
-				.map(sys => 
-				({[sys.name]: handleErrors(sys.func,
-					gameState.state[id][sys.name], 
-					id, 
-					gameState.state[id],  // is mutable so danger
-					eventHandler
-				)})
-			))
-		))
-	};
+	
+	gameState["systems"].forEach(system=>{
+		processSystem(gameState["state"][system["name"]], system);
+	});
+	return gameState;
 
 }
 
-export { nextState }
+function loadState(initialState) {
+	//parse initialState
+	var gameState = {};
+	initialState.systems.forEach(item=>{
+		addSystem(gameState, item.name, item.func)
+	});
+	for(var objectId in initialState['state']) {
+		for(var systemName in initialState['state'][objectId]) {
+			addBehaviour(
+				gameState, systemName, objectId, initialState['state'][objectId][systemName]
+			);
+		}
+	}
+	return gameState;
+}
+
+export { nextState, addSystem, addBehaviour, addEventListener, loadState }

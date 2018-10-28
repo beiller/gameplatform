@@ -7,7 +7,7 @@ import * as INPUT from './input.js';
 function applyInput(state, id, deps, eventHandler) {
 	var newState = {...state, ...INPUT.getControllerState(state.controllerId)};
 	if(newState.buttons[0] === true && state.buttons[0] === false) {
-		eventHandler.emitEvent(id, {animationName: "DE_Dance"}, id);
+		//eventHandler.emitEvent(id, {animationName: "DE_Dance"}, id);
 	}
 	return newState;
 }
@@ -65,7 +65,7 @@ function applyPhysics(state, id, deps, eventHandler) {
 			x: state.x + (deps.motion.fx * movementSpeed),
 			z: state.z + (deps.motion.fz * movementSpeed),
 		}
-		eventHandler.emitEvent(id, {newPosition: newState}, id);
+		//eventHandler.emitEvent(id, {newPosition: newState}, id);
 		return newState;
 	}
 	return state;
@@ -98,7 +98,7 @@ function applyEntity(state, id, deps, eventHandler) {
 			};
 		}
 	}
-	if('followEntity' in deps) {
+	/*if('followEntity' in deps) {
 		if(eventHandler.events.length > 0) {
 			for(var i = eventHandler.events.length-1; i >= 0; i--) {
 				if(eventHandler.events[i].from == deps.followEntity.entityName) {
@@ -111,7 +111,7 @@ function applyEntity(state, id, deps, eventHandler) {
 				}
 			}
 		}
-	}
+	}*/
 	return state;
 }
 function pointCharacter(state, id, deps) {
@@ -133,14 +133,14 @@ function pointCharacter(state, id, deps) {
 }
 
 function applyAnimation(state, id, deps, eventHandler) {
-	if(eventHandler.events.length > 0) {
+	/*if(eventHandler.events.length > 0) {
 		for(var i = eventHandler.events.length-1; i >= 0; i--) {
 			if('animationName' in eventHandler.events[i]) {
 				console.log("Triggering animation", eventHandler.events[i]['animationName']);
 				return {...state, playingAnimation: true, animationName: eventHandler.events[i]['animationName']};
 			}
 		}
-	}
+	}*/
 	if('playingAnimation' in state && state.playingAnimation === true) {
 		if('motion' in deps && Math.abs(deps['motion'].fx) > 0.0001) {
 			return {...state, playingAnimation: false};	
@@ -199,7 +199,7 @@ function createUIDiv(state){
     doUpdateFunc = updateUIDiv;
 }
 function updateUIDiv(state){
-	element.innerHTML = JSON.stringify(state.state.character1, null, 2);
+	//element.innerHTML = JSON.stringify(state.state.character1, null, 2);
 }
 
 function testMiddleware(nextStateFn) {
@@ -247,7 +247,7 @@ function main() {
 			}
 		}
 	};
-	var numTiles = 25;
+	var numTiles = 50;
 	for(var x = 0; x < numTiles; x++) {
 		for(var y = 0; y < numTiles; y++) {
 			initialState['state']["ground"+x+"-"+y] = {
@@ -258,7 +258,7 @@ function main() {
 			}	
 		}
 	}
-	for(var i = 0; i < 5; i++) {
+	for(var i = 0; i < 25; i++) {
 		var xPos = (Math.random()-0.5)*2*30;
 		var zPos = (Math.random()-0.5)*2*30;
 		initialState['state']["character"+(i+999)] = {
@@ -273,9 +273,11 @@ function main() {
 		}
 	}
 	var middleware = [testMiddleware];
-	console.log(initialState);
-	window.gameState = initialState;
-	var renderFunction = RENDERER.init(initialState);
+	
+	var gameState = ENGINE.loadState(initialState);
+	console.log(gameState);
+	window.gameState = gameState;
+	var renderFunction = RENDERER.init(gameState);
 	var nextStateFn = ENGINE.nextState;
 	for(var i = 0; i < middleware.length; i++) {
 		nextStateFn = middleware[i](nextStateFn);
