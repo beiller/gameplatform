@@ -1,13 +1,14 @@
 import * as RENDERER from './renderer.js';
 import * as ENGINE from './engine.js';
 import * as INPUT from './input.js';
+import * as InspectorMiddleware from './InspectorMiddleware.js';
 
 //welcome!
 
 function applyInput(state, id, deps, eventHandler) {
 	var newState = {...state, ...INPUT.getControllerState(state.controllerId)};
 	if(newState.buttons[0] === true && state.buttons[0] === false) {
-		//eventHandler.emitEvent(id, {animationName: "DE_Dance"}, id);
+		eventHandler.emitEvent("input", id, {animationName: "DE_Dance"});
 	}
 	return newState;
 }
@@ -65,7 +66,7 @@ function applyPhysics(state, id, deps, eventHandler) {
 			x: state.x + (deps.motion.fx * movementSpeed),
 			z: state.z + (deps.motion.fz * movementSpeed),
 		}
-		//eventHandler.emitEvent(id, {newPosition: newState}, id);
+		eventHandler.emitEvent("physics", id, {newPosition: newState});
 		return newState;
 	}
 	return state;
@@ -98,20 +99,21 @@ function applyEntity(state, id, deps, eventHandler) {
 			};
 		}
 	}
-	/*if('followEntity' in deps) {
-		if(eventHandler.events.length > 0) {
-			for(var i = eventHandler.events.length-1; i >= 0; i--) {
-				if(eventHandler.events[i].from == deps.followEntity.entityName) {
-					return {
-						...pointCharacter(state, id, deps), 
-						x: eventHandler.events[i].newPosition.x, 
-						y: 4.0, 
-						z: eventHandler.events[i].newPosition.z + 2
-					};
-				}
-			}
+	if('followEntity' in deps) {
+		var event = true;
+		var e = null;
+		while(event) {
+			event = eventHandler.getEvent("physics", deps.followEntity.entityName);
+			if(event) e = event;
 		}
-	}*/
+		if(e)
+			return {
+				...pointCharacter(state, id, deps), 
+				x: e.newPosition.x, 
+				y: 4.0, 
+				z: e.newPosition.z + 2
+			};
+	}
 	return state;
 }
 function pointCharacter(state, id, deps) {
@@ -133,14 +135,13 @@ function pointCharacter(state, id, deps) {
 }
 
 function applyAnimation(state, id, deps, eventHandler) {
-	/*if(eventHandler.events.length > 0) {
-		for(var i = eventHandler.events.length-1; i >= 0; i--) {
-			if('animationName' in eventHandler.events[i]) {
-				console.log("Triggering animation", eventHandler.events[i]['animationName']);
-				return {...state, playingAnimation: true, animationName: eventHandler.events[i]['animationName']};
-			}
-		}
-	}*/
+	var e = eventHandler.getEvent("input", id);
+	if(e && 'animationName' in e)
+		return {
+			...state, playingAnimation: true, 
+			animationName: e.animationName
+		};
+
 	if('playingAnimation' in state && state.playingAnimation === true) {
 		if('motion' in deps && Math.abs(deps['motion'].fx) > 0.0001) {
 			return {...state, playingAnimation: false};	
@@ -178,42 +179,6 @@ function applyFollowEntity(state, id, deps, eventHandler) {
 	return state;
 }
 
-var element = null;
-var doUpdateFunc = createUIDiv;
-function createUIDiv(state){
-    var container = document.createElement( 'div' );
-    /*container.style = {
-    	...container.style,
-    	position: "absolute", top: "0px", left: "0px", width: "200px", height: "200px",
-    	border: "solid 1px"
-    }*/
-    container.style.position = "absolute";
-    container.style.left = "0px";
-    container.style.top = "0px";
-    container.style.width = "500px";
-    container.style.height = "500px";
-    container.style.overflow = "none";
-    container.innerHTML = "TEST";
-    element = container;
-    document.body.appendChild( container );
-    doUpdateFunc = updateUIDiv;
-}
-function updateUIDiv(state){
-	//element.innerHTML = JSON.stringify(state.state.character1, null, 2);
-}
-
-function testMiddleware(nextStateFn) {
-	function newMiddleware(state) {
-		
-		if(Math.random() > 0.00000) {
-			//console.log('Random event occurred! Now showing state:', state);
-			doUpdateFunc(state);
-		}
-		return nextStateFn(state);
-	}
-	return newMiddleware;
-}
-
 function main() {
 	var initialState = {
 		"systems": [	
@@ -227,7 +192,14 @@ function main() {
 			{ name: "animation", func: applyAnimation },
 			{ name: "render", func: applyRender },
 		],
-		"events": [],
+		"events": {
+			"physics": {
+				"character1": []
+			},
+			"input": {
+				"character1": []
+			}
+		},
 		"state": {
 			"camera1": {
 				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
@@ -247,7 +219,7 @@ function main() {
 			}
 		}
 	};
-	var numTiles = 50;
+	var numTiles = 10;
 	for(var x = 0; x < numTiles; x++) {
 		for(var y = 0; y < numTiles; y++) {
 			initialState['state']["ground"+x+"-"+y] = {
@@ -258,7 +230,7 @@ function main() {
 			}	
 		}
 	}
-	for(var i = 0; i < 25; i++) {
+	for(var i = 0; i < 10; i++) {
 		var xPos = (Math.random()-0.5)*2*30;
 		var zPos = (Math.random()-0.5)*2*30;
 		initialState['state']["character"+(i+999)] = {
@@ -272,7 +244,9 @@ function main() {
 			"physics": {x: xPos, y: 0, z: 0}
 		}
 	}
-	var middleware = [testMiddleware];
+	var middleware = [
+		InspectorMiddleware.middleware
+	];
 	
 	var gameState = ENGINE.loadState(initialState);
 	console.log(gameState);

@@ -22,9 +22,6 @@ function dataCallback(gltf, state, id) {
 	if('scale' in state) {
 		gltf.scene.scale.set(state.scale, state.scale, state.scale);
 	}
-	for(var i in gltf.animations) {
-		console.log(gltf.animations[i].name);
-	}
 	for(var i in gltf.scene.children) {
 		gltf.scene.children[i].animations = gltf.animations;
 	}
@@ -403,6 +400,13 @@ function renderObject(state, id, deps) {
 	}
 
 	if('animation' in deps)	{
+		if(!('animations' in state)) {
+			var animationNames = loadedObjects[id].children[0].animations.map(x=>x.name);
+			return {
+				...state,
+				animations: animationNames
+			}
+		}
 		state = animateObject(state, id, deps);
 	}
 	return state;
