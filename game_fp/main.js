@@ -1,6 +1,7 @@
 import * as RENDERER from './renderer.js';
 import * as ENGINE from './engine.js';
 import * as INPUT from './input.js';
+import * as PHYSICS from './physics.js';
 import * as InspectorMiddleware from './InspectorMiddleware.js';
 
 //welcome!
