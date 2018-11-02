@@ -58,7 +58,8 @@ function updateUIDiv(state){
 		$(element).empty();
 		$(element).append(createMenu(state.state, 'state'));
 		$(element).dialog({	
-				maxHeight: 500
+				maxHeight: 500,
+				position: { my: "left top", at: "left top", of: window }
 			}).dialogExtend({
 		        "closable" : false,
 		        "maximizable" : true,

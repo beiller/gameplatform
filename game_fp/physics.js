@@ -1,11 +1,3 @@
-Ammo().then(function() {
-
-const temp_trans_1 = new Ammo.btTransform();
-const temp_trans_2 = new Ammo.btTransform();
-const temp_vec3_1 = new Ammo.btVector3(0,0,0);
-const temp_vec3_2 = new Ammo.btVector3(0,0,0);
-const temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
-const temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
 const collisionLayers = {
 	PLAYER:   1,
 	WORLD:    2,
@@ -28,7 +20,7 @@ const collisionFlags = {
 	CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
 };
 
-const stepHz = 120;
+const stepHz = 60;
 const constraintSolverIterations = 10;
 const callbacks = {};
 function addCollisionCallback(body, func) {
@@ -156,13 +148,14 @@ function localCreateRigidBody(mass, startTransform, shape, options, layers, mask
 	var btBody = new Ammo.btRigidBody(cInfo);
 	btBody.setActivationState(4); //disables sleep
 	btBody.setFriction(0.9);
-	//btBody.setDamping(options.damping || 1.0, options.damping || 1.0);
+	btBody.setDamping(options.damping || 0.1, options.damping || 0.1);
 	//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
 	
 	return btBody;
 };
+
 function getMat3(pos, rot) {
 	temp_trans_1.setIdentity();
 	temp_vec3_1.setValue(pos.x, pos.y, pos.z);
@@ -170,7 +163,82 @@ function getMat3(pos, rot) {
 	return temp_trans_1;
 }
 
-function main() {
+var world = null;
+var temp_trans_1 = null
+var temp_trans_2 = null
+var temp_vec3_1 = null
+var temp_vec3_2 = null
+var temp_quat_1 = null
+var temp_quat_2 = null
+function init(gameState) {
+	temp_trans_1 = new Ammo.btTransform();
+	temp_trans_2 = new Ammo.btTransform();
+	temp_vec3_1 = new Ammo.btVector3(0,0,0);
+	temp_vec3_2 = new Ammo.btVector3(0,0,0);
+	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
+	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
+	world = initPhysics();
+	var groundBody = function(){
+		var shapeOptions = { 
+			type: "box", x: 100, y: 1, z: 100, margin: 0.00001 
+		};
+		var bodyOptions = {
+			mass: 0, transform: getMat3({x:0,y:-1,z:0}), options: {}, staticObject: true
+		};
+		return createBody(createShape(shapeOptions), bodyOptions);
+	}();
+	addBody(world.m_dynamicsWorld, groundBody);
+
+}
+
+const movementSpeed = 12.0;
+const bodies = {};
+function applyPhysics(state, id, deps, eventHandler) {
+	if(!world) return;
+
+	if(!(id in bodies)) {
+		var shapeOptions = { 
+			type: "box", x: 0.2, y: 1.6/2, z: 0.2, margin: 0.00001 
+		};
+		var bodyOptions = {
+			mass: 45.35, transform: getMat3({x:state.x,y:1.6/2,z:state.z}), options: {damping: 999999.999}
+		};
+		bodies[id] = createBody(createShape(shapeOptions), bodyOptions);
+		addBody(world.m_dynamicsWorld, bodies[id]);
+
+		temp_vec3_1.setValue(0,0,0);
+		bodies[id].setAngularFactor(temp_vec3_1);
+		
+	}
+
+	//console.log(p.x(), p.z());
+	if('motion' in deps) {
+		/*const newState = {
+			...state, 
+			x: state.x + (deps.motion.fx * movementSpeed),
+			z: state.z + (deps.motion.fz * movementSpeed),
+		}*/
+		temp_vec3_1.setValue(deps.motion.fx * movementSpeed, 0, deps.motion.fz * movementSpeed);
+		bodies[id].applyImpulse(temp_vec3_1);
+		const p = bodies[id].getWorldTransform().getOrigin();
+		const newState = {
+			...state, 
+			x: p.x(), y: p.y(), z: p.z(),
+		}
+		eventHandler.emitEvent("physics", id, {newPosition: newState});
+		return newState;
+	}
+	return state;
+}
+
+const frameTime = 1000/60;
+function stepWorld() {
+	step(world.m_dynamicsWorld, world.dispatcher, frameTime);
+}
+
+setInterval(stepWorld, frameTime);
+
+/*function main() {
 	var world = initPhysics();
 	var groundBody = function(){
 		var shapeOptions = { 
@@ -191,8 +259,6 @@ function main() {
 		return createBody(createShape(shapeOptions), bodyOptions);
 	}();
 
-	//m_dynamicsWorld.addRigidBody(body.body, collisionLayers.WORLD, collisionLayers.WORLD | collisionLayers.PLAYER);
-
 	addBody(world.m_dynamicsWorld, groundBody);
 	addBody(world.m_dynamicsWorld, boxBody);
 	for(var i = 0; i < 1000; i++) {
@@ -200,6 +266,6 @@ function main() {
 		console.log(boxBody.getWorldTransform().getOrigin().y());
 	}
 };
-main();
+main();*/
 
-});
+export { init, applyPhysics }

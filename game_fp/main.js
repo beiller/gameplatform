@@ -59,18 +59,8 @@ function applyMotion(state, id, deps, eventHandler) {
 	return state;
 }
 
-const movementSpeed = 0.05;
 function applyPhysics(state, id, deps, eventHandler) {
-	if('motion' in deps) {
-		const newState = {
-			...state, 
-			x: state.x + (deps.motion.fx * movementSpeed),
-			z: state.z + (deps.motion.fz * movementSpeed),
-		}
-		eventHandler.emitEvent("physics", id, {newPosition: newState});
-		return newState;
-	}
-	return state;
+	return PHYSICS.applyPhysics(state, id, deps, eventHandler);
 }
 
 function normalize2D(point) {
@@ -95,7 +85,7 @@ function applyEntity(state, id, deps, eventHandler) {
 			return {
 				...pointCharacter(state, id, deps),
 				x: deps['physics'].x,
-				y: deps['physics'].y,
+				y: deps['physics'].y - (1.6/2),
 				z: deps['physics'].z
 			};
 		}
@@ -231,7 +221,8 @@ function main() {
 			}	
 		}
 	}
-	for(var i = 0; i < 10; i++) {
+	var numCharacters = 5;
+	for(var i = 0; i < numCharacters; i++) {
 		var xPos = (Math.random()-0.5)*2*30;
 		var zPos = (Math.random()-0.5)*2*30;
 		initialState['state']["character"+(i+999)] = {
@@ -242,7 +233,7 @@ function main() {
 			},
 			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},
-			"physics": {x: xPos, y: 0, z: 0}
+			"physics": {x: xPos, y: 0, z: zPos}
 		}
 	}
 	var middleware = [
@@ -253,6 +244,9 @@ function main() {
 	console.log(gameState);
 	window.gameState = gameState;
 	var renderFunction = RENDERER.init(gameState);
+	Ammo().then(function() {   // why the fuck do I have to do this?
+		PHYSICS.init(gameState);
+	});
 	var nextStateFn = ENGINE.nextState;
 	for(var i = 0; i < middleware.length; i++) {
 		nextStateFn = middleware[i](nextStateFn);
