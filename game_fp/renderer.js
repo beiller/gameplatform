@@ -1,13 +1,83 @@
-import * as THREE from './three.module.js';
+import * as THREE from './lib/three.module.js';
 import * as Effects from './Effects.js';
 import * as Loader from './Loader.js';
 import * as ENGINE from './engine.js';
 
 var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
+var GLOBAL_RENDERER = null;
+var GLOBAL_ORBIT_CONTROLS = null;
 
 var loadedObjects = {};
 var loaderCallbackFunction = null;
+var hdrCubeRenderTarget = null;
+
+function updateCubeMaps() {
+	if(!hdrCubeRenderTarget) return;
+
+    function setEnv(ob, envMap) {
+    	if('children' in ob && ob.children.length > 0) {
+    		for(var c in ob.children) {
+    			setEnv(ob.children[c], envMap);
+    		}
+    	}
+    	if('material' in ob) {
+    		ob.material["envMap"] = envMap;
+    		ob.material["envMapIntensity"] = 10000.0;
+    		ob.material["needsUpdate"] = true;
+    	}
+    }
+    for(var k in loadedObjects) {
+    	setEnv(loadedObjects[k], hdrCubeRenderTarget.texture);
+    }
+};
+
+function loadEXRMap() {
+	return new Promise(function(resolve) { 
+		var genCubeUrls = function( prefix, postfix ) {
+			return [
+				prefix + 'px' + postfix, prefix + 'nx' + postfix,
+				prefix + 'py' + postfix, prefix + 'ny' + postfix,
+				prefix + 'pz' + postfix, prefix + 'nz' + postfix
+			];
+		};
+		var hdrUrls = genCubeUrls( '/textures/park1/', '.hdr' );
+		new THREE.HDRCubeTextureLoader().load( THREE.UnsignedByteType, hdrUrls, function ( hdrCubeMap ) {
+
+			var pmremGenerator = new THREE.PMREMGenerator( hdrCubeMap );
+			pmremGenerator.update( GLOBAL_RENDERER );
+
+			var pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( pmremGenerator.cubeLods );
+			pmremCubeUVPacker.update( GLOBAL_RENDERER );
+
+			hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
+
+			hdrCubeMap.dispose();
+			//pmremGenerator.dispose();
+			//pmremCubeUVPacker.dispose();
+	        var mesh = new THREE.Mesh(
+	        	new THREE.SphereGeometry(50, 60, 40), 
+	        	new THREE.MeshStandardMaterial(
+	        		{
+	        			//emissiveMap: texture,
+	        			//emissiveIntensity: 100.0,
+	        			//emissive: new THREE.Color( 0xFFFFFF ),
+	        			envMap: hdrCubeRenderTarget.texture,
+	        			envMapIntensity: 15000.0,
+	        			side: THREE.BackSide,
+	        			roughness: 0,
+	        			metalness: 1
+	        		}
+	        	)
+	        );
+	        GLOBAL_SCENE.add(mesh);
+	        updateCubeMaps();
+
+			resolve(pmremCubeUVPacker.CubeUVRenderTarget);
+
+		} );
+	});
+};
 
 const loaders = {
 	"camera": loadCamera,
@@ -291,6 +361,8 @@ function initRendering(scene, settings, camera) {
     };
     window.addEventListener( 'resize', onWindowResize, false );
 
+    GLOBAL_RENDERER = renderer;
+
     return {
     	renderer: renderer, 
     	container: container, 
@@ -314,7 +386,7 @@ function render_fn(sceneData, scene, camera, useSSAO) {
 	    if(useSSAO) {
 	    	sceneData.effectComposer.render();
 	    } else {
-	    	sceneData.renderer.render( scene, camera );
+	    	GLOBAL_RENDERER.render( GLOBAL_SCENE, GLOBAL_CAMERA );
 	    }
 	};
 	return render;
@@ -376,8 +448,31 @@ function animateObject(state, id, deps) {
 	return state;
 }
 
+function updateCamera(state, id, deps, eventHandler) {
+	var e = eventHandler.getEvent("camera", "all");
+	if(e) {
+		return {...state, ...e};
+	}
+	if(state.mode == 'follow') {
+		if(GLOBAL_ORBIT_CONTROLS) {
+			GLOBAL_ORBIT_CONTROLS.dispose();
+			GLOBAL_ORBIT_CONTROLS = null;
+		}
+		return state;
+	} else {
+		if(!GLOBAL_ORBIT_CONTROLS) {
+			GLOBAL_ORBIT_CONTROLS = new THREE.OrbitControls( GLOBAL_CAMERA, document.getElementsByTagName('canvas')[0] );
+			GLOBAL_ORBIT_CONTROLS.enableZoom = true;
+			GLOBAL_ORBIT_CONTROLS.enableKeys = true;
+		}
+		GLOBAL_ORBIT_CONTROLS.update();
+		return state;
+	}
+	return state;
+}
+
 var previousEntity = {};
-function renderObject(state, id, deps) {
+function renderObject(state, id, deps, eventHandler) {
 	
 	if(!GLOBAL_CAMERA || !GLOBAL_SCENE) return state;  // we have not yet been initialized
 
@@ -390,6 +485,7 @@ function renderObject(state, id, deps) {
 		return newState;
 	}
 	if((id in loadedObjects) && state.loading) {
+		updateCubeMaps();
 		GLOBAL_SCENE.add(loadedObjects[id]);
 		return {...state, ...{loading: false}};
 	}
@@ -397,6 +493,12 @@ function renderObject(state, id, deps) {
 	if(!(id in previousEntity) || previousEntity[id] !== deps['entity']) {
 		updateObject(state, id, deps['entity']);
 		previousEntity[id] = deps['entity'];
+	}
+
+	var e = eventHandler.getEvent("render", id);
+	if(e && 'doIt' in e) {
+		loadedObjects[id].children[1].visible = !loadedObjects[id].children[1].visible;
+		return state;
 	}
 
 	if('animation' in deps)	{
@@ -435,8 +537,9 @@ function init(initialState) {
 	mesh.castShadow = false;
 	mesh.receiveShadow = false;
 	scene.add(mesh);
-
+	loadEXRMap();
 	return render_fn(sceneData, scene, camera)
 }
 
-export { renderObject, init };
+export { renderObject, init, updateCamera };
+

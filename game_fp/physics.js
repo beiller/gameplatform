@@ -107,7 +107,7 @@ function createBody(shape, bodyInfo) {
 	if(bodyInfo.noContact) flags.push(collisionFlags.CF_NO_CONTACT_RESPONSE);
 	if(bodyInfo.staticObject) flags.push(collisionFlags.CF_STATIC_OBJECT);
 	if(bodyInfo.kinematic) flags.push(collisionFlags.CF_KINEMATIC_OBJECT);
-	body.setDamping(bodyInfo.damping || 0.7, bodyInfo.damping || 0.7);
+	body.setDamping(bodyInfo.damping || 0.1, bodyInfo.damping || 0.1);
 	setBodyFlags(body, flags);
 	return body;
 }
@@ -148,7 +148,6 @@ function localCreateRigidBody(mass, startTransform, shape, options, layers, mask
 	var btBody = new Ammo.btRigidBody(cInfo);
 	btBody.setActivationState(4); //disables sleep
 	btBody.setFriction(0.9);
-	btBody.setDamping(options.damping || 0.1, options.damping || 0.1);
 	//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
@@ -201,7 +200,7 @@ function applyPhysics(state, id, deps, eventHandler) {
 			type: "box", x: 0.2, y: 1.6/2, z: 0.2, margin: 0.00001 
 		};
 		var bodyOptions = {
-			mass: 45.35, transform: getMat3({x:state.x,y:1.6/2,z:state.z}), options: {damping: 999999.999}
+			mass: 45.35, transform: getMat3({x:state.x,y:1.6/2,z:state.z}), damping: 0.9
 		};
 		bodies[id] = createBody(createShape(shapeOptions), bodyOptions);
 		addBody(world.m_dynamicsWorld, bodies[id]);

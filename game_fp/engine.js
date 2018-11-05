@@ -38,10 +38,18 @@ function emitEvent(events, systemName, objectId, state) {
 }
 function getEvent(events, systemName, objectId) {
 	objectId = objectId || "all";
+	if(!(systemName in events)) {
+		events[systemName] = {};
+	}
 	try {
-		return events[systemName][objectId].shift(); 
+		const e = events[systemName][objectId].shift(); 
+		events[systemName][objectId].length = 0; // RESET THIS ARRAY avoid GC?
+		return e;
 	} catch(e) {
-		return undefined;
+		if(e instanceof TypeError)
+			events[systemName][objectId] = [];
+			return undefined;
+		throw e;
 	}
 }
 
@@ -64,7 +72,7 @@ function gatherDeps(state, objectId, systemName) {
 }
 
 function doStateTransition(state, objectId, systemName, systemFunc, eventHandler) {
-	try {
+	//try {
 	return deepFreeze(
 		gatherDeps(			
 			systemFunc(
@@ -75,10 +83,10 @@ function doStateTransition(state, objectId, systemName, systemFunc, eventHandler
 			), objectId, systemName
 		)
 	)
-	} catch(e) {
+	/*} catch(e) {
 		console.log(e);
 		return state;
-	}
+	}*/
 }
 function processSystem(systemStates, system, eventHandler) {
 	for(var objectId in systemStates) {

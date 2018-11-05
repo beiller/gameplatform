@@ -11,6 +11,17 @@ function applyInput(state, id, deps, eventHandler) {
 	if(newState.buttons[0] === true && state.buttons[0] === false) {
 		eventHandler.emitEvent("input", id, {animationName: "DE_Dance"});
 	}
+	if(newState.buttons[1] === true && state.buttons[1] === false) {
+		eventHandler.emitEvent("render", id, {doIt: true});
+	}
+	if(newState.buttons[2] === true && state.buttons[2] === false) {
+		console.log("changing camera to type uhhh");
+		eventHandler.emitEvent("camera", "all", {type: 'uhhh'});
+	}
+	if(newState.buttons[3] === true && state.buttons[3] === false) {
+		console.log("changing camera to type follow");
+		eventHandler.emitEvent("camera", "all", {type: 'follow', entityName: 'character1'});
+	}
 	return newState;
 }
 
@@ -90,13 +101,8 @@ function applyEntity(state, id, deps, eventHandler) {
 			};
 		}
 	}
-	if('followEntity' in deps) {
-		var event = true;
-		var e = null;
-		while(event) {
-			event = eventHandler.getEvent("physics", deps.followEntity.entityName);
-			if(event) e = event;
-		}
+	if('camera' in deps && deps.camera.type == 'follow') {
+		var e = eventHandler.getEvent("physics", deps.camera.entityName);
 		if(e)
 			return {
 				...pointCharacter(state, id, deps), 
@@ -134,7 +140,7 @@ function applyAnimation(state, id, deps, eventHandler) {
 		};
 
 	if('playingAnimation' in state && state.playingAnimation === true) {
-		if('motion' in deps && Math.abs(deps['motion'].fx) > 0.0001) {
+		if('motion' in deps && (Math.abs(deps['motion'].fx)+Math.abs(deps['motion'].fz)) > 0.0001) {
 			return {...state, playingAnimation: false};	
 		}
 		return state;
@@ -154,7 +160,7 @@ function applyAnimation(state, id, deps, eventHandler) {
 }
 
 function applyRender(state, id, deps, eventHandler) {
-	return RENDERER.renderObject(state, id, deps);
+	return RENDERER.renderObject(state, id, deps, eventHandler);
 }
 
 function randomMotion(state, id, deps, eventHandler) {
@@ -166,8 +172,8 @@ function randomMotion(state, id, deps, eventHandler) {
 	};
 }
 
-function applyFollowEntity(state, id, deps, eventHandler) {
-	return state;
+function applyCamera(state, id, deps, eventHandler) {
+	return RENDERER.updateCamera(state, id, deps, eventHandler);
 }
 
 function main() {
@@ -179,7 +185,8 @@ function main() {
 			{ name: "physics", func: applyPhysics },
 			{ name: "randomMotion", func: randomMotion },
 			{ name: "entity", func: applyEntity },
-			{ name: "followEntity", func: applyFollowEntity },
+			{ name: "camera", func: applyCamera },
+			//{ name: "followEntity", func: applyFollowEntity },
 			{ name: "animation", func: applyAnimation },
 			{ name: "render", func: applyRender },
 		],
@@ -194,9 +201,9 @@ function main() {
 		"state": {
 			"camera1": {
 				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
-				"randomMotion": { speed: 0.025, x: 0, y: 0, z: 0 },
+				"camera": {fov: 60.0, type: 'follow' },
+				//"randomMotion": { speed: 0.025, x: 0, y: 0, z: 0 },
 				"render": {type: "camera"},
-				"followEntity": {entityName: "character1"}
 			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0},
@@ -210,7 +217,7 @@ function main() {
 			}
 		}
 	};
-	var numTiles = 10;
+	var numTiles = 30;
 	for(var x = 0; x < numTiles; x++) {
 		for(var y = 0; y < numTiles; y++) {
 			initialState['state']["ground"+x+"-"+y] = {

@@ -1,4 +1,4 @@
-import * as THREE from './three.module.js';
+import * as THREE from './lib/three.module.js';
 
 /**
 * @author Rich Tibbett / https://github.com/richtr
