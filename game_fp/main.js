@@ -217,7 +217,7 @@ function main() {
 			}
 		}
 	};
-	var numTiles = 30;
+	var numTiles = 3;
 	for(var x = 0; x < numTiles; x++) {
 		for(var y = 0; y < numTiles; y++) {
 			initialState['state']["ground"+x+"-"+y] = {
@@ -228,7 +228,7 @@ function main() {
 			}	
 		}
 	}
-	var numCharacters = 5;
+	var numCharacters = 2;
 	for(var i = 0; i < numCharacters; i++) {
 		var xPos = (Math.random()-0.5)*2*30;
 		var zPos = (Math.random()-0.5)*2*30;

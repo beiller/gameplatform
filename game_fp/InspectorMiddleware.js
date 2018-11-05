@@ -48,11 +48,8 @@ function createMenu(drawMap, key) {
 	return r;
 }
 
-function updateUIDiv(state){
-	
-	//element.textContent = JSON.stringify(state.state.entity.character1, null, 2);
-
-
+var runFunc = runOnce;
+function runOnce(state) {
 	if(element.textContent == 'TEST') {
 
 		$(element).empty();
@@ -70,6 +67,11 @@ function updateUIDiv(state){
 		        "minimizeLocation" : "right"
     		});
 	}	
+	runFunc = function(state) {};
+}
+function updateUIDiv(state){
+	runFunc(state);
+	//element.textContent = JSON.stringify(state.state.entity.character1, null, 2);
 }
 
 function setDeep(obj, path, val) {
