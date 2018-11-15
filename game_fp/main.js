@@ -217,7 +217,7 @@ function main() {
 			}
 		}
 	};
-	var numTiles = 3;
+	var numTiles = 30;
 	for(var x = 0; x < numTiles; x++) {
 		for(var y = 0; y < numTiles; y++) {
 			initialState['state']["ground"+x+"-"+y] = {

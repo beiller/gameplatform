@@ -1,7 +1,6 @@
 import * as THREE from './lib/three.module.js';
 import * as Effects from './Effects.js';
 import * as Loader from './Loader.js';
-import * as ENGINE from './engine.js';
 
 var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
@@ -53,15 +52,10 @@ function loadEXRMap() {
 			hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
 
 			hdrCubeMap.dispose();
-			//pmremGenerator.dispose();
-			//pmremCubeUVPacker.dispose();
 	        var mesh = new THREE.Mesh(
 	        	new THREE.SphereGeometry(50, 60, 40), 
 	        	new THREE.MeshStandardMaterial(
 	        		{
-	        			//emissiveMap: texture,
-	        			//emissiveIntensity: 100.0,
-	        			//emissive: new THREE.Color( 0xFFFFFF ),
 	        			envMap: hdrCubeRenderTarget.texture,
 	        			envMapIntensity: 15000.0,
 	        			side: THREE.BackSide,
@@ -72,9 +66,7 @@ function loadEXRMap() {
 	        );
 	        GLOBAL_SCENE.add(mesh);
 	        updateCubeMaps();
-
 			resolve(pmremCubeUVPacker.CubeUVRenderTarget);
-
 		} );
 	});
 };
