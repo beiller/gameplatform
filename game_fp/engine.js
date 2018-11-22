@@ -46,9 +46,10 @@ function getEvent(events, systemName, objectId) {
 		events[systemName][objectId].length = 0; // RESET THIS ARRAY avoid GC?
 		return e;
 	} catch(e) {
-		if(e instanceof TypeError)
+		if(e instanceof TypeError) {
 			events[systemName][objectId] = [];
 			return undefined;
+		}
 		throw e;
 	}
 }
@@ -89,18 +90,31 @@ function doStateTransition(state, objectId, systemName, systemFunc, eventHandler
 	}*/
 }
 function processSystem(systemStates, system, eventHandler) {
-	for(var objectId in systemStates) {
+	/* Iterate through systems states and process them in sequence */
+	//mutate gameState
+	for(let objectId in systemStates) {
 		systemStates[objectId] = doStateTransition(
 			systemStates[objectId], objectId, system["name"], system["func"], eventHandler
 		)
 	}
+	return systemStates;
 }
 
 function nextState(gameState) {
+	/* Iterate through systems and process them system by system */
 	const eventHandler = getEventHandler(gameState["events"]);
-	gameState["systems"].forEach(system=>{
-		processSystem(gameState["state"][system["name"]], system, eventHandler);
-	});
+	let system = null;
+	for(let i = 0; i < gameState.systems.length; i++) { // system in gameState["systems"]) {
+		system = gameState.systems[i];
+		processSystem(gameState["state"][system["name"]], system, eventHandler); //mutate gameState
+	}
+	return gameState;
+}
+
+function createEntity(gameState, objectId, state) {
+	for(var systemName in state) {
+		addBehaviour(gameState, systemName, objectId, state[systemName]);
+	}
 	return gameState;
 }
 
@@ -111,11 +125,7 @@ function loadState(initialState) {
 		addSystem(gameState, item.name, item.func)
 	});
 	for(var objectId in initialState['state']) {
-		for(var systemName in initialState['state'][objectId]) {
-			addBehaviour(
-				gameState, systemName, objectId, initialState['state'][objectId][systemName]
-			);
-		}
+		gameState = createEntity(gameState, objectId, initialState['state'][objectId]);
 	}
 	gameState.events = initialState.events;
 	return gameState;

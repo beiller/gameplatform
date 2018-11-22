@@ -384,6 +384,17 @@ function render_fn(sceneData, scene, camera, useSSAO) {
 	return render;
 }
 
+function createHealthBar() {
+    var sprite = new THREE.Sprite();
+    //var healthRatio = this.characterStats.health / this.characterStats.maxHealth;
+    sprite.scale.set( 2.0, 0.1, 0.5);
+    sprite.position.set(0, 7, 0);
+    sprite.material.color = new THREE.Color( 0x00FF00 );
+    //this.armature.add(sprite);
+    //this.healthBarMesh = sprite;
+    return sprite;
+};
+
 function loadAssets(state, id) {
 	loaders[state.type](state, id);
 }
@@ -502,6 +513,16 @@ function renderObject(state, id, deps, eventHandler) {
 			}
 		}
 		state = animateObject(state, id, deps);
+	}
+	if('stats' in deps) {
+		if(!('healthBarSprite' in state)) {
+			let sprite = createHealthBar();
+			loadedObjects[id].add(sprite);
+			loadedObjects[sprite.id] = sprite;
+			return {...state, healthBarSprite: sprite.id };
+		}
+		var healthRatio = Math.max(0.0001, deps.stats.health / deps.stats.maxHealth);
+		loadedObjects[state.healthBarSprite].scale.x = healthRatio;
 	}
 	return state;
 }

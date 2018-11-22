@@ -32,14 +32,26 @@ function step(m_dynamicsWorld, dispatcher, dt) {
 	for(var i = 0; i < numIterations; i++) {
 		m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/stepHz);
 	}
+};
 
+function getIdByBody(body) {
+	for(let id in bodies) {
+		if(body.a === bodies[id].a) {
+			return id;
+		}
+	}
+	return null;
+}
+
+function getCollisionData(objectId) {
 	/*
 		Emit collision detection events
 
 		CollisionCallback arguments body1:Body, body2:Body, hitpoint:Array(xyz)
 	*/
+	var data = [];
 	var i,
-	    dp = dispatcher,
+	    dp = world.dispatcher,
 	    num = dp.getNumManifolds(),
 	    manifold, num_contacts, j, pt;
 
@@ -55,19 +67,25 @@ function step(m_dynamicsWorld, dispatcher, dt) {
 	        pt = manifold.getContactPoint(j);
 	        var b1 = manifold.getBody0();
 	        var b2 = manifold.getBody1();
-	        if(b1.ptr in callbacks) {
-	        	var hp = pt.getPositionWorldOnA();
-	        	console.log(b1, b2, [hp.x(), hp.y(), hp.z()]);
+	        if(b1.a === bodies[objectId].a) {
+	        	let b2Id = getIdByBody(b2);
+	        	if(b2Id) {
+	        		let hp = pt.getPositionWorldOnB();
+	        		data.push({id: b2Id, hp: [hp.x(), hp.y(), hp.z()]});
+	        	}
 	        }
-	        if(b2.ptr in callbacks) {
-	        	var hp = pt.getPositionWorldOnB();
-	        	console.log(b2, b1, [hp.x(), hp.y(), hp.z()]);
+	        if(b2.a === bodies[objectId].a) {
+	        	let b1Id = getIdByBody(b1);
+	        	if(b1Id) {
+	        		let hp = pt.getPositionWorldOnA();
+	        		data.push({id: b1Id, hp: [hp.x(), hp.y(), hp.z()]});
+	        	}
 	        }
 	    }
 	}
-};
-
-
+	return data;
+}
+	        
 function initPhysics() {
 	// Bullet-interfacing code
 	var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -190,7 +208,16 @@ function init(gameState) {
 
 }
 
-const movementSpeed = 12.0;
+function applyMotionPhysics(state, id, deps, eventHandler) {
+	temp_vec3_1.setValue(deps.motion.fx * movementSpeed, 0, deps.motion.fz * movementSpeed);
+	bodies[id].applyImpulse(temp_vec3_1);
+	const p = bodies[id].getWorldTransform().getOrigin();
+	return {
+		...state, 
+		x: p.x(), y: p.y(), z: p.z(),
+	};
+}
+const movementSpeed = 15.0;
 const bodies = {};
 function applyPhysics(state, id, deps, eventHandler) {
 	if(!world) return;
@@ -205,28 +232,20 @@ function applyPhysics(state, id, deps, eventHandler) {
 		bodies[id] = createBody(createShape(shapeOptions), bodyOptions);
 		addBody(world.m_dynamicsWorld, bodies[id]);
 
-		temp_vec3_1.setValue(0,0,0);
+		temp_vec3_1.setValue(0, 0, 0);
 		bodies[id].setAngularFactor(temp_vec3_1);
-		
 	}
 
-	//console.log(p.x(), p.z());
 	if('motion' in deps) {
-		/*const newState = {
-			...state, 
-			x: state.x + (deps.motion.fx * movementSpeed),
-			z: state.z + (deps.motion.fz * movementSpeed),
-		}*/
-		temp_vec3_1.setValue(deps.motion.fx * movementSpeed, 0, deps.motion.fz * movementSpeed);
-		bodies[id].applyImpulse(temp_vec3_1);
-		const p = bodies[id].getWorldTransform().getOrigin();
-		const newState = {
-			...state, 
-			x: p.x(), y: p.y(), z: p.z(),
-		}
-		eventHandler.emitEvent("physics", id, {newPosition: newState});
-		return newState;
+		state = applyMotionPhysics(state, id, deps, eventHandler);
+		eventHandler.emitEvent("physics", id, {newPosition: state});
 	}
+	
+	let collisions = getCollisionData(id);
+	for(var i = 0; i < collisions.length; i++) {
+		eventHandler.emitEvent("collision", id, collisions[i]);
+	}
+
 	return state;
 }
 
@@ -237,34 +256,5 @@ function stepWorld() {
 
 setInterval(stepWorld, frameTime);
 
-/*function main() {
-	var world = initPhysics();
-	var groundBody = function(){
-		var shapeOptions = { 
-			type: "box", x: 100, y: 1, z: 6, margin: 0.00001 
-		};
-		var bodyOptions = {
-			mass: 0, transform: getMat3({x:0,y:-1,z:0}), options: {}, staticObject: true
-		};
-		return createBody(createShape(shapeOptions), bodyOptions);
-	}();
-	var boxBody = function(){
-		var shapeOptions = { 
-			type: "box", x: 1, y: 1, z: 1, margin: 0.00001 
-		};
-		var bodyOptions = {
-			mass: 1.0, transform: getMat3({x:0,y:5.0,z:0}), options: {}
-		};
-		return createBody(createShape(shapeOptions), bodyOptions);
-	}();
-
-	addBody(world.m_dynamicsWorld, groundBody);
-	addBody(world.m_dynamicsWorld, boxBody);
-	for(var i = 0; i < 1000; i++) {
-		step(world.m_dynamicsWorld, world.dispatcher, 0.05);
-		console.log(boxBody.getWorldTransform().getOrigin().y());
-	}
-};
-main();*/
 
 export { init, applyPhysics }

@@ -84,14 +84,6 @@ function normalize2D(point) {
 
 function applyEntity(state, id, deps, eventHandler) {
 	if('physics' in deps) {
-		if('randomMotion' in deps) {
-			return {
-				...pointCharacter(state, id, deps),
-				x: deps['physics'].x + deps['randomMotion'].x,
-				y: deps['physics'].y + deps['randomMotion'].y,
-				z: deps['physics'].z + deps['randomMotion'].z
-			};
-		}
 		if(deps.physics.x != state.x || deps.physics.y != state.y || deps.physics.z != state.z) {
 			return {
 				...pointCharacter(state, id, deps),
@@ -163,17 +155,20 @@ function applyRender(state, id, deps, eventHandler) {
 	return RENDERER.renderObject(state, id, deps, eventHandler);
 }
 
-function randomMotion(state, id, deps, eventHandler) {
-	return {
-		...state,
-		x: ((Math.random() * state.speed) - state.speed / 2.0),
-		y: ((Math.random() * state.speed) - state.speed / 2.0),
-		z: ((Math.random() * state.speed) - state.speed / 2.0),
-	};
-}
-
 function applyCamera(state, id, deps, eventHandler) {
 	return RENDERER.updateCamera(state, id, deps, eventHandler);
+}
+
+function applyStats(state, id, deps, eventHandler) { 
+	var e = eventHandler.getEvent("collision", id);
+	if(e) {
+		//console.log(e);
+		return {
+			...state,
+			health: state.health - 1
+		}
+	}
+	return state; 
 }
 
 function main() {
@@ -183,26 +178,19 @@ function main() {
 			{ name: "ai", func: applyAI },
 			{ name: "motion", func: applyMotion },
 			{ name: "physics", func: applyPhysics },
-			{ name: "randomMotion", func: randomMotion },
 			{ name: "entity", func: applyEntity },
 			{ name: "camera", func: applyCamera },
-			//{ name: "followEntity", func: applyFollowEntity },
+			{ name: "stats", func: applyStats },
 			{ name: "animation", func: applyAnimation },
 			{ name: "render", func: applyRender },
 		],
 		"events": {
-			"physics": {
-				"character1": []
-			},
-			"input": {
-				"character1": []
-			}
+
 		},
 		"state": {
 			"camera1": {
 				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
 				"camera": {fov: 60.0, type: 'follow' },
-				//"randomMotion": { speed: 0.025, x: 0, y: 0, z: 0 },
 				"render": {type: "camera"},
 			},
 			"character1": {
@@ -213,11 +201,12 @@ function main() {
 				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
-				"physics": {x: 0, y: 0, z: 0}
+				"physics": {x: 0, y: 0, z: 0},
+				"stats": {health: 100, maxHealth: 100}
 			}
 		}
 	};
-	var numTiles = 30;
+	var numTiles = 5;
 	for(var x = 0; x < numTiles; x++) {
 		for(var y = 0; y < numTiles; y++) {
 			initialState['state']["ground"+x+"-"+y] = {
@@ -228,7 +217,7 @@ function main() {
 			}	
 		}
 	}
-	var numCharacters = 2;
+	var numCharacters = 10;
 	for(var i = 0; i < numCharacters; i++) {
 		var xPos = (Math.random()-0.5)*2*30;
 		var zPos = (Math.random()-0.5)*2*30;
@@ -240,7 +229,8 @@ function main() {
 			},
 			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},
-			"physics": {x: xPos, y: 0, z: zPos}
+			"physics": {x: xPos, y: 0, z: zPos},
+			"stats": {health: 100, maxHealth: 100}
 		}
 	}
 	var middleware = [
