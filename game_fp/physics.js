@@ -117,15 +117,17 @@ function setBodyFlags(body, flags) {
 	flags.forEach(function(e) { flagToSet |= e; });
 	body.setCollisionFlags(flagToSet);
 }
-function createBody(shape, bodyInfo) {
-	var body = localCreateRigidBody(
-		bodyInfo.mass, bodyInfo.transform, shape, bodyInfo.options
-	);
+function createBody(shape, state) {	
+	var bodyInfo = { ...state };
+	var body = localCreateRigidBody(bodyInfo.mass, getMat3({x:bodyInfo.x,y:bodyInfo.y,z:bodyInfo.z}), shape);
 	var flags = [];
+
 	if(bodyInfo.noContact) flags.push(collisionFlags.CF_NO_CONTACT_RESPONSE);
 	if(bodyInfo.staticObject) flags.push(collisionFlags.CF_STATIC_OBJECT);
 	if(bodyInfo.kinematic) flags.push(collisionFlags.CF_KINEMATIC_OBJECT);
-	body.setDamping(bodyInfo.damping || 0.1, bodyInfo.damping || 0.1);
+	if(bodyInfo.damping) {
+		body.setDamping(bodyInfo.damping, bodyInfo.damping);
+	}
 	setBodyFlags(body, flags);
 	return body;
 }
@@ -149,18 +151,16 @@ function createShape(shapeInfo) {
 	return shape;
 }
 
-function localCreateRigidBody(mass, startTransform, shape, options, layers, mask) {
-	if (!shape)
-		return null;
-
+function localCreateRigidBody(mass, startTransform, shape) {
 	// rigidbody is dynamic if and only if mass is non zero, otherwise static
 	var isDynamic = (mass != 0.0);
 
 	var localInertia = new Ammo.btVector3(0, 0, 0);
-	if (isDynamic)
-		shape.calculateLocalInertia(mass, localInertia);
-
 	var myMotionState = new Ammo.btDefaultMotionState(startTransform);
+
+	if (isDynamic) {
+		shape.calculateLocalInertia(mass, localInertia);	
+	} 
 	var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
 	cInfo.friction = 5.0;
 	var btBody = new Ammo.btRigidBody(cInfo);
@@ -195,17 +195,6 @@ function init(gameState) {
 	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
 	world = initPhysics();
-	var groundBody = function(){
-		var shapeOptions = { 
-			type: "box", x: 100, y: 1, z: 100, margin: 0.00001 
-		};
-		var bodyOptions = {
-			mass: 0, transform: getMat3({x:0,y:-1,z:0}), options: {}, staticObject: true
-		};
-		return createBody(createShape(shapeOptions), bodyOptions);
-	}();
-	addBody(world.m_dynamicsWorld, groundBody);
-
 }
 
 function applyMotionPhysics(state, id, deps, eventHandler) {
@@ -223,15 +212,16 @@ function applyPhysics(state, id, deps, eventHandler) {
 	if(!world) return;
 
 	if(!(id in bodies)) {
-		var shapeOptions = { 
+		/*//set defaults?
+		state.shape = state.shape || { 
 			type: "box", x: 0.2, y: 1.6/2, z: 0.2, margin: 0.00001 
 		};
-		var bodyOptions = {
-			mass: 45.35, transform: getMat3({x:state.x,y:1.6/2,z:state.z}), damping: 0.9
-		};
-		bodies[id] = createBody(createShape(shapeOptions), bodyOptions);
+		state.mass = state.mass || 45.35*/
+		//create bodies
+		var shape = createShape({ ...state.shape });
+		bodies[id] = createBody(shape, state);
 		addBody(world.m_dynamicsWorld, bodies[id]);
-
+		//"rest" the object necessary?
 		temp_vec3_1.setValue(0, 0, 0);
 		bodies[id].setAngularFactor(temp_vec3_1);
 	}

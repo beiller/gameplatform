@@ -193,6 +193,14 @@ function main() {
 				"camera": {fov: 60.0, type: 'follow' },
 				"render": {type: "camera"},
 			},
+			"groundplane1": {
+				"physics": {
+					mass: 0, x: 0, y: -1, z: 0, staticObject: true,
+					shape: {
+						type: "box", x: 100, y: 1, z: 100, margin: 0.00001 
+					}
+				}
+			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0},
 				"animation": { animationName: 'DE_Dance' },
@@ -201,7 +209,10 @@ function main() {
 				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
-				"physics": {x: 0, y: 0, z: 0},
+				"physics": {x: 0, y: 0.8, z: 0, 
+					shape: {type: "box", x: 0.2, y: 0.8, z: 0.2, margin: 0.00001},
+					mass: 45.35, damping: 0.9
+				},
 				"stats": {health: 100, maxHealth: 100}
 			}
 		}
@@ -229,7 +240,10 @@ function main() {
 			},
 			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},
-			"physics": {x: xPos, y: 0, z: zPos},
+			"physics": {x: xPos, y: 0.8, z: zPos, 
+				shape: {type: "box", x: 0.2, y: 0.8, z: 0.2, margin: 0.00001},
+				mass: 45.35, damping: 0.9
+			},
 			"stats": {health: 100, maxHealth: 100}
 		}
 	}
