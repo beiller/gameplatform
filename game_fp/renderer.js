@@ -451,7 +451,7 @@ function animateObject(state, id, deps) {
 	return state;
 }
 
-function updateCamera(state, id, deps, eventHandler) {
+function updateCamera(state, id, deps, eventHandler, gameState) {
 	var e = eventHandler.getEvent("camera", "all");
 	if(e) {
 		return {...state, ...e};
@@ -467,6 +467,10 @@ function updateCamera(state, id, deps, eventHandler) {
 			GLOBAL_ORBIT_CONTROLS = new THREE.OrbitControls( GLOBAL_CAMERA, document.getElementsByTagName('canvas')[0] );
 			GLOBAL_ORBIT_CONTROLS.enableZoom = true;
 			GLOBAL_ORBIT_CONTROLS.enableKeys = true;
+		}
+		if(state.entityName in loadedObjects) {
+			GLOBAL_ORBIT_CONTROLS.target.copy(loadedObjects[state.entityName].position);
+			GLOBAL_ORBIT_CONTROLS.target.y += 1.5;
 		}
 		GLOBAL_ORBIT_CONTROLS.update();
 		return state;

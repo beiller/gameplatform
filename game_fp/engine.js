@@ -42,7 +42,7 @@ function getEvent(events, systemName, objectId) {
 		events[systemName] = {};
 	}
 	try {
-		const e = events[systemName][objectId].shift(); 
+		const e = events[systemName][objectId].pop();
 		events[systemName][objectId].length = 0; // RESET THIS ARRAY avoid GC?
 		return e;
 	} catch(e) {
@@ -72,7 +72,7 @@ function gatherDeps(state, objectId, systemName) {
 	return state;
 }
 
-function doStateTransition(state, objectId, systemName, systemFunc, eventHandler) {
+function doStateTransition(state, objectId, systemName, systemFunc, eventHandler, gameState) {
 	//try {
 	return deepFreeze(
 		gatherDeps(			
@@ -80,7 +80,8 @@ function doStateTransition(state, objectId, systemName, systemFunc, eventHandler
 				state,
 				objectId, 
 				objectId in deps ? deps[objectId] : {},
-				eventHandler
+				eventHandler,
+				gameState
 			), objectId, systemName
 		)
 	)
@@ -89,12 +90,12 @@ function doStateTransition(state, objectId, systemName, systemFunc, eventHandler
 		return state;
 	}*/
 }
-function processSystem(systemStates, system, eventHandler) {
+function processSystem(systemStates, system, eventHandler, gameState) {
 	/* Iterate through systems states and process them in sequence */
 	//mutate gameState
 	for(let objectId in systemStates) {
 		systemStates[objectId] = doStateTransition(
-			systemStates[objectId], objectId, system["name"], system["func"], eventHandler
+			systemStates[objectId], objectId, system["name"], system["func"], eventHandler, gameState
 		)
 	}
 	return systemStates;
@@ -106,7 +107,7 @@ function nextState(gameState) {
 	let system = null;
 	for(let i = 0; i < gameState.systems.length; i++) { // system in gameState["systems"]) {
 		system = gameState.systems[i];
-		processSystem(gameState["state"][system["name"]], system, eventHandler); //mutate gameState
+		processSystem(gameState["state"][system["name"]], system, eventHandler, gameState); //mutate gameState
 	}
 	return gameState;
 }

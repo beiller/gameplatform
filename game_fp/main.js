@@ -155,13 +155,13 @@ function applyRender(state, id, deps, eventHandler) {
 	return RENDERER.renderObject(state, id, deps, eventHandler);
 }
 
-function applyCamera(state, id, deps, eventHandler) {
-	return RENDERER.updateCamera(state, id, deps, eventHandler);
+function applyCamera(state, id, deps, eventHandler, gameState) {
+	return RENDERER.updateCamera(state, id, deps, eventHandler, gameState);
 }
 
-function applyStats(state, id, deps, eventHandler) { 
+function applyStats(state, id, deps, eventHandler, gameState) { 
 	var e = eventHandler.getEvent("collision", id);
-	if(e) {
+	if(e && gameState.state.stats[e.id]) {
 		//console.log(e);
 		return {
 			...state,
@@ -195,7 +195,7 @@ function main() {
 			},
 			"groundplane1": {
 				"physics": {
-					mass: 0, x: 0, y: -1, z: 0, staticObject: true,
+					mass: 0, x: 0, y: -5, z: 0, staticObject: true,
 					shape: {
 						type: "box", x: 100, y: 1, z: 100, margin: 0.00001 
 					}
@@ -217,13 +217,20 @@ function main() {
 			}
 		}
 	};
-	var numTiles = 5;
+	var numTiles = 4;
 	for(var x = 0; x < numTiles; x++) {
 		for(var y = 0; y < numTiles; y++) {
 			initialState['state']["ground"+x+"-"+y] = {
 				"entity": {x: (x*10)-(numTiles*10/2), y: 0, z: (y*10)-(numTiles*10/2)},
 				"render": { 
 					type: "animatedMesh", filename: "grass_tile.glb"
+				},
+				"physics": {
+					x: (x*10)-(numTiles*10/2), y: 0, z: (y*10)-(numTiles*10/2),
+					mass: 0, staticObject: true,
+					shape: {
+						type: "box", x: 5, y: 0.001, z: 5, margin: 0.00001 
+					}
 				}
 			}	
 		}

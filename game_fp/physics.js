@@ -23,9 +23,6 @@ const collisionFlags = {
 const stepHz = 60;
 const constraintSolverIterations = 10;
 const callbacks = {};
-function addCollisionCallback(body, func) {
-	callbacks[body.ptr] = func;
-};
 function step(m_dynamicsWorld, dispatcher, dt) {
 	dt = Math.min(dt, 0.05);
 	var numIterations = stepHz / 60;
@@ -47,7 +44,7 @@ function getCollisionData(objectId) {
 	/*
 		Emit collision detection events
 
-		CollisionCallback arguments body1:Body, body2:Body, hitpoint:Array(xyz)
+		CollisionCallback arguments id: Other's ID, hitpoint: Array(xyz)
 	*/
 	var data = [];
 	var i,
@@ -233,7 +230,10 @@ function applyPhysics(state, id, deps, eventHandler) {
 	
 	let collisions = getCollisionData(id);
 	for(var i = 0; i < collisions.length; i++) {
-		eventHandler.emitEvent("collision", id, collisions[i]);
+		eventHandler.emitEvent("collision", id, {
+			...collisions[i],
+			deps: deps
+		});
 	}
 
 	return state;
