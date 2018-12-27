@@ -54,7 +54,6 @@ function getEvent(events, systemName, objectId) {
 	}
 }
 
-var deps = {}; 
 function getEventHandler(events) {
 	const eventSystem = {
 		addEventListener: (s,o)=>addEventListener(events,s,o),
@@ -64,27 +63,22 @@ function getEventHandler(events) {
 	return eventSystem;
 }
 
-function gatherDeps(state, objectId, systemName) {
-	if(systemName == "render") return state; //skip passing deps from render its last.
-	if(!(objectId in deps))
-		deps[objectId] = {}
-	deps[objectId][systemName] = state;
-	return state;
-}
 
 function doStateTransition(state, objectId, systemName, systemFunc, eventHandler, gameState) {
 	//try {
-	return deepFreeze(
-		gatherDeps(			
-			systemFunc(
-				state,
-				objectId, 
-				objectId in deps ? deps[objectId] : {},
-				eventHandler,
-				gameState
-			), objectId, systemName
+	const oldState = state;
+	const newState = deepFreeze(	
+		systemFunc(
+			state,
+			objectId, 
+			eventHandler,
+			gameState.state
 		)
-	)
+	);
+	/*if(oldState !== newState) {
+		console.log("State changed", systemName, oldState, newState)
+	}*/
+	return newState;
 	/*} catch(e) {
 		console.log(e);
 		return state;

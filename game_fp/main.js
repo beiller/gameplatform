@@ -6,8 +6,8 @@ import * as InspectorMiddleware from './InspectorMiddleware.js';
 
 //welcome!
 
-function applyInput(state, id, deps, eventHandler) {
-	var newState = {...state, ...INPUT.getControllerState(state.controllerId)};
+function applyInput(state, id, eventHandler) {
+	var newState = {...state, ...INPUT.getControllerState(state.controllerId)};	
 	if(newState.buttons[0] === true && state.buttons[0] === false) {
 		eventHandler.emitEvent("input", id, {animationName: "DE_Dance"});
 	}
@@ -22,7 +22,19 @@ function applyInput(state, id, deps, eventHandler) {
 		console.log("changing camera to type follow");
 		eventHandler.emitEvent("camera", "all", {type: 'follow', entityName: 'character1'});
 	}
-	return newState;
+	try {
+		for(var i = 0; i < newState.buttons.length; i++) {
+			if(newState.buttons[i] !== state.buttons[i]) {
+				return newState;
+			}
+		}
+		if(newState.x !== state.x || newState.y !== state.y) {
+			return newState;
+		}
+	} catch(e) {
+		return {...state, ...newState};
+	}
+	return state;
 }
 
 function changeDirections(state, fieldName) {
@@ -39,7 +51,7 @@ function changeDirections(state, fieldName) {
 	}
 	return state;
 }
-function applyAI(state, id, deps, eventHandler) {
+function applyAI(state, id, eventHandler) {
 	var newState = changeDirections(state, "x");
 	if(newState !== state) {
 		return newState;
@@ -51,27 +63,30 @@ function applyAI(state, id, deps, eventHandler) {
 	return state;
 }
 
-function applyMotion(state, id, deps, eventHandler) {
+function applyMotion(state, id, eventHandler, gameState) {
+	//TODO this will listen for events and only change data "onChange"
 	var dep = null;
-	if('input' in deps && 'x' in deps.input && 'y' in deps.input) {
-		dep = deps['input'];
+	if(id in gameState.input && 'x' in gameState.input[id] && 'y' in gameState.input[id]) {
+		dep = gameState.input[id];
 	}
-	if('ai' in deps && 'x' in deps.ai && 'y' in deps.ai) {
-		dep = deps['ai'];
+	if(id in gameState.ai && 'x' in gameState.ai[id] && 'y' in gameState.ai[id]) {
+		dep = gameState.ai[id];
 	}
 	if(dep) {
 		var normalized = normalize2D(dep);
-		return {
-			...state,
-			fx: normalized.x, 
-			fz: -normalized.y
-		};
+		if(state.fx !== normalized.x || state.fz !== normalized.y) {
+			return {
+				...state,
+				fx: normalized.x, 
+				fz: -normalized.y
+			}
+		}
 	}
 	return state;
 }
 
-function applyPhysics(state, id, deps, eventHandler) {
-	return PHYSICS.applyPhysics(state, id, deps, eventHandler);
+function applyPhysics(state, id, eventHandler, gameState) {
+	return PHYSICS.applyPhysics(state, id, eventHandler, gameState);
 }
 
 function normalize2D(point) {
@@ -82,34 +97,38 @@ function normalize2D(point) {
 	return {x: 0, y: 0};
 }
 
-function applyEntity(state, id, deps, eventHandler) {
-	if('physics' in deps) {
-		if(deps.physics.x != state.x || deps.physics.y != state.y || deps.physics.z != state.z) {
+function applyEntity(state, id, eventHandler, gameState) {
+	if(id in gameState.physics && (!('staticObject' in gameState.physics[id]) || gameState.physics[id].staticObject === false)) {
+		if(gameState.physics[id].x !== state.x || (gameState.physics[id].y-0.8) !== state.y || gameState.physics[id].z !== state.z) {
 			return {
-				...pointCharacter(state, id, deps),
-				x: deps['physics'].x,
-				y: deps['physics'].y - (1.6/2),
-				z: deps['physics'].z
+				...pointCharacter(state, id, gameState),
+				x: gameState.physics[id].x,
+				y: gameState.physics[id].y - 0.8,
+				z: gameState.physics[id].z
 			};
 		}
 	}
-	if('camera' in deps && deps.camera.type == 'follow') {
-		var e = eventHandler.getEvent("physics", deps.camera.entityName);
-		if(e)
-			return {
-				...pointCharacter(state, id, deps), 
-				x: e.newPosition.x, 
-				y: 4.0, 
-				z: e.newPosition.z + 2
-			};
+	if(id in gameState.camera in gameState && gameState.camera[id].type == 'follow') {
+		var e = eventHandler.getEvent("physics", gameState.camera[id].entityName);
+		if(e) {
+			if(e.newPosition.x !== state.x || (e.newPosition.z + 2) !== state.z) {
+				return {
+					...state,
+					x: e.newPosition.x, 
+					y: 4.0, 
+					z: e.newPosition.z + 2
+				};
+			}
+		}
 	}
 	return state;
 }
-function pointCharacter(state, id, deps) {
-	if('motion' in deps) {
+function pointCharacter(state, id, gameState) {
+	if(id in gameState.motion) {
+		const motion = gameState.motion[id];
 	//point character
-		if(Math.abs(deps.motion.fx)+Math.abs(deps.motion.fz) > 0) {
-			var rotation = Math.atan2(deps.motion.fx,deps.motion.fz);
+		if(Math.abs(motion.fx)+Math.abs(motion.fz) > 0) {
+			var rotation = Math.atan2(motion.fx, motion.fz);
 			return {
 				...state,
 				rotation: {
@@ -123,7 +142,7 @@ function pointCharacter(state, id, deps) {
 	return state;
 }
 
-function applyAnimation(state, id, deps, eventHandler) {
+function applyAnimation(state, id, eventHandler, gameState) {
 	var e = eventHandler.getEvent("input", id);
 	if(e && 'animationName' in e)
 		return {
@@ -132,36 +151,35 @@ function applyAnimation(state, id, deps, eventHandler) {
 		};
 
 	if('playingAnimation' in state && state.playingAnimation === true) {
-		if('motion' in deps && (Math.abs(deps['motion'].fx)+Math.abs(deps['motion'].fz)) > 0.0001) {
+		if(id in gameState.motion && (Math.abs(gameState.motion[id].fx)+Math.abs(gameState.motion[id].fz)) > 0.0001) {
 			return {...state, playingAnimation: false};	
 		}
 		return state;
 	}
-	if('render' in deps && deps['render']['filename'] == 'soccer_char1_gltf.glb') {
-		return state;
-	}
-	var totalMotion = Math.abs(deps['motion'].fx) + Math.abs(deps['motion'].fz);
-	if(totalMotion > 0.0001 && state.animationName != 'DE_CombatRun') {
-		return {...state, animationName: 'DE_CombatRun'};
-	}
-	if(totalMotion < 0.0001 && state.animationName != 'DE_Combatiddle') {
-		return {...state, animationName: 'DE_Combatiddle'};
+	if(id in gameState.motion) {
+		var totalMotion = Math.abs(gameState.motion[id].fx) + Math.abs(gameState.motion[id].fz);
+		if(totalMotion > 0.0001 && state.animationName != 'DE_CombatRun') {
+			return {...state, animationName: 'DE_CombatRun'};
+		}
+		if(totalMotion < 0.0001 && state.animationName != 'DE_Combatiddle') {
+			return {...state, animationName: 'DE_Combatiddle'};
+		}
 	}
 	
 	return state;
 }
 
-function applyRender(state, id, deps, eventHandler) {
-	return RENDERER.renderObject(state, id, deps, eventHandler);
+function applyRender(state, id, eventHandler, gameState) {
+	return RENDERER.renderObject(state, id, eventHandler, gameState);
 }
 
-function applyCamera(state, id, deps, eventHandler, gameState) {
-	return RENDERER.updateCamera(state, id, deps, eventHandler, gameState);
+function applyCamera(state, id, eventHandler, gameState) {
+	return RENDERER.updateCamera(state, id, eventHandler, gameState);
 }
 
-function applyStats(state, id, deps, eventHandler, gameState) { 
+function applyStats(state, id, eventHandler, gameState) { 
 	var e = eventHandler.getEvent("collision", id);
-	if(e && gameState.state.stats[e.id]) {
+	if(e && gameState.stats[e.id]) {
 		//console.log(e);
 		return {
 			...state,
@@ -171,7 +189,7 @@ function applyStats(state, id, deps, eventHandler, gameState) {
 	return state; 
 }
 
-function main() {
+function level1() {
 	var initialState = {
 		"systems": [	
 			{ name: "input", func: applyInput },
@@ -229,7 +247,7 @@ function main() {
 					x: (x*10)-(numTiles*10/2), y: 0, z: (y*10)-(numTiles*10/2),
 					mass: 0, staticObject: true,
 					shape: {
-						type: "box", x: 5, y: 0.001, z: 5, margin: 0.00001 
+						type: "box", x: 5, y: 0.0001, z: 5, margin: 0.00001 
 					}
 				}
 			}	
@@ -254,6 +272,11 @@ function main() {
 			"stats": {health: 100, maxHealth: 100}
 		}
 	}
+	return initialState;
+}
+
+function main() {
+	var initialState = level1();
 	var middleware = [
 		InspectorMiddleware.middleware
 	];

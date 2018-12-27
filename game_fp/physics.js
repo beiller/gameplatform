@@ -194,26 +194,24 @@ function init(gameState) {
 	world = initPhysics();
 }
 
-function applyMotionPhysics(state, id, deps, eventHandler) {
-	temp_vec3_1.setValue(deps.motion.fx * movementSpeed, 0, deps.motion.fz * movementSpeed);
+function applyMotionPhysics(state, id, eventHandler, gameState) {
+	temp_vec3_1.setValue(gameState.motion[id].fx * movementSpeed, 0, gameState.motion[id].fz * movementSpeed);
 	bodies[id].applyImpulse(temp_vec3_1);
 	const p = bodies[id].getWorldTransform().getOrigin();
-	return {
-		...state, 
-		x: p.x(), y: p.y(), z: p.z(),
-	};
+	const x = p.x();
+	const y = p.y();
+	const z = p.z();
+	if(x !== state.x || y !== state.y || z !== state.z) {  //detect changes
+		return { ...state, x: x, y: y, z: z }
+	}
+	return state;
 }
 const movementSpeed = 15.0;
 const bodies = {};
-function applyPhysics(state, id, deps, eventHandler) {
+function applyPhysics(state, id, eventHandler, gameState) {
 	if(!world) return;
 
 	if(!(id in bodies)) {
-		/*//set defaults?
-		state.shape = state.shape || { 
-			type: "box", x: 0.2, y: 1.6/2, z: 0.2, margin: 0.00001 
-		};
-		state.mass = state.mass || 45.35*/
 		//create bodies
 		var shape = createShape({ ...state.shape });
 		bodies[id] = createBody(shape, state);
@@ -223,16 +221,15 @@ function applyPhysics(state, id, deps, eventHandler) {
 		bodies[id].setAngularFactor(temp_vec3_1);
 	}
 
-	if('motion' in deps) {
-		state = applyMotionPhysics(state, id, deps, eventHandler);
+	if(id in gameState.motion) {
+		state = applyMotionPhysics(state, id, eventHandler, gameState);
 		eventHandler.emitEvent("physics", id, {newPosition: state});
 	}
 	
 	let collisions = getCollisionData(id);
 	for(var i = 0; i < collisions.length; i++) {
 		eventHandler.emitEvent("collision", id, {
-			...collisions[i],
-			deps: deps
+			...collisions[i]
 		});
 	}
 

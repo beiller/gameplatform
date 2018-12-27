@@ -431,27 +431,27 @@ function updateObject(state, id, entity) {
 	}
 }
 
-function animateObject(state, id, deps) {
+function animateObject(state, id, gameState) {
 	if(!('currentAnimation' in state)) {
-		getAnimationClip(id, deps['animation'].animationName).play();
+		getAnimationClip(id, gameState.animation[id].animationName).play();
 		return {
 			...state,
-			currentAnimation: deps["animation"].animationName
+			currentAnimation: gameState.animation[id].animationName
 		};
 	}
-	if(state.currentAnimation !== deps['animation'].animationName) {
+	if(state.currentAnimation !== gameState.animation[id].animationName) {
 		getAnimationClip(id, state.currentAnimation).stop();
-		getAnimationClip(id, deps['animation'].animationName).play();
+		getAnimationClip(id, gameState.animation[id].animationName).play();
 		return {
 			...state,
-			currentAnimation: deps["animation"].animationName
+			currentAnimation: gameState.animation[id].animationName
 		};
 	}
 	getAnimationMixer(id).update(0.016);
 	return state;
 }
 
-function updateCamera(state, id, deps, eventHandler, gameState) {
+function updateCamera(state, id, eventHandler, gameState) {
 	var e = eventHandler.getEvent("camera", "all");
 	if(e) {
 		return {...state, ...e};
@@ -479,7 +479,7 @@ function updateCamera(state, id, deps, eventHandler, gameState) {
 }
 
 var previousEntity = {};
-function renderObject(state, id, deps, eventHandler) {
+function renderObject(state, id, eventHandler, gameState) {
 	
 	if(!GLOBAL_CAMERA || !GLOBAL_SCENE) return state;  // we have not yet been initialized
 
@@ -497,9 +497,9 @@ function renderObject(state, id, deps, eventHandler) {
 		return {...state, ...{loading: false}};
 	}
 	//compare states of deps (memory address compare)
-	if(!(id in previousEntity) || previousEntity[id] !== deps['entity']) {
-		updateObject(state, id, deps['entity']);
-		previousEntity[id] = deps['entity'];
+	if(!(id in previousEntity) || previousEntity[id] !== gameState.entity[id]) {
+		updateObject(state, id, gameState.entity[id]);
+		previousEntity[id] = gameState.entity[id];
 	}
 
 	var e = eventHandler.getEvent("render", id);
@@ -508,7 +508,7 @@ function renderObject(state, id, deps, eventHandler) {
 		return state;
 	}
 
-	if('animation' in deps)	{
+	if(id in gameState.animation) {
 		if(!('animations' in state)) {
 			var animationNames = loadedObjects[id].children[0].animations.map(x=>x.name);
 			return {
@@ -516,16 +516,16 @@ function renderObject(state, id, deps, eventHandler) {
 				animations: animationNames
 			}
 		}
-		state = animateObject(state, id, deps);
+		state = animateObject(state, id, gameState);
 	}
-	if('stats' in deps) {
+	if(id in gameState.stats) {
 		if(!('healthBarSprite' in state)) {
 			let sprite = createHealthBar();
 			loadedObjects[id].add(sprite);
 			loadedObjects[sprite.id] = sprite;
 			return {...state, healthBarSprite: sprite.id };
 		}
-		var healthRatio = Math.max(0.0001, deps.stats.health / deps.stats.maxHealth);
+		var healthRatio = Math.max(0.0001, gameState.stats[id].health / gameState.stats[id].maxHealth);
 		loadedObjects[state.healthBarSprite].scale.x = healthRatio;
 	}
 	return state;
