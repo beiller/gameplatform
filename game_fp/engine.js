@@ -1,16 +1,15 @@
 
 
 function deepFreeze(object) {
-  if(Object.isFrozen(object)) return object;
-  // Retrieve the property names defined on object
-  var propNames = Object.getOwnPropertyNames(object);
-  // Freeze properties before freezing self
-  for (let name of propNames) {
-    let value = object[name];
-    object[name] = value && typeof value === "object" ? 
-      deepFreeze(value) : value;
-  }
-  return Object.freeze(object);
+	if(Object.isFrozen(object)) return object;
+	// Retrieve the property names defined on object
+	var propNames = Object.getOwnPropertyNames(object);
+	// Freeze properties before freezing self
+	for (let name of propNames) {
+		let value = object[name];
+		object[name] = value && typeof value === "object" ? deepFreeze(value) : value;
+	}
+	return Object.freeze(object);
 }
 
 function addSystem(gameState, systemName, func) {
@@ -24,6 +23,9 @@ function addBehaviour(gameState, behaviourName, objectId, initialState) {
 	gameState["state"][behaviourName][objectId] = initialState
 }
 
+/*
+	Events
+*/
 function addEventListener(events, systemName, objectId) {
 	objectId = objectId || "all";
 	if(!(systemName in events)) events[systemName] = {};
@@ -63,30 +65,32 @@ function getEventHandler(events) {
 	return eventSystem;
 }
 
-
+/*
+	Core functions
+*/
 function doStateTransition(state, objectId, systemName, systemFunc, eventHandler, gameState) {
-	//try {
-	const oldState = state;
-	const newState = deepFreeze(	
-		systemFunc(
-			state,
-			objectId, 
-			eventHandler,
-			gameState.state
-		)
-	);
-	/*if(oldState !== newState) {
-		console.log("State changed", systemName, oldState, newState)
-	}*/
-	return newState;
-	/*} catch(e) {
+	try {
+		const oldState = state;
+		const newState = deepFreeze(	
+			systemFunc(
+				state,
+				objectId, 
+				eventHandler,
+				gameState.state
+			)
+		);
+		/*if(oldState !== newState) {
+			console.log("State changed", systemName, oldState, newState)
+		}*/
+		return newState;
+	} catch(e) {
 		console.log(e);
 		return state;
-	}*/
+	}
 }
 function processSystem(systemStates, system, eventHandler, gameState) {
 	/* Iterate through systems states and process them in sequence */
-	//mutate gameState
+	//mutate systemStates
 	for(let objectId in systemStates) {
 		systemStates[objectId] = doStateTransition(
 			systemStates[objectId], objectId, system["name"], system["func"], eventHandler, gameState
@@ -101,7 +105,7 @@ function nextState(gameState) {
 	let system = null;
 	for(let i = 0; i < gameState.systems.length; i++) { // system in gameState["systems"]) {
 		system = gameState.systems[i];
-		processSystem(gameState["state"][system["name"]], system, eventHandler, gameState); //mutate gameState
+		processSystem(gameState["state"][system["name"]], system, eventHandler, gameState); //mutate 1st arg
 	}
 	return gameState;
 }

@@ -22,7 +22,7 @@ const collisionFlags = {
 
 const stepHz = 60;
 const constraintSolverIterations = 10;
-const callbacks = {};
+
 function step(m_dynamicsWorld, dispatcher, dt) {
 	dt = Math.min(dt, 0.05);
 	var numIterations = stepHz / 60;
@@ -208,10 +208,18 @@ function applyMotionPhysics(state, id, eventHandler, gameState) {
 }
 const movementSpeed = 15.0;
 const bodies = {};
+
+function resetWorld() {
+	for(var bodyId in bodies) {
+		world.m_dynamicsWorld.removeRigidBody(bodies[bodyId]);
+		bodies[bodyId] = undefined;
+	}
+}
+
 function applyPhysics(state, id, eventHandler, gameState) {
 	if(!world) return;
 
-	if(!(id in bodies)) {
+	if(!(id in bodies) || !bodies[id]) {
 		//create bodies
 		var shape = createShape({ ...state.shape });
 		bodies[id] = createBody(shape, state);
@@ -244,4 +252,4 @@ function stepWorld() {
 setInterval(stepWorld, frameTime);
 
 
-export { init, applyPhysics }
+export { init, applyPhysics, resetWorld }

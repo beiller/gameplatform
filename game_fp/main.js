@@ -14,14 +14,14 @@ function applyInput(state, id, eventHandler) {
 	if(newState.buttons[1] === true && state.buttons[1] === false) {
 		eventHandler.emitEvent("render", id, {doIt: true});
 	}
-	if(newState.buttons[2] === true && state.buttons[2] === false) {
+	/*if(newState.buttons[2] === true && state.buttons[2] === false) {
 		console.log("changing camera to type uhhh");
 		eventHandler.emitEvent("camera", "all", {type: 'uhhh'});
 	}
 	if(newState.buttons[3] === true && state.buttons[3] === false) {
 		console.log("changing camera to type follow");
 		eventHandler.emitEvent("camera", "all", {type: 'follow', entityName: 'character1'});
-	}
+	}*/
 	try {
 		for(var i = 0; i < newState.buttons.length; i++) {
 			if(newState.buttons[i] !== state.buttons[i]) {
@@ -108,17 +108,15 @@ function applyEntity(state, id, eventHandler, gameState) {
 			};
 		}
 	}
-	if(id in gameState.camera in gameState && gameState.camera[id].type == 'follow') {
-		var e = eventHandler.getEvent("physics", gameState.camera[id].entityName);
-		if(e) {
-			if(e.newPosition.x !== state.x || (e.newPosition.z + 2) !== state.z) {
-				return {
-					...state,
-					x: e.newPosition.x, 
-					y: 4.0, 
-					z: e.newPosition.z + 2
-				};
-			}
+	if(id in gameState.camera && gameState.camera[id].type == 'follow') {
+		const physicsState = gameState.physics[gameState.camera[id].entityName];
+		if(physicsState.x !== state.x || (physicsState.z + 2) !== state.z) {
+			return {
+				...state,
+				x: physicsState.x, 
+				y: 4.0, 
+				z: physicsState.z + 2
+			};
 		}
 	}
 	return state;
@@ -181,10 +179,18 @@ function applyStats(state, id, eventHandler, gameState) {
 	var e = eventHandler.getEvent("collision", id);
 	if(e && gameState.stats[e.id]) {
 		//console.log(e);
+		if('hitCooldown' in state && state.hitCooldown > 0) {
+			return {...state, hitCooldown: state.hitCooldown - 1};
+		}
+		console.log("Ouch!");
 		return {
 			...state,
-			health: state.health - 1
+			health: state.health - 10,
+			hitCooldown: 100
 		}
+	}
+	if('hitCooldown' in state && state.hitCooldown > 0) {
+		return {...state, hitCooldown: state.hitCooldown - 1};
 	}
 	return state; 
 }
@@ -196,8 +202,8 @@ function level1() {
 			{ name: "ai", func: applyAI },
 			{ name: "motion", func: applyMotion },
 			{ name: "physics", func: applyPhysics },
-			{ name: "entity", func: applyEntity },
 			{ name: "camera", func: applyCamera },
+			{ name: "entity", func: applyEntity },
 			{ name: "stats", func: applyStats },
 			{ name: "animation", func: applyAnimation },
 			{ name: "render", func: applyRender },
@@ -207,8 +213,9 @@ function level1() {
 		},
 		"state": {
 			"camera1": {
+				"input": { "controllerId": "0" },
 				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
-				"camera": {fov: 60.0, type: 'follow' },
+				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
 				"render": {type: "camera"},
 			},
 			"groundplane1": {
@@ -221,7 +228,7 @@ function level1() {
 			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0},
-				"animation": { animationName: 'DE_Dance' },
+				"animation": { animationName: 'DE_Dance', playingAnimation: true },
 				"render": { 
 					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.333
 				},
@@ -259,7 +266,7 @@ function level1() {
 		var zPos = (Math.random()-0.5)*2*30;
 		initialState['state']["character"+(i+999)] = {
 			"entity": {x: xPos, y: 0, z: zPos},
-			"animation": { animationName: 'DE_Dance' },
+			"animation": { animationName: 'DE_Dance', playingAnimation: true },
 			"render": { 
 				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.333
 			},
@@ -273,6 +280,13 @@ function level1() {
 		}
 	}
 	return initialState;
+}
+
+function resetWorld() {
+	var initialState = level1();
+	var gameState = ENGINE.loadState(initialState);
+	window.gameState = gameState;
+	PHYSICS.resetWorld();
 }
 
 function main() {

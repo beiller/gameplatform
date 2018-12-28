@@ -51,7 +51,9 @@ function loadEXRMap() {
 
 			hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
 
-			hdrCubeMap.dispose();
+			//hdrCubeMap.dispose();
+			/*let shader = THREE.ShaderLib.cube;
+			shader.uniforms.tCube.value = hdrCubeRenderTarget;
 	        var mesh = new THREE.Mesh(
 	        	new THREE.SphereGeometry(50, 60, 40), 
 	        	new THREE.MeshStandardMaterial(
@@ -64,8 +66,13 @@ function loadEXRMap() {
 	        		}
 	        	)
 	        );
-	        GLOBAL_SCENE.add(mesh);
+	        //mesh.scale.x = -1;
+	        //mesh.material.side = THREE.FrontSide;
+	        GLOBAL_SCENE.add(mesh);*/
+	        
+	        GLOBAL_SCENE.background = hdrCubeMap;  // TODO not quite working in my version of threejs
 	        updateCubeMaps();
+
 			resolve(pmremCubeUVPacker.CubeUVRenderTarget);
 		} );
 	});
@@ -452,11 +459,20 @@ function animateObject(state, id, gameState) {
 }
 
 function updateCamera(state, id, eventHandler, gameState) {
-	var e = eventHandler.getEvent("camera", "all");
+	/*var e = eventHandler.getEvent("camera", "all");
 	if(e) {
 		return {...state, ...e};
+	}*/
+	if(id in gameState.input) {
+		if(gameState.input[id].buttons[2]) {
+			console.log("changing camera to type sexycam");
+			return {...state, type: 'sexycam'}
+		} else if(gameState.input[id].buttons[3]) {
+			console.log("changing camera to type followcam");
+			return {...state, type: 'follow'}
+		}
 	}
-	if(state.mode == 'follow') {
+	if(state.type == 'follow') {
 		if(GLOBAL_ORBIT_CONTROLS) {
 			GLOBAL_ORBIT_CONTROLS.dispose();
 			GLOBAL_ORBIT_CONTROLS = null;
