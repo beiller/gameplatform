@@ -99,6 +99,12 @@ function processSystem(systemStates, system, eventHandler, gameState) {
 	return systemStates;
 }
 
+let commandQueue = [];
+
+function queueCommand(command) {
+	commandQueue.push(command);
+}
+
 function nextState(gameState) {
 	/* Iterate through systems and process them system by system */
 	const eventHandler = getEventHandler(gameState["events"]);
@@ -107,6 +113,10 @@ function nextState(gameState) {
 		system = gameState.systems[i];
 		processSystem(gameState["state"][system["name"]], system, eventHandler, gameState); //mutate 1st arg
 	}
+	for(let i = 0; i < commandQueue.length; i++) {
+		commandQueue[i](gameState);
+	}
+	commandQueue.length = 0;
 	return gameState;
 }
 
@@ -130,4 +140,4 @@ function loadState(initialState) {
 	return gameState;
 }
 
-export { nextState, loadState, deepFreeze }
+export { nextState, loadState, deepFreeze, addSystem, createEntity, queueCommand }

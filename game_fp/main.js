@@ -22,6 +22,30 @@ function applyInput(state, id, eventHandler) {
 		console.log("changing camera to type follow");
 		eventHandler.emitEvent("camera", "all", {type: 'follow', entityName: 'character1'});
 	}*/
+	if(newState.buttons[4] === true && state.buttons[4] === false) {
+		//eventHandler.emitEvent("render", id, {doIt: true});
+		console.log("Queing command!!!!!");
+		ENGINE.queueCommand(function(gameState) {
+			var xPos = (Math.random()-0.5)*2*30;
+			var zPos = (Math.random()-0.5)*2*30;
+			var state = {
+				"entity": {x: xPos, y: 0, z: zPos},
+				"animation": { animationName: 'DE_Dance', playingAnimation: true },
+				"render": { 
+					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.333
+				},
+				"ai": { x: 1.0, y: 0.0 },
+				"motion": {fx: 0, fy: 0, fz: 0},
+				"physics": {x: xPos, y: 0.8, z: zPos, 
+					shape: {type: "box", x: 0.2, y: 0.8, z: 0.2, margin: 0.00001},
+					mass: 45.35, damping: 0.9
+				},
+				"stats": {health: 100, maxHealth: 100}
+			}
+			var id = 'baddy'+(Math.random() * 100);
+			ENGINE.createEntity(gameState, id, state);
+		})
+	}
 	try {
 		for(var i = 0; i < newState.buttons.length; i++) {
 			if(newState.buttons[i] !== state.buttons[i]) {

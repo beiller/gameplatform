@@ -1,13 +1,13 @@
 var controller = {
 	x: 0,
 	y: 0,
-	buttons: [false, false, false, false, false]
+	buttons: [false, false, false, false, false, false]
 };
 
 var controller1 = {
 	x: -1,
 	y: 0,
-	buttons: [false, false, false, false, false]
+	buttons: [false, false, false, false, false, false]
 };
 
 function getControllerState(controllerId) {
@@ -31,6 +31,7 @@ window.onkeyup = function(e) {
 		'KeyG': c=>({...c, buttons: [...c.buttons.slice(0, 1), false, ...c.buttons.slice(2)]}),
 		'KeyZ': c=>({...c, buttons: [...c.buttons.slice(0, 2), false, ...c.buttons.slice(3)]}),
 		'KeyX': c=>({...c, buttons: [...c.buttons.slice(0, 3), false, ...c.buttons.slice(4)]}),
+		'KeyC': c=>({...c, buttons: [...c.buttons.slice(0, 4), false, ...c.buttons.slice(5)]}),
 	}
 	controller = kmap[e.code](controller);
 	//console.log(controller.buttons);
@@ -46,6 +47,7 @@ window.onkeydown = function(e) {
 		'KeyG': c=>({...c, buttons: [...c.buttons.slice(0, 1), true, ...c.buttons.slice(2)]}),
 		'KeyZ': c=>({...c, buttons: [...c.buttons.slice(0, 2), true, ...c.buttons.slice(3)]}),
 		'KeyX': c=>({...c, buttons: [...c.buttons.slice(0, 3), true, ...c.buttons.slice(4)]}),
+		'KeyC': c=>({...c, buttons: [...c.buttons.slice(0, 4), true, ...c.buttons.slice(5)]}),
 	}
 	controller = kmap[e.code](controller);
 	//console.log(controller.buttons);
