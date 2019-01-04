@@ -23,6 +23,13 @@ function addBehaviour(gameState, behaviourName, objectId, initialState) {
 	gameState["state"][behaviourName][objectId] = initialState
 }
 
+function removeBehaviour(gameState, behaviourName, objectId) {
+	if("state" in gameState && behaviourName in gameState.state && objectId in gameState.state[behaviourName]) {
+		//gameState.state[behaviourName][objectId] = undefined;
+		delete gameState.state[behaviourName][objectId];
+	}
+}
+
 /*
 	Events
 */
@@ -127,6 +134,14 @@ function createEntity(gameState, objectId, state) {
 	return gameState;
 }
 
+function deleteEntity(gameState, objectId) {
+	if(!("state" in gameState)) return;
+	for(var systemName in gameState.state) {
+		removeBehaviour(gameState, systemName, objectId);
+	}
+	return gameState;
+}
+
 function loadState(initialState) {
 	//parse initialState
 	var gameState = {};
@@ -140,4 +155,22 @@ function loadState(initialState) {
 	return gameState;
 }
 
-export { nextState, loadState, deepFreeze, addSystem, createEntity, queueCommand }
+function init(initialState, middleware) {
+	var nextStateFn = nextState;
+	for(var i = 0; i < middleware.length; i++) {
+		nextStateFn = middleware[i](nextStateFn);
+	}
+	window.gameState = loadState(initialState);
+	function tick() {
+		//window.gameState = ENGINE.nextState(window.gameState);
+		window.gameState = nextStateFn(window.gameState);
+		//renderFunction();
+		//requestAnimationFrame(tick);
+	}
+	//requestAnimationFrame(tick);
+	const frameTime = 1000/60;
+	setInterval(tick, frameTime);
+	return gameState;
+}
+
+export { init, nextState, loadState, deepFreeze, addSystem, createEntity, queueCommand, deleteEntity, removeBehaviour }

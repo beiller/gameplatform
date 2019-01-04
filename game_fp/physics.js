@@ -1,3 +1,5 @@
+import * as RENDERER from './renderer.js';
+
 const collisionLayers = {
 	PLAYER:   1,
 	WORLD:    2,
@@ -38,6 +40,54 @@ function getIdByBody(body) {
 		}
 	}
 	return null;
+}
+
+function buildBodyIdMap() {
+	var bodyIdMap = {};
+	for(let id in bodies) {
+		bodyIdMap[bodies[id].a] = id;
+	}
+	return bodyIdMap;
+}
+
+
+function readCollisionData(objectId) {
+	/*
+
+	*/
+	var collisionMap = {};
+	var bodyIdMap = buildBodyIdMap();
+	var data = [];
+	var i,
+	    dp = world.dispatcher,
+	    num = dp.getNumManifolds(),
+	    manifold, num_contacts, j, pt;
+
+	for (i = 0; i < num; i++) {
+	    manifold = dp.getManifoldByIndexInternal(i);
+
+	    num_contacts = manifold.getNumContacts();
+	    if (num_contacts === 0) {
+	        continue;
+	    }
+
+	    for (j = 0; j < num_contacts; j++) {
+	        pt = manifold.getContactPoint(j);
+	        var b1 = manifold.getBody0();
+	        var b2 = manifold.getBody1();
+	        let hp = pt.getPositionWorldOnB();
+	        if(!(bodyIdMap[b1.a] in collisionMap)) {
+	        	collisionMap[bodyIdMap[b1.a]] = [];
+	        }
+	        if(!(bodyIdMap[b2.a] in collisionMap)) {
+	        	collisionMap[bodyIdMap[b2.a]] = [];
+	        }
+	        collisionMap[bodyIdMap[b1.a]].push({id: bodyIdMap[b2.a], hp: [hp.x(), hp.y(), hp.z()]});
+	        hp = pt.getPositionWorldOnA();
+	        collisionMap[bodyIdMap[b2.a]].push({id: bodyIdMap[b1.a], hp: [hp.x(), hp.y(), hp.z()]});
+	    }
+	}
+	return collisionMap;
 }
 
 function getCollisionData(objectId) {
@@ -184,6 +234,8 @@ var temp_vec3_1 = null
 var temp_vec3_2 = null
 var temp_quat_1 = null
 var temp_quat_2 = null
+const frameTime = 1000/60;
+
 function init(gameState) {
 	temp_trans_1 = new Ammo.btTransform();
 	temp_trans_2 = new Ammo.btTransform();
@@ -192,19 +244,25 @@ function init(gameState) {
 	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
 	world = initPhysics();
+	setInterval(stepWorld, frameTime);
+}
+
+function readPhysicsState(state, id) {
+	const t = bodies[id].getWorldTransform();
+	const p = t.getOrigin();
+	const x = p.x();
+	const y = p.y();
+	const z = p.z();
+	const q = t.getRotation();
+	//			return [q.x(), q.y(), q.z(), q.w()];
+	//if(x !== state.x || y !== state.y || z !== state.z) {  //detect changes
+	return { ...state, x: x, y: y, z: z, rotation: {x: q.x(), y: q.y(), z: q.z(), w: q.w()} }
+	//}
 }
 
 function applyMotionPhysics(state, id, eventHandler, gameState) {
 	temp_vec3_1.setValue(gameState.motion[id].fx * movementSpeed, 0, gameState.motion[id].fz * movementSpeed);
 	bodies[id].applyImpulse(temp_vec3_1);
-	const p = bodies[id].getWorldTransform().getOrigin();
-	const x = p.x();
-	const y = p.y();
-	const z = p.z();
-	if(x !== state.x || y !== state.y || z !== state.z) {  //detect changes
-		return { ...state, x: x, y: y, z: z }
-	}
-	return state;
 }
 const movementSpeed = 15.0;
 const bodies = {};
@@ -225,14 +283,16 @@ function applyPhysics(state, id, eventHandler, gameState) {
 		bodies[id] = createBody(shape, state);
 		addBody(world.m_dynamicsWorld, bodies[id]);
 		//"rest" the object necessary?
-		temp_vec3_1.setValue(0, 0, 0);
-		bodies[id].setAngularFactor(temp_vec3_1);
+		if('lockRotation' in state && state.lockRotation === true) {
+			temp_vec3_1.setValue(0, 1, 0);
+			bodies[id].setAngularFactor(temp_vec3_1);
+		}
 	}
 
 	if(id in gameState.motion) {
-		state = applyMotionPhysics(state, id, eventHandler, gameState);
-		eventHandler.emitEvent("physics", id, {newPosition: state});
+		applyMotionPhysics(state, id, eventHandler, gameState);
 	}
+	state = readPhysicsState(state, id);
 	
 	let collisions = getCollisionData(id);
 	for(var i = 0; i < collisions.length; i++) {
@@ -244,12 +304,18 @@ function applyPhysics(state, id, eventHandler, gameState) {
 	return state;
 }
 
-const frameTime = 1000/60;
 function stepWorld() {
 	step(world.m_dynamicsWorld, world.dispatcher, frameTime);
+	//clean up
+	for(var objectId in bodies) {
+		if(!(objectId in window.gameState.state.physics)) {
+			console.log("Deleting rigidbody", objectId);
+			world.m_dynamicsWorld.removeRigidBody(bodies[objectId]);
+			delete bodies[objectId];
+		}
+	}
+	var cmap = readCollisionData();
 }
-
-setInterval(stepWorld, frameTime);
 
 
 export { init, applyPhysics, resetWorld }

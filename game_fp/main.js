@@ -6,45 +6,43 @@ import * as InspectorMiddleware from './InspectorMiddleware.js';
 
 //welcome!
 
-function applyInput(state, id, eventHandler) {
+function applyInput(state, id, eventHandler, gameState) {
+	// TODO warning this is called for every entity that has applyInput
 	var newState = {...state, ...INPUT.getControllerState(state.controllerId)};	
-	if(newState.buttons[0] === true && state.buttons[0] === false) {
+	/*if(newState.buttons[0] === true && state.buttons[0] === false) {
 		eventHandler.emitEvent("input", id, {animationName: "DE_Dance"});
-	}
-	if(newState.buttons[1] === true && state.buttons[1] === false) {
+	}*/
+	/*if(newState.buttons[1] === true && state.buttons[1] === false) {
 		eventHandler.emitEvent("render", id, {doIt: true});
-	}
-	/*if(newState.buttons[2] === true && state.buttons[2] === false) {
-		console.log("changing camera to type uhhh");
-		eventHandler.emitEvent("camera", "all", {type: 'uhhh'});
-	}
-	if(newState.buttons[3] === true && state.buttons[3] === false) {
-		console.log("changing camera to type follow");
-		eventHandler.emitEvent("camera", "all", {type: 'follow', entityName: 'character1'});
 	}*/
 	if(newState.buttons[4] === true && state.buttons[4] === false) {
-		//eventHandler.emitEvent("render", id, {doIt: true});
-		console.log("Queing command!!!!!");
-		ENGINE.queueCommand(function(gameState) {
-			var xPos = (Math.random()-0.5)*2*30;
-			var zPos = (Math.random()-0.5)*2*30;
-			var state = {
-				"entity": {x: xPos, y: 0, z: zPos},
-				"animation": { animationName: 'DE_Dance', playingAnimation: true },
-				"render": { 
-					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.333
-				},
-				"ai": { x: 1.0, y: 0.0 },
-				"motion": {fx: 0, fy: 0, fz: 0},
-				"physics": {x: xPos, y: 0.8, z: zPos, 
-					shape: {type: "box", x: 0.2, y: 0.8, z: 0.2, margin: 0.00001},
-					mass: 45.35, damping: 0.9
-				},
-				"stats": {health: 100, maxHealth: 100}
-			}
-			var id = 'baddy'+(Math.random() * 100);
-			ENGINE.createEntity(gameState, id, state);
-		})
+		if(id in gameState.physics && id in gameState.motion) {
+			console.log("Queing command from entity: ", id);
+			let physicsState = gameState.physics[id];
+			let motionState = gameState.motion[id]
+			ENGINE.queueCommand(function(gameState) {
+				var xPos = physicsState.x;
+				var yPos = physicsState.y;
+				var zPos = physicsState.z - 1.0;
+				var fx = motionState.fx * 0.001;
+				var fz = motionState.fz * 0.001;
+				var state = {
+					"entity": {x: xPos, y: yPos, z: zPos},
+					"render": { 
+						type: "sphere", radius: 0.2
+					},
+					"motion": {fx: 0, fy: 0.5, fz: -0.5},
+					"physics": {x: xPos, y: yPos, z: zPos, 
+						shape: {type: "sphere", radius: 0.2 },
+						mass: 1.1, damping: 0.2
+					},
+					"stats": {health: 99999, maxHealth: 99999},
+					"particle": {maxAge: 10}
+				}
+				var id = 'baddy'+(Math.random() * 100);
+				ENGINE.createEntity(gameState, id, state);
+			});
+		}
 	}
 	try {
 		for(var i = 0; i < newState.buttons.length; i++) {
@@ -122,12 +120,17 @@ function normalize2D(point) {
 }
 
 function applyEntity(state, id, eventHandler, gameState) {
-	if(id in gameState.physics && (!('staticObject' in gameState.physics[id]) || gameState.physics[id].staticObject === false)) {
-		if(gameState.physics[id].x !== state.x || (gameState.physics[id].y-0.8) !== state.y || gameState.physics[id].z !== state.z) {
+	if(id in gameState.physics) {
+		
+		let y = gameState.physics[id].y
+		if('shape' in gameState.physics[id] && gameState.physics[id].shape.y) {
+			y -= gameState.physics[id].shape.y;
+		}
+		if(gameState.physics[id].x !== state.x || y !== state.y || gameState.physics[id].z !== state.z) {
 			return {
 				...pointCharacter(state, id, gameState),
 				x: gameState.physics[id].x,
-				y: gameState.physics[id].y - 0.8,
+				y: y,
 				z: gameState.physics[id].z
 			};
 		}
@@ -165,12 +168,12 @@ function pointCharacter(state, id, gameState) {
 }
 
 function applyAnimation(state, id, eventHandler, gameState) {
-	var e = eventHandler.getEvent("input", id);
-	if(e && 'animationName' in e)
+	if(id in gameState.input && gameState.input[id].buttons[0] === true && !state.playingAnimation) {
 		return {
 			...state, playingAnimation: true, 
-			animationName: e.animationName
+			animationName: 'DE_Dance'
 		};
+	}
 
 	if('playingAnimation' in state && state.playingAnimation === true) {
 		if(id in gameState.motion && (Math.abs(gameState.motion[id].fx)+Math.abs(gameState.motion[id].fz)) > 0.0001) {
@@ -199,6 +202,22 @@ function applyCamera(state, id, eventHandler, gameState) {
 	return RENDERER.updateCamera(state, id, eventHandler, gameState);
 }
 
+function applyParticle(state, id, eventHandler, gameState) {
+	if('age' in state && 'maxAge' in state && state.age > state.maxAge) {
+		var myId = id;
+		ENGINE.queueCommand(function(gameState) {
+			//ENGINE.removeBehaviour(gameState, "motion", myId);
+			ENGINE.deleteEntity(gameState, myId);
+			/*setTimeout(function() { // BAD practise TODO - this is an unexpected side effect (deleting magically)
+				ENGINE.queueCommand(function(gameState) {
+					ENGINE.deleteEntity(gameState, myId);
+				});
+			}, 5000);*/
+		});
+	}
+	return { ...state, age: (state.age || 0)+1, maxAge: state.maxAge || 100 };
+}
+
 function applyStats(state, id, eventHandler, gameState) { 
 	var e = eventHandler.getEvent("collision", id);
 	if(e && gameState.stats[e.id]) {
@@ -224,6 +243,7 @@ function level1() {
 		"systems": [	
 			{ name: "input", func: applyInput },
 			{ name: "ai", func: applyAI },
+			{ name: "particle", func: applyParticle },
 			{ name: "motion", func: applyMotion },
 			{ name: "physics", func: applyPhysics },
 			{ name: "camera", func: applyCamera },
@@ -237,7 +257,7 @@ function level1() {
 		},
 		"state": {
 			"camera1": {
-				"input": { "controllerId": "0" },
+				"input": { "controllerId": "0" },  // needs input to toggle modes
 				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
 				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
 				"render": {type: "camera"},
@@ -254,13 +274,13 @@ function level1() {
 				"entity": {x: 0, y: 0, z: 0},
 				"animation": { animationName: 'DE_Dance', playingAnimation: true },
 				"render": { 
-					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.333
+					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.31
 				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
-				"physics": {x: 0, y: 0.8, z: 0, 
-					shape: {type: "box", x: 0.2, y: 0.8, z: 0.2, margin: 0.00001},
-					mass: 45.35, damping: 0.9
+				"physics": {x: 0, y: 2.8, z: 0, 
+					shape: {type: "box", x: 0.4, y: 0.85, z: 0.4, margin: 0.00001},
+					mass: 45.35, damping: 0.9, lockRotation: true
 				},
 				"stats": {health: 100, maxHealth: 100}
 			}
@@ -292,13 +312,13 @@ function level1() {
 			"entity": {x: xPos, y: 0, z: zPos},
 			"animation": { animationName: 'DE_Dance', playingAnimation: true },
 			"render": { 
-				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.333
+				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.31
 			},
 			"ai": { x: 1.0, y: 0.0 },
 			"motion": {fx: 0, fy: 0, fz: 0},
 			"physics": {x: xPos, y: 0.8, z: zPos, 
-				shape: {type: "box", x: 0.2, y: 0.8, z: 0.2, margin: 0.00001},
-				mass: 45.35, damping: 0.9
+				shape: {type: "box", x: 0.4, y: 0.85, z: 0.4, margin: 0.00001},
+				mass: 45.35, damping: 0.9, lockRotation: true
 			},
 			"stats": {health: 100, maxHealth: 100}
 		}
@@ -318,26 +338,14 @@ function main() {
 	var middleware = [
 		InspectorMiddleware.middleware
 	];
-	
-	var gameState = ENGINE.loadState(initialState);
+	var gameState = ENGINE.init(initialState, middleware);
 	console.log(gameState);
 	window.gameState = gameState;
-	var renderFunction = RENDERER.init(gameState);
+	//var renderFunction = RENDERER.init(gameState);
+	RENDERER.init(gameState);
 	Ammo().then(function() {   // why the fuck do I have to do this?
 		PHYSICS.init(gameState);
 	});
-	var nextStateFn = ENGINE.nextState;
-	for(var i = 0; i < middleware.length; i++) {
-		nextStateFn = middleware[i](nextStateFn);
-	}
-	//window.emitEvent = ENGINE.emitEvent;
-	function tick() {
-		//window.gameState = ENGINE.nextState(window.gameState);
-		window.gameState = nextStateFn(window.gameState);
-		renderFunction();
-		requestAnimationFrame(tick);
-	}
-	requestAnimationFrame(tick);
 }
 
 main();

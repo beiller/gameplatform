@@ -6,10 +6,15 @@ var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
 var GLOBAL_RENDERER = null;
 var GLOBAL_ORBIT_CONTROLS = null;
+var DEBUG_PHYSICS = true;
 
 var loadedObjects = {};
+var physicsDebugObjects = {};
 var loaderCallbackFunction = null;
 var hdrCubeRenderTarget = null;
+
+var getAnimationMixer = null;
+var getAnimationClip = null;
 
 function updateCubeMaps() {
 	if(!hdrCubeRenderTarget) return;
@@ -51,9 +56,9 @@ function loadEXRMap() {
 
 			hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
 
-			//hdrCubeMap.dispose();
-			/*let shader = THREE.ShaderLib.cube;
-			shader.uniforms.tCube.value = hdrCubeRenderTarget;
+			hdrCubeMap.dispose();
+			//let shader = THREE.ShaderLib.cube;
+			//shader.uniforms.tCube.value = hdrCubeRenderTarget;
 	        var mesh = new THREE.Mesh(
 	        	new THREE.SphereGeometry(50, 60, 40), 
 	        	new THREE.MeshStandardMaterial(
@@ -62,15 +67,14 @@ function loadEXRMap() {
 	        			envMapIntensity: 15000.0,
 	        			side: THREE.BackSide,
 	        			roughness: 0,
-	        			metalness: 1
+	        			metalness: 1,
+	        			refractionRatio: -1.0
 	        		}
 	        	)
 	        );
-	        //mesh.scale.x = -1;
-	        //mesh.material.side = THREE.FrontSide;
-	        GLOBAL_SCENE.add(mesh);*/
+	        GLOBAL_SCENE.add(mesh);
 	        
-	        GLOBAL_SCENE.background = hdrCubeMap;  // TODO not quite working in my version of threejs
+	        //GLOBAL_SCENE.background = hdrCubeMap;  // TODO not quite working in my version of threejs
 	        updateCubeMaps();
 
 			resolve(pmremCubeUVPacker.CubeUVRenderTarget);
@@ -80,7 +84,22 @@ function loadEXRMap() {
 
 const loaders = {
 	"camera": loadCamera,
-	"animatedMesh": loadGLTF
+	"animatedMesh": loadGLTF,
+	"sphere": createSphere
+}
+
+var cachedSphereGeometry = new THREE.SphereGeometry(1.0, 12, 12);
+function createSphere(state, id) {
+	loadedObjects[id] = new THREE.Mesh(
+    	cachedSphereGeometry,
+    	new THREE.MeshStandardMaterial(
+    		{
+    			envMap: hdrCubeRenderTarget.texture,
+    			roughness: 0.5,
+    		}
+    	)
+    );
+    loadedObjects[id].scale.set(state.radius, state.radius, state.radius);
 }
 
 function loadCamera(state, id) {
@@ -172,6 +191,15 @@ function makeTextTexture( message, parameters ) {
 	texture.needsUpdate = true;
 	return texture;
 }
+function makeTextSprite( message, parameters ) {
+	var texture = makeTextTexture(message, parameters);
+    var spriteMaterial = new THREE.SpriteMaterial(
+        { map: texture, lights: false }
+    );
+    var sprite = new THREE.Sprite( spriteMaterial );
+    sprite.scale.set(2,1,1.0);
+    return sprite;
+};
 
 function createRectLight(pos) {
 	const width = .5;
@@ -379,7 +407,7 @@ function setupLighting() {
 	return createLight([2, 1, 4], [0,0,0]);
 }
 
-function render_fn(sceneData, scene, camera, useSSAO) {
+function createRenderFunction(sceneData, scene, camera, useSSAO) {
 	function render() {
 	    sceneData.renderer.clear();
 	    if(useSSAO) {
@@ -420,21 +448,23 @@ function createCache(fn) {
 function createMixer(id) {
 	return new THREE.AnimationMixer(loadedObjects[id].children[1]);
 }
-let getAnimationMixer = createCache(createMixer);
 
 function createClip(id, animationName) {
 	return getAnimationMixer(id).clipAction(animationName);
 }
-let getAnimationClip = createCache(createClip);
 
-function updateObject(state, id, entity) {
-	loadedObjects[id].position.set(entity.x, entity.y, entity.z);
+function updateObject(entity, threeObject) {
+	threeObject.position.set(entity.x, entity.y, entity.z);
 	if('rotation' in entity) {
-		loadedObjects[id].rotation.set(
-			entity.rotation.x,
-			entity.rotation.y,
-			entity.rotation.z,
-		);
+		if('w' in entity.rotation) {
+			threeObject.quaternion.set( 
+				entity.rotation.x, entity.rotation.y, entity.rotation.z, entity.rotation.w 
+			)
+		} else {
+			threeObject.rotation.set( 
+				entity.rotation.x, entity.rotation.y, entity.rotation.z
+			)
+		}
 	}
 }
 
@@ -465,10 +495,10 @@ function updateCamera(state, id, eventHandler, gameState) {
 	}*/
 	if(id in gameState.input) {
 		if(gameState.input[id].buttons[2]) {
-			console.log("changing camera to type sexycam");
+			console.log("changing camera to sexycam");
 			return {...state, type: 'sexycam'}
 		} else if(gameState.input[id].buttons[3]) {
-			console.log("changing camera to type followcam");
+			console.log("changing camera to followcam");
 			return {...state, type: 'follow'}
 		}
 	}
@@ -494,6 +524,28 @@ function updateCamera(state, id, eventHandler, gameState) {
 	return state;
 }
 
+function create3DText(string, size, height, colorIntHex, x, y, z) {
+	var textGeo = new THREE.TextGeometry(string, {
+		size: size,
+		height: height
+	});
+	var  color = new THREE.Color(colorIntHex);
+	var  textMaterial = new THREE.MeshStandardMaterial({ emissive: color });
+	var  text = new THREE.Mesh(textGeo, textMaterial);
+	text.position.set(x, y, z);
+	return text;
+}
+function createDebugAxis() {
+	var axis = new THREE.AxesHelper();
+	//var X = create3DText("X", 1.0, 0.5, 0xFFEEEE, 1, 0, 0);
+	var X = makeTextSprite("X", {backgroundColor: {r: 1.0, g: 0.9, b: 0.9, a: 1.0}});
+	var Y = makeTextSprite("Y", {backgroundColor: {r: 0.9, g: 1.0, b: 0.9, a: 1.0}});
+	var Z = makeTextSprite("Z", {backgroundColor: {r: 0.9, g: 0.9, b: 1.0, a: 1.0}});
+	X.position.set(1,0,0); Y.position.set(0,1,0); Z.position.set(0,0,1);
+	return axis.add(X).add(Y).add(Z);
+	//return axis;
+}
+
 var previousEntity = {};
 function renderObject(state, id, eventHandler, gameState) {
 	
@@ -505,6 +557,33 @@ function renderObject(state, id, eventHandler, gameState) {
 		}
 		let newState = {...state, ...{loading: true}};
 		loadAssets(newState, id);
+		if(DEBUG_PHYSICS) {
+			if(id in gameState.physics && 'shape' in gameState.physics[id]) {
+				var state = gameState.physics[id];
+				var material = new THREE.MeshStandardMaterial({ 
+		    		wireframe: true, emissive: new THREE.Color(0xFFFFFF)
+		    	});
+
+				if(state.shape.type == 'box') {
+					physicsDebugObjects[id] = new THREE.Mesh(
+				    	new THREE.BoxGeometry( 
+				    		state.shape.x * 2.001, 
+				    		state.shape.y * 2.001, 
+				    		state.shape.z * 2.001
+				    	),
+				    	material
+				    ).add(createDebugAxis());
+				    GLOBAL_SCENE.add(physicsDebugObjects[id]);
+				}
+				if(state.shape.type == 'sphere') {
+					physicsDebugObjects[id] = new THREE.Mesh(
+				    	new THREE.SphereGeometry(state.shape.radius * 1.001, 12, 12), 
+				    	material
+				    ).add(createDebugAxis());
+				    GLOBAL_SCENE.add(physicsDebugObjects[id]);
+				}
+			}
+		}
 		return newState;
 	}
 	if((id in loadedObjects) && state.loading) {
@@ -514,12 +593,20 @@ function renderObject(state, id, eventHandler, gameState) {
 	}
 	//compare states of deps (memory address compare)
 	if(!(id in previousEntity) || previousEntity[id] !== gameState.entity[id]) {
-		updateObject(state, id, gameState.entity[id]);
+		updateObject(gameState.entity[id], loadedObjects[id]);
 		previousEntity[id] = gameState.entity[id];
 	}
 
-	var e = eventHandler.getEvent("render", id);
+	if(DEBUG_PHYSICS && id in physicsDebugObjects) {
+		updateObject(gameState.physics[id], physicsDebugObjects[id]);
+	}
+
+	/*var e = eventHandler.getEvent("render", id);
 	if(e && 'doIt' in e) {
+		loadedObjects[id].children[1].visible = !loadedObjects[id].children[1].visible;
+		return state;
+	}*/
+	if(id in gameState.input && gameState.input[id].buttons[1] === true && loadedObjects[id].children.length > 0) {
 		loadedObjects[id].children[1].visible = !loadedObjects[id].children[1].visible;
 		return state;
 	}
@@ -538,18 +625,27 @@ function renderObject(state, id, eventHandler, gameState) {
 		if(!('healthBarSprite' in state)) {
 			let sprite = createHealthBar();
 			loadedObjects[id].add(sprite);
-			loadedObjects[sprite.id] = sprite;
 			return {...state, healthBarSprite: sprite.id };
 		}
 		var healthRatio = Math.max(0.0001, gameState.stats[id].health / gameState.stats[id].maxHealth);
-		loadedObjects[state.healthBarSprite].scale.x = healthRatio;
+		//loadedObjects[state.healthBarSprite].scale.x = healthRatio;
+		GLOBAL_SCENE.getObjectById( state.healthBarSprite, true ).scale.x = healthRatio;
 	}
 	return state;
 }
 
 function init(initialState) {
-	var object3dList = {};
-	var animationMixerList = {};
+	GLOBAL_CAMERA = null;
+	GLOBAL_SCENE = null;
+	GLOBAL_RENDERER = null;
+	GLOBAL_ORBIT_CONTROLS = null;
+	loadedObjects = {};
+	physicsDebugObjects = {};
+	loaderCallbackFunction = null;
+	hdrCubeRenderTarget = null;
+	getAnimationMixer = createCache(createMixer);
+	getAnimationClip = createCache(createClip);
+
 	var scene = new THREE.Scene();
 	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
 	GLOBAL_CAMERA = camera;
@@ -571,7 +667,25 @@ function init(initialState) {
 	mesh.receiveShadow = false;
 	scene.add(mesh);
 	loadEXRMap();
-	return render_fn(sceneData, scene, camera)
+
+	const render = createRenderFunction(sceneData, scene, camera);
+	function renderFunction() {
+		render();
+		for(var objectId in loadedObjects) {
+			if(!(objectId in window.gameState.state.render)) {
+				console.log("Deleting mesh", objectId);
+				
+				GLOBAL_SCENE.remove(loadedObjects[objectId]);
+				delete loadedObjects[objectId];
+				if(objectId in physicsDebugObjects) {
+					GLOBAL_SCENE.remove(physicsDebugObjects[objectId]);
+					delete physicsDebugObjects[objectId];
+				}
+			}
+		}
+		requestAnimationFrame(renderFunction);
+	}
+	requestAnimationFrame(renderFunction);
 }
 
 export { renderObject, init, updateCamera };
