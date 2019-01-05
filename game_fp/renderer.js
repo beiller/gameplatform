@@ -94,7 +94,6 @@ function createSphere(state, id) {
     	cachedSphereGeometry,
     	new THREE.MeshStandardMaterial(
     		{
-    			envMap: hdrCubeRenderTarget.texture,
     			roughness: 0.5,
     		}
     	)
@@ -116,6 +115,13 @@ function dataCallback(gltf, state, id) {
 	loadedObjects[id] = gltf.scene;
 }
 function loadGLTF(state, id) {
+	function loaderCallback( gltf ) {
+		dataCallback(gltf, state, id);
+	}
+	Loader.loadGLTF(state.filename, loaderCallback);
+}
+
+function loadJSON(state, id) {
 	function loaderCallback( gltf ) {
 		dataCallback(gltf, state, id);
 	}
@@ -489,10 +495,6 @@ function animateObject(state, id, gameState) {
 }
 
 function updateCamera(state, id, eventHandler, gameState) {
-	/*var e = eventHandler.getEvent("camera", "all");
-	if(e) {
-		return {...state, ...e};
-	}*/
 	if(id in gameState.input) {
 		if(gameState.input[id].buttons[2]) {
 			console.log("changing camera to sexycam");
@@ -577,9 +579,32 @@ function renderObject(state, id, eventHandler, gameState) {
 				}
 				if(state.shape.type == 'sphere') {
 					physicsDebugObjects[id] = new THREE.Mesh(
-				    	new THREE.SphereGeometry(state.shape.radius * 1.001, 12, 12), 
+				    	new THREE.SphereGeometry(state.shape.radius * 1.001, 6, 6), 
 				    	material
 				    ).add(createDebugAxis());
+				    GLOBAL_SCENE.add(physicsDebugObjects[id]);
+				}
+				if(state.shape.type == 'capsule') {
+					var r = state.shape.radius;
+					var m1 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 12, 6, 0, Math.PI*2, 0, Math.PI/2), material);
+					var m2 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 12, 6, 0, Math.PI*2, 0, Math.PI/2), material);
+					var m3 = new THREE.Mesh(new THREE.CylinderGeometry( 
+						r * 1.0001, r * 1.0001, state.shape.height, 12, 5, true 
+					), material);
+				    m1.position.set(0,  state.shape.height*0.5, 0);
+				    m2.position.set(0, -state.shape.height*0.5, 0);
+				    m2.rotation.x = Math.PI;
+				    physicsDebugObjects[id] = new THREE.Object3D().add(m1).add(m2).add(m3).add(createDebugAxis());
+				    physicsDebugObjects[id].add(
+						new THREE.Mesh(
+							new THREE.BoxGeometry( 
+								r * 2.001, 
+								2*r+state.shape.height, 
+								r * 2.001
+							),
+							material
+						)
+				    )
 				    GLOBAL_SCENE.add(physicsDebugObjects[id]);
 				}
 			}
@@ -592,8 +617,15 @@ function renderObject(state, id, eventHandler, gameState) {
 		return {...state, ...{loading: false}};
 	}
 	//compare states of deps (memory address compare)
-	if(!(id in previousEntity) || previousEntity[id] !== gameState.entity[id]) {
-		updateObject(gameState.entity[id], loadedObjects[id]);
+	if(id in gameState.entity && !(id in previousEntity) || previousEntity[id] !== gameState.entity[id]) {
+		var ent = gameState.entity[id];
+		if('offsetY' in ent) {
+			ent = {
+				...ent,
+				y: ent.y + ent.offsetY
+			}
+		}
+		updateObject(ent, loadedObjects[id]);
 		previousEntity[id] = gameState.entity[id];
 	}
 
@@ -601,11 +633,6 @@ function renderObject(state, id, eventHandler, gameState) {
 		updateObject(gameState.physics[id], physicsDebugObjects[id]);
 	}
 
-	/*var e = eventHandler.getEvent("render", id);
-	if(e && 'doIt' in e) {
-		loadedObjects[id].children[1].visible = !loadedObjects[id].children[1].visible;
-		return state;
-	}*/
 	if(id in gameState.input && gameState.input[id].buttons[1] === true && loadedObjects[id].children.length > 0) {
 		loadedObjects[id].children[1].visible = !loadedObjects[id].children[1].visible;
 		return state;
@@ -633,6 +660,8 @@ function renderObject(state, id, eventHandler, gameState) {
 	}
 	return state;
 }
+
+var render = null;  // the render function...
 
 function init(initialState) {
 	GLOBAL_CAMERA = null;
@@ -668,25 +697,24 @@ function init(initialState) {
 	scene.add(mesh);
 	loadEXRMap();
 
-	const render = createRenderFunction(sceneData, scene, camera);
-	function renderFunction() {
-		render();
-		for(var objectId in loadedObjects) {
-			if(!(objectId in window.gameState.state.render)) {
-				console.log("Deleting mesh", objectId);
-				
-				GLOBAL_SCENE.remove(loadedObjects[objectId]);
-				delete loadedObjects[objectId];
-				if(objectId in physicsDebugObjects) {
-					GLOBAL_SCENE.remove(physicsDebugObjects[objectId]);
-					delete physicsDebugObjects[objectId];
-				}
-			}
-		}
-		requestAnimationFrame(renderFunction);
-	}
-	requestAnimationFrame(renderFunction);
+	render = createRenderFunction(sceneData, scene, camera);
 }
 
-export { renderObject, init, updateCamera };
+function renderFunction() {
+	render();
+	for(var objectId in loadedObjects) {
+		if(!(objectId in window.gameState.state.render)) {
+			console.log("Deleting mesh", objectId);
+			
+			GLOBAL_SCENE.remove(loadedObjects[objectId]);
+			delete loadedObjects[objectId];
+			if(objectId in physicsDebugObjects) {
+				GLOBAL_SCENE.remove(physicsDebugObjects[objectId]);
+				delete physicsDebugObjects[objectId];
+			}
+		}
+	}
+}
+
+export { renderObject, init, updateCamera, renderFunction };
 

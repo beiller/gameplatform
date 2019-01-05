@@ -24,6 +24,9 @@ const collisionFlags = {
 
 const stepHz = 60;
 const constraintSolverIterations = 10;
+const globalCollisionMap = {};
+const bodyIdMap = {};
+const bodies = {};
 
 function step(m_dynamicsWorld, dispatcher, dt) {
 	dt = Math.min(dt, 0.05);
@@ -33,35 +36,34 @@ function step(m_dynamicsWorld, dispatcher, dt) {
 	}
 };
 
-function getIdByBody(body) {
-	for(let id in bodies) {
-		if(body.a === bodies[id].a) {
-			return id;
+function buildBodyIdMap() {
+	// clean bodyIdMap object
+	for(let oid in bodies) {
+		let bodyId = bodies[oid].a;
+		if(!(oid in window.gameState.state.physics)) {
+			delete bodyIdMap[bodyId];
+		} else {
+			bodyIdMap[bodyId] = oid;
 		}
 	}
-	return null;
 }
-
-function buildBodyIdMap() {
-	var bodyIdMap = {};
-	for(let id in bodies) {
-		bodyIdMap[bodies[id].a] = id;
-	}
-	return bodyIdMap;
-}
-
 
 function readCollisionData(objectId) {
-	/*
-
-	*/
-	var collisionMap = {};
-	var bodyIdMap = buildBodyIdMap();
+	buildBodyIdMap();
 	var data = [];
 	var i,
 	    dp = world.dispatcher,
 	    num = dp.getNumManifolds(),
 	    manifold, num_contacts, j, pt;
+
+	// clean globalCollisionMap object
+	for(let oid in globalCollisionMap) {
+		if(!(oid in window.gameState.state.physics)) {
+			delete globalCollisionMap[oid];
+		} else {
+			globalCollisionMap[oid] = []; // does this avoid GC?
+		}
+	}
 
 	for (i = 0; i < num; i++) {
 	    manifold = dp.getManifoldByIndexInternal(i);
@@ -76,63 +78,19 @@ function readCollisionData(objectId) {
 	        var b1 = manifold.getBody0();
 	        var b2 = manifold.getBody1();
 	        let hp = pt.getPositionWorldOnB();
-	        if(!(bodyIdMap[b1.a] in collisionMap)) {
-	        	collisionMap[bodyIdMap[b1.a]] = [];
+	        if(!(bodyIdMap[b1.a] in globalCollisionMap)) {
+	        	globalCollisionMap[bodyIdMap[b1.a]] = [];
 	        }
-	        if(!(bodyIdMap[b2.a] in collisionMap)) {
-	        	collisionMap[bodyIdMap[b2.a]] = [];
+	        if(!(bodyIdMap[b2.a] in globalCollisionMap)) {
+	        	globalCollisionMap[bodyIdMap[b2.a]] = [];
 	        }
-	        collisionMap[bodyIdMap[b1.a]].push({id: bodyIdMap[b2.a], hp: [hp.x(), hp.y(), hp.z()]});
+	        globalCollisionMap[bodyIdMap[b1.a]].push({id: bodyIdMap[b2.a], hp: [hp.x(), hp.y(), hp.z()]});
 	        hp = pt.getPositionWorldOnA();
-	        collisionMap[bodyIdMap[b2.a]].push({id: bodyIdMap[b1.a], hp: [hp.x(), hp.y(), hp.z()]});
+	        globalCollisionMap[bodyIdMap[b2.a]].push({id: bodyIdMap[b1.a], hp: [hp.x(), hp.y(), hp.z()]});
 	    }
 	}
-	return collisionMap;
 }
 
-function getCollisionData(objectId) {
-	/*
-		Emit collision detection events
-
-		CollisionCallback arguments id: Other's ID, hitpoint: Array(xyz)
-	*/
-	var data = [];
-	var i,
-	    dp = world.dispatcher,
-	    num = dp.getNumManifolds(),
-	    manifold, num_contacts, j, pt;
-
-	for (i = 0; i < num; i++) {
-	    manifold = dp.getManifoldByIndexInternal(i);
-
-	    num_contacts = manifold.getNumContacts();
-	    if (num_contacts === 0) {
-	        continue;
-	    }
-
-	    for (j = 0; j < num_contacts; j++) {
-	        pt = manifold.getContactPoint(j);
-	        var b1 = manifold.getBody0();
-	        var b2 = manifold.getBody1();
-	        if(b1.a === bodies[objectId].a) {
-	        	let b2Id = getIdByBody(b2);
-	        	if(b2Id) {
-	        		let hp = pt.getPositionWorldOnB();
-	        		data.push({id: b2Id, hp: [hp.x(), hp.y(), hp.z()]});
-	        	}
-	        }
-	        if(b2.a === bodies[objectId].a) {
-	        	let b1Id = getIdByBody(b1);
-	        	if(b1Id) {
-	        		let hp = pt.getPositionWorldOnA();
-	        		data.push({id: b1Id, hp: [hp.x(), hp.y(), hp.z()]});
-	        	}
-	        }
-	    }
-	}
-	return data;
-}
-	        
 function initPhysics() {
 	// Bullet-interfacing code
 	var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
@@ -192,6 +150,12 @@ function createShape(shapeInfo) {
 		    var shape = new Ammo.btBoxShape(temp_vec3_1);
 		    shape.setMargin(shapeInfo.margin || 0.0001);
 		    break;
+		case "capsule":
+			if(! 'height' in shapeInfo) throw("Must specify height and radius in shape info");
+			 // I am scaling down the height parameter as a hack. This doesnt seem to align with box?
+		    var shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height*0.85);
+		    shape.setMargin(shapeInfo.margin || 0.0001);
+		    break;
 		default:
 			throw("Invalid shape type: " + shapeInfo.type);
 	};
@@ -244,7 +208,6 @@ function init(gameState) {
 	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
 	world = initPhysics();
-	setInterval(stepWorld, frameTime);
 }
 
 function readPhysicsState(state, id) {
@@ -261,11 +224,9 @@ function readPhysicsState(state, id) {
 }
 
 function applyMotionPhysics(state, id, eventHandler, gameState) {
-	temp_vec3_1.setValue(gameState.motion[id].fx * movementSpeed, 0, gameState.motion[id].fz * movementSpeed);
+	temp_vec3_1.setValue(gameState.motion[id].fx, 0, gameState.motion[id].fz);
 	bodies[id].applyImpulse(temp_vec3_1);
 }
-const movementSpeed = 15.0;
-const bodies = {};
 
 function resetWorld() {
 	for(var bodyId in bodies) {
@@ -293,15 +254,12 @@ function applyPhysics(state, id, eventHandler, gameState) {
 		applyMotionPhysics(state, id, eventHandler, gameState);
 	}
 	state = readPhysicsState(state, id);
-	
-	let collisions = getCollisionData(id);
-	for(var i = 0; i < collisions.length; i++) {
-		eventHandler.emitEvent("collision", id, {
-			...collisions[i]
-		});
-	}
 
 	return state;
+}
+
+function applyCollision(state, id, eventHandler, gameState) {
+	return { ...state, colliding: id in globalCollisionMap? globalCollisionMap[id] : [] };
 }
 
 function stepWorld() {
@@ -314,8 +272,8 @@ function stepWorld() {
 			delete bodies[objectId];
 		}
 	}
-	var cmap = readCollisionData();
+	readCollisionData();
 }
 
 
-export { init, applyPhysics, resetWorld }
+export { init, applyPhysics, resetWorld, applyCollision, stepWorld }

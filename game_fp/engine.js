@@ -155,22 +155,28 @@ function loadState(initialState) {
 	return gameState;
 }
 
+var nextStateFn = null;
 function init(initialState, middleware) {
-	var nextStateFn = nextState;
+	nextStateFn = nextState;
 	for(var i = 0; i < middleware.length; i++) {
 		nextStateFn = middleware[i](nextStateFn);
 	}
 	window.gameState = loadState(initialState);
-	function tick() {
-		//window.gameState = ENGINE.nextState(window.gameState);
-		window.gameState = nextStateFn(window.gameState);
-		//renderFunction();
-		//requestAnimationFrame(tick);
-	}
 	//requestAnimationFrame(tick);
-	const frameTime = 1000/60;
-	setInterval(tick, frameTime);
+	//const frameTime = 1000/60;
+	//setInterval(tick, frameTime);
 	return gameState;
 }
 
-export { init, nextState, loadState, deepFreeze, addSystem, createEntity, queueCommand, deleteEntity, removeBehaviour }
+function tick() {
+	//window.gameState = ENGINE.nextState(window.gameState);
+	window.gameState = nextStateFn(window.gameState);
+	//renderFunction();
+	//requestAnimationFrame(tick);
+}
+
+export { 
+	init, nextState, loadState, deepFreeze, 
+	addSystem, createEntity, queueCommand, 
+	deleteEntity, removeBehaviour, tick 
+}
