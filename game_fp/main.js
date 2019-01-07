@@ -40,7 +40,13 @@ function getProjectileCollidingSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats
 	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
 }
 
-const defaultStats = { health: 99999, maxHealth: 99999 };
+const defaultStats = { 
+	health: 99999, 
+	maxHealth: 99999,
+	effect: {
+		fire: 50
+	}
+};
 function getFireSpell(x, y, z, facingX, facingZ) {
 	const stats = defaultStats;
 	const fireballForce = 0.15;
@@ -282,24 +288,37 @@ function applyCollision(state, id, eventHandler, gameState) {
 	return PHYSICS.applyCollision(state, id, eventHandler, gameState);
 }
 
+function applyStatsEffect(stats1, stats2) {
+	if('effect' in stats2 && 'health' in stats1) {
+		let totalDamage = 0;
+		for(let effectType in stats2.effect) {
+			totalDamage += Math.max(stats2.effect[effectType] - (stats1[effectType] || 0), 0);
+		}
+		console.log('Inflicted', totalDamage, 'hp damage');
+		return {
+			...stats1, health: stats1.health - totalDamage
+		};
+	}
+	return stats1;
+}
+
 function applyStats(state, id, eventHandler, gameState) { 
 	if('hitCooldown' in state && state.hitCooldown > 0) {
 		return {...state, hitCooldown: state.hitCooldown - 1};
 	}
 
 	if(id in gameState.collision) { 
-		for(var index in gameState.collision[id].colliding) {  // TODO collide multiple objects
+		let newState = {
+			...state, hitCooldown: 100
+		};
+		for(var index in gameState.collision[id].colliding) {
 			if(gameState.collision[id].colliding[index].id in gameState.stats) {
-				console.log("Ouch!");
-				return {
-					...state,
-					health: state.health - 10,
-					hitCooldown: 100
-				}
+				const otherStats = gameState.stats[gameState.collision[id].colliding[index].id];
+				newState = applyStatsEffect(newState, otherStats);
 			}
 		}
+		return newState;
 	}
-
 	return state; 
 }
 
