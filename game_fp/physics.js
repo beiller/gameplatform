@@ -152,8 +152,9 @@ function createShape(shapeInfo) {
 		    break;
 		case "capsule":
 			if(! 'height' in shapeInfo) throw("Must specify height and radius in shape info");
-			 // I am scaling down the height parameter as a hack. This doesnt seem to align with box?
-		    var shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height*0.85);
+			// I am scaling down the height parameter as a hack. This doesnt seem to align with box?
+		    //var shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height*0.825);
+		    var shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height);
 		    shape.setMargin(shapeInfo.margin || 0.0001);
 		    break;
 		default:
@@ -236,17 +237,62 @@ function resetWorld() {
 }
 
 function applyPhysics(state, id, eventHandler, gameState) {
-	if(!world) return;
+	if(!world) return state;
 
 	if(!(id in bodies) || !bodies[id]) {
-		//create bodies
-		var shape = createShape({ ...state.shape });
-		bodies[id] = createBody(shape, state);
-		addBody(world.m_dynamicsWorld, bodies[id]);
-		//"rest" the object necessary?
-		if('lockRotation' in state && state.lockRotation === true) {
-			temp_vec3_1.setValue(0, 1, 0);
-			bodies[id].setAngularFactor(temp_vec3_1);
+		var shapeInfo = { ...state.shape };
+		if(id in gameState.render && gameState.render[id].type === 'animatedMesh') { // 
+			if(!('loading' in gameState.render[id]) || gameState.render[id].loading === true) {
+				return state;
+			}
+			if(shapeInfo.type == 'box' && gameState.render[id].boundsY) {
+				shapeInfo = {
+					...shapeInfo,
+					x: gameState.render[id].boundsX, 
+					y: gameState.render[id].boundsY, 
+					z: gameState.render[id].boundsZ, 
+				}
+			} 
+			if(shapeInfo.type == 'capsule' && gameState.render[id].boundsY) {
+				var r = (gameState.render[id].boundsX + gameState.render[id].boundsZ) / 2.0
+				shapeInfo = {
+					...shapeInfo,
+					height: (2*gameState.render[id].boundsY) - (2*r), 
+					radius: r
+				}
+			} 
+			if(shapeInfo.type == 'sphere' && gameState.render[id].boundsY) {
+				var r = Math.max(
+					gameState.render[id].boundsX, gameState.render[id].boundsY, gameState.render[id].boundsZ
+				);
+				shapeInfo = {
+					...shapeInfo,
+					radius: r
+				}
+			} 
+			//create bodies
+			var shape = createShape(shapeInfo);
+			bodies[id] = createBody(shape, state);
+			addBody(world.m_dynamicsWorld, bodies[id]);
+			//"rest" the object necessary?
+			if('lockRotation' in state && state.lockRotation === true) {
+				temp_vec3_1.setValue(0, 1, 0);
+				bodies[id].setAngularFactor(temp_vec3_1);
+			}
+			return {
+				...state, shape: shapeInfo
+			};
+		} else {
+			//create bodies
+			var shape = createShape(shapeInfo);
+			bodies[id] = createBody(shape, state);
+			addBody(world.m_dynamicsWorld, bodies[id]);
+			//"rest" the object necessary?
+			if('lockRotation' in state && state.lockRotation === true) {
+				temp_vec3_1.setValue(0, 1, 0);
+				bodies[id].setAngularFactor(temp_vec3_1);
+			}
+			return state;
 		}
 	}
 
@@ -264,10 +310,11 @@ function applyCollision(state, id, eventHandler, gameState) {
 
 function stepWorld() {
 	step(world.m_dynamicsWorld, world.dispatcher, frameTime);
-	//clean up
+	/*
+		Clean up aka garbage collect unused game objects from physics simulation
+	*/
 	for(var objectId in bodies) {
 		if(!(objectId in window.gameState.state.physics)) {
-			console.log("Deleting rigidbody", objectId);
 			world.m_dynamicsWorld.removeRigidBody(bodies[objectId]);
 			delete bodies[objectId];
 		}

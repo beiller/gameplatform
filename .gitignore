@@ -1,5 +1,5 @@
 /ignore
-level2
-level3
-level*
+/level2
+/level3
+/level*
 .DS_Store

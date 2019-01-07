@@ -2,55 +2,73 @@ import * as RENDERER from './renderer.js';
 import * as ENGINE from './engine.js';
 import * as INPUT from './input.js';
 import * as PHYSICS from './physics.js';
+import * as LEVEL from './level.js';
 import * as InspectorMiddleware from './InspectorMiddleware.js';
 
 //welcome!
 
-function applyInput(state, id, eventHandler, gameState) {
-	// TODO warning this is called for every entity that has applyInput
-	var newState = {...state, ...INPUT.getControllerState(state.controllerId)};	
-	if(newState.buttons[4] === true && state.buttons[4] === false) {
-		if(id in gameState.physics && id in gameState.motion) {
-			console.log("Queing command from entity: ", id);
+function getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats) {
+	return {
+		"entity": {x: xPos, y: yPos, z: zPos},
+		"render": { 
+			type: "sphere", radius: radius
+		},
+		"motion": {fx: fx, fy: fy, fz: fz},
+		"physics": {x: xPos, y: yPos, z: zPos, 
+			shape: {type: "sphere", radius: radius },
+			mass: mass, damping: damping, noContact: noContact
+		},
+		"stats": stats ? stats : defaultStats,
+		"particle": {maxAge: maxAge, damping: fDamping }
+	};
+}
+function getProjectileSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
+	const fDamping = 0.9;
+	const mass = 0.02;
+	const noContact = true;
+	const maxAge = 50;
+	const damping = 0.9;
+	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
+}
+
+const defaultStats = { health: 99999, maxHealth: 99999 };
+function getFireSpell(x, y, z, facingX, facingZ) {
+	const stats = defaultStats;
+	const fireballForce = 0.25;
+	const nVec = normalize2D({x: facingX, y: facingZ});
+	const fx = nVec.x * fireballForce;
+	const fz = nVec.y * fireballForce;
+	const fy = 100.0;
+	const rAmt = 0.3333 * fireballForce; //random direction scale
+	const r1 = (Math.random() * rAmt) - (rAmt*0.5);
+	const r2 = (Math.random() * rAmt) - (rAmt*0.5);
+	const radius = 1.5;
+	return getProjectileSpell(radius, x, y, z, fx+r1, fy, fz+r2, stats);
+}
+function applyMagic(state, id, eventHandler, gameState) {
+	if(!state) {
+		return {
+			spells: ["fireball", "iceball"],
+			cooldowns: [500, 500]
+		}
+	}
+	if(id in gameState.input) {
+		if(gameState.input[id].buttons[4]) {
 			let physicsState = gameState.physics[id];
-			let motionState = gameState.motion[id]
+			let motionState = gameState.motion[id];
+			//todo calculate proper xyz emission position
 			ENGINE.queueCommand(function(gameState) {
-				var xPos = physicsState.x;
-				var yPos = physicsState.y;
-				var zPos = physicsState.z - 1.0;
-				var fx = motionState.fx * 0.001;
-				var fz = motionState.fz * 0.001;
-				var state = {
-					"entity": {x: xPos, y: yPos, z: zPos},
-					"render": { 
-						type: "sphere", radius: 0.2
-					},
-					"motion": {fx: 0, fy: 100.5, fz: -0.5},
-					"physics": {x: xPos, y: yPos, z: zPos, 
-						shape: {type: "sphere", radius: 0.2 },
-						mass: 0.02, damping: 0.9
-					},
-					"stats": {health: 99999, maxHealth: 99999},
-					"particle": {maxAge: 500, damping: 0.5 }
-				}
-				var id = 'baddy'+(Math.random() * 100);
-				ENGINE.createEntity(gameState, id, state);
+				const fstate = getFireSpell(
+					physicsState.x, physicsState.y, physicsState.z, motionState.facingX, motionState.facingZ
+				);
+				const id = 'baddy'+(Math.random() * 100);
+				ENGINE.createEntity(gameState, id, fstate);
 			});
 		}
 	}
-	try {
-		for(var i = 0; i < newState.buttons.length; i++) {
-			if(newState.buttons[i] !== state.buttons[i]) {
-				return newState;
-			}
-		}
-		if(newState.x !== state.x || newState.y !== state.y) {
-			return newState;
-		}
-	} catch(e) {
-		return {...state, ...newState};
-	}
-	return state;
+}
+function applyInput(state, id, eventHandler, gameState) {
+	return {...state, ...INPUT.getControllerState(state.controllerId)};	
 }
 
 function changeDirections(state, fieldName) {
@@ -81,7 +99,6 @@ function applyAI(state, id, eventHandler) {
 
 const movementSpeed = 15.0;
 function applyMotion(state, id, eventHandler, gameState) {
-	//TODO this will listen for events and only change data "onChange"
 	var dep = null; // will contain an object that contains x, y, and z field
 	var damping = 1.0; // 1.0 - no damping. 0.0 - full damping
 	if('particle' in gameState && id in gameState.particle) {
@@ -102,10 +119,14 @@ function applyMotion(state, id, eventHandler, gameState) {
 	if(dep) {
 		var normalized = normalize2D(dep);
 		if(state.fx !== normalized.x || state.fz !== normalized.y) {
+
 			return {
 				...state,
-				fx: (normalized.x * movementSpeed) * damping, 
-				fz: (-normalized.y * movementSpeed) * damping
+				fx: (normalized.x * movementSpeed), 
+				fz: (-normalized.y * movementSpeed),
+				facingX: state.fx || 0,
+				facingY: state.fy || 0,
+				facingZ: state.fz || 1
 			}
 		}
 	}
@@ -122,6 +143,13 @@ function normalize2D(point) {
 		return {x: point.x / norm, y: point.y / norm};
 	}
 	return {x: 0, y: 0};
+}
+function normalize3D(point) {
+	var norm = Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
+	if (norm != 0) { // as3 return 0,0 for a point of zero length
+		return {x: point.x / norm, y: point.y / norm, z: point.z / norm};
+	}
+	return {x: 0, y: 0, z: 0};
 }
 
 function applyEntity(state, id, eventHandler, gameState) {
@@ -239,131 +267,39 @@ function applyStats(state, id, eventHandler, gameState) {
 	return state; 
 }
 
-function level1() {
-	var initialState = {
-		"systems": [	
-			{ name: "input", func: applyInput },
-			{ name: "ai", func: applyAI },
-			{ name: "particle", func: applyParticle },
-			{ name: "motion", func: applyMotion },
-			{ name: "physics", func: applyPhysics },
-			{ name: "collision", func: applyCollision },
-			{ name: "camera", func: applyCamera },
-			{ name: "entity", func: applyEntity },
-			{ name: "stats", func: applyStats },
-			{ name: "animation", func: applyAnimation },
-			{ name: "render", func: applyRender },
-		],
-		"events": {
-
-		},
-		"state": {
-			"camera1": {
-				"input": { "controllerId": "0" },  // needs input to toggle modes
-				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
-				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
-				"render": {type: "camera"},
-			},
-			"thisisafuckingroom?": {
-				"entity": {x: 0, y: 0, z: 0},
-				"render": {
-					type: "animatedMesh", filename: "/environments/room2.gltf"
-				}
-			},
-			"groundplane1": {
-				"entity": {x: 0, y: -10, z: 0},
-				"physics": {
-					mass: 0, x: 0, y: -10, z: 0, staticObject: true,
-					shape: {
-						type: "box", x: 250, y: 0.01, z: 250, margin: 0.000001 
-					}
-				}
-			},
-			"sphere1": {
-				"entity": {x: -5, y: -9, z: -5 },
-				"render": { type: "sphere", radius: 10},
-				"physics": {x: -5, y: -9, z: -5, 
-					shape: {type: "sphere", radius: 10 },
-					mass: 0, staticObject: true
-				}
-			},
-			"character1": {
-				"entity": {x: 0, y: 0, z: 0, offsetY: -0.85 },
-				"animation": { animationName: 'DE_Dance', playingAnimation: true },
-				"collision": { type: "ouchie" },
-				"render": { 
-					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.31
-				},
-				"input": { "controllerId": "0" },
-				"motion": {fx: 0, fy: 0, fz: 0},
-				"physics": {x: 0, y: 2.8, z: 0, 
-					//shape: {type: "box", x: 0.4, y: 0.85, z: 0.4, margin: 0.00001},
-					shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
-					mass: 45.35, damping: 0.9, lockRotation: true
-				},
-				"stats": {health: 100, maxHealth: 100}
-			}
-		}
-	};
-	var numTiles = 4;
-	for(var x = 0; x < numTiles; x++) {
-		for(var y = 0; y < numTiles; y++) {
-			initialState['state']["ground"+x+"-"+y] = {
-				"entity": {x: (x*10)-(numTiles*10/2), y: 0, z: (y*10)-(numTiles*10/2)},
-				"render": { 
-					type: "animatedMesh", filename: "grass_tile.glb"
-				},
-				"physics": {
-					x: (x*10)-(numTiles*10/2), y: 0, z: (y*10)-(numTiles*10/2),
-					mass: 0, staticObject: true,
-					shape: {
-						type: "box", x: 5, y: 0.0001, z: 5, margin: 0.00001 
-					}
-				}
-			}	
-		}
-	}
-	var numCharacters = 10;
-	for(var i = 0; i < numCharacters; i++) {
-		var xPos = (Math.random()-0.5)*2*20;
-		var zPos = (Math.random()-0.5)*2*20;
-		initialState['state']["character"+(i+999)] = {
-			"entity": {x: xPos, y: 0, z: zPos, offsetY: -0.85 },
-			"animation": { animationName: 'DE_Dance', playingAnimation: true },
-			"render": { 
-				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.31
-			},
-			"collision": { type: "ouchie" },
-			"ai": { x: 1.0, y: 0.0 },
-			"motion": {fx: 0, fy: 0, fz: 0},
-			"physics": {x: xPos, y: 0.8, z: zPos, 
-				shape: {type: "box", x: 0.4, y: 0.85, z: 0.4, margin: 0.00001},
-				mass: 45.35, damping: 0.9, lockRotation: true
-			},
-			"stats": {health: 100, maxHealth: 100}
-		}
-	}
-	return initialState;
-}
+const systems = [	
+	{ name: "input", func: applyInput },
+	{ name: "ai", func: applyAI },
+	{ name: "particle", func: applyParticle },
+	{ name: "motion", func: applyMotion },
+	{ name: "physics", func: applyPhysics },
+	{ name: "magic", func: applyMagic },
+	{ name: "collision", func: applyCollision },
+	{ name: "camera", func: applyCamera },
+	{ name: "entity", func: applyEntity },
+	{ name: "stats", func: applyStats },
+	{ name: "animation", func: applyAnimation },
+	{ name: "render", func: applyRender },
+];
 
 function resetWorld() {
-	var initialState = level1();
+	var initialState = LEVEL.level1(systems);
 	var gameState = ENGINE.loadState(initialState);
 	window.gameState = gameState;
 	PHYSICS.resetWorld();
 }
 
 function main() {
-	var initialState = level1();
+	var initialState = LEVEL.level1(systems);
 	var middleware = [
 		InspectorMiddleware.middleware
 	];
 	var gameState = ENGINE.init(initialState, middleware);
 	console.log(gameState);
 	window.gameState = gameState;
-	//var renderFunction = RENDERER.init(gameState);
+
 	RENDERER.init(gameState);
-	Ammo().then(function() {   // why the fuck do I have to do this?
+	Ammo().then(function() {  // must initialize ammo
 		PHYSICS.init(gameState);
 	});
 	//start game loop
