@@ -225,7 +225,7 @@ function readPhysicsState(state, id) {
 }
 
 function applyMotionPhysics(state, id, eventHandler, gameState) {
-	temp_vec3_1.setValue(gameState.motion[id].fx, 0, gameState.motion[id].fz);
+	temp_vec3_1.setValue(gameState.motion[id].fx, gameState.motion[id].fy, gameState.motion[id].fz);
 	bodies[id].applyImpulse(temp_vec3_1);
 }
 

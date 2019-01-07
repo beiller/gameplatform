@@ -23,28 +23,55 @@ function getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContac
 	};
 }
 function getProjectileSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
-	const fDamping = 0.9;
+	const fDamping = 0.8;
 	const mass = 0.02;
 	const noContact = true;
-	const maxAge = 50;
+	const maxAge = 150;
 	const damping = 0.9;
+	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
+}
+
+function getProjectileCollidingSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
+	const fDamping = 0.9;
+	const mass = 100.0;
+	const noContact = false;
+	const maxAge = 250;
+	const damping = 0.5;
 	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
 }
 
 const defaultStats = { health: 99999, maxHealth: 99999 };
 function getFireSpell(x, y, z, facingX, facingZ) {
 	const stats = defaultStats;
-	const fireballForce = 0.25;
+	const fireballForce = 0.15;
 	const nVec = normalize2D({x: facingX, y: facingZ});
 	const fx = nVec.x * fireballForce;
 	const fz = nVec.y * fireballForce;
-	const fy = 100.0;
+	const fy = 0.05;
 	const rAmt = 0.3333 * fireballForce; //random direction scale
 	const r1 = (Math.random() * rAmt) - (rAmt*0.5);
 	const r2 = (Math.random() * rAmt) - (rAmt*0.5);
 	const radius = 1.5;
 	return getProjectileSpell(radius, x, y, z, fx+r1, fy, fz+r2, stats);
 }
+function getMeteorSpell(x, y, z) {
+	const stats = defaultStats;
+	const fireballForce = 0.025;
+	const fx = 0.5 * fireballForce;
+	const fy = -1500.0;
+	const fz = 0.5 * fireballForce;
+	const rAmt = 0.3333 * fireballForce; //random direction scale
+	const r1 = (Math.random() * rAmt) - (rAmt*0.5);
+	const r2 = (Math.random() * rAmt) - (rAmt*0.5);
+	const meteorFieldRadius = 30.0 // nxn meters
+	const meteorRandomHeight = 1.0 // nxn meters
+	const r3 = (Math.random() * meteorFieldRadius) - (meteorFieldRadius*0.5);
+	const r4 = (Math.random() * meteorFieldRadius) - (meteorFieldRadius*0.5);
+	const r5 = Math.random() * meteorRandomHeight
+	const radius = 1.5;
+	return getProjectileCollidingSpell(radius, x+r3, y+20+r5, z+r4, fx+r1, fy, fz+r2, stats);
+}
+
 function applyMagic(state, id, eventHandler, gameState) {
 	if(!state) {
 		return {
@@ -53,16 +80,24 @@ function applyMagic(state, id, eventHandler, gameState) {
 		}
 	}
 	if(id in gameState.input) {
-		if(gameState.input[id].buttons[4]) {
-			let physicsState = gameState.physics[id];
-			let motionState = gameState.motion[id];
-			//todo calculate proper xyz emission position
+		let physicsState = gameState.physics[id];
+		let motionState = gameState.motion[id];
+		let inputState = gameState.input[id];
+		const temp_id = 'baddy'+(Math.random() * 100);
+		//todo calculate proper xyz emission position
+		if(inputState.buttons[4] || inputState.buttons[5]) {
+			let spellFunc = null;
+			if(inputState.buttons[4]) {
+				spellFunc = getFireSpell;
+			}
+			if(inputState.buttons[5]) {
+				spellFunc = getMeteorSpell;
+			}
 			ENGINE.queueCommand(function(gameState) {
-				const fstate = getFireSpell(
+				const fstate = spellFunc(
 					physicsState.x, physicsState.y, physicsState.z, motionState.facingX, motionState.facingZ
 				);
-				const id = 'baddy'+(Math.random() * 100);
-				ENGINE.createEntity(gameState, id, fstate);
+				ENGINE.createEntity(gameState, temp_id, fstate);
 			});
 		}
 	}
@@ -106,6 +141,7 @@ function applyMotion(state, id, eventHandler, gameState) {
 		return {
 			...state,
 			fx: state.fx * damping, 
+			fy: state.fy * damping, 
 			fz: state.fz * damping
 		}
 	}
