@@ -42,7 +42,7 @@ function mergeGeometry( geometry1, geometry2, materialOffset ) {
     		count: oldGroup.count,
     		materialIndex: oldGroup.materialIndex + materialOffset
     	};
-    	this.groups.push(newGroup);
+    	returnGeometry.groups.push(newGroup);
     }
 
     return returnGeometry;
@@ -82,3 +82,5 @@ function mergeGeometry( geometry1, geometry2, materialOffset ) {
     }
 
 };
+
+export { mergeGeometry }

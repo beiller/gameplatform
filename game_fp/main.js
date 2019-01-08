@@ -26,7 +26,7 @@ function getProjectileSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 	const fDamping = 0.8;
 	const mass = 0.02;
 	const noContact = true;
-	const maxAge = 150;
+	const maxAge = 30;
 	const damping = 0.9;
 	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
 }
@@ -35,7 +35,7 @@ function getProjectileCollidingSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats
 	const fDamping = 0.9;
 	const mass = 100.0;
 	const noContact = false;
-	const maxAge = 250;
+	const maxAge = 50;
 	const damping = 0.5;
 	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
 }
@@ -239,11 +239,20 @@ function pointCharacter(state, id, gameState) {
 	return state;
 }
 
+//state.specialAnimation
+const animations = {
+	special: 'DE_Dance',
+	run: 'DE_CombatRun',
+	idle: 'DE_Combatiddle'
+}
 function applyAnimation(state, id, eventHandler, gameState) {
+	if(!state.animations) {
+		return {...state, animations: animations};
+	}
 	if(id in gameState.input && gameState.input[id].buttons[0] === true && !state.playingAnimation) {
 		return {
 			...state, playingAnimation: true, 
-			animationName: 'DE_Dance'
+			animationName: state.animations.special
 		};
 	}
 
@@ -255,11 +264,11 @@ function applyAnimation(state, id, eventHandler, gameState) {
 	}
 	if(id in gameState.motion) {
 		var totalMotion = Math.abs(gameState.motion[id].fx) + Math.abs(gameState.motion[id].fz);
-		if(totalMotion > 0.0001 && state.animationName != 'DE_CombatRun') {
-			return {...state, animationName: 'DE_CombatRun'};
+		if(totalMotion > 0.0001 && state.animationName != state.animations.run) {
+			return {...state, animationName: state.animations.run};
 		}
-		if(totalMotion < 0.0001 && state.animationName != 'DE_Combatiddle') {
-			return {...state, animationName: 'DE_Combatiddle'};
+		if(totalMotion < 0.0001 && state.animationName != state.animations.idle) {
+			return {...state, animationName: state.animations.idle};
 		}
 	}
 	
@@ -308,13 +317,12 @@ function applyStats(state, id, eventHandler, gameState) {
 	}
 
 	if(id in gameState.collision) { 
-		let newState = {
-			...state, hitCooldown: 100
-		};
+		let newState = {...state};
 		for(var index in gameState.collision[id].colliding) {
 			if(gameState.collision[id].colliding[index].id in gameState.stats) {
 				const otherStats = gameState.stats[gameState.collision[id].colliding[index].id];
 				newState = applyStatsEffect(newState, otherStats);
+				newState['hitCooldown'] = 100;
 			}
 		}
 		return newState;

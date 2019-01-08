@@ -6,7 +6,7 @@ var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
 var GLOBAL_RENDERER = null;
 var GLOBAL_ORBIT_CONTROLS = null;
-var DEBUG_PHYSICS = true;
+var DEBUG_PHYSICS = false;
 
 var loadedObjects = {};
 var physicsDebugObjects = {};
@@ -27,9 +27,17 @@ function updateCubeMaps() {
     		}
     	}
     	if('material' in ob) {
-    		ob.material["envMap"] = envMap;
-    		ob.material["envMapIntensity"] = 10000.0;
-    		ob.material["needsUpdate"] = true;
+    		if('length' in ob.material) {
+    			for(let k = 0; k < ob.material.length; k++) {
+	    			ob.material[k]["envMap"] = envMap;
+		    		ob.material[k]["envMapIntensity"] = 10000.0;
+		    		ob.material[k]["needsUpdate"] = true;	
+    			}
+    		} else {
+	    		ob.material["envMap"] = envMap;
+	    		ob.material["envMapIntensity"] = 10000.0;
+	    		ob.material["needsUpdate"] = true;
+    		}
     	}
     }
     for(var k in loadedObjects) {
@@ -114,19 +122,19 @@ function dataCallback(gltf, state, id) {
 		gltf.scene.children[i].animations = gltf.animations;
 	}
 	loadedObjects[id] = gltf.scene;
+	updateCubeMaps();
 }
+
 function loadGLTF(state, id) {
 	function loaderCallback( gltf ) {
 		dataCallback(gltf, state, id);
 	}
-	Loader.loadGLTF(state.filename, loaderCallback);
-}
-
-function loadJSON(state, id) {
-	function loaderCallback( gltf ) {
-		dataCallback(gltf, state, id);
+	let extension = state.filename.split('.').pop().toLowerCase();
+	if(extension === 'json') {
+		Loader.loadThreeJS(state.filename, loaderCallback);
+	} else {
+		Loader.loadGLTF(state.filename, loaderCallback);
 	}
-	Loader.loadGLTF(state.filename, loaderCallback);
 }
 
 const toneMappingOptions = {

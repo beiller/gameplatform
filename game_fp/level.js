@@ -43,11 +43,17 @@ function level1(systems) {
 			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0 },
-				"animation": { animationName: 'DE_Dance', playingAnimation: true },
+				"animation": { animationName: 'XP32_Dance', playingAnimation: true, 
+					animations: {
+						special: 'XP32_Dance',
+						run: 'XP32_CombatRun',
+						idle: 'XP32_Combatiddle'
+					}
+				 },
 				"collision": { type: "ouchie" },
 				"magic": null,
 				"render": { 
-					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.285
+					type: "animatedMesh", filename: "/uunp_test/body_ultra.json"
 				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
