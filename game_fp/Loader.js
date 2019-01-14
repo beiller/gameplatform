@@ -273,6 +273,14 @@ function jsonPromise(url) {
     });
 }
 
+function loadTexture(url) {
+	return new Promise(function (resolve, reject) {
+		texloader.load(url + '?cache=' + new Date().getTime(), function(tex) {
+        	resolve(tex);
+        });
+    });
+}
+
 function texturePromise(meshIndex, materialIndex, slot, url) {
 	return new Promise(function (resolve, reject) {
         texloader.load(url + '?cache=' + new Date().getTime(), function(tex) {
@@ -337,7 +345,10 @@ function finalize(meshList, callback) {
 		
 	}
 	singleGeometry.bones = meshList[0].geometry.bones;
-	scene.add(new THREE.SkinnedMesh(singleGeometry, materials));
+	const mesh = new THREE.SkinnedMesh(singleGeometry, materials);
+	mesh.castShadow = true;
+	mesh.receiveShadow = true;
+	scene.add(mesh);
 	callback({scene: scene, animations: meshList[0].geometry.animations});
 }
 
@@ -352,7 +363,8 @@ function loadThreeJS(url, callback, numTimesCalled) {
 				meshList[meshId].materials[materialId] = new THREE.MeshStandardMaterial({
 					...metaData[meshId].material[materialId],
 					skinning: true,
-					envMap: 'test'
+					envMap: 'test',
+					shadowSide: THREE.BackSide, side: THREE.DoubleSide
 				});
 			}
 		}
@@ -370,4 +382,5 @@ function loadThreeJS(url, callback, numTimesCalled) {
 	});
 };
 
-export { loadGLTF, loadThreeJS }
+export { loadGLTF, loadThreeJS, loadTexture }
+

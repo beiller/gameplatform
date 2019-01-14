@@ -137,26 +137,99 @@ function createBody(shape, state) {
 	return body;
 }
 
+function createTerrainShape(terrainDepth, terrainWidth, heightData, terrainMinHeight, terrainMaxHeight) {
+		var minmax = [
+			Math.min(...heightData),
+			Math.min(...numbers),
+			Math.min(...numbers),
+			Math.max(...numbers),
+			Math.max(...numbers),
+			Math.max(...numbers)
+		];
+        // This parameter is not really used, since we are using PHY_FLOAT height data type and hence it is ignored
+        var heightScale = 1;
+        // Up axis = 0 for X, 1 for Y, 2 for Z. Normally 1 = Y is used.
+        var upAxis = 1;
+        // hdt, height data type. "PHY_FLOAT" is used. Possible values are "PHY_FLOAT", "PHY_UCHAR", "PHY_SHORT"
+        var hdt = "PHY_FLOAT";
+        // Set this to your needs (inverts the triangles)
+        var flipQuadEdges = false;
+        // Creates height data buffer in Ammo heap
+        var ammoHeightData = Ammo._malloc(4 * terrainWidth * terrainDepth);
+        // Copy the javascript height data array to the Ammo one.
+        var p = 0;
+        var p2 = 0;
+        for ( var j = 0; j < terrainDepth; j++ ) {
+                for ( var i = 0; i < terrainWidth; i++ ) {
+                        
+                        // write 32-bit float data to memory
+                        Ammo.HEAPF32[ ammoHeightData + p2 >> 2 ] = heightData[ p ];
+                        
+                        p++;
+                        
+                        // 4 bytes/float
+                        p2 += 4;
+                }
+        }
+        
+        // Creates the heightfield physics shape
+        var heightFieldShape = new Ammo.btHeightfieldTerrainShape(
+                terrainWidth,
+                terrainDepth,
+                ammoHeightData,
+                heightScale,
+                terrainMinHeight,
+                terrainMaxHeight,
+                upAxis,
+                hdt,
+                flipQuadEdges
+        );
+        
+        // Set horizontal scale
+        var scaleX = terrainWidthExtents / ( terrainWidth - 1 );
+        var scaleZ = terrainDepthExtents / ( terrainDepth - 1 );
+        heightFieldShape.setLocalScaling( new Ammo.btVector3( scaleX, 1, scaleZ ) );
+        
+        heightFieldShape.setMargin( 0.05 );
+        
+        return heightFieldShape;
+        
+}
+
 function createShape(shapeInfo) {
 	var shape = null;
 	switch(shapeInfo.type) {
 		case "sphere":
 			if(! 'radius' in shapeInfo) throw("Must specify radius in shape info");
-			var shape = new Ammo.btSphereShape(shapeInfo.radius);
+			shape = new Ammo.btSphereShape(shapeInfo.radius);
 			break;
 		case "box":
 			if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
 			temp_vec3_1.setValue(shapeInfo.x, shapeInfo.y, shapeInfo.z);
-		    var shape = new Ammo.btBoxShape(temp_vec3_1);
+		    shape = new Ammo.btBoxShape(temp_vec3_1);
 		    shape.setMargin(shapeInfo.margin || 0.0001);
 		    break;
 		case "capsule":
 			if(! 'height' in shapeInfo) throw("Must specify height and radius in shape info");
 			// I am scaling down the height parameter as a hack. This doesnt seem to align with box?
 		    //var shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height*0.825);
-		    var shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height);
+		    shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height);
 		    shape.setMargin(shapeInfo.margin || 0.0001);
 		    break;
+		case "heightField":
+			if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
+			temp_vec3_1.setValue(shapeInfo.x, shapeInfo.y, shapeInfo.z);
+		    shape = new Ammo.btBoxShape(temp_vec3_1);
+		    shape.setMargin(shapeInfo.margin || 0.0001);
+		    break;
+
+
+			const minHeight = -1.0;
+			const maxHeight = 1.0;
+			shape = createTerrainShape(
+				shapeInfo.z, shapeInfo.x, shapeInfo.heightData, minHeight, maxHeight
+			)
+			break;
 		default:
 			throw("Invalid shape type: " + shapeInfo.type);
 	};
@@ -241,7 +314,8 @@ function applyPhysics(state, id, eventHandler, gameState) {
 
 	if(!(id in bodies) || !bodies[id]) {
 		var shapeInfo = { ...state.shape };
-		if(id in gameState.render && gameState.render[id].type === 'animatedMesh') { // 
+		const getShapeFromLoadedGeometry = gameState.render[id].type === 'animatedMesh' || gameState.render[id].type === 'heightField'
+		if(id in gameState.render && getShapeFromLoadedGeometry) { // 
 			if(!('loading' in gameState.render[id]) || gameState.render[id].loading === true) {
 				return state;
 			}
@@ -259,6 +333,13 @@ function applyPhysics(state, id, eventHandler, gameState) {
 					...shapeInfo,
 					height: (2*gameState.render[id].boundsY) - (2*r), 
 					radius: r
+				}
+			} 
+			if(shapeInfo.type == 'heightField' && gameState.render[id].heightData) {
+				//var r = (gameState.render[id].boundsX + gameState.render[id].boundsZ) / 2.0
+				shapeInfo = {
+					...shapeInfo,
+					heightData: gameState.render[id].heightData,
 				}
 			} 
 			if(shapeInfo.type == 'sphere' && gameState.render[id].boundsY) {

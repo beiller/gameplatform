@@ -1,6 +1,8 @@
 import * as THREE from './lib/three.module.js';
+import * as TREE from './lib/tree.js';
 import * as Effects from './Effects.js';
 import * as Loader from './Loader.js';
+import * as MESH_UTILS from './mesh_utils.js';
 
 var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
@@ -94,7 +96,98 @@ function loadEXRMap() {
 const loaders = {
 	"camera": loadCamera,
 	"animatedMesh": loadGLTF,
-	"sphere": createSphere
+	"sphere": createSphere,
+	"box": createBox,
+	"heightField": createWorld,
+	"tree": createTree,
+	"grass": createGrass,
+	"rock": createRock
+}
+
+function meshPostProcess(threeObject) {
+	if(threeObject.geometry) {
+		threeObject.castShadow = true;
+		threeObject.receiveShadow = true;
+	}
+	if(threeObject.children.length > 0) {
+		for(let i = 0; i < threeObject.children.length; i++) {
+			meshPostProcess(threeObject.children[i]);
+		}
+	}
+}
+
+function createWorld(state, id) {
+	const wSeg = 50;
+	const hSeg = 50;
+	const width = 50.0;
+	const height = 50.0;
+
+	const simp = new MESH_UTILS.SimplexNoise();
+	const scale = 50.0;
+	function vertexFunction(x, y, z) {
+		const sY = simp.noise3d((x/width)*scale, (y+1)*0.5, (z/height)*scale);
+		return [x, sY*.25, z];
+	}
+
+	const pmesh = new THREE.PlaneBufferGeometry( width, height, wSeg - 1, hSeg - 1 );
+    pmesh.rotateX( -Math.PI / 2 );
+    var vertices = pmesh.attributes.position.array;
+    for ( var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3 ) {
+            const res = vertexFunction(vertices[ j ], vertices[ j + 1 ], vertices[ j + 2 ]);
+            vertices[ j ] = res[0]
+            vertices[ j + 1 ] = res[1];
+            vertices[ j + 2 ] = res[2];
+    }
+	pmesh.computeVertexNormals();
+	
+	const mesh = new THREE.Mesh(
+		pmesh, 
+		new THREE.MeshStandardMaterial(
+			{
+				color: new THREE.Color(0x555555),
+				roughness: 0.65,
+				shadowSide: THREE.BackSide, side: THREE.DoubleSide
+			}
+		)
+	);
+	loadedObjects[id] = mesh;
+}
+
+function createRock(state, id) {
+	const iter = 1;
+	const radius = (Math.random() * 0.6) + 0.3;
+	const simp = new MESH_UTILS.SimplexNoise();
+	const scale = 150.0;
+	function vertexFunction(x, y, z) {
+		const sX = simp.noise3d(x, 0, 0) - 0.5;
+		const sY = simp.noise3d(x, y, z) - 0.5;
+		const sZ = simp.noise3d(0, 0, z) - 0.5;
+		const scale = 0.2;
+		return [scale*sX+x, scale*sY+y, scale*sZ+z];
+	}
+
+	const pmesh = new THREE.BufferGeometry().fromGeometry( new THREE.IcosahedronGeometry( radius, iter ) ) ;//hackz
+    var vertices = pmesh.attributes.position.array;
+    for ( var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3 ) {
+            const res = vertexFunction(vertices[ j ], vertices[ j + 1 ], vertices[ j + 2 ]);
+            vertices[ j ] = res[0]
+            vertices[ j + 1 ] = res[1];
+            vertices[ j + 2 ] = res[2];
+    }
+	pmesh.computeVertexNormals();
+	
+	const mesh = new THREE.Mesh(
+		pmesh, 
+		new THREE.MeshStandardMaterial(
+			{
+				color: new THREE.Color(0x888890),
+				roughness: 0.65,
+				shadowSide: THREE.BackSide, side: THREE.DoubleSide
+			}
+		)
+	);
+	loadedObjects[id] = mesh;
+	mesh.position.y += 0.5;
 }
 
 var cachedSphereGeometry = new THREE.SphereGeometry(1.0, 12, 12);
@@ -108,6 +201,103 @@ function createSphere(state, id) {
     	)
     );
     loadedObjects[id].scale.set(state.radius, state.radius, state.radius);
+}
+
+function createBox(state, id) {
+	loadedObjects[id] = new THREE.Mesh(
+    	new THREE.BoxGeometry( state.x, state.y, state.z ),
+    	new THREE.MeshStandardMaterial(
+    		{
+    			roughness: 0.5,
+    		}
+    	)
+    );
+}
+
+var cachedGrassGeom = null;
+//function createCachedGrassGeom() {
+const geometry = new THREE.Geometry();
+geometry.faceVertexUvs[0] = [];
+
+function addBlade(geometry, offsetX, offsetZ) {
+	const bladeWidth = 0.7;
+	const bladeHeight = 1.5;
+	const r1 = ((Math.random() -0.5)*2) * 0.25;
+	const r2 = ((Math.random() -0.5)*2) * 1.0;
+	const r3 = ((Math.random() -0.5)*2) * 0.25;
+	const r4 = ((Math.random() -0.5)*2) * 1.0;
+	const root = -2.0
+
+	geometry.vertices.push(new THREE.Vector3( offsetX+bladeWidth+r1,  root+bladeHeight,  offsetZ+r2));  //right top
+	geometry.vertices.push(new THREE.Vector3( offsetX,             root,    offsetZ));            //bottom center
+	geometry.vertices.push(new THREE.Vector3( offsetX-bladeWidth+r3,  root+bladeHeight,  offsetZ+r4));  //left top
+
+	geometry.faces.push(new THREE.Face3(
+		geometry.vertices.length-3, 
+		geometry.vertices.length-2, 
+		geometry.vertices.length-1,
+	));
+
+	geometry.faceVertexUvs[0].push([
+		new THREE.Vector2(1,1),
+		new THREE.Vector2(0,1),
+		new THREE.Vector2(0,0)
+	]);
+	geometry.uvsNeedUpdate = true;
+}
+const maxDist = 0.50;
+for(let i = 0; i < 1; i++) {
+	addBlade(geometry, ((Math.random() -0.5)*2)*maxDist, ((Math.random() -0.5)*2)*maxDist)
+}
+cachedGrassGeom = new THREE.BufferGeometry().fromGeometry( geometry );
+cachedGrassGeom.computeVertexNormals();
+
+//}
+function createGrass(state, id) {
+	loadedObjects[id] = new THREE.Mesh(
+    	cachedGrassGeom,
+    	new THREE.MeshStandardMaterial(
+    		{
+    			color: new THREE.Color(0x99CC99),
+    			roughness: 0.5,
+    			side: THREE.DoubleSide,
+    			transparent: true,
+    			alphaTest: 0.5
+    			//wireframe: true,
+    			//emissive: new THREE.Color(0xAAFFAA),
+    			//emissiveIntensity: 10000.0
+    		}
+    	)
+    );
+    loadedObjects[id].rotation.y = Math.random() * 3.1415;
+    Loader.loadTexture('/game_fp/flower1.png').then(function(tex) {
+    	loadedObjects[id].material.map = tex;
+    	loadedObjects[id].material.needsUpdate = true;
+    })
+}
+
+let tree = new TREE.Tree({
+    generations : 4,        // # for branch' hierarchy
+    length      : 5.0,      // length of root branch
+    uvLength    : 20.0,     // uv.v ratio against geometry length (recommended is generations * length)
+    radius      : 0.3,      // radius of root branch
+    radiusSegments : 5,     // # of radius segments for each branch geometry
+    heightSegments : 3      // # of height segments for each branch geometry
+});
+
+let treeGeometry = TREE.TreeGeometry.build(tree);
+function createTree(state, id) {
+	let mesh = new THREE.Mesh(
+	    treeGeometry, 
+	    new THREE.MeshStandardMaterial({roughness: 0.85, color: new THREE.Color(0x332525)}) // set any material
+	);	
+	mesh.position.y -= 3.25;
+	mesh.rotation.y = Math.random() * 3.1415;
+	loadedObjects[id] = mesh;
+    Loader.loadTexture('/game_fp/treebark1.jpeg').then(function(tex) {
+    	loadedObjects[id].material.map = tex;
+    	loadedObjects[id].material.needsUpdate = true;
+    })
 }
 
 function loadCamera(state, id) {
@@ -244,7 +434,7 @@ function createPointLight(pos, settings) {
 	mesh.receiveShadow = false;
 	bulbLight.add( mesh );
 	if(settings.enableShadows) {
-		setupShadows(bulbLight);
+		setupShadows(bulbLight, settings);
 	}
 	return bulbLight;
 }
@@ -263,7 +453,7 @@ function createSpotLight(pos, tar, settings) {
 	mesh.receiveShadow = false;
 	bulbLight.add( mesh );
 	if(settings.enableShadows) {
-		setupShadows(bulbLight);
+		setupShadows(bulbLight, settings);
 	}
 	bulbLight.angle = 150.0;
 	return bulbLight;
@@ -273,7 +463,7 @@ function createDirectionLight(pos, settings) {
 	light.position.set( pos[0], pos[1], pos[2] );
 
 	if(settings.enableShadows) {
-		setupShadows(light);
+		setupShadows(light, settings);
 	}
 	/*light.castShadow = true;
 	light.shadow.mapSize.width = 4096;
@@ -294,26 +484,26 @@ function createDirectionLight(pos, settings) {
 
 	return light;
 }
-function setupShadows(light) {
+function setupShadows(light, settings) {
 	
 	light.castShadow = true;
-	light.shadow.mapSize = new THREE.Vector2( scope.settings.shadowResolution, scope.settings.shadowResolution );
+	light.shadow.mapSize = new THREE.Vector2( settings.shadowResolution, settings.shadowResolution );
 	
 	light.shadow.camera.fov = 1.0;
 	light.shadow.camera.near = 0.1;
-	light.shadow.camera.far = 6;
-	light.shadow.bias = 0.00075;
-	light.shadow.radius = 1;
+	light.shadow.camera.far = 50.0;
+	//light.shadow.bias = 0.00075;
+	//light.shadow.radius = 1;
 }
-function createLight(pos, tar) {
+function createLight(pos, tar, settings) {
 	
 	//var bulbLight = createRectLight(pos);
-	//var bulbLight = createPointLight(pos);
-	var bulbLight = createDirectionLight(pos, tar);
+	var bulbLight = createSpotLight(pos, tar, settings);
+	//var bulbLight = createDirectionLight(pos, tar);
 	
 	//bulbLight.intensity = bulbLuminousPowers["75 lm (15W)"];
-	bulbLight.intensity = 50000;
-	bulbLight.distance = 100;
+	bulbLight.intensity = 5000000;
+	bulbLight.distance = 10000;
 	return bulbLight;
 }
 function initRendering(scene, settings, camera) {
@@ -341,7 +531,7 @@ function initRendering(scene, settings, camera) {
     var container = document.createElement( 'div' );
     document.body.appendChild( container );
 
-    setupLighting();
+    setupLighting(settings);
 
     // this.jsonloader = new THREE.JSONLoader();
     // this.loader = new Loader();
@@ -416,10 +606,10 @@ function initRendering(scene, settings, camera) {
     };
 };
 
-function setupLighting() {
+function setupLighting(settings) {
 	//this.spot1 = createLight([0.5, 0, -4], [0, -2.5, 0]);
 	//this.spot2 = createLight([0.5, 0, 2], [0, -2.5, 0]);
-	return createLight([2, 1, 4], [0,0,0]);
+	return createLight([2, 5, 30], [0,0,0], settings);
 }
 
 function createRenderFunction(sceneData, scene, camera, useSSAO) {
@@ -585,7 +775,7 @@ function createPhysicsDebugMesh(state) {
 	    m2.rotation.x = Math.PI;
 	    return new THREE.Object3D().add(m1).add(m2).add(m3).add(createDebugAxis());
 	}
-	return null;
+	return new THREE.Object3D().add(createDebugAxis());
 }
 
 var previousEntity = {};
@@ -635,6 +825,7 @@ function renderObject(state, id, eventHandler, gameState) {
 	}
 	if((id in loadedObjects) && state.loading) {
 		updateCubeMaps();
+		meshPostProcess(loadedObjects[id])
 		GLOBAL_SCENE.add(loadedObjects[id]);
 		if(!loadedObjects[id].geometry && !loadedObjects[id].children.length>0) {
 			return {...state, loading: false};
@@ -696,7 +887,7 @@ function renderObject(state, id, eventHandler, gameState) {
 		}
 		state = animateObject(state, id, gameState);
 	}
-	if(id in gameState.stats) {
+	if(id in gameState.stats && gameState.stats[id].health) {
 		if(!(id in healthBarSprites)) {
 			let sprite = createHealthBar();
 			healthBarSprites[id] = sprite;
@@ -728,10 +919,14 @@ function init(initialState) {
 	GLOBAL_CAMERA = camera;
 	GLOBAL_SCENE = scene;
 
-	var settings = {};
+	var settings = {
+		enableShadows: true,
+		shadowResolution: 1024,
+		enableAA: false
+	};
 	var sceneData = initRendering(scene, settings, camera);
 	sceneData.gameState = initialState;
-	var light = setupLighting();
+	var light = setupLighting(settings);
 	scene.add(light);
 	var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 2.0 );
 	var bulbMat = new THREE.MeshStandardMaterial( {
