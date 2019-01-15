@@ -3,11 +3,11 @@ import * as ENGINE from './engine.js';
 var element = null;
 var doUpdateFunc = createUIDiv;
 function createUIDiv(state){
+	doUpdateFunc = updateUIDiv;
     var container = document.createElement( 'div' );
     container.innerHTML = "TEST";
     element = container;
     document.body.appendChild( container );
-    doUpdateFunc = updateUIDiv;
 }
 
 const htmlCache = {};
@@ -50,6 +50,7 @@ function createMenu(drawMap, key) {
 
 var runFunc = runOnce;
 function runOnce(state) {
+	runFunc = function(state) {};
 	if(element.textContent == 'TEST') {
 
 		$(element).empty();
@@ -67,7 +68,6 @@ function runOnce(state) {
 		        "minimizeLocation" : "right"
     		});
 	}	
-	runFunc = function(state) {};
 }
 function updateUIDiv(state){
 	runFunc(state);

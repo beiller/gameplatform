@@ -39,11 +39,10 @@ function step(m_dynamicsWorld, dispatcher, dt) {
 function buildBodyIdMap() {
 	// clean bodyIdMap object
 	for(let oid in bodies) {
-		let bodyId = bodies[oid].a;
 		if(!(oid in window.gameState.state.physics)) {
-			delete bodyIdMap[bodyId];
+			delete bodyIdMap[bodies[oid].a];
 		} else {
-			bodyIdMap[bodyId] = oid;
+			bodyIdMap[bodies[oid].a] = oid;
 		}
 	}
 }
@@ -282,6 +281,8 @@ function init(gameState) {
 	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
 	world = initPhysics();
+	console.log('Iterations', world.m_dynamicsWorld.getSolverInfo().m_numIterations);
+	world.m_dynamicsWorld.getSolverInfo().m_numIterations = 1;
 }
 
 function readPhysicsState(state, id) {
@@ -311,6 +312,18 @@ function resetWorld() {
 
 function applyPhysics(state, id, eventHandler, gameState) {
 	if(!world) return state;
+
+	var character = gameState.physics['character1']; //hack
+	temp_vec3_1.setValue(character.x - state.x, character.y - state.y, character.z - state.z);
+	const len = Math.abs(temp_vec3_1.length());
+	if(id !== 'character1' && len > 10.0) {
+		//console.log("Far away");
+		if(!state.neverSleep && id in bodies) {
+			world.m_dynamicsWorld.removeRigidBody(bodies[id]);
+			delete bodies[id];
+		}
+		return state;
+	}
 
 	if(!(id in bodies) || !bodies[id]) {
 		var shapeInfo = { ...state.shape };

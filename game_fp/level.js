@@ -22,7 +22,7 @@ function level1(systems) {
 				"entity": {x: 0, y: 0.5, z: 0},
 				"render": { type: "heightField" },
 				"physics": {
-					mass: 0, x: 0, y: 0.5, z: 0, staticObject: true,
+					mass: 0, x: 0, y: 0.5, z: 0, staticObject: true, neverSleep: true,
 					shape: {
 						type: "heightField", x: 250, y: 0.01, z: 250, margin: 0.000001 
 					}
@@ -83,7 +83,7 @@ function level1(systems) {
 			}	
 		}
 	}
-	var numCharacters = 5;
+	var numCharacters = 3;
 	for(var i = 0; i < numCharacters; i++) {
 		var xPos = (Math.random()-0.5)*2*20;
 		var zPos = (Math.random()-0.5)*2*20;
@@ -146,7 +146,7 @@ function level1(systems) {
 	}
 
 	//gridmap = gridmap.split(',');
-	const gridmap = generateAFuckingGrid(30, 30);
+	const gridmap = generateAFuckingGrid(50, 50);
 	for(let z = 0; z < gridmap.length; z++) {
 		for(let x = 0; x < gridmap[z].length; x++) {
 			const tileHeight = parseInt(gridmap[z].charAt(x)) + 1;

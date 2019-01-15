@@ -19,6 +19,25 @@ var hdrCubeRenderTarget = null;
 var getAnimationMixer = null;
 var getAnimationClip = null;
 
+const textureCache = {};
+function loadTextureOnce(url, callback) {
+	if(!(url in textureCache)) {
+		textureCache[url] = 'loading'
+		Loader.loadTexture(url).then(function(tex) {
+	    	textureCache[url] = tex;
+	    	callback(tex);
+	    })	
+	} else {
+		if(textureCache[url] === 'loading') {
+			let u = url;
+			let c = callback;
+			setTimeout(function() { loadTextureOnce(u, c) }, 1000);
+		} else {
+			callback(textureCache[url]);
+		}
+	}
+}
+
 function updateCubeMaps() {
 	if(!hdrCubeRenderTarget) return;
 
@@ -166,28 +185,25 @@ function createRock(state, id) {
 		return [scale*sX+x, scale*sY+y, scale*sZ+z];
 	}
 
-	const pmesh = new THREE.BufferGeometry().fromGeometry( new THREE.IcosahedronGeometry( radius, iter ) ) ;//hackz
-    var vertices = pmesh.attributes.position.array;
-    for ( var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3 ) {
-            const res = vertexFunction(vertices[ j ], vertices[ j + 1 ], vertices[ j + 2 ]);
-            vertices[ j ] = res[0]
-            vertices[ j + 1 ] = res[1];
-            vertices[ j + 2 ] = res[2];
-    }
-	pmesh.computeVertexNormals();
-	
+	const gmesh = new THREE.IcosahedronGeometry( radius, iter )
+	for(let i = 0; i < gmesh.vertices.length; i++) {
+		gmesh.vertices[i].fromArray(vertexFunction(gmesh.vertices[i].x, gmesh.vertices[i].y, gmesh.vertices[i].z));
+	}
+	gmesh.computeVertexNormals();
+	const pmesh = new THREE.BufferGeometry().fromGeometry( gmesh ) ;
+
 	const mesh = new THREE.Mesh(
 		pmesh, 
 		new THREE.MeshStandardMaterial(
-			{
-				color: new THREE.Color(0x888890),
-				roughness: 0.65,
-				shadowSide: THREE.BackSide, side: THREE.DoubleSide
-			}
+			{color: new THREE.Color(0x888890), roughness: 0.65, shadowSide: THREE.BackSide, side: THREE.DoubleSide}
 		)
 	);
 	loadedObjects[id] = mesh;
-	mesh.position.y += 0.5;
+	mesh.position.y += 0.35;
+	loadTextureOnce('/game_fp/stone1.jpeg', function(tex) {
+    	loadedObjects[id].material.map = tex;
+    	loadedObjects[id].material.needsUpdate = true;
+    });
 }
 
 var cachedSphereGeometry = new THREE.SphereGeometry(1.0, 12, 12);
@@ -220,13 +236,13 @@ const geometry = new THREE.Geometry();
 geometry.faceVertexUvs[0] = [];
 
 function addBlade(geometry, offsetX, offsetZ) {
-	const bladeWidth = 0.7;
-	const bladeHeight = 1.5;
+	const bladeWidth = 1.25;
+	const bladeHeight = 1.0;
 	const r1 = ((Math.random() -0.5)*2) * 0.25;
 	const r2 = ((Math.random() -0.5)*2) * 1.0;
 	const r3 = ((Math.random() -0.5)*2) * 0.25;
 	const r4 = ((Math.random() -0.5)*2) * 1.0;
-	const root = -2.0
+	const root = -1.5
 
 	geometry.vertices.push(new THREE.Vector3( offsetX+bladeWidth+r1,  root+bladeHeight,  offsetZ+r2));  //right top
 	geometry.vertices.push(new THREE.Vector3( offsetX,             root,    offsetZ));            //bottom center
@@ -245,14 +261,19 @@ function addBlade(geometry, offsetX, offsetZ) {
 	]);
 	geometry.uvsNeedUpdate = true;
 }
-const maxDist = 0.50;
+/*const maxDist = 0.50;
 for(let i = 0; i < 1; i++) {
 	addBlade(geometry, ((Math.random() -0.5)*2)*maxDist, ((Math.random() -0.5)*2)*maxDist)
-}
+}*/
+addBlade(geometry, 0, 0);
 cachedGrassGeom = new THREE.BufferGeometry().fromGeometry( geometry );
-cachedGrassGeom.computeVertexNormals();
 
 //}
+let customDepthMaterial = new THREE.MeshDepthMaterial( {
+	depthPacking: THREE.RGBADepthPacking,
+	//map: tex,
+	alphaTest: 0.25
+} );
 function createGrass(state, id) {
 	loadedObjects[id] = new THREE.Mesh(
     	cachedGrassGeom,
@@ -270,9 +291,12 @@ function createGrass(state, id) {
     	)
     );
     loadedObjects[id].rotation.y = Math.random() * 3.1415;
-    Loader.loadTexture('/game_fp/flower1.png').then(function(tex) {
+    loadTextureOnce('/game_fp/flower1.png', function(tex) {
     	loadedObjects[id].material.map = tex;
     	loadedObjects[id].material.needsUpdate = true;
+    	customDepthMaterial.map = tex;
+    	customDepthMaterial.needsUpdate = true;
+		loadedObjects[id].customDepthMaterial = customDepthMaterial;
     })
 }
 
@@ -294,7 +318,7 @@ function createTree(state, id) {
 	mesh.position.y -= 3.25;
 	mesh.rotation.y = Math.random() * 3.1415;
 	loadedObjects[id] = mesh;
-    Loader.loadTexture('/game_fp/treebark1.jpeg').then(function(tex) {
+    loadTextureOnce('/game_fp/treebark1.jpeg', function(tex) {
     	loadedObjects[id].material.map = tex;
     	loadedObjects[id].material.needsUpdate = true;
     })
@@ -815,6 +839,17 @@ function renderObject(state, id, eventHandler, gameState) {
 	
 	if(!GLOBAL_CAMERA || !GLOBAL_SCENE) return state;  // we have not yet been initialized
 
+	if(id in gameState.entity) {
+		var character = gameState.entity['character1']; //hack
+		var entity = gameState.entity[id];
+		tempThreeVector1.set(character.x - entity.x, character.y - entity.y, character.z - entity.z);
+		const len = Math.abs(tempThreeVector1.length());
+		if(id !== 'character1' && len > 10.0) {
+			//console.log("Far away");
+			return state;
+		}
+	}
+
 	if(!(id in loadedObjects)) {
 		if(state.loading) {
 			return state;
@@ -825,13 +860,14 @@ function renderObject(state, id, eventHandler, gameState) {
 	}
 	if((id in loadedObjects) && state.loading) {
 		updateCubeMaps();
-		meshPostProcess(loadedObjects[id])
+		meshPostProcess(loadedObjects[id]);
+
 		GLOBAL_SCENE.add(loadedObjects[id]);
 		if(!loadedObjects[id].geometry && !loadedObjects[id].children.length>0) {
 			return {...state, loading: false};
 		}
 
-		var bounds = calculateBoundsDeep(loadedObjects[id]);
+		const bounds = calculateBoundsDeep(loadedObjects[id]);
 		tempThreeVector1.fromArray(bounds[0]); //min
 		tempThreeVector2.fromArray(bounds[1]); //max
 		tempThreeVector3.addVectors(tempThreeVector1, tempThreeVector2).multiplyScalar(0.5); //midpoint (center mass)
@@ -857,7 +893,7 @@ function renderObject(state, id, eventHandler, gameState) {
 	}
 	//compare states of deps (memory address compare)
 	if(id in gameState.entity && !(id in previousEntity) || previousEntity[id] !== gameState.entity[id]) {
-		var ent = gameState.entity[id];
+		let ent = gameState.entity[id];
 		if('offsetY' in state) {
 			ent = {
 				...ent,
@@ -879,7 +915,7 @@ function renderObject(state, id, eventHandler, gameState) {
 
 	if(id in gameState.animation) {
 		if(!('animations' in state)) {
-			var animationNames = loadedObjects[id].children[0].animations.map(x=>x.name);
+			const animationNames = loadedObjects[id].children[0].animations.map(x=>x.name);
 			return {
 				...state,
 				animations: animationNames
@@ -894,7 +930,7 @@ function renderObject(state, id, eventHandler, gameState) {
 			//GLOBAL_SCENE.add(healthBarSprites[id]);
 			loadedObjects[id].add(sprite);
 		}
-		var healthRatio = Math.max(0.0001, gameState.stats[id].health / gameState.stats[id].maxHealth);
+		const healthRatio = Math.max(0.0001, gameState.stats[id].health / gameState.stats[id].maxHealth);
 		healthBarSprites[id].scale.x = healthRatio;
 	}
 	return state;
@@ -921,7 +957,7 @@ function init(initialState) {
 
 	var settings = {
 		enableShadows: true,
-		shadowResolution: 1024,
+		shadowResolution: 512,
 		enableAA: false
 	};
 	var sceneData = initRendering(scene, settings, camera);
