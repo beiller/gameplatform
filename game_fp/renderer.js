@@ -90,6 +90,13 @@ function updateCubeMaps() {
     for(var k in loadedObjects) {
     	setEnv(loadedObjects[k], hdrCubeRenderTarget.texture);
     }
+    const globalMaterials = [grassMaterial, rockMaterial, treeMaterial];
+    for(let i in globalMaterials) {
+    	//let mat = ;
+    	globalMaterials[i]["envMap"] = hdrCubeRenderTarget.texture;
+		globalMaterials[i]["envMapIntensity"] = 10000.0;
+		globalMaterials[i]["needsUpdate"] = true;
+	}
 };
 
 function loadEXRMap() {
