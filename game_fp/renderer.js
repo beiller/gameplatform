@@ -13,13 +13,39 @@ var DEBUG_PHYSICS = false;
 var loadedObjects = {};
 var physicsDebugObjects = {};
 var healthBarSprites = {};
+
 var loaderCallbackFunction = null;
 var hdrCubeRenderTarget = null;
 
 var getAnimationMixer = null;
 var getAnimationClip = null;
 
+const customDepthMaterial = new THREE.MeshDepthMaterial( {
+	depthPacking: THREE.RGBADepthPacking, alphaTest: 0.25
+});
+const grassMaterial = new THREE.MeshStandardMaterial({
+	//color: new THREE.Color(0x99CC99),
+	roughness: 0.5,
+	side: THREE.DoubleSide,
+	transparent: true,
+	alphaTest: 0.5
+});
+const rockMaterial = new THREE.MeshStandardMaterial(
+	{color: new THREE.Color(0x888890), roughness: 0.65, shadowSide: THREE.BackSide, side: THREE.DoubleSide}
+)
+const treeMaterial = new THREE.MeshStandardMaterial({roughness: 0.85, color: new THREE.Color(0x332525)});
+
 const textureCache = {};
+const meshInstance = {  //not really instanced but large static
+	grass: new THREE.Mesh(new THREE.BufferGeometry(), grassMaterial),
+	rock: new THREE.Mesh(new THREE.BufferGeometry(), rockMaterial),
+	tree: new THREE.Mesh(new THREE.BufferGeometry(), treeMaterial),
+};
+meshInstance.grass.customDepthMaterial = customDepthMaterial;
+for(let i in meshInstance) {
+	meshPostProcess(meshInstance[i]);
+}
+
 function loadTextureOnce(url, callback) {
 	if(!(url in textureCache)) {
 		textureCache[url] = 'loading'
@@ -144,8 +170,8 @@ function createWorld(state, id) {
 	const simp = new MESH_UTILS.SimplexNoise();
 	const scale = 50.0;
 	function vertexFunction(x, y, z) {
-		const sY = simp.noise3d((x/width)*scale, (y+1)*0.5, (z/height)*scale);
-		return [x, sY*.25, z];
+		const sY = simp.noise3d((x/width)*scale, y, (z/height)*scale);
+		return [x, (sY-0.5)*0.5, z];
 	}
 
 	const pmesh = new THREE.PlaneBufferGeometry( width, height, wSeg - 1, hSeg - 1 );
@@ -193,16 +219,12 @@ function createRock(state, id) {
 	const pmesh = new THREE.BufferGeometry().fromGeometry( gmesh ) ;
 
 	const mesh = new THREE.Mesh(
-		pmesh, 
-		new THREE.MeshStandardMaterial(
-			{color: new THREE.Color(0x888890), roughness: 0.65, shadowSide: THREE.BackSide, side: THREE.DoubleSide}
-		)
+		pmesh, rockMaterial
 	);
 	loadedObjects[id] = mesh;
-	mesh.position.y += 0.35;
 	loadTextureOnce('/game_fp/stone1.jpeg', function(tex) {
-    	loadedObjects[id].material.map = tex;
-    	loadedObjects[id].material.needsUpdate = true;
+    	rockMaterial.map = tex;
+    	rockMaterial.needsUpdate = true;
     });
 }
 
@@ -242,7 +264,7 @@ function addBlade(geometry, offsetX, offsetZ) {
 	const r2 = ((Math.random() -0.5)*2) * 1.0;
 	const r3 = ((Math.random() -0.5)*2) * 0.25;
 	const r4 = ((Math.random() -0.5)*2) * 1.0;
-	const root = -1.5
+	const root = 0.0;
 
 	geometry.vertices.push(new THREE.Vector3( offsetX+bladeWidth+r1,  root+bladeHeight,  offsetZ+r2));  //right top
 	geometry.vertices.push(new THREE.Vector3( offsetX,             root,    offsetZ));            //bottom center
@@ -268,36 +290,22 @@ for(let i = 0; i < 1; i++) {
 addBlade(geometry, 0, 0);
 cachedGrassGeom = new THREE.BufferGeometry().fromGeometry( geometry );
 
-//}
-let customDepthMaterial = new THREE.MeshDepthMaterial( {
-	depthPacking: THREE.RGBADepthPacking,
-	//map: tex,
-	alphaTest: 0.25
-} );
 function createGrass(state, id) {
-	loadedObjects[id] = new THREE.Mesh(
+	const mesh = new THREE.Mesh(
     	cachedGrassGeom,
-    	new THREE.MeshStandardMaterial(
-    		{
-    			color: new THREE.Color(0x99CC99),
-    			roughness: 0.5,
-    			side: THREE.DoubleSide,
-    			transparent: true,
-    			alphaTest: 0.5
-    			//wireframe: true,
-    			//emissive: new THREE.Color(0xAAFFAA),
-    			//emissiveIntensity: 10000.0
-    		}
-    	)
+    	grassMaterial
     );
+    mesh.customDepthMaterial = customDepthMaterial;
+
+    loadedObjects[id] = mesh;
     loadedObjects[id].rotation.y = Math.random() * 3.1415;
+
     loadTextureOnce('/game_fp/flower1.png', function(tex) {
-    	loadedObjects[id].material.map = tex;
-    	loadedObjects[id].material.needsUpdate = true;
+    	grassMaterial.map = tex;
+    	grassMaterial.needsUpdate = true;
     	customDepthMaterial.map = tex;
     	customDepthMaterial.needsUpdate = true;
-		loadedObjects[id].customDepthMaterial = customDepthMaterial;
-    })
+    });
 }
 
 let tree = new TREE.Tree({
@@ -310,17 +318,18 @@ let tree = new TREE.Tree({
 });
 
 let treeGeometry = TREE.TreeGeometry.build(tree);
+treeGeometry = new THREE.BufferGeometry().fromGeometry( treeGeometry );
+
 function createTree(state, id) {
 	let mesh = new THREE.Mesh(
-	    treeGeometry, 
-	    new THREE.MeshStandardMaterial({roughness: 0.85, color: new THREE.Color(0x332525)}) // set any material
+	    treeGeometry, treeMaterial
 	);	
 	mesh.position.y -= 3.25;
 	mesh.rotation.y = Math.random() * 3.1415;
 	loadedObjects[id] = mesh;
     loadTextureOnce('/game_fp/treebark1.jpeg', function(tex) {
-    	loadedObjects[id].material.map = tex;
-    	loadedObjects[id].material.needsUpdate = true;
+    	treeMaterial.map = tex;
+    	treeMaterial.needsUpdate = true;
     })
 }
 
@@ -839,7 +848,7 @@ function renderObject(state, id, eventHandler, gameState) {
 	
 	if(!GLOBAL_CAMERA || !GLOBAL_SCENE) return state;  // we have not yet been initialized
 
-	if(id in gameState.entity) {
+	/*if(id in gameState.entity) {
 		var character = gameState.entity['character1']; //hack
 		var entity = gameState.entity[id];
 		tempThreeVector1.set(character.x - entity.x, character.y - entity.y, character.z - entity.z);
@@ -848,7 +857,7 @@ function renderObject(state, id, eventHandler, gameState) {
 			//console.log("Far away");
 			return state;
 		}
-	}
+	}*/
 
 	if(!(id in loadedObjects)) {
 		if(state.loading) {
@@ -858,11 +867,15 @@ function renderObject(state, id, eventHandler, gameState) {
 		loadAssets(newState, id);
 		return newState;
 	}
+	const instanceable = state.type in meshInstance;
+
 	if((id in loadedObjects) && state.loading) {
 		updateCubeMaps();
 		meshPostProcess(loadedObjects[id]);
 
 		GLOBAL_SCENE.add(loadedObjects[id]);
+
+		//Exit if we have no geometry
 		if(!loadedObjects[id].geometry && !loadedObjects[id].children.length>0) {
 			return {...state, loading: false};
 		}
@@ -875,12 +888,39 @@ function renderObject(state, id, eventHandler, gameState) {
 
 		tempThreeVector3.multiplyScalar(state.scale || 1.0); // scale to setting
 		tempThreeVector4.multiplyScalar(state.scale || 1.0);
+
+		//move this to the mesh to instance
+		
+		if(instanceable) {
+			const ent = gameState.entity[id];
+			loadedObjects[id].position.set(ent.x, ent.y, ent.z);
+			loadedObjects[id].updateMatrixWorld();
+			const newGeom = loadedObjects[id].geometry.clone();
+			newGeom.applyMatrix(loadedObjects[id].matrixWorld);
+
+			if(Object.keys(meshInstance[state.type].geometry.attributes).length == 0) {
+				meshInstance[state.type].geometry = newGeom;
+			} else {
+				meshInstance[state.type].geometry = MESH_UTILS.mergeGeometry(
+					meshInstance[state.type].geometry, newGeom
+				)
+				GLOBAL_SCENE.remove(loadedObjects[id]);
+			}
+			meshInstance[state.type].geometry.computeVertexNormals();
+			//delete loadedObjects[id];
+			loadedObjects[id] = new THREE.Object3D();
+		}
+
 		return {
 			...state, 
 			loading: false,
 			offsetX: -tempThreeVector3.x, offsetY: -tempThreeVector3.y, offsetZ: -tempThreeVector3.z,
 			boundsX:  tempThreeVector4.x, boundsY:  tempThreeVector4.y, boundsZ:  tempThreeVector4.z
 		};
+	}
+
+	if(instanceable) {
+		return state;
 	}
 
 	if(DEBUG_PHYSICS && !(id in physicsDebugObjects)) {
@@ -954,6 +994,9 @@ function init(initialState) {
 	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
 	GLOBAL_CAMERA = camera;
 	GLOBAL_SCENE = scene;
+	for(let i in meshInstance) {
+		GLOBAL_SCENE.add(meshInstance[i]);	
+	}
 
 	var settings = {
 		enableShadows: true,

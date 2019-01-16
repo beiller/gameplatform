@@ -316,7 +316,7 @@ function applyPhysics(state, id, eventHandler, gameState) {
 	var character = gameState.physics['character1']; //hack
 	temp_vec3_1.setValue(character.x - state.x, character.y - state.y, character.z - state.z);
 	const len = Math.abs(temp_vec3_1.length());
-	if(id !== 'character1' && len > 10.0) {
+	if(id !== 'character1' && len > 5.0) {
 		//console.log("Far away");
 		if(!state.neverSleep && id in bodies) {
 			world.m_dynamicsWorld.removeRigidBody(bodies[id]);

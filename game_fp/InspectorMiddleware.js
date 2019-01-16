@@ -101,7 +101,7 @@ function middleware(nextStateFn) {
 	function newMiddleware(state) {
 		if(Math.random() > 0.00000) {
 			//console.log('Random event occurred! Now showing state:', state);
-			doUpdateFunc(state);
+			//doUpdateFunc(state);
 		}
 		var ns = nextStateFn(state);
 		if(modifiers.length > 0) {

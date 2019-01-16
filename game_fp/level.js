@@ -19,10 +19,10 @@ function level1(systems) {
 				}
 			},*/
 			"groundplane1": {
-				"entity": {x: 0, y: 0.5, z: 0},
+				"entity": {x: 0, y: -0.5, z: 0},
 				"render": { type: "heightField" },
 				"physics": {
-					mass: 0, x: 0, y: 0.5, z: 0, staticObject: true, neverSleep: true,
+					mass: 0, x: 0, y: -0.5, z: 0, staticObject: true, neverSleep: true,
 					shape: {
 						type: "heightField", x: 250, y: 0.01, z: 250, margin: 0.000001 
 					}
@@ -111,7 +111,7 @@ function level1(systems) {
 			for(let x = 0; x < width; x++) {
 				if(Math.random() > 0.975) {
 					cols.push('1')
-				} else if(Math.random() > 0.8) {
+				} else if(Math.random() > 0.3) {
 					cols.push('2')
 				} else if(Math.random() > 0.92) {
 					cols.push('3')
@@ -130,9 +130,9 @@ function level1(systems) {
 
 	function generateTile(x, z, offsetx, offsetz, type, noContact) {
 		return {
-			"entity": {x: x-offsetx, y: 1, z: z-offsetz },
+			"entity": {x: x-offsetx, y: 0, z: z-offsetz },
 			"render": { type: type, x: 1.0, y: 1.0, z: 1.0 },
-			"physics": {x: x-offsetx, y: 1, z: z-offsetz, 
+			"physics": {x: x-offsetx, y: 0, z: z-offsetz, 
 				shape: {type: "box", x: .5, y: .5, z: .5, margin: 0.00001 },
 				mass: 0, staticObject: true, noContact: noContact
 			}

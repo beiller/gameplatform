@@ -83,7 +83,7 @@ function getMeteorSpell(x, y, z, facingX, facingZ) {
 	const fx = 0.5 * (fireballForce * nVec.x);
 	const fy = -500.0;
 	const fz = 0.5 * (fireballForce * nVec.y);
-	return getProjectileCollidingSpell(radius, x+r3, y+20+r5, z+r4, fx+r1, fy, fz+r2, stats);
+	return getProjectileCollidingSpell(radius, x+r3, y+10+r5, z+r4, fx+r1, fy, fz+r2, stats);
 }
 
 function queueSpell(spellFunction, physicsState, motionState) {
