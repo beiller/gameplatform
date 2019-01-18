@@ -40,7 +40,7 @@ function level1(systems) {
 				"entity": {x: 0, y: 0, z: 0 },
 				"collision": { type: "ouchie" },
 				"magic": null,
-				/*"animation": { animationName: 'XP32_Dance', playingAnimation: true, 
+				"animation": { animationName: 'XP32_Dance', playingAnimation: true, 
 					animations: {
 						special: 'XP32_Dance',
 						run: 'XP32_CombatRun',
@@ -48,12 +48,12 @@ function level1(systems) {
 					}
 				},
 				"render": { 
-					type: "animatedMesh", filename: "/uunp_test/body_ultra.json"
-				},*/
-				"animation": { animationName: 'DE_Dance', playingAnimation: true },
+					type: "animatedMesh", filename: "/uunp_test/body.json"
+				},
+				/*"animation": { animationName: 'DE_Dance', playingAnimation: true },
 				"render": { 
 					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.285
-				},
+				},*/
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
 				"physics": {x: 0, y: 2.8, z: 0, 
@@ -146,7 +146,7 @@ function level1(systems) {
 	}
 
 	//gridmap = gridmap.split(',');
-	const gridmap = generateAFuckingGrid(50, 50);
+	const gridmap = generateAFuckingGrid(25, 25);
 	for(let z = 0; z < gridmap.length; z++) {
 		for(let x = 0; x < gridmap[z].length; x++) {
 			const tileHeight = parseInt(gridmap[z].charAt(x)) + 1;

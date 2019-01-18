@@ -122,7 +122,7 @@ function loadEXRMap() {
 			hdrCubeMap.dispose();
 			//let shader = THREE.ShaderLib.cube;
 			//shader.uniforms.tCube.value = hdrCubeRenderTarget;
-	        var mesh = new THREE.Mesh(
+	        /*var mesh = new THREE.Mesh(
 	        	new THREE.SphereGeometry(50, 60, 40), 
 	        	new THREE.MeshStandardMaterial(
 	        		{
@@ -135,7 +135,7 @@ function loadEXRMap() {
 	        		}
 	        	)
 	        );
-	        GLOBAL_SCENE.add(mesh);
+	        GLOBAL_SCENE.add(mesh);*/
 	        
 	        //GLOBAL_SCENE.background = hdrCubeMap;  // TODO not quite working in my version of threejs
 	        updateCubeMaps();
@@ -726,7 +726,7 @@ function animateObject(state, id, gameState) {
 			currentAnimation: gameState.animation[id].animationName
 		};
 	}
-	getAnimationMixer(id).update(0.016);
+	getAnimationMixer(id).update(0.032);
 	return state;
 }
 
@@ -855,14 +855,16 @@ function renderObject(state, id, eventHandler, gameState) {
 	
 	if(!GLOBAL_CAMERA || !GLOBAL_SCENE) return state;  // we have not yet been initialized
 
-	/*if(id in gameState.entity) {
+	/*if(id in loadedObjects && id in gameState.entity) {
 		var character = gameState.entity['character1']; //hack
 		var entity = gameState.entity[id];
 		tempThreeVector1.set(character.x - entity.x, character.y - entity.y, character.z - entity.z);
 		const len = Math.abs(tempThreeVector1.length());
-		if(id !== 'character1' && len > 10.0) {
-			//console.log("Far away");
+		if(id !== 'character1' && len > 10.0 && loadedObjects[id].visible === true) {
+			loadedObjects[id].visible === false;
 			return state;
+		} else {
+			loadedObjects[id].visible === true;
 		}
 	}*/
 
@@ -897,14 +899,12 @@ function renderObject(state, id, eventHandler, gameState) {
 		tempThreeVector4.multiplyScalar(state.scale || 1.0);
 
 		//move this to the mesh to instance
-		
 		if(instanceable) {
 			const ent = gameState.entity[id];
 			loadedObjects[id].position.set(ent.x, ent.y, ent.z);
 			loadedObjects[id].updateMatrixWorld();
 			const newGeom = loadedObjects[id].geometry.clone();
 			newGeom.applyMatrix(loadedObjects[id].matrixWorld);
-
 			if(Object.keys(meshInstance[state.type].geometry.attributes).length == 0) {
 				meshInstance[state.type].geometry = newGeom;
 			} else {
@@ -914,7 +914,7 @@ function renderObject(state, id, eventHandler, gameState) {
 				GLOBAL_SCENE.remove(loadedObjects[id]);
 			}
 			meshInstance[state.type].geometry.computeVertexNormals();
-			//delete loadedObjects[id];
+			delete loadedObjects[id];
 			loadedObjects[id] = new THREE.Object3D();
 		}
 
@@ -1007,7 +1007,7 @@ function init(initialState) {
 
 	var settings = {
 		enableShadows: true,
-		shadowResolution: 512,
+		shadowResolution: 1024,
 		enableAA: false
 	};
 	var sceneData = initRendering(scene, settings, camera);

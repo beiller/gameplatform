@@ -24,16 +24,16 @@ function getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContac
 }
 function getProjectileSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 	const fDamping = 0.8;
-	const mass = 0.02;
-	const noContact = true;
-	const maxAge = 10;
-	const damping = 0.9;
+	const mass = 0.05;
+	const noContact = false;
+	const maxAge = 1000;
+	const damping = 0.09;
 	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
 }
 
 function getProjectileCollidingSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 	const fDamping = 0.9;
-	const mass = 100.0;
+	const mass = 10.0;
 	const noContact = false;
 	const maxAge = 50;
 	const damping = 0.5;
@@ -47,14 +47,14 @@ const defaultStats = {
 };
 function getFireSpell(x, y, z, facingX, facingZ) {
 	const stats = defaultStats;
-	const fireballForce = 0.15;
+	const fireballForce = 0.01;
 	const nVec = normalize2D({x: facingX, y: facingZ});
 	const fx = nVec.x * fireballForce;
 	const fz = nVec.y * fireballForce;
-	const fy = 0.01;
-	const rAmt = 0.3333 * fireballForce; //random direction scale
-	const r1 = (Math.random() * rAmt) - (rAmt*0.5);
-	const r2 = (Math.random() * rAmt) - (rAmt*0.5);
+	const fy = 0.001;
+	const rAmt = 0.001 * fireballForce; //random direction scale
+	const r1 = 0;//(Math.random() * rAmt) - (rAmt*0.5);
+	const r2 = 0;//(Math.random() * rAmt) - (rAmt*0.5);
 	const radius = 0.5;
 	//offset xyz by radius + character radius
 	const cRadius = 0.8 // hard coded temp radius for character
@@ -65,7 +65,7 @@ function getFireSpell(x, y, z, facingX, facingZ) {
 function getMeteorSpell(x, y, z, facingX, facingZ) {
 	const stats = defaultStats;
 	
-	const fireballForce = 0.025;
+	const fireballForce = 0.0025;
 	const rAmt = 0.3333 * fireballForce; //random direction scale
 	const r1 = (Math.random() * rAmt) - (rAmt*0.5);
 	const r2 = (Math.random() * rAmt) - (rAmt*0.5);
@@ -81,7 +81,7 @@ function getMeteorSpell(x, y, z, facingX, facingZ) {
 	z += nVec.y * (radius+cRadius); 
 	
 	const fx = 0.5 * (fireballForce * nVec.x);
-	const fy = -500.0;
+	const fy = -1;
 	const fz = 0.5 * (fireballForce * nVec.y);
 	return getProjectileCollidingSpell(radius, x+r3, y+10+r5, z+r4, fx+r1, fy, fz+r2, stats);
 }
@@ -154,7 +154,7 @@ function applyAI(state, id, eventHandler) {
 	return state;
 }
 
-const movementSpeed = 15.0;
+const movementSpeed = 1.0;
 function applyMotion(state, id, eventHandler, gameState) {
 	var dep = null; // will contain an object that contains x, y, and z field
 	var damping = 1.0; // 1.0 - no damping. 0.0 - full damping
@@ -177,14 +177,13 @@ function applyMotion(state, id, eventHandler, gameState) {
 	if(dep) {
 		var normalized = normalize2D(dep);
 		if(state.fx !== normalized.x || state.fz !== normalized.y) {
-
 			return {
 				...state,
 				fx: (normalized.x * movementSpeed), 
 				fz: (-normalized.y * movementSpeed),
 				facingX: state.fx || 0,
 				facingY: state.fy || 0,
-				facingZ: state.fz || 1
+				facingZ: state.fz || 0
 			}
 		}
 	}
@@ -382,11 +381,22 @@ function main() {
 		PHYSICS.init(gameState);
 	});
 	//start game loop
+	var fps = 30;
+	var now;
+	var then = Date.now();
+	var interval = 1000/fps;
+	var delta;
 	function mainLoop() {
-		ENGINE.tick();
-		PHYSICS.stepWorld();
-		RENDERER.renderFunction();
 		requestAnimationFrame(mainLoop);
+		now = Date.now();
+	    delta = now - then;
+	     
+	    if (delta > interval) {
+	    	then = now - (delta % interval);
+			ENGINE.tick();
+			PHYSICS.stepWorld();
+			RENDERER.renderFunction();
+		}
 	}
 	requestAnimationFrame(mainLoop);
 }

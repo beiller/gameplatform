@@ -22,15 +22,16 @@ const collisionFlags = {
 	CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
 };
 
-const stepHz = 60;
+const stepHz = 30;
+const stepDt = 1000/stepHz;
 const constraintSolverIterations = 10;
 const globalCollisionMap = {};
 const bodyIdMap = {};
 const bodies = {};
 
-function step(m_dynamicsWorld, dispatcher, dt) {
-	dt = Math.min(dt, 0.05);
-	var numIterations = stepHz / 60;
+function step(m_dynamicsWorld, dispatcher) {
+	const dt = stepDt;
+	var numIterations = stepHz / 30;
 	for(var i = 0; i < numIterations; i++) {
 		m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/stepHz);
 	}
@@ -271,7 +272,6 @@ var temp_vec3_1 = null
 var temp_vec3_2 = null
 var temp_quat_1 = null
 var temp_quat_2 = null
-const frameTime = 1000/60;
 
 function init(gameState) {
 	temp_trans_1 = new Ammo.btTransform();
@@ -299,7 +299,11 @@ function readPhysicsState(state, id) {
 }
 
 function applyMotionPhysics(state, id, eventHandler, gameState) {
-	temp_vec3_1.setValue(gameState.motion[id].fx, gameState.motion[id].fy, gameState.motion[id].fz);
+	temp_vec3_1.setValue(
+		gameState.motion[id].fx*stepDt, 
+		gameState.motion[id].fy*stepDt, 
+		gameState.motion[id].fz*stepDt
+	);
 	bodies[id].applyImpulse(temp_vec3_1);
 }
 
@@ -316,7 +320,7 @@ function applyPhysics(state, id, eventHandler, gameState) {
 	var character = gameState.physics['character1']; //hack
 	temp_vec3_1.setValue(character.x - state.x, character.y - state.y, character.z - state.z);
 	const len = Math.abs(temp_vec3_1.length());
-	if(id !== 'character1' && len > 5.0) {
+	if(state.staticObject && id !== 'character1' && len > 15.0) {
 		//console.log("Far away");
 		if(!state.neverSleep && id in bodies) {
 			world.m_dynamicsWorld.removeRigidBody(bodies[id]);
@@ -403,7 +407,7 @@ function applyCollision(state, id, eventHandler, gameState) {
 }
 
 function stepWorld() {
-	step(world.m_dynamicsWorld, world.dispatcher, frameTime);
+	step(world.m_dynamicsWorld, world.dispatcher);
 	/*
 		Clean up aka garbage collect unused game objects from physics simulation
 	*/
