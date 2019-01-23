@@ -214,12 +214,21 @@ function applyEntity(state, id, eventHandler, gameState) {
 		
 		let y = gameState.physics[id].y; // hmm
 		if(gameState.physics[id].x !== state.x || y !== state.y || gameState.physics[id].z !== state.z) {
-			return {
-				...pointCharacter(state, id, gameState),
-				x: gameState.physics[id].x,
-				y: y,
-				z: gameState.physics[id].z
-			};
+			if(id in gameState.input || id in gameState.ai) {
+				return {
+					...pointCharacter(state, id, gameState),
+					x: gameState.physics[id].x,
+					y: y,
+					z: gameState.physics[id].z
+				}
+			} else {
+				return {
+					rotation: {...gameState.physics[id].rotation},
+					x: gameState.physics[id].x,
+					y: y,
+					z: gameState.physics[id].z
+				}
+			}
 		}
 	}
 	if(id in gameState.camera && gameState.camera[id].type == 'follow') {

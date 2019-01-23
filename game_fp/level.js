@@ -24,7 +24,7 @@ function level1(systems) {
 				"physics": {
 					mass: 0, x: 0, y: -0.5, z: 0, staticObject: true, neverSleep: true,
 					shape: {
-						type: "heightField", x: 250, y: 0.01, z: 250, margin: 0.000001 
+						type: "heightField", x: 250, y: 0.25, z: 250, margin: 0.01 
 					}
 				}
 			},
@@ -36,19 +36,45 @@ function level1(systems) {
 					mass: 0, staticObject: true
 				}
 			},*/
+			"sword": {
+				"entity": {x: 0, y: 15, z: 0 },
+				"render": { 
+					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "firesword"
+				},
+				"physics": {x: 0, y: 15, z: 0, 
+					//shape: {type: "sphere", radius: .1 },
+					shape: {
+						type: "box", y: 0.15
+					},
+					mass: 0.5
+				}
+			},
+			"severedFuckingHead": {
+				"entity": {x: 0, y: 15, z: 0 },
+				"render": { 
+					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "miku_outfit1"
+				},
+				"physics": {x: 0, y: 15, z: 0, 
+					shape: {type: "sphere", radius: .1 },
+					/*shape: {
+						type: "box"
+					},*/
+					mass: 0.5
+				}
+			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0 },
 				"collision": { type: "ouchie" },
 				"magic": null,
-				"animation": { animationName: 'XP32_Dance', playingAnimation: true, 
+				"animation": { animationName: 'f1.1', playingAnimation: true, 
 					animations: {
-						special: 'XP32_Dance',
-						run: 'XP32_CombatRun',
-						idle: 'XP32_Combatiddle'
+						special: 'f2.2',
+						run: 'walk',
+						idle: 'idle'
 					}
 				},
 				"render": { 
-					type: "animatedMesh", filename: "/uunp_test/body.json"
+					type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "miku"
 				},
 				/*"animation": { animationName: 'DE_Dance', playingAnimation: true },
 				"render": { 

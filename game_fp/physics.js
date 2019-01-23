@@ -31,9 +31,10 @@ const bodies = {};
 
 function step(m_dynamicsWorld, dispatcher) {
 	const dt = stepDt;
-	var numIterations = stepHz / 30;
+	//var numIterations = stepHz / 30;
+	const numIterations = 1;
 	for(var i = 0; i < numIterations; i++) {
-		m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/stepHz);
+		m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/stepHz/numIterations);
 	}
 };
 
@@ -207,7 +208,7 @@ function createShape(shapeInfo) {
 			if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
 			temp_vec3_1.setValue(shapeInfo.x, shapeInfo.y, shapeInfo.z);
 		    shape = new Ammo.btBoxShape(temp_vec3_1);
-		    shape.setMargin(shapeInfo.margin || 0.0001);
+		    shape.setMargin(shapeInfo.margin || 0.01);
 		    break;
 		case "capsule":
 			if(! 'height' in shapeInfo) throw("Must specify height and radius in shape info");
@@ -339,9 +340,9 @@ function applyPhysics(state, id, eventHandler, gameState) {
 			if(shapeInfo.type == 'box' && gameState.render[id].boundsY) {
 				shapeInfo = {
 					...shapeInfo,
-					x: gameState.render[id].boundsX, 
-					y: gameState.render[id].boundsY, 
-					z: gameState.render[id].boundsZ, 
+					x: state.shape.x || gameState.render[id].boundsX, 
+					y: state.shape.y || gameState.render[id].boundsY, 
+					z: state.shape.z || gameState.render[id].boundsZ, 
 				}
 			} 
 			if(shapeInfo.type == 'capsule' && gameState.render[id].boundsY) {

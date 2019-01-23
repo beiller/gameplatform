@@ -8,7 +8,7 @@ var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
 var GLOBAL_RENDERER = null;
 var GLOBAL_ORBIT_CONTROLS = null;
-var DEBUG_PHYSICS = false;
+var DEBUG_PHYSICS = true;
 
 var loadedObjects = {};
 var physicsDebugObjects = {};
@@ -31,7 +31,7 @@ const grassMaterial = new THREE.MeshStandardMaterial({
 	alphaTest: 0.5
 });
 const rockMaterial = new THREE.MeshStandardMaterial(
-	{color: new THREE.Color(0x888890), roughness: 0.65, shadowSide: THREE.BackSide, side: THREE.DoubleSide}
+	{color: new THREE.Color(0x888890), roughness: 0.65}
 )
 const treeMaterial = new THREE.MeshStandardMaterial({roughness: 0.85, color: new THREE.Color(0x332525)});
 
@@ -74,7 +74,7 @@ function updateCubeMaps() {
     		}
     	}
     	if('material' in ob) {
-    		if('length' in ob.material) {
+    		if(Array.isArray(ob.material)) {
     			for(let k = 0; k < ob.material.length; k++) {
 	    			ob.material[k]["envMap"] = envMap;
 		    		ob.material[k]["envMapIntensity"] = 10000.0;
@@ -197,8 +197,7 @@ function createWorld(state, id) {
 		new THREE.MeshStandardMaterial(
 			{
 				color: new THREE.Color(0x555555),
-				roughness: 0.65,
-				shadowSide: THREE.BackSide, side: THREE.DoubleSide
+				roughness: 0.65
 			}
 		)
 	);
@@ -361,9 +360,9 @@ function loadGLTF(state, id) {
 	}
 	let extension = state.filename.split('.').pop().toLowerCase();
 	if(extension === 'json') {
-		Loader.loadThreeJS(state.filename, loaderCallback);
+		Loader.loadThreeJS(state, loaderCallback);
 	} else {
-		Loader.loadGLTF(state.filename, loaderCallback);
+		Loader.loadGLTF(state, loaderCallback);
 	}
 }
 
@@ -963,6 +962,7 @@ function renderObject(state, id, eventHandler, gameState) {
 	if(id in gameState.animation) {
 		if(!('animations' in state)) {
 			const animationNames = loadedObjects[id].children[0].animations.map(x=>x.name);
+			console.log(animationNames);
 			return {
 				...state,
 				animations: animationNames
