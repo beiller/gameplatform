@@ -55,10 +55,10 @@ function level1(systems) {
 					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "miku_outfit1"
 				},
 				"physics": {x: 0, y: 15, z: 0, 
-					shape: {type: "sphere", radius: .1 },
-					/*shape: {
+					//shape: {type: "sphere", radius: .1 },
+					shape: {
 						type: "box"
-					},*/
+					},
 					mass: 0.5
 				}
 			},
@@ -66,15 +66,15 @@ function level1(systems) {
 				"entity": {x: 0, y: 0, z: 0 },
 				"collision": { type: "ouchie" },
 				"magic": null,
-				"animation": { animationName: 'f1.1', playingAnimation: true, 
+				"animation": { animationName: 'XP32_Dance', playingAnimation: true, 
 					animations: {
-						special: 'f2.2',
-						run: 'walk',
-						idle: 'idle'
+						special: 'XP32_Dance',
+						run: 'XP32_CombatRun',
+						idle: 'XP32_Combatiddle'
 					}
 				},
 				"render": { 
-					type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "miku"
+					type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "uunp_test"
 				},
 				/*"animation": { animationName: 'DE_Dance', playingAnimation: true },
 				"render": { 
@@ -130,41 +130,6 @@ function level1(systems) {
 		}
 	}
 
-	function generateAFuckingGrid(width, height) {
-		let rows = [];
-		for(let z = 0; z < height; z++) {
-			let cols = []
-			for(let x = 0; x < width; x++) {
-				if(Math.random() > 0.975) {
-					cols.push('1')
-				} else if(Math.random() > 0.3) {
-					cols.push('2')
-				} else if(Math.random() > 0.92) {
-					cols.push('3')
-				} else {
-					cols.push('0')
-				}
-			}
-			rows.push(cols.join());
-		}
-		return rows;
-	}
-
-	function generateId() {
-		return "tile"+(Math.random() * 100.0);
-	}
-
-	function generateTile(x, z, offsetx, offsetz, type, noContact) {
-		return {
-			"entity": {x: x-offsetx, y: 0, z: z-offsetz },
-			"render": { type: type, x: 1.0, y: 1.0, z: 1.0 },
-			"physics": {x: x-offsetx, y: 0, z: z-offsetz, 
-				shape: {type: "box", x: .5, y: .5, z: .5, margin: 0.00001 },
-				mass: 0, staticObject: true, noContact: noContact
-			}
-		}
-	}
-
 	const tileFunctions = {
 		'1': function(x, z, offsetx, offsetz) { return generateTile(x, z, offsetx, offsetz, "tree", false) },
 		'2': function(x, z, offsetx, offsetz) { return generateTile(x, z, offsetx, offsetz, "grass", true) },
@@ -172,7 +137,7 @@ function level1(systems) {
 	}
 
 	//gridmap = gridmap.split(',');
-	const gridmap = generateAFuckingGrid(25, 25);
+	const gridmap = generateAFuckingGrid2(25, 25);
 	for(let z = 0; z < gridmap.length; z++) {
 		for(let x = 0; x < gridmap[z].length; x++) {
 			const tileHeight = parseInt(gridmap[z].charAt(x)) + 1;
@@ -190,5 +155,83 @@ function level1(systems) {
 	return initialState;
 }
 
+function generateAFuckingGrid(width, height) {
+	let rows = [];
+	for(let z = 0; z < height; z++) {
+		let cols = []
+		for(let x = 0; x < width; x++) {
+			if(Math.random() > 0.975) {
+				cols.push('1')
+			} else if(Math.random() > 0.3) {
+				cols.push('2')
+			} else if(Math.random() > 0.92) {
+				cols.push('3')
+			} else {
+				cols.push('0')
+			}
+		}
+		rows.push(cols.join());
+	}
+	return rows;
+}
+
+function generateId() {
+	return "tile"+(Math.random() * 100.0);
+}
+
+function generateTile(x, z, offsetx, offsetz, type, noContact) {
+	return {
+		"entity": {x: x-offsetx, y: 0, z: z-offsetz },
+		"render": { type: type, x: 1.0, y: 1.0, z: 1.0 },
+		"physics": {x: x-offsetx, y: 0, z: z-offsetz, 
+			shape: {type: "box", x: .5, y: .5, z: .5, margin: 0.00001 },
+			mass: 0, staticObject: true, noContact: noContact
+		}
+	}
+}
+
+const FLOOR_TILE = '0';
+const WALL_TILE = '3'
+function createRoom(sizeX, sizeY) {
+	const roomData = [Array(sizeY).fill(WALL_TILE)];
+	for(let i = 0; i < sizeY-2; i++) {
+		const line = Array(sizeY).fill(FLOOR_TILE);
+		line[0] = line[sizeY-1] = WALL_TILE;
+		roomData.push(line);
+	}
+	roomData.push(Array(sizeY).fill(WALL_TILE));
+	return roomData;
+}
+
+function sliceRoom(offsetX, offsetY, sizeX, sizeY, dim, roomData) {
+	if(sizeX < 5 || sizeY < 5) {
+		return roomData;
+	}
+	const randX = Math.round((Math.random() * ((sizeX-offsetX)-3))+1);
+	const randY = Math.round((Math.random() * ((sizeY-offsetY)-3))+1);
+	if(dim == 0) {
+		for(let i = offsetX; i < sizeX; i++) {
+			if(i != randX) {
+				roomData[randY][i] = WALL_TILE;
+			}
+		}
+	}
+	if(dim == 1) {
+		for(let i = offsetY; i < sizeY; i++) {
+			if(i != randY) {
+				roomData[i][randX] = WALL_TILE;
+			}
+		}
+	}
+	return roomData;
+}
+
+function generateAFuckingGrid2(width, height) {
+	const roomData = sliceRoom(0, 0, 20, 10, 0, sliceRoom(0, 10, 20, 20, 0, sliceRoom(0, 0, 20, 20, 0, createRoom(20, 20))));
+	for(let i = 0; i < roomData.length; i++) {
+		roomData[i] = roomData[i].join('');
+	}
+	return roomData;
+}
 
 export { level1 }

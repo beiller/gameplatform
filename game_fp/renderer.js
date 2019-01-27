@@ -289,11 +289,11 @@ function addBlade(geometry, offsetX, offsetZ) {
 	]);
 	geometry.uvsNeedUpdate = true;
 }
-/*const maxDist = 0.50;
-for(let i = 0; i < 1; i++) {
+const maxDist = 0.50;
+for(let i = 0; i < 5; i++) {
 	addBlade(geometry, ((Math.random() -0.5)*2)*maxDist, ((Math.random() -0.5)*2)*maxDist)
-}*/
-addBlade(geometry, 0, 0);
+}
+//addBlade(geometry, 0, 0);
 cachedGrassGeom = new THREE.BufferGeometry().fromGeometry( geometry );
 
 function createGrass(state, id) {
@@ -694,7 +694,7 @@ function createClip(id, animationName) {
 	return getAnimationMixer(id).clipAction(animationName);
 }
 
-function updateObject(entity, threeObject) {
+function updateObject(renderState, entity, threeObject) {
 	threeObject.position.set(entity.x, entity.y, entity.z);
 	if('rotation' in entity) {
 		if('w' in entity.rotation) {
@@ -706,6 +706,16 @@ function updateObject(entity, threeObject) {
 				entity.rotation.x, entity.rotation.y, entity.rotation.z
 			)
 		}
+	}
+	if('offsetY' in renderState) {
+		tempThreeVector1.set(renderState.offsetX, renderState.offsetY, renderState.offsetZ).applyQuaternion(threeObject.quaternion);
+		threeObject.position.add(tempThreeVector1);
+		/*ent = {
+			...entity,
+			x: ent.x + state.offsetX, 
+			y: ent.y + state.offsetY, 
+			z: ent.z + state.offsetZ
+		}*/
 	}
 }
 
@@ -940,18 +950,12 @@ function renderObject(state, id, eventHandler, gameState) {
 	//compare states of deps (memory address compare)
 	if(id in gameState.entity && !(id in previousEntity) || previousEntity[id] !== gameState.entity[id]) {
 		let ent = gameState.entity[id];
-		if('offsetY' in state) {
-			ent = {
-				...ent,
-				y: ent.y + state.offsetY
-			}
-		}
-		updateObject(ent, loadedObjects[id]);
+		updateObject(state, ent, loadedObjects[id]);
 		previousEntity[id] = gameState.entity[id];
 	}
 
 	if(DEBUG_PHYSICS && id in physicsDebugObjects) {
-		updateObject(gameState.physics[id], physicsDebugObjects[id]);
+		updateObject({}, gameState.physics[id], physicsDebugObjects[id]);
 	}
 
 	if(id in gameState.input && gameState.input[id].buttons[1] === true && loadedObjects[id].children.length > 0) {

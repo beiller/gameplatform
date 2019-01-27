@@ -211,27 +211,29 @@ function normalize3D(point) {
 
 function applyEntity(state, id, eventHandler, gameState) {
 	if(id in gameState.physics) {
-		
-		let y = gameState.physics[id].y; // hmm
-		if(gameState.physics[id].x !== state.x || y !== state.y || gameState.physics[id].z !== state.z) {
+		// Move the entity according to physics simulation
+		if(gameState.physics[id].x != state.x || gameState.physics[id].y != state.y || gameState.physics[id].z != state.z) {
 			if(id in gameState.input || id in gameState.ai) {
+				//fake rotation by pointing the character if its controlled by AI or KB
 				return {
-					...pointCharacter(state, id, gameState),
+					...pointCharacter(state, id, gameState), 
 					x: gameState.physics[id].x,
-					y: y,
+					y: gameState.physics[id].y,
 					z: gameState.physics[id].z
 				}
 			} else {
+				//use physics sim rotation
 				return {
 					rotation: {...gameState.physics[id].rotation},
 					x: gameState.physics[id].x,
-					y: y,
+					y: gameState.physics[id].y,
 					z: gameState.physics[id].z
 				}
 			}
 		}
 	}
 	if(id in gameState.camera && gameState.camera[id].type == 'follow') {
+		// Move the camera track a character
 		const physicsState = gameState.physics[gameState.camera[id].entityName];
 		if(physicsState.x !== state.x || (physicsState.z + 2) !== state.z) {
 			return {
