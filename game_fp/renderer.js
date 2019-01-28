@@ -8,7 +8,7 @@ var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
 var GLOBAL_RENDERER = null;
 var GLOBAL_ORBIT_CONTROLS = null;
-var DEBUG_PHYSICS = true;
+var DEBUG_PHYSICS = false;
 
 var loadedObjects = {};
 var physicsDebugObjects = {};
@@ -153,7 +153,8 @@ const loaders = {
 	"heightField": createWorld,
 	"tree": createTree,
 	"grass": createGrass,
-	"rock": createRock
+	"rock": createRock,
+	"brick": createBox
 }
 
 function meshPostProcess(threeObject) {
