@@ -112,8 +112,8 @@ function applyMagic(state, id, eventHandler, gameState) {
 		const inputState = gameState.input[id];
 		
 		//todo calculate proper xyz emission position
-		if(inputState.buttons[4] || inputState.buttons[5]) {
-			const spellIndex = inputState.buttons[4] ? 0 : 1;
+		if(inputState.buttons[4] || inputState.buttons[5] || inputState.buttons[6]) {
+			const spellIndex = inputState.buttons[5] ? 1 : 0;
 			if(state.cooldowns[spellIndex] <= 0) {
 				queueSpell(spellMap[state.spells[spellIndex]], physicsState, motionState);
 				const newCooldown = [...state.cooldowns]

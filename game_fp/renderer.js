@@ -3,6 +3,7 @@ import * as TREE from './lib/tree.js';
 import * as Effects from './Effects.js';
 import * as Loader from './Loader.js';
 import * as MESH_UTILS from './mesh_utils.js';
+import * as LEVEL from './level.js';
 
 var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
@@ -170,26 +171,33 @@ function meshPostProcess(threeObject) {
 }
 
 function createWorld(state, id) {
-	const wSeg = 50;
-	const hSeg = 50;
-	const width = 50.0;
-	const height = 50.0;
+	const wSeg = 200;
+	const hSeg = 200;
+	const width = 100.0;
+	const height = 100.0;
+	const heightMap = LEVEL.createHeightMap(wSeg, hSeg);
 
 	const simp = new MESH_UTILS.SimplexNoise();
 	const scale = 50.0;
-	function vertexFunction(x, y, z) {
+	/*function vertexFunction(x, y, z) {
 		const sY = simp.noise3d((x/width)*scale, y, (z/height)*scale);
 		return [x, (sY-0.5)*0.5, z];
+	}*/
+	function vertexFunction(x, y, z) {
+		return [x, heightMap[x][z], z];
 	}
 
 	const pmesh = new THREE.PlaneBufferGeometry( width, height, wSeg - 1, hSeg - 1 );
     pmesh.rotateX( -Math.PI / 2 );
     var vertices = pmesh.attributes.position.array;
     for ( var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3 ) {
-            const res = vertexFunction(vertices[ j ], vertices[ j + 1 ], vertices[ j + 2 ]);
+            /*const res = vertexFunction(vertices[ j ], vertices[ j + 1 ], vertices[ j + 2 ]);
             vertices[ j ] = res[0]
             vertices[ j + 1 ] = res[1];
-            vertices[ j + 2 ] = res[2];
+            vertices[ j + 2 ] = res[2];*/
+            const xi = parseInt(i % wSeg);
+			const yi = parseInt(i / wSeg);
+            vertices[ j + 1 ] = (heightMap[xi][yi] * 15.0) + 7.5;
     }
 	pmesh.computeVertexNormals();
 	

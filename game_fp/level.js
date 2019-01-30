@@ -70,7 +70,8 @@ function level1(systems) {
 					animations: {
 						special: 'XP32_Dance',
 						run: 'XP32_CombatRun',
-						idle: 'XP32_Combatiddle'
+						idle: 'XP32_Combatiddle',
+						idle: 'XP32_CombatAttack2'
 					}
 				},
 				"render": { 
@@ -138,7 +139,7 @@ function level1(systems) {
 	}
 
 	//gridmap = gridmap.split(',');
-	const gridmap = generateAFuckingGrid4(50, 50);
+	/*const gridmap = generateAFuckingGrid3(70, 70);
 	for(let z = 0; z < gridmap.length; z++) {
 		for(let x = 0; x < gridmap[z].length; x++) {
 			const tileHeight = parseInt(gridmap[z].charAt(x)) + 1;
@@ -150,7 +151,7 @@ function level1(systems) {
 		}
 
 
-	}
+	}*/
 
 	initialState.systems = systems;
 	return initialState;
@@ -193,47 +194,6 @@ function generateTile(x, z, offsetx, offsetz, type, noContact) {
 
 const FLOOR_TILE = '0';
 const WALL_TILE = '4'
-function createRoom(sizeX, sizeY) {
-	const roomData = [Array(sizeY).fill(WALL_TILE)];
-	for(let i = 0; i < sizeY-2; i++) {
-		const line = Array(sizeY).fill(FLOOR_TILE);
-		line[0] = line[sizeY-1] = WALL_TILE;
-		roomData.push(line);
-	}
-	roomData.push(Array(sizeY).fill(WALL_TILE));
-	return roomData;
-}
-
-function sliceRoom(offsetX, offsetY, sizeX, sizeY, dim, roomData) {
-	if(sizeX < 5 || sizeY < 5) {
-		return roomData;
-	}
-	const randX = Math.round((Math.random() * ((sizeX-offsetX)-3))+1);
-	const randY = Math.round((Math.random() * ((sizeY-offsetY)-3))+1);
-	if(dim == 0) {
-		for(let i = offsetX; i < sizeX; i++) {
-			if(i != randX) {
-				roomData[randY][i] = WALL_TILE;
-			}
-		}
-	}
-	if(dim == 1) {
-		for(let i = offsetY; i < sizeY; i++) {
-			if(i != randY) {
-				roomData[i][randX] = WALL_TILE;
-			}
-		}
-	}
-	return roomData;
-}
-
-function generateAFuckingGrid2(width, height) {
-	const roomData = sliceRoom(0, 0, 20, 10, 0, sliceRoom(0, 10, 20, 20, 0, sliceRoom(0, 0, 20, 20, 0, createRoom(20, 20))));
-	for(let i = 0; i < roomData.length; i++) {
-		roomData[i] = roomData[i].join('');
-	}
-	return roomData;
-}
 
 function generateAFuckingGrid3(w, h) {
 
@@ -250,17 +210,17 @@ function generateAFuckingGrid3(w, h) {
 	function drawBox(mapData, startX, endX, startY, endY, fill) {
 		for(let i = startX; i <= endX; i++) {
 			for(let j = startY; j <= endY; j++) {
-				console.log("Setting x="+i+", y="+j, fill);
+				//console.log("Setting x="+i+", y="+j, fill);
 				mapData[j][i] = fill;
 			}
 		}
 	}
 	let DATA = createRoom(w, h);
 	var map = new ROT.Digger(w, h, {
-		roomWidth: [3, 9],
-		roomHeight: [3, 9],
-		corridorLength: [3, 10],
-		dugPercentage: 0.8,
+		roomWidth: [6, 16],
+		roomHeight: [6, 16],
+		corridorLength: [3, 6],
+		dugPercentage: 0.4,
 		timeLimit: 5000
     });
 	map.create();
@@ -289,9 +249,75 @@ function generateAFuckingGrid3(w, h) {
 	return DATA;
 }
 
+function add(a,b) { return a+b; }
+function getScalarDiv(scalar){
+	function divScalar(a,b) { 
+		return a / scalar; 
+	}
+	return divScalar;
+}
+function mapOper(map1, map2, fn) {
+	if(!fn) fn = add;
+	for(let i = 0; i < map1.length; i++) {
+		for(let j = 0; j < map1[0].length; j++) {
+			map1[i][j] = fn(map1[i][j], map2[i][j]);
+		}
+	}
+}
+
+function randomChoice(arr) {
+	return arr[Math.floor(Math.random() * arr.length)]
+}
+function createHeightMap(w, h) {
+	let heightMap = Array(h).fill().map(() => Array(w).fill(0));
+	const options = { 
+		born: [1, 3, 5, 6, 7, 8], //{int[]} [options.born] List of neighbor counts for a new cell to be born in empty space
+		survive: [4, 5, 6, 7, 8], //{int[]} [options.survive] List of neighbor counts for an existing  cell to survive
+		topology: 8, //{int} [options.topology] Topology 4 or 6 or 8
+		connected: true //connect loose pieces
+	};
+	let map = null;
+	const iter = 80;
+	function setRandomPixels(probability) {
+	    for (let i = 0; i < map._width; i++) {
+	      for (let j = 0; j < map._height; j++) {
+	        map._map[i][j] = Math.random() < probability ? 1 : map._map[i][j];
+	      }
+	    }
+	}
+	const borns = [
+		[2, 4, 6, 8],
+		[1, 3, 5, 7],
+		[2, 4, 5, 7],
+		[1, 3, 6, 8],
+		[1, 3, 5, 6, 7, 8],
+		[2, 3, 6, 7, 8],
+		[3, 4, 5, 6, 7, 8]
+	];
+	for (let i=0; i<iter; i++) {
+		if(!map) {
+			map = new ROT.Cellular(w, h, options);
+			map.randomize(0.0025);
+		} else {
+			map.setOptions({
+				...options, born: randomChoice(borns)
+			})
+			map.create();
+		}
+		mapOper(heightMap, map._map, add);
+	}
+	mapOper(heightMap, map._map, getScalarDiv(iter));
+	return heightMap;
+}
+
 function generateAFuckingGrid4(w, h) {
 	/* create a connected map where the player can reach all non-wall sections */
-	var map = new ROT.Cellular(w, h, { connected: true });
+	var map = new ROT.Cellular(w, h, { 
+		born: [5, 6, 7, 8], //{int[]} [options.born] List of neighbor counts for a new cell to be born in empty space
+		survive: [4, 5, 6, 7, 8], //{int[]} [options.survive] List of neighbor counts for an existing  cell to survive
+		topology: 8, //{int} [options.topology] Topology 4 or 6 or 8
+		connected: true //connect loose pieces
+	});
 
 	/* cells with 1/2 probability */
 	map.randomize(0.5);
@@ -299,14 +325,6 @@ function generateAFuckingGrid4(w, h) {
 	/* make a few generations */
 	for (var i=0; i<4; i++) map.create();
 
-	/* display only the final map */
-	var display = new ROT.Display({width:w, height:h, fontSize:4});
-	//SHOW(display.getContainer());    
-	map.create(null);
-
-	/* now connect the maze */
-	//var display = new ROT.Display({width:w, height:h, fontSize:4});
-	//SHOW(display.getContainer());    
 	let DATA = [];
 	const mapTranslate = {
 		1: FLOOR_TILE, 0: WALL_TILE
@@ -325,4 +343,4 @@ function generateAFuckingGrid4(w, h) {
 
 
 
-export { level1 }
+export { level1, createHeightMap }
