@@ -9,7 +9,7 @@ var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
 var GLOBAL_RENDERER = null;
 var GLOBAL_ORBIT_CONTROLS = null;
-var DEBUG_PHYSICS = false;
+var DEBUG_PHYSICS = true;
 
 var loadedObjects = {};
 var physicsDebugObjects = {};
@@ -35,6 +35,7 @@ const rockMaterial = new THREE.MeshStandardMaterial(
 	{color: new THREE.Color(0x888890), roughness: 0.65}
 )
 const treeMaterial = new THREE.MeshStandardMaterial({roughness: 0.85, color: new THREE.Color(0x332525)});
+const defaultMaterial = new THREE.MeshStandardMaterial({roughness: 0.5});
 
 const textureCache = {};
 const meshInstance = {  //not really instanced but large static
@@ -170,12 +171,12 @@ function meshPostProcess(threeObject) {
 	}
 }
 
-function createWorld(state, id) {
-	const wSeg = 200;
-	const hSeg = 200;
-	const width = 100.0;
-	const height = 100.0;
-	const heightMap = LEVEL.createHeightMap(wSeg, hSeg);
+function createWorld(state, id, eventHandler, gameState) {
+	const wSeg = gameState.physics[id].shape.terrainWidthExtents;
+	const hSeg = gameState.physics[id].shape.terrainDepthExtents;
+	const width = gameState.physics[id].shape.x;
+	const height = gameState.physics[id].shape.z;
+	const heightMap = gameState.physics[id].shape.heightMapData; 
 
 	const simp = new MESH_UTILS.SimplexNoise();
 	const scale = 50.0;
@@ -187,17 +188,11 @@ function createWorld(state, id) {
 		return [x, heightMap[x][z], z];
 	}
 
-	const pmesh = new THREE.PlaneBufferGeometry( width, height, wSeg - 1, hSeg - 1 );
+	const pmesh = new THREE.PlaneBufferGeometry( wSeg, hSeg, width - 1, height - 1);
     pmesh.rotateX( -Math.PI / 2 );
     var vertices = pmesh.attributes.position.array;
     for ( var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3 ) {
-            /*const res = vertexFunction(vertices[ j ], vertices[ j + 1 ], vertices[ j + 2 ]);
-            vertices[ j ] = res[0]
-            vertices[ j + 1 ] = res[1];
-            vertices[ j + 2 ] = res[2];*/
-            const xi = parseInt(i % wSeg);
-			const yi = parseInt(i / wSeg);
-            vertices[ j + 1 ] = (heightMap[xi][yi] * 15.0) + 7.5;
+            vertices[ j + 1 ] = heightMap[i];
     }
 	pmesh.computeVertexNormals();
 	
@@ -205,7 +200,7 @@ function createWorld(state, id) {
 		pmesh, 
 		new THREE.MeshStandardMaterial(
 			{
-				color: new THREE.Color(0x555555),
+				color: new THREE.Color(0x557755),
 				roughness: 0.65
 			}
 		)
@@ -247,11 +242,7 @@ var cachedSphereGeometry = new THREE.SphereGeometry(1.0, 12, 12);
 function createSphere(state, id) {
 	loadedObjects[id] = new THREE.Mesh(
     	cachedSphereGeometry,
-    	new THREE.MeshStandardMaterial(
-    		{
-    			roughness: 0.5,
-    		}
-    	)
+    	defaultMaterial
     );
     loadedObjects[id].scale.set(state.radius, state.radius, state.radius);
 }
@@ -259,11 +250,7 @@ function createSphere(state, id) {
 function createBox(state, id) {
 	loadedObjects[id] = new THREE.Mesh(
     	new THREE.BoxGeometry( state.x, state.y, state.z ),
-    	new THREE.MeshStandardMaterial(
-    		{
-    			roughness: 0.5,
-    		}
-    	)
+    	defaultMaterial
     );
 }
 
@@ -680,8 +667,8 @@ function createHealthBar() {
     return sprite;
 };
 
-function loadAssets(state, id) {
-	loaders[state.type](state, id);
+function loadAssets(state, id, eventHandler, gameState) {
+	loaders[state.type](state, id, eventHandler, gameState);
 }
 
 function createCache(fn) {
@@ -706,17 +693,19 @@ function createClip(id, animationName) {
 function updateObject(renderState, entity, threeObject) {
 	threeObject.position.set(entity.x, entity.y, entity.z);
 	if('rotation' in entity) {
-		if('w' in entity.rotation) {
-			threeObject.quaternion.set( 
-				entity.rotation.x, entity.rotation.y, entity.rotation.z, entity.rotation.w 
-			)
-		} else {
-			threeObject.rotation.set( 
-				entity.rotation.x, entity.rotation.y, entity.rotation.z
-			)
+		if('rotation' in entity) {
+			if('w' in entity.rotation) {
+				threeObject.quaternion.set( 
+					entity.rotation.x, entity.rotation.y, entity.rotation.z, entity.rotation.w 
+				)
+			} else {
+				threeObject.rotation.set( 
+					entity.rotation.x, entity.rotation.y, entity.rotation.z
+				)
+			}
 		}
 	}
-	if('offsetY' in renderState) {
+	if('offsetY' in renderState && !(renderState.ignoreOffset)) {
 		tempThreeVector1.set(renderState.offsetX, renderState.offsetY, renderState.offsetZ).applyQuaternion(threeObject.quaternion);
 		threeObject.position.add(tempThreeVector1);
 		/*ent = {
@@ -891,7 +880,7 @@ function renderObject(state, id, eventHandler, gameState) {
 			return state;
 		}
 		let newState = {...state, ...{loading: true}};
-		loadAssets(newState, id);
+		loadAssets(newState, id, eventHandler, gameState);
 		return newState;
 	}
 	const instanceable = state.type in meshInstance;

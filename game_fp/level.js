@@ -19,12 +19,13 @@ function level1(systems) {
 				}
 			},*/
 			"groundplane1": {
-				"entity": {x: 0, y: -0.5, z: 0},
 				"render": { type: "heightField" },
 				"physics": {
-					mass: 0, x: 0, y: -0.5, z: 0, staticObject: true, neverSleep: true,
+					mass: 0, x: 0, y: 0, z: 0, staticObject: true, neverSleep: true,
 					shape: {
-						type: "heightField", x: 250, y: 0.25, z: 250, margin: 0.01 
+						type: "heightField", x: 60, z: 60, margin: 0.5,
+						terrainWidthExtents: 150, terrainDepthExtents: 150,
+						heightMapData: createHeightMap(60, 60, 15)
 					}
 				}
 			},
@@ -37,29 +38,29 @@ function level1(systems) {
 				}
 			},*/
 			"sword": {
-				"entity": {x: 0, y: 15, z: 0 },
+				"entity": {x: 1, y: 9, z: 0 },
 				"render": { 
 					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "firesword"
 				},
-				"physics": {x: 0, y: 15, z: 0, 
+				"physics": {x: 1, y: 9, z: 0, 
 					//shape: {type: "sphere", radius: .1 },
 					shape: {
 						type: "box", y: 0.15
 					},
-					mass: 0.5
+					mass: 0.25
 				}
 			},
 			"severedFuckingHead": {
-				"entity": {x: 0, y: 15, z: 0 },
+				"entity": {x: 0, y: 9, z: 0 },
 				"render": { 
-					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "miku_outfit1"
+					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "icestaff"
 				},
-				"physics": {x: 0, y: 15, z: 0, 
+				"physics": {x: 0, y: 9, z: 0, 
 					//shape: {type: "sphere", radius: .1 },
 					shape: {
 						type: "box"
 					},
-					mass: 0.5
+					mass: 0.25
 				}
 			},
 			"character1": {
@@ -92,24 +93,7 @@ function level1(systems) {
 			}
 		}
 	};
-	var numTiles = 0;
-	for(var x = 0; x < numTiles; x++) {
-		for(var y = 0; y < numTiles; y++) {
-			initialState['state']["ground"+x+"-"+y] = {
-				"entity": {x: (x*10)-(numTiles*10/2), y: 0, z: (y*10)-(numTiles*10/2)},
-				"render": { 
-					type: "animatedMesh", filename: "grass_tile.glb"
-				},
-				"physics": {
-					x: (x*10)-(numTiles*10/2), y: 0, z: (y*10)-(numTiles*10/2),
-					mass: 0, staticObject: true,
-					shape: {
-						type: "box", x: 5, y: 0.0001, z: 5, margin: 0.00001 
-					}
-				}
-			}	
-		}
-	}
+
 	var numCharacters = 3;
 	for(var i = 0; i < numCharacters; i++) {
 		var xPos = (Math.random()-0.5)*2*20;
@@ -249,12 +233,14 @@ function generateAFuckingGrid3(w, h) {
 	return DATA;
 }
 
+
 function add(a,b) { return a+b; }
-function getScalarDiv(scalar){
-	function divScalar(a,b) { 
-		return a / scalar; 
+function div(a,b) { return a/b; }
+function getScalarFn(fn1, scalar) {
+	function scalarFn(a,b) {
+		return fn1(a, scalar);
 	}
-	return divScalar;
+	return scalarFn;
 }
 function mapOper(map1, map2, fn) {
 	if(!fn) fn = add;
@@ -264,12 +250,11 @@ function mapOper(map1, map2, fn) {
 		}
 	}
 }
-
 function randomChoice(arr) {
 	return arr[Math.floor(Math.random() * arr.length)]
 }
-function createHeightMap(w, h) {
-	let heightMap = Array(h).fill().map(() => Array(w).fill(0));
+function createHeightMap(width, depth, height) {
+	let heightMap = Array(depth).fill().map(() => Array(width).fill(0));
 	const options = { 
 		born: [1, 3, 5, 6, 7, 8], //{int[]} [options.born] List of neighbor counts for a new cell to be born in empty space
 		survive: [4, 5, 6, 7, 8], //{int[]} [options.survive] List of neighbor counts for an existing  cell to survive
@@ -280,9 +265,9 @@ function createHeightMap(w, h) {
 	const iter = 80;
 	function setRandomPixels(probability) {
 	    for (let i = 0; i < map._width; i++) {
-	      for (let j = 0; j < map._height; j++) {
-	        map._map[i][j] = Math.random() < probability ? 1 : map._map[i][j];
-	      }
+			for (let j = 0; j < map._height; j++) {
+				map._map[i][j] = Math.random() < probability ? 1 : map._map[i][j];
+			}
 	    }
 	}
 	const borns = [
@@ -296,7 +281,7 @@ function createHeightMap(w, h) {
 	];
 	for (let i=0; i<iter; i++) {
 		if(!map) {
-			map = new ROT.Cellular(w, h, options);
+			map = new ROT.Cellular(width, depth, options);
 			map.randomize(0.0025);
 		} else {
 			map.setOptions({
@@ -306,11 +291,19 @@ function createHeightMap(w, h) {
 		}
 		mapOper(heightMap, map._map, add);
 	}
-	mapOper(heightMap, map._map, getScalarDiv(iter));
-	return heightMap;
+	mapOper(heightMap, map._map, getScalarFn(div, iter));
+	let idx = 0;
+	let finalData = [];
+	
+	for(let i = 0; i < heightMap.length; i++) {
+		for(let j = 0; j < heightMap.length; j++) {
+			finalData.push(heightMap[j][i] * height - height);
+		}
+	}
+	return finalData;
 }
 
-function generateAFuckingGrid4(w, h) {
+function createDungeon(w, h) {
 	/* create a connected map where the player can reach all non-wall sections */
 	var map = new ROT.Cellular(w, h, { 
 		born: [5, 6, 7, 8], //{int[]} [options.born] List of neighbor counts for a new cell to be born in empty space
@@ -339,6 +332,31 @@ function generateAFuckingGrid4(w, h) {
 		
 	}
 	return DATA;
+}
+
+function generateHeight( width, depth, minHeight, maxHeight ) {
+	/*
+		Generate 1d heightmap of width*depth, in a Math.sin pattern (used for debug)
+	*/
+    var size = width * depth;
+    //var data = new Array( size );
+    var data = []; //Array.from(Array(depth), () => new Array(width));
+    var hRange = maxHeight - minHeight;
+    var w2 = width / 2;
+    var d2 = depth / 2;
+    var phaseMult = 12;
+	var p = 0;
+    for ( var j = 0; j < depth; j ++ ) {
+    	for ( var i = 0; i < width; i ++ ) {
+    		var radius = Math.sqrt(
+    			Math.pow( ( i - w2 ) / w2, 2.0 ) +
+    			Math.pow( ( j - d2 ) / d2, 2.0 ) );
+			var height = ( Math.sin( radius * phaseMult ) + 1 ) * 0.5  * hRange + minHeight;
+			data[p] = height;
+			p++;
+		}
+    }
+    return data;
 }
 
 
