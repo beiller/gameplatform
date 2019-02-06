@@ -3,25 +3,51 @@ import * as ENGINE from './engine.js';
 import * as INPUT from './input.js';
 import * as PHYSICS from './physics.js';
 import * as LEVEL from './level.js';
+import * as THREE from './lib/three.module.js';
 import * as InspectorMiddleware from './InspectorMiddleware.js';
 
 //welcome!
 
-function getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats) {
-	return {
-		"entity": {x: xPos, y: yPos, z: zPos},
-		"render": { 
-			type: "sphere", radius: radius
-		},
-		"motion": {fx: fx, fy: fy, fz: fz},
-		"physics": {x: xPos, y: yPos, z: zPos, 
-			shape: {type: "sphere", radius: radius },
-			mass: mass, damping: damping, noContact: noContact
-		},
-		"stats": stats ? stats : defaultStats,
-		"particle": {maxAge: maxAge, damping: fDamping }
+function getShapeFunction(shape) {
+	return function(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats) {
+		return {
+			"entity": {x: xPos, y: yPos, z: zPos},
+			"render": { 
+				type: shape, radius: radius, height: 1.0
+			},
+			"motion": {fx: fx, fy: fy, fz: fz},
+			"physics": {x: xPos, y: yPos, z: zPos, 
+				shape: {type: shape, radius: radius, height: 1.0 },
+				mass: mass, damping: damping, noContact: noContact
+			},
+			"stats": stats ? stats : defaultStats,
+			"particle": {maxAge: maxAge, damping: fDamping }
+		};
 	};
 }
+
+const getSpell = getShapeFunction("sphere")
+const getAttack = getShapeFunction("cone");
+
+let q = new THREE.Quaternion();
+function getAttackVolume(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
+	q.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), Math.PI / -2 );
+	return {
+		"entity": {x: xPos, y: yPos, z: zPos, rotation: {x: q.x, y: q.y, z: q.z, w: q.w}},
+		"render": { 
+			type: "cone", radius: radius, height: 5.0
+		},
+		"motion": {fx: 0, fy: 0, fz: 0},
+		"physics": {x: xPos, y: yPos, z: zPos, 
+			rotation: {x: q.x, y: q.y, z: q.z, w: q.w},
+			shape: {type: "cone", radius: radius, height: 5.0 },
+			mass: 1.0, damping: 0.01, noContact: true
+		},
+		"stats": stats ? stats : defaultStats,
+		"particle": {maxAge: 3, damping: 0.5 }
+	};
+}
+
 function getProjectileSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 	const fDamping = 0.8;
 	const mass = 0.05;
@@ -45,6 +71,10 @@ const defaultStats = {
 		fire: 50
 	}
 };
+function getSwordAttack(x, y, z, facingX, facingZ) {
+	const stats = defaultStats;
+	return getAttackVolume(1.0, x, y, z, 0, 0, 0, stats);
+}
 function getFireSpell(x, y, z, facingX, facingZ) {
 	const stats = defaultStats;
 	const fireballForce = 0.01;
@@ -97,13 +127,14 @@ function queueSpell(spellFunction, physicsState, motionState) {
 }
 const spellMap = {
 	"fireball": getFireSpell,
-	"meteorstorm": getMeteorSpell
+	"meteorstorm": getMeteorSpell,
+	"attack": getSwordAttack
 }
 function applyMagic(state, id, eventHandler, gameState) {
 	if(!state) {
 		return {
-			spells: ["fireball", "meteorstorm"],
-			cooldowns: [100, 100]
+			spells: ["fireball", "meteorstorm", "attack"],
+			cooldowns: [100, 100, 100]
 		}
 	}
 	if(id in gameState.input) {
@@ -113,7 +144,8 @@ function applyMagic(state, id, eventHandler, gameState) {
 		
 		//todo calculate proper xyz emission position
 		if(inputState.buttons[4] || inputState.buttons[5] || inputState.buttons[6]) {
-			const spellIndex = inputState.buttons[5] ? 1 : 0;
+			//const spellIndex = inputState.buttons[5] ? 1 : 0;
+			const spellIndex = [inputState.buttons[4], inputState.buttons[5], inputState.buttons[6]].findIndex(x=>x===true);
 			if(state.cooldowns[spellIndex] <= 0) {
 				queueSpell(spellMap[state.spells[spellIndex]], physicsState, motionState);
 				const newCooldown = [...state.cooldowns]

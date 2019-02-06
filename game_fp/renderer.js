@@ -36,6 +36,7 @@ const rockMaterial = new THREE.MeshStandardMaterial(
 )
 const treeMaterial = new THREE.MeshStandardMaterial({roughness: 0.85, color: new THREE.Color(0x332525)});
 const defaultMaterial = new THREE.MeshStandardMaterial({roughness: 0.5});
+const groundMaterial = new THREE.MeshStandardMaterial( { roughness: 0.65 } );
 
 const textureCache = {};
 const meshInstance = {  //not really instanced but large static
@@ -122,24 +123,6 @@ function loadEXRMap() {
 			hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
 
 			hdrCubeMap.dispose();
-			//let shader = THREE.ShaderLib.cube;
-			//shader.uniforms.tCube.value = hdrCubeRenderTarget;
-	        /*var mesh = new THREE.Mesh(
-	        	new THREE.SphereGeometry(50, 60, 40), 
-	        	new THREE.MeshStandardMaterial(
-	        		{
-	        			envMap: hdrCubeRenderTarget.texture,
-	        			envMapIntensity: 15000.0,
-	        			side: THREE.BackSide,
-	        			roughness: 0,
-	        			metalness: 1,
-	        			refractionRatio: -1.0
-	        		}
-	        	)
-	        );
-	        GLOBAL_SCENE.add(mesh);*/
-	        
-	        //GLOBAL_SCENE.background = hdrCubeMap;  // TODO not quite working in my version of threejs
 	        updateCubeMaps();
 
 			resolve(pmremCubeUVPacker.CubeUVRenderTarget);
@@ -156,7 +139,8 @@ const loaders = {
 	"tree": createTree,
 	"grass": createGrass,
 	"rock": createRock,
-	"brick": createBox
+	"brick": createBox,
+	"cone": createCone
 }
 
 function meshPostProcess(threeObject) {
@@ -198,14 +182,16 @@ function createWorld(state, id, eventHandler, gameState) {
 	
 	const mesh = new THREE.Mesh(
 		pmesh, 
-		new THREE.MeshStandardMaterial(
-			{
-				color: new THREE.Color(0x557755),
-				roughness: 0.65
-			}
-		)
+		groundMaterial
 	);
 	loadedObjects[id] = mesh;
+    loadTextureOnce('/game_fp/ground_hhh316.jpg', function(tex) {
+	    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+	    tex.offset.set( 0, 0 );
+	    tex.repeat.set( 4, 4 );
+    	groundMaterial.map = tex;
+    	groundMaterial.needsUpdate = true;
+    })
 }
 
 function createRock(state, id) {
@@ -245,6 +231,15 @@ function createSphere(state, id) {
     	defaultMaterial
     );
     loadedObjects[id].scale.set(state.radius, state.radius, state.radius);
+}
+
+var cachedConeGeometry = new THREE.ConeGeometry();
+function createCone(state, id) {
+	loadedObjects[id] = new THREE.Mesh(
+    	cachedConeGeometry,
+    	defaultMaterial
+    );
+    loadedObjects[id].scale.set(state.radius, state.height, state.radius);
 }
 
 function createBox(state, id) {
@@ -693,16 +688,14 @@ function createClip(id, animationName) {
 function updateObject(renderState, entity, threeObject) {
 	threeObject.position.set(entity.x, entity.y, entity.z);
 	if('rotation' in entity) {
-		if('rotation' in entity) {
-			if('w' in entity.rotation) {
-				threeObject.quaternion.set( 
-					entity.rotation.x, entity.rotation.y, entity.rotation.z, entity.rotation.w 
-				)
-			} else {
-				threeObject.rotation.set( 
-					entity.rotation.x, entity.rotation.y, entity.rotation.z
-				)
-			}
+		if('w' in entity.rotation) {
+			threeObject.quaternion.set( 
+				entity.rotation.x, entity.rotation.y, entity.rotation.z, entity.rotation.w 
+			)
+		} else {
+			threeObject.rotation.set( 
+				entity.rotation.x, entity.rotation.y, entity.rotation.z
+			)
 		}
 	}
 	if('offsetY' in renderState && !(renderState.ignoreOffset)) {
@@ -760,8 +753,10 @@ function updateCamera(state, id, eventHandler, gameState) {
 			GLOBAL_ORBIT_CONTROLS.enableKeys = true;
 		}
 		if(state.entityName in loadedObjects) {
+			//calculate delta is probablt backwards
+			tempThreeVector2.copy(loadedObjects[state.entityName].position).sub(GLOBAL_ORBIT_CONTROLS.target);
 			GLOBAL_ORBIT_CONTROLS.target.copy(loadedObjects[state.entityName].position);
-			GLOBAL_ORBIT_CONTROLS.target.y += 1.5;
+			GLOBAL_ORBIT_CONTROLS.target.y += 1.15;
 		}
 		GLOBAL_ORBIT_CONTROLS.update();
 		return state;
@@ -790,10 +785,11 @@ function createDebugAxis() {
 	return axis.add(X).add(Y).add(Z);
 	//return axis;
 }
+
+const physicsDebugMaterial = new THREE.MeshStandardMaterial({ 
+	wireframe: true, emissive: new THREE.Color(0xFFFFFF)
+});
 function createPhysicsDebugMesh(state) {
-	var material = new THREE.MeshStandardMaterial({ 
-		wireframe: true, emissive: new THREE.Color(0xFFFFFF)
-	});
 	if(state.shape.type == 'box') {
 		return new THREE.Mesh(
 	    	new THREE.BoxGeometry( 
@@ -801,26 +797,32 @@ function createPhysicsDebugMesh(state) {
 	    		state.shape.y * 2.001, 
 	    		state.shape.z * 2.001
 	    	),
-	    	material
+	    	physicsDebugMaterial
 	    ).add(createDebugAxis());
 	}
 	if(state.shape.type == 'sphere') {
 		return new THREE.Mesh(
-	    	new THREE.SphereGeometry(state.shape.radius * 1.005, 8, 8), 
-	    	material
+	    	new THREE.SphereGeometry(state.shape.radius * 1.001, 8, 8), 
+	    	physicsDebugMaterial
 	    ).add(createDebugAxis());
 	}
 	if(state.shape.type == 'capsule') {
 		var r = state.shape.radius;
-		var m1 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 12, 6, 0, Math.PI*2, 0, Math.PI/2), material);
-		var m2 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 12, 6, 0, Math.PI*2, 0, Math.PI/2), material);
+		var m1 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 12, 6, 0, Math.PI*2, 0, Math.PI/2), physicsDebugMaterial);
+		var m2 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 12, 6, 0, Math.PI*2, 0, Math.PI/2), physicsDebugMaterial);
 		var m3 = new THREE.Mesh(new THREE.CylinderGeometry( 
 			r * 1.0001, r * 1.0001, state.shape.height, 12, 5, true 
-		), material);
+		), physicsDebugMaterial);
 	    m1.position.set(0,  state.shape.height*0.5, 0);
 	    m2.position.set(0, -state.shape.height*0.5, 0);
 	    m2.rotation.x = Math.PI;
 	    return new THREE.Object3D().add(m1).add(m2).add(m3).add(createDebugAxis());
+	}
+	if(state.shape.type == 'cone') {
+		return new THREE.Mesh(
+	    	new THREE.ConeGeometry(state.shape.radius, state.shape.height), 
+	    	physicsDebugMaterial
+	    ).add(createDebugAxis());
 	}
 	return new THREE.Object3D().add(createDebugAxis());
 }
@@ -874,18 +876,21 @@ function renderObject(state, id, eventHandler, gameState) {
 			loadedObjects[id].visible === true;
 		}
 	}*/
-
+	let immediate = false;
 	if(!(id in loadedObjects)) {
 		if(state.loading) {
 			return state;
 		}
 		let newState = {...state, ...{loading: true}};
 		loadAssets(newState, id, eventHandler, gameState);
-		return newState;
+		if(!(id in loadedObjects)) { // For immediatly loaded geom (generated), no need to exit
+			return newState;
+		}
+		immediate = true;
 	}
 	const instanceable = state.type in meshInstance;
 
-	if((id in loadedObjects) && state.loading) {
+	if(immediate || ((id in loadedObjects) && state.loading)) {
 		updateCubeMaps();
 		meshPostProcess(loadedObjects[id]);
 
@@ -923,6 +928,10 @@ function renderObject(state, id, eventHandler, gameState) {
 			meshInstance[state.type].geometry.computeVertexNormals();
 			delete loadedObjects[id];
 			loadedObjects[id] = new THREE.Object3D();
+		} else {
+			try {
+			updateObject(state, gameState.entity[id], loadedObjects[id]);
+			} catch(e){}
 		}
 
 		return {
@@ -1027,8 +1036,58 @@ function init(initialState) {
 	mesh.receiveShadow = false;
 	scene.add(mesh);
 	loadEXRMap();
+	initSkyShader();
 
 	render = createRenderFunction(sceneData, scene, camera);
+}
+
+function initSkyShader() {
+	// Add Sky
+	const sky = new THREE.Sky();
+	sky.scale.setScalar( 450000 );
+	GLOBAL_SCENE.add( sky );
+
+	// Add Sun Helper
+	const sunSphere = new THREE.Mesh(
+		new THREE.SphereBufferGeometry( 20000, 16, 8 ),
+		new THREE.MeshBasicMaterial( { color: 0xffffff } )
+	);
+	sunSphere.position.y = - 700000;
+	sunSphere.visible = false;
+	GLOBAL_SCENE.add( sunSphere );
+
+	/// GUI
+
+	var effectController  = {
+		turbidity: 10,
+		rayleigh: 2,
+		mieCoefficient: 0.005,
+		mieDirectionalG: 0.8,
+		luminance: 1,
+		inclination: 0.49, // elevation / inclination
+		azimuth: 0.25, // Facing front,
+		sun: ! true
+	};
+
+	var distance = 400000;
+
+	var uniforms = sky.material.uniforms;
+	uniforms[ "turbidity" ].value = effectController.turbidity;
+	uniforms[ "rayleigh" ].value = effectController.rayleigh;
+	uniforms[ "luminance" ].value = effectController.luminance;
+	uniforms[ "mieCoefficient" ].value = effectController.mieCoefficient;
+	uniforms[ "mieDirectionalG" ].value = effectController.mieDirectionalG;
+
+	var theta = Math.PI * ( effectController.inclination - 0.5 );
+	var phi = 2 * Math.PI * ( effectController.azimuth - 0.5 );
+
+	sunSphere.position.x = distance * Math.cos( phi );
+	sunSphere.position.y = distance * Math.sin( phi ) * Math.sin( theta );
+	sunSphere.position.z = distance * Math.sin( phi ) * Math.cos( theta );
+
+	//sunSphere.visible = effectController.sun;
+
+	uniforms[ "sunPosition" ].value.copy( sunSphere.position );
 }
 
 function renderFunction() {

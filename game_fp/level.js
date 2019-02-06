@@ -72,7 +72,7 @@ function level1(systems) {
 						special: 'XP32_Dance',
 						run: 'XP32_CombatRun',
 						idle: 'XP32_Combatiddle',
-						idle: 'XP32_CombatAttack2'
+						attack: 'XP32_CombatAttack'
 					}
 				},
 				"render": { 
@@ -116,10 +116,10 @@ function level1(systems) {
 	}
 
 	const tileFunctions = {
-		'1': function(x, z, offsetx, offsetz) { return generateTile(x, z, offsetx, offsetz, "tree", false) },
-		'2': function(x, z, offsetx, offsetz) { return generateTile(x, z, offsetx, offsetz, "grass", true) },
-		'3': function(x, z, offsetx, offsetz) { return generateTile(x, z, offsetx, offsetz, "rock", false) },
-		'4': function(x, z, offsetx, offsetz) { return generateTile(x, z, offsetx, offsetz, "brick", false) },
+		'1': function(x, z, offsetx, offsetz) { return generateTile(x, 0, z, offsetx, offsetz, "tree", false) },
+		'2': function(x, z, offsetx, offsetz) { return generateTile(x, 0, z, offsetx, offsetz, "grass", true) },
+		'3': function(x, z, offsetx, offsetz) { return generateTile(x, 0, z, offsetx, offsetz, "rock", false) },
+		'4': function(x, z, offsetx, offsetz) { return generateTile(x, 0, z, offsetx, offsetz, "brick", false) },
 	}
 
 	//gridmap = gridmap.split(',');
@@ -133,9 +133,32 @@ function level1(systems) {
 				initialState['state'][generateId()] = tileFunctions[gridmap[z].charAt(x)](x, z, offsetx, offsetz);
 			}
 		}
-
-
 	}*/
+	const heightData = initialState.state["groundplane1"].physics.shape.heightMapData;
+	const width = initialState.state["groundplane1"].physics.shape.x;
+	const depth = initialState.state["groundplane1"].physics.shape.z;
+	const widthExtents = initialState.state["groundplane1"].physics.shape.terrainWidthExtents;
+	const depthExtents = initialState.state["groundplane1"].physics.shape.terrainDepthExtents;
+
+	const widthInterval = widthExtents / width;
+	const depthInterval = depthExtents / depth;
+
+	const types = ["tree", "rock", "grass"];
+	const num = [150, 250, 1000];
+
+	for(let t = 0; t < types.length; t++) {
+		for(let k = 0; k < num[t]; k++) {
+			const randomIndex = parseInt(Math.random() * (width * depth));
+			const x = parseInt(randomIndex % width);
+			const y = heightData[randomIndex];
+			const z = parseInt(randomIndex / width);
+			initialState['state'][generateId()] = generateTile(
+				x * widthInterval - (widthExtents / 2), 
+				y, 
+				z * depthInterval - (depthExtents / 2), 
+				0, 0, types[t], types[t] == "grass");
+		}
+	}
 
 	initialState.systems = systems;
 	return initialState;
@@ -165,11 +188,11 @@ function generateId() {
 	return "tile"+(Math.random() * 100.0);
 }
 
-function generateTile(x, z, offsetx, offsetz, type, noContact) {
+function generateTile(x, y, z, offsetx, offsetz, type, noContact) {
 	return {
-		"entity": {x: x-offsetx, y: 0, z: z-offsetz },
+		"entity": {x: x-offsetx, y: y, z: z-offsetz },
 		"render": { type: type, x: 1.0, y: 1.0, z: 1.0 },
-		"physics": {x: x-offsetx, y: 0, z: z-offsetz, 
+		"physics": {x: x-offsetx, y: y, z: z-offsetz, 
 			shape: {type: "box", x: .5, y: .5, z: .5, margin: 0.00001 },
 			mass: 0, staticObject: true, noContact: noContact
 		}
@@ -180,7 +203,6 @@ const FLOOR_TILE = '0';
 const WALL_TILE = '4'
 
 function generateAFuckingGrid3(w, h) {
-
 	function createRoom(sizeX, sizeY) {
 		const roomData = [Array(sizeX).fill(WALL_TILE)];
 		for(let i = 0; i < sizeY-2; i++) {
@@ -271,13 +293,13 @@ function createHeightMap(width, depth, height) {
 	    }
 	}
 	const borns = [
-		[2, 4, 6, 8],
+		[1, 2, 4, 6, 8],
 		[1, 3, 5, 7],
-		[2, 4, 5, 7],
+		[1, 2, 4, 5, 7],
 		[1, 3, 6, 8],
 		[1, 3, 5, 6, 7, 8],
-		[2, 3, 6, 7, 8],
-		[3, 4, 5, 6, 7, 8]
+		[1, 2, 3, 6, 7, 8],
+		[1, 3, 4, 5, 6, 7, 8]
 	];
 	for (let i=0; i<iter; i++) {
 		if(!map) {

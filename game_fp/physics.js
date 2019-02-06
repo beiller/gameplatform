@@ -224,6 +224,10 @@ function createShape(shapeInfo) {
 			if(! 'radius' in shapeInfo) throw("Must specify radius in shape info");
 			shape = new Ammo.btSphereShape(shapeInfo.radius);
 			break;
+		case "cone":
+			if(! 'radius' in shapeInfo || ! 'height' in shapeInfo) throw("Must specify radius and height in shape info");
+			shape = new Ammo.btConeShape(shapeInfo.radius, shapeInfo.height);
+			break;
 		case "box":
 			if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
 			temp_vec3_1.setValue(shapeInfo.x, shapeInfo.y, shapeInfo.z);
@@ -389,6 +393,14 @@ function applyPhysics(state, id, eventHandler, gameState) {
 			var shape = createShape(shapeInfo);
 			bodies[id] = createBody(shape, state);
 			addBody(world.m_dynamicsWorld, bodies[id]);
+			//set the rotation if specified
+			if('rotation' in state) {
+				let t = bodies[id].getWorldTransform();
+				temp_quat_1.setValue(state.rotation.x, state.rotation.y, state.rotation.z, state.rotation.w);
+				t.setRotation(temp_quat_1);
+				bodies[id].getMotionState().setWorldTransform(t);
+			}
+
 			//"rest" the object necessary?
 			if('lockRotation' in state && state.lockRotation === true) {
 				temp_vec3_1.setValue(0, 1, 0);
