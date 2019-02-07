@@ -50,18 +50,17 @@ function level1(systems) {
 					mass: 0.25
 				}
 			},
-			"severedFuckingHead": {
+			"icestaff1": {
 				"entity": {x: 0, y: 9, z: 0 },
 				"render": { 
 					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "icestaff"
 				},
-				"physics": {x: 0, y: 9, z: 0, 
-					//shape: {type: "sphere", radius: .1 },
-					shape: {
-						type: "box"
-					},
-					mass: 0.25
-				}
+				"physics": {x: 0, y: 9, z: 0, shape: { type: "box" }, mass: 0.25 }
+			},
+			"mytext1": {
+				"entity": {x: 2, y: 1, z: 0 },
+				"render": { type: "3dText", string: "Hello", size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
+				"physics": {x: 2, y: 1, z: 0, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 }
 			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0 },

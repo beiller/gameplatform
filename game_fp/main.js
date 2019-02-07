@@ -29,19 +29,23 @@ function getShapeFunction(shape) {
 const getSpell = getShapeFunction("sphere")
 const getAttack = getShapeFunction("cone");
 
-let q = new THREE.Quaternion();
+let q1 = new THREE.Quaternion();
+let q2 = new THREE.Quaternion();
 function getAttackVolume(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
-	q.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), Math.PI / -2 );
+	q2.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), Math.PI / 2 );
+	q1.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.atan2(-fx, -fz) );
+	q1.multiply(q2);
+	const height = 5.0;
 	return {
-		"entity": {x: xPos, y: yPos, z: zPos, rotation: {x: q.x, y: q.y, z: q.z, w: q.w}},
+		"entity": {x: xPos, y: yPos, z: zPos, rotation: {x: q1.x, y: q1.y, z: q1.z, w: q1.w}},
 		"render": { 
-			type: "cone", radius: radius, height: 5.0
+			type: "cone", radius: radius, height: height
 		},
 		"motion": {fx: 0, fy: 0, fz: 0},
 		"physics": {x: xPos, y: yPos, z: zPos, 
-			rotation: {x: q.x, y: q.y, z: q.z, w: q.w},
-			shape: {type: "cone", radius: radius, height: 5.0 },
-			mass: 1.0, damping: 0.01, noContact: true
+			rotation: {x: q1.x, y: q1.y, z: q1.z, w: q1.w},
+			shape: {type: "cone", radius: radius, height: height },
+			mass: 0.1, damping: 0.9999, noContact: true
 		},
 		"stats": stats ? stats : defaultStats,
 		"particle": {maxAge: 3, damping: 0.5 }
@@ -73,7 +77,7 @@ const defaultStats = {
 };
 function getSwordAttack(x, y, z, facingX, facingZ) {
 	const stats = defaultStats;
-	return getAttackVolume(1.0, x, y, z, 0, 0, 0, stats);
+	return getAttackVolume(1.0, x, y, z, facingX, 0, facingZ, stats);
 }
 function getFireSpell(x, y, z, facingX, facingZ) {
 	const stats = defaultStats;
@@ -116,10 +120,10 @@ function getMeteorSpell(x, y, z, facingX, facingZ) {
 	return getProjectileCollidingSpell(radius, x+r3, y+10+r5, z+r4, fx+r1, fy, fz+r2, stats);
 }
 
-function queueSpell(spellFunction, physicsState, motionState) {
+function queueEntity(createStateFunction, physicsState, motionState) {
 	const temp_id = 'baddy'+(Math.random() * 100);
 	ENGINE.queueCommand(function(gameState) {
-		const fstate = spellFunction(
+		const fstate = createStateFunction(
 			physicsState.x, physicsState.y, physicsState.z, motionState.facingX, motionState.facingZ
 		);
 		ENGINE.createEntity(gameState, temp_id, fstate);
@@ -147,7 +151,7 @@ function applyMagic(state, id, eventHandler, gameState) {
 			//const spellIndex = inputState.buttons[5] ? 1 : 0;
 			const spellIndex = [inputState.buttons[4], inputState.buttons[5], inputState.buttons[6]].findIndex(x=>x===true);
 			if(state.cooldowns[spellIndex] <= 0) {
-				queueSpell(spellMap[state.spells[spellIndex]], physicsState, motionState);
+				queueEntity(spellMap[state.spells[spellIndex]], physicsState, motionState);
 				const newCooldown = [...state.cooldowns]
 				newCooldown[spellIndex] = 25;
 				return { ...state, cooldowns: newCooldown };

@@ -140,7 +140,8 @@ const loaders = {
 	"grass": createGrass,
 	"rock": createRock,
 	"brick": createBox,
-	"cone": createCone
+	"cone": createCone,
+	"3dText": create3DTextState
 }
 
 function meshPostProcess(threeObject) {
@@ -247,6 +248,23 @@ function createBox(state, id) {
     	new THREE.BoxGeometry( state.x, state.y, state.z ),
     	defaultMaterial
     );
+}
+
+function create3DTextState(state, id) {
+	//makeTextSprite("Z", {backgroundColor: {r: 0.9, g: 0.9, b: 1.0, a: 1.0}});
+	loadedObjects[id] = makeTextSprite(state.string, {backgroundColor: {r: 0.9, g: 0.9, b: 1.0, a: 1.0}});
+}
+
+function create3DText(string, size, height, colorIntHex, x, y, z) {
+	var textGeo = new THREE.TextGeometry(string, {
+		size: size,
+		height: height
+	});
+	var color = new THREE.Color(colorIntHex);
+	var textMaterial = new THREE.MeshStandardMaterial({ emissive: color });
+	var text = new THREE.Mesh(textGeo, textMaterial);
+	text.position.set(x, y, z);
+	return text;
 }
 
 var cachedGrassGeom = null;
@@ -426,11 +444,12 @@ function makeTextTexture( message, parameters ) {
 	texture.needsUpdate = true;
 	return texture;
 }
+
 function makeTextSprite( message, parameters ) {
 	var texture = makeTextTexture(message, parameters);
-    var spriteMaterial = new THREE.SpriteMaterial(
-        { map: texture, lights: false }
-    );
+	const spriteMaterial = new THREE.SpriteMaterial(
+	    { map: texture, lights: false }
+	);
     var sprite = new THREE.Sprite( spriteMaterial );
     sprite.scale.set(2,1,1.0);
     return sprite;
@@ -764,17 +783,6 @@ function updateCamera(state, id, eventHandler, gameState) {
 	return state;
 }
 
-function create3DText(string, size, height, colorIntHex, x, y, z) {
-	var textGeo = new THREE.TextGeometry(string, {
-		size: size,
-		height: height
-	});
-	var  color = new THREE.Color(colorIntHex);
-	var  textMaterial = new THREE.MeshStandardMaterial({ emissive: color });
-	var  text = new THREE.Mesh(textGeo, textMaterial);
-	text.position.set(x, y, z);
-	return text;
-}
 function createDebugAxis() {
 	var axis = new THREE.AxesHelper();
 	//var X = create3DText("X", 1.0, 0.5, 0xFFEEEE, 1, 0, 0);
