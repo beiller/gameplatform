@@ -9,7 +9,7 @@ var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
 var GLOBAL_RENDERER = null;
 var GLOBAL_ORBIT_CONTROLS = null;
-var DEBUG_PHYSICS = true;
+var DEBUG_PHYSICS = false;
 
 var loadedObjects = {};
 var physicsDebugObjects = {};
@@ -191,6 +191,8 @@ function createWorld(state, id, eventHandler, gameState) {
 	    tex.offset.set( 0, 0 );
 	    tex.repeat.set( 4, 4 );
     	groundMaterial.map = tex;
+    	groundMaterial.bumpMap = tex;
+    	groundMaterial.bumpScale = 0.05;
     	groundMaterial.needsUpdate = true;
     })
 }
@@ -221,6 +223,8 @@ function createRock(state, id) {
 	loadedObjects[id] = mesh;
 	loadTextureOnce('/game_fp/stone1.jpeg', function(tex) {
     	rockMaterial.map = tex;
+    	rockMaterial.bumpMap = tex;
+    	rockMaterial.bumpScale = 0.05;
     	rockMaterial.needsUpdate = true;
     });
 }
@@ -413,7 +417,7 @@ function makeTextTexture( message, parameters ) {
 	if ( parameters === undefined ) parameters = {};
 	var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "MainFont";
 	var fontsize = parameters.hasOwnProperty("fontsize") ? parameters["fontsize"] : 48;
-	var borderThickness = parameters.hasOwnProperty("borderThickness") ? parameters["borderThickness"] : 4;
+	var borderThickness = parameters.hasOwnProperty("borderThickness") ? parameters["borderThickness"] : 0.1;
 	var borderColor = parameters.hasOwnProperty("borderColor") ? parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
 	var backgroundColor = parameters.hasOwnProperty("backgroundColor") ? parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
 	var canvas = document.createElement('canvas');
@@ -451,11 +455,11 @@ function makeTextSprite( message, parameters ) {
 	    { map: texture, lights: false }
 	);
     var sprite = new THREE.Sprite( spriteMaterial );
-    sprite.scale.set(2,1,1.0);
+    sprite.scale.set(10,5,5);
     return sprite;
 };
 
-function createRectLight(pos) {
+function createRectLight( pos ) {
 	const width = .5;
 	const height = .5;
 	var bulbLight = new THREE.RectAreaLight( 0xffee88, 1, width, height );

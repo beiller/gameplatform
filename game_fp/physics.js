@@ -138,7 +138,7 @@ function localCreateRigidBody(mass, startTransform, shape) {
 	cInfo.friction = 5.0;
 	var btBody = new Ammo.btRigidBody(cInfo);
 	btBody.setActivationState(4); //disables sleep
-	btBody.setFriction(0.9);
+	btBody.setFriction(1.2);
 	//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
@@ -153,9 +153,8 @@ function createBody(shape, state) {
 	if(bodyInfo.noContact) flags.push(collisionFlags.CF_NO_CONTACT_RESPONSE);
 	if(bodyInfo.staticObject) flags.push(collisionFlags.CF_STATIC_OBJECT);
 	if(bodyInfo.kinematic) flags.push(collisionFlags.CF_KINEMATIC_OBJECT);
-	if(bodyInfo.damping) {
-		body.setDamping(bodyInfo.damping, bodyInfo.damping);
-	}
+	body.setDamping(bodyInfo.damping || 0.2, bodyInfo.damping || 0.2);
+	
 	setBodyFlags(body, flags);
 	return body;
 }

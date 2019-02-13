@@ -31,6 +31,7 @@ const getAttack = getShapeFunction("cone");
 
 let q1 = new THREE.Quaternion();
 let q2 = new THREE.Quaternion();
+
 function getAttackVolume(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 	q2.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), Math.PI / 2 );
 	q1.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.atan2(-fx, -fz) );
@@ -45,7 +46,7 @@ function getAttackVolume(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 		"physics": {x: xPos, y: yPos, z: zPos, 
 			rotation: {x: q1.x, y: q1.y, z: q1.z, w: q1.w},
 			shape: {type: "cone", radius: radius, height: height },
-			mass: 0.1, damping: 0.9999, noContact: true
+			mass: 0.1, damping: 0.9999, noContact: true, margin: 1.5
 		},
 		"stats": stats ? stats : defaultStats,
 		"particle": {maxAge: 3, damping: 0.5 }
@@ -82,7 +83,7 @@ function getSwordAttack(x, y, z, facingX, facingZ) {
 function getFireSpell(x, y, z, facingX, facingZ) {
 	const stats = defaultStats;
 	const fireballForce = 0.01;
-	const nVec = normalize2D({x: facingX, y: facingZ});
+	const nVec = normalizeXY({x: facingX, y: facingZ});
 	const fx = nVec.x * fireballForce;
 	const fz = nVec.y * fireballForce;
 	const fy = 0.001;
@@ -109,7 +110,7 @@ function getMeteorSpell(x, y, z, facingX, facingZ) {
 	const r4 = (Math.random() * meteorFieldRadius) - (meteorFieldRadius*0.5);
 	const r5 = Math.random() * meteorRandomHeight
 	const radius = 0.5;
-	const nVec = normalize2D({x: facingX, y: facingZ});
+	const nVec = normalizeXY({x: facingX, y: facingZ});
 	const cRadius = 0.8 // hard coded temp radius for character
 	x += nVec.x * (radius+cRadius); 
 	z += nVec.y * (radius+cRadius); 
@@ -120,14 +121,17 @@ function getMeteorSpell(x, y, z, facingX, facingZ) {
 	return getProjectileCollidingSpell(radius, x+r3, y+10+r5, z+r4, fx+r1, fy, fz+r2, stats);
 }
 
-function queueEntity(createStateFunction, physicsState, motionState) {
+function createEntity(entity) {
 	const temp_id = 'baddy'+(Math.random() * 100);
 	ENGINE.queueCommand(function(gameState) {
-		const fstate = createStateFunction(
-			physicsState.x, physicsState.y, physicsState.z, motionState.facingX, motionState.facingZ
-		);
-		ENGINE.createEntity(gameState, temp_id, fstate);
+		ENGINE.createEntity(gameState, temp_id, entity);
 	});
+}
+function queueEntity(createStateFunction, physicsState, motionState) {
+	const fstate = createStateFunction(
+		physicsState.x, physicsState.y, physicsState.z, motionState.facingX, motionState.facingZ
+	);
+	createEntity(fstate);
 }
 const spellMap = {
 	"fireball": getFireSpell,
@@ -211,15 +215,21 @@ function applyMotion(state, id, eventHandler, gameState) {
 		dep = gameState.ai[id];
 	}
 	if(dep) {
-		var normalized = normalize2D(dep);
+		var normalized = normalizeXY(dep);
 		if(state.fx !== normalized.x || state.fz !== normalized.y) {
+			const fx = (normalized.x * movementSpeed);
+			const fz = (-normalized.y * movementSpeed);
+			const useFacing = Math.abs(fx) + Math.abs(fz) > 0;
+			const facingX = useFacing ? fx : state.facingX;
+			const facingZ = useFacing ? fz : state.facingZ;
 			return {
 				...state,
-				fx: (normalized.x * movementSpeed), 
-				fz: (-normalized.y * movementSpeed),
-				facingX: state.fx || 0,
-				facingY: state.fy || 0,
-				facingZ: state.fz || 0
+				fx: fx,
+				fy: useFacing ? 0.3 : 0, //apply small upward force while walking
+				fz: fz,
+				facingX: facingX,
+				facingY: 0,
+				facingZ: facingZ
 			}
 		}
 	}
@@ -230,14 +240,14 @@ function applyPhysics(state, id, eventHandler, gameState) {
 	return PHYSICS.applyPhysics(state, id, eventHandler, gameState);
 }
 
-function normalize2D(point) {
+function normalizeXY(point) {
 	var norm = Math.sqrt(point.x * point.x + point.y * point.y);
 	if (norm != 0) { // as3 return 0,0 for a point of zero length
 		return {x: point.x / norm, y: point.y / norm};
 	}
 	return {x: 0, y: 0};
 }
-function normalize3D(point) {
+function normalizeXYZ(point) {
 	var norm = Math.sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
 	if (norm != 0) { // as3 return 0,0 for a point of zero length
 		return {x: point.x / norm, y: point.y / norm, z: point.z / norm};
@@ -305,7 +315,7 @@ function pointCharacter(state, id, gameState) {
 const animations = {
 	special: 'DE_Dance',
 	run: 'DE_CombatRun',
-	idle: 'DE_Combatiddle'
+	idle: 'DE_Shy'
 }
 function applyAnimation(state, id, eventHandler, gameState) {
 	if(!state.animations) {
@@ -355,12 +365,18 @@ function applyParticle(state, id, eventHandler, gameState) {
 	return { ...state, age: (state.age || 0)+1, maxAge: state.maxAge || 100 };
 }
 
+/*
+	Read intersections from physics library
+*/
 function applyCollision(state, id, eventHandler, gameState) {
 	return PHYSICS.applyCollision(state, id, eventHandler, gameState);
 }
 
-function applyStatsEffect(stats1, stats2) {
-	if('effect' in stats2 && 'health' in stats1) {
+/*
+	
+*/
+function applyStatsEffect(stats1, stats2, id, otherId, gameState) {
+	if('effect' in stats2 && 'health' in stats1 && id != otherId) {
 		let totalDamage = 0;
 		for(let effectType in stats2.effect) {
 			totalDamage += Math.max(stats2.effect[effectType] - (stats1[effectType] || 0), 0);
@@ -382,9 +398,27 @@ function applyStats(state, id, eventHandler, gameState) {
 		let newState = {...state};
 		for(var index in gameState.collision[id].colliding) {
 			if(gameState.collision[id].colliding[index].id in gameState.stats) {
-				const otherStats = gameState.stats[gameState.collision[id].colliding[index].id];
-				newState = applyStatsEffect(newState, otherStats);
-				newState['hitCooldown'] = 100;
+				const otherId = gameState.collision[id].colliding[index].id;
+				const otherStats = gameState.stats[otherId];
+				const beforeApplyStats = newState;
+				newState = applyStatsEffect(newState, otherStats, id, otherId, gameState);
+				if(beforeApplyStats != newState) {
+					const rScale = 0.04;
+					const x = gameState.physics[id].x;
+					const y = gameState.physics[id].y;
+					const z = gameState.physics[id].z;
+					const fx = (((Math.random() - 0.5)*2.0)*rScale);
+					const fz = (((Math.random() - 0.5)*2.0)*rScale);
+					const totalDamage = beforeApplyStats.health - newState.health;
+					createEntity({
+						"entity": {x: x, y: y, z: z },
+						"render": { type: "3dText", string: ""+totalDamage, size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
+						"physics": {x: x, y: y, z: z, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 },
+						"particle": {maxAge: 70, damping: 0.5 },
+						"motion": {fx: fx, fy: 0.1, fz: fz}
+					});
+				}
+				newState['hitCooldown'] = 50;
 			}
 		}
 		return newState;
@@ -406,6 +440,8 @@ const systems = [
 	{ name: "animation", func: applyAnimation },
 	{ name: "render", func: applyRender },
 ];
+
+
 
 function resetWorld() {
 	var initialState = LEVEL.level1(systems);
@@ -436,8 +472,7 @@ function main() {
 	function mainLoop() {
 		requestAnimationFrame(mainLoop);
 		now = Date.now();
-	    delta = now - then;
-	     
+	    delta = now - then; 
 	    if (delta > interval) {
 	    	then = now - (delta % interval);
 			ENGINE.tick();

@@ -62,6 +62,18 @@ function level1(systems) {
 				"render": { type: "3dText", string: "Hello", size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
 				"physics": {x: 2, y: 1, z: 0, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 }
 			},
+			"monster1123": {
+				"entity": {x: 0, y: 0, z: 0 },
+				"animation": { animationName: 'XP32_CombatBlock', playingAnimation: true },
+				"render": { 
+					type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "necker"
+				},
+				"physics": {x: 0, y: 2.8, z: 0, 
+					//shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
+					shape: {type: "capsule", radius: 0.3, margin: 0.001},
+					mass: 45.35, damping: 0.9, lockRotation: true
+				}
+			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0 },
 				"collision": { type: "ouchie" },
@@ -85,7 +97,7 @@ function level1(systems) {
 				"motion": {fx: 0, fy: 0, fz: 0},
 				"physics": {x: 0, y: 2.8, z: 0, 
 					//shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
-					shape: {type: "capsule", radius: 0.3, margin: 0.00001},
+					shape: {type: "capsule", radius: 0.3, margin: 0.001},
 					mass: 45.35, damping: 0.9, lockRotation: true
 				},
 				"stats": {health: 100, maxHealth: 100}
