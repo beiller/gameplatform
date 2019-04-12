@@ -21,6 +21,12 @@ var hdrCubeRenderTarget = null;
 var getAnimationMixer = null;
 var getAnimationClip = null;
 
+const settings = {
+	enableShadows: true,
+	shadowResolution: 1024,
+	enableAA: false
+};
+
 const customDepthMaterial = new THREE.MeshDepthMaterial( {
 	depthPacking: THREE.RGBADepthPacking, alphaTest: 0.25
 });
@@ -141,7 +147,27 @@ const loaders = {
 	"rock": createRock,
 	"brick": createBox,
 	"cone": createCone,
-	"3dText": create3DTextState
+	"3dText": create3DTextState,
+	"light": createThreeLight
+}
+
+function createThreeLight(state, id, eventHandler, gameState) {
+	//state.lightType;
+	const light = createLight([2, 5, 30], [0,0,0], settings);
+	//scene.add(light);
+	var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 2.0 );
+	var bulbMat = new THREE.MeshStandardMaterial( {
+		emissive: 0xffffee,
+		emissiveIntensity: 1,
+		color: 0x000000
+	});
+	var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
+	mesh.castShadow = false;
+	mesh.receiveShadow = false;
+	//scene.add(mesh);
+	mesh.add(light);
+	loadedObjects[id] = mesh;
+	
 }
 
 function meshPostProcess(threeObject) {
@@ -186,7 +212,7 @@ function createWorld(state, id, eventHandler, gameState) {
 		groundMaterial
 	);
 	loadedObjects[id] = mesh;
-    loadTextureOnce('/game_fp/ground_hhh316.jpg', function(tex) {
+    loadTextureOnce('textures/ground_hhh316.jpg', function(tex) {
 	    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
 	    tex.offset.set( 0, 0 );
 	    tex.repeat.set( 4, 4 );
@@ -221,7 +247,7 @@ function createRock(state, id) {
 		pmesh, rockMaterial
 	);
 	loadedObjects[id] = mesh;
-	loadTextureOnce('/game_fp/stone1.jpeg', function(tex) {
+	loadTextureOnce('textures/stone1.jpeg', function(tex) {
     	rockMaterial.map = tex;
     	rockMaterial.bumpMap = tex;
     	rockMaterial.bumpScale = 0.05;
@@ -319,7 +345,7 @@ function createGrass(state, id) {
     loadedObjects[id] = mesh;
     loadedObjects[id].rotation.y = Math.random() * 3.1415;
 
-    loadTextureOnce('/game_fp/flower1.png', function(tex) {
+    loadTextureOnce('textures/flower1.png', function(tex) {
     	grassMaterial.map = tex;
     	grassMaterial.needsUpdate = true;
     	customDepthMaterial.map = tex;
@@ -346,7 +372,7 @@ function createTree(state, id) {
 	mesh.position.y -= 3.25;
 	mesh.rotation.y = Math.random() * 3.1415;
 	loadedObjects[id] = mesh;
-    loadTextureOnce('/game_fp/treebark1.jpeg', function(tex) {
+    loadTextureOnce('textures/treebark1.jpeg', function(tex) {
     	treeMaterial.map = tex;
     	treeMaterial.needsUpdate = true;
     })
@@ -583,8 +609,6 @@ function initRendering(scene, settings, camera) {
 	var renderer = new THREE.WebGLRenderer( { antialias: settings.enableAA } );
     var container = document.createElement( 'div' );
     document.body.appendChild( container );
-
-    setupLighting(settings);
 
     // this.jsonloader = new THREE.JSONLoader();
     // this.loader = new Loader();
@@ -1028,25 +1052,9 @@ function init(initialState) {
 		GLOBAL_SCENE.add(meshInstance[i]);	
 	}
 
-	var settings = {
-		enableShadows: true,
-		shadowResolution: 1024,
-		enableAA: false
-	};
 	var sceneData = initRendering(scene, settings, camera);
 	sceneData.gameState = initialState;
-	var light = setupLighting(settings);
-	scene.add(light);
-	var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 2.0 );
-	var bulbMat = new THREE.MeshStandardMaterial( {
-		emissive: 0xffffee,
-		emissiveIntensity: 1,
-		color: 0x000000
-	});
-	var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
-	mesh.castShadow = false;
-	mesh.receiveShadow = false;
-	scene.add(mesh);
+
 	loadEXRMap();
 	initSkyShader();
 

@@ -25,18 +25,16 @@ function level1(systems) {
 					shape: {
 						type: "heightField", x: 60, z: 60, margin: 0.5,
 						terrainWidthExtents: 150, terrainDepthExtents: 150,
-						heightMapData: createHeightMap(60, 60, 15)
+						//heightMapData: createHeightMap(60, 60, 15)
+						heightMapData: createDungeon(60, 60, -5)
+						//heightMapData: generateAFuckingGrid3(60, 60, -5)
 					}
 				}
 			},
-			/*"sphere1": {
+            "light1234": {
 				"entity": {x: -5, y: -9, z: -5 },
-				"render": { type: "sphere", radius: 10},
-				"physics": {x: -5, y: -9, z: -5, 
-					shape: {type: "sphere", radius: 10 },
-					mass: 0, staticObject: true
-				}
-			},*/
+				"render": { type: "light", lightType: "spot" }
+			},
 			"sword": {
 				"entity": {x: 1, y: 9, z: 0 },
 				"render": { 
@@ -57,11 +55,11 @@ function level1(systems) {
 				},
 				"physics": {x: 0, y: 9, z: 0, shape: { type: "box" }, mass: 0.25 }
 			},
-			"mytext1": {
+			/*"mytext1": {
 				"entity": {x: 2, y: 1, z: 0 },
 				"render": { type: "3dText", string: "Hello", size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
 				"physics": {x: 2, y: 1, z: 0, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 }
-			},
+			},*/
 			"monster1123": {
 				"entity": {x: 0, y: 0, z: 0 },
 				"animation": { animationName: 'XP32_CombatBlock', playingAnimation: true },
@@ -78,17 +76,6 @@ function level1(systems) {
 				"entity": {x: 0, y: 0, z: 0 },
 				"collision": { type: "ouchie" },
 				"magic": null,
-				/*"animation": { animationName: 'XP32_Dance', playingAnimation: true, 
-					animations: {
-						special: 'XP32_Dance',
-						run: 'XP32_CombatRun',
-						idle: 'XP32_Combatiddle',
-						attack: 'XP32_CombatAttack'
-					}
-				},
-				"render": { 
-					type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "uunp_test"
-				},*/
 				"animation": { animationName: 'DE_Dance', playingAnimation: true },
 				"render": { 
 					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.285
@@ -105,7 +92,7 @@ function level1(systems) {
 		}
 	};
 
-	var numCharacters = 3;
+	var numCharacters = 2;
 	for(var i = 0; i < numCharacters; i++) {
 		var xPos = (Math.random()-0.5)*2*20;
 		var zPos = (Math.random()-0.5)*2*20;
@@ -116,13 +103,42 @@ function level1(systems) {
 				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.285
 			},
 			"collision": { type: "ouchie" },
-			"ai": { x: 1.0, y: 0.0 },
+			"ai": { x: 1.0, y: 0.0, mode: 1 },
 			"motion": {fx: 0, fy: 0, fz: 0},
 			"physics": {x: xPos, y: 0.8, z: zPos, 
 				shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
 				mass: 45.35, damping: 0.9, lockRotation: true
 			},
 			"stats": {health: 100, maxHealth: 100}
+		}
+	}
+
+	var numMonsters = 2;
+	for(var i = 0; i < numMonsters; i++) {
+		var xPos = (Math.random()-0.5)*2*20;
+		var zPos = (Math.random()-0.5)*2*20;
+		initialState['state']["character"+(i+1999)] = {
+			"entity": {x: xPos, y: 0, z: zPos },
+			"animation": { animationName: 'XP32_NormalIddle', playingAnimation: true,
+				animations: {
+					special: 'XP32_CombatBlock',
+					run: 'XP32_NormalRun',
+					idle: 'XP32_NormalIddle',
+					dead: 'arest',
+					attack: 'XP32_CombatAttack'
+				}
+			},
+			"render": { 
+				type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "necker"
+			},
+			"collision": { type: "ouchie" },
+			"ai": { x: 1.0, y: 0.0, mode: 2 },
+			"motion": {fx: 0, fy: 0, fz: 0},
+			"physics": {x: xPos, y: 0.8, z: zPos, 
+				shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
+				mass: 45.35, damping: 0.9, lockRotation: true
+			},
+			"stats": {health: 500, maxHealth: 500}
 		}
 	}
 
@@ -210,10 +226,11 @@ function generateTile(x, y, z, offsetx, offsetz, type, noContact) {
 	}
 }
 
-const FLOOR_TILE = '0';
-const WALL_TILE = '4'
 
-function generateAFuckingGrid3(w, h) {
+
+function generateAFuckingGrid3(w, h, height) {
+	const FLOOR_TILE = 1;
+	const WALL_TILE = 0;
 	function createRoom(sizeX, sizeY) {
 		const roomData = [Array(sizeX).fill(WALL_TILE)];
 		for(let i = 0; i < sizeY-2; i++) {
@@ -258,12 +275,14 @@ function generateAFuckingGrid3(w, h) {
 			FLOOR_TILE
 		);
 	}
-	console.log(DATA);
-	console.log(map);
+
+	let finalData = [];
 	for(let i = 0; i < DATA.length; i++) {
-		DATA[i] = DATA[i].join('');
+		for(let j = 0; j < DATA.length; j++) {
+			finalData.push(DATA[j][i] * height);
+		}
 	}
-	return DATA;
+	return finalData;
 }
 
 
@@ -336,7 +355,7 @@ function createHeightMap(width, depth, height) {
 	return finalData;
 }
 
-function createDungeon(w, h) {
+function createDungeon(w, h, height) {
 	/* create a connected map where the player can reach all non-wall sections */
 	var map = new ROT.Cellular(w, h, { 
 		born: [5, 6, 7, 8], //{int[]} [options.born] List of neighbor counts for a new cell to be born in empty space
@@ -352,19 +371,24 @@ function createDungeon(w, h) {
 	for (var i=0; i<4; i++) map.create();
 
 	let DATA = [];
-	const mapTranslate = {
-		1: FLOOR_TILE, 0: WALL_TILE
-	}
 	map.connect(null, 1);
 	for(let i = 0; i < map._map.length; i++) {
 		let row = [];
 		for(let j = 0; j < map._map[i].length; j++) {
-			row.push(mapTranslate[map._map[i][j]]);
+			row.push(map._map[i][j]);
 		}
-		DATA.push(row.join(''))
+		DATA.push(row)
 		
 	}
-	return DATA;
+	//return DATA;
+	let finalData = [];
+	
+	for(let i = 0; i < DATA.length; i++) {
+		for(let j = 0; j < DATA.length; j++) {
+			finalData.push(DATA[j][i] * height);
+		}
+	}
+	return finalData;
 }
 
 function generateHeight( width, depth, minHeight, maxHeight ) {

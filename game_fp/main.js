@@ -26,29 +26,33 @@ function getShapeFunction(shape) {
 	};
 }
 
-const getSpell = getShapeFunction("sphere")
-const getAttack = getShapeFunction("cone");
+const getSpell = getShapeFunction("sphere");
 
+// TODO remove THREE dependency
 let q1 = new THREE.Quaternion();
 let q2 = new THREE.Quaternion();
 
-function getAttackVolume(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
+function getAttackVolume(id, radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 	q2.setFromAxisAngle( new THREE.Vector3( 1, 0, 0 ), Math.PI / 2 );
 	q1.setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.atan2(-fx, -fz) );
 	q1.multiply(q2);
-	const height = 5.0;
+	const height = 1.5;
+	const nVec = normalizeXY({x: fx, y: fz});
+	const cRadius = 0 // hard coded temp radius for character
+	xPos += nVec.x * (cRadius + (height / 2)); 
+	zPos += nVec.y * (cRadius + (height / 2)); 
 	return {
 		"entity": {x: xPos, y: yPos, z: zPos, rotation: {x: q1.x, y: q1.y, z: q1.z, w: q1.w}},
 		"render": { 
-			type: "cone", radius: radius, height: height
+			type: "box", x: radius, y: radius, z: radius
 		},
 		"motion": {fx: 0, fy: 0, fz: 0},
 		"physics": {x: xPos, y: yPos, z: zPos, 
 			rotation: {x: q1.x, y: q1.y, z: q1.z, w: q1.w},
-			shape: {type: "cone", radius: radius, height: height },
-			mass: 0.1, damping: 0.9999, noContact: true, margin: 1.5
+			shape: {type: "box", x: radius, y: radius, z: radius },
+			mass: 0.1, damping: 0.9999, noContact: true, margin: 0.5
 		},
-		"stats": stats ? stats : defaultStats,
+		"stats": stats,
 		"particle": {maxAge: 3, damping: 0.5 }
 	};
 }
@@ -76,12 +80,12 @@ const defaultStats = {
 		fire: 50
 	}
 };
-function getSwordAttack(x, y, z, facingX, facingZ) {
-	const stats = defaultStats;
-	return getAttackVolume(1.0, x, y, z, facingX, 0, facingZ, stats);
+function getSwordAttack(id, x, y, z, facingX, facingZ) {
+	const stats = {...defaultStats, origin: id};
+	return getAttackVolume(id, 1.0, x, y, z, facingX, 0, facingZ, stats);
 }
-function getFireSpell(x, y, z, facingX, facingZ) {
-	const stats = defaultStats;
+function getFireSpell(id, x, y, z, facingX, facingZ) {
+	const stats = {...defaultStats, origin: id};
 	const fireballForce = 0.01;
 	const nVec = normalizeXY({x: facingX, y: facingZ});
 	const fx = nVec.x * fireballForce;
@@ -97,8 +101,8 @@ function getFireSpell(x, y, z, facingX, facingZ) {
 	z += nVec.y * (radius+cRadius); 
 	return getProjectileSpell(radius, x, y, z, fx+r1, fy, fz+r2, stats);
 }
-function getMeteorSpell(x, y, z, facingX, facingZ) {
-	const stats = defaultStats;
+function getMeteorSpell(id, x, y, z, facingX, facingZ) {
+	const stats = {...defaultStats, origin: id};
 	
 	const fireballForce = 0.0025;
 	const rAmt = 0.3333 * fireballForce; //random direction scale
@@ -127,9 +131,9 @@ function createEntity(entity) {
 		ENGINE.createEntity(gameState, temp_id, entity);
 	});
 }
-function queueEntity(createStateFunction, physicsState, motionState) {
+function queueEntity(createStateFunction, id, physicsState, motionState) {
 	const fstate = createStateFunction(
-		physicsState.x, physicsState.y, physicsState.z, motionState.facingX, motionState.facingZ
+		id, physicsState.x, physicsState.y, physicsState.z, motionState.facingX, motionState.facingZ
 	);
 	createEntity(fstate);
 }
@@ -155,7 +159,7 @@ function applyMagic(state, id, eventHandler, gameState) {
 			//const spellIndex = inputState.buttons[5] ? 1 : 0;
 			const spellIndex = [inputState.buttons[4], inputState.buttons[5], inputState.buttons[6]].findIndex(x=>x===true);
 			if(state.cooldowns[spellIndex] <= 0) {
-				queueEntity(spellMap[state.spells[spellIndex]], physicsState, motionState);
+				queueEntity(spellMap[state.spells[spellIndex]], id, physicsState, motionState);
 				const newCooldown = [...state.cooldowns]
 				newCooldown[spellIndex] = 25;
 				return { ...state, cooldowns: newCooldown };
@@ -182,19 +186,34 @@ function changeDirections(state, fieldName) {
 	}
 	return state;
 }
-function applyAI(state, id, eventHandler) {
-	var newState = changeDirections(state, "x");
-	if(newState !== state) {
-		return newState;
+function applyAI(state, id, eventHandler, gameState) {
+	if(!('mode' in state)) {
+		return {...state, mode: 1} //wander mode
 	}
-	var newState = changeDirections(state, "y");
-	if(newState !== state) {
-		return newState;
+	if(state.mode === 1) { //wander mode
+		var newState = changeDirections(state, "x");
+		if(newState !== state) {
+			return newState;
+		}
+		var newState = changeDirections(state, "y");
+		if(newState !== state) {
+			return newState;
+		}
+		return state;
 	}
-	return state;
+	if(state.mode === 2) { //attack mode
+		const distx = gameState["entity"]["character1"].x - gameState.entity[id].x;
+		const distz = gameState["entity"]["character1"].z - gameState.entity[id].z;
+		if(( Math.abs(distx) + Math.abs(distz) ) > 5.0) {
+			return {...state, x: distx, y: -distz};
+		}
+		return {...state, x: 0, y: 0};
+	}
+	
 }
 
-const movementSpeed = 1.0;
+const movementSpeed = 0.58;
+const upforce = 0.45;
 function applyMotion(state, id, eventHandler, gameState) {
 	var dep = null; // will contain an object that contains x, y, and z field
 	var damping = 1.0; // 1.0 - no damping. 0.0 - full damping
@@ -225,7 +244,7 @@ function applyMotion(state, id, eventHandler, gameState) {
 			return {
 				...state,
 				fx: fx,
-				fy: useFacing ? 0.3 : 0, //apply small upward force while walking
+				fy: useFacing ? upforce : 0, //apply small upward force while walking
 				fz: fz,
 				facingX: facingX,
 				facingY: 0,
@@ -315,11 +334,19 @@ function pointCharacter(state, id, gameState) {
 const animations = {
 	special: 'DE_Dance',
 	run: 'DE_CombatRun',
-	idle: 'DE_Shy'
+	idle: 'DE_Shy',
+	dead: 'DE_Working',
+	attack: 'DE_Dance'
 }
 function applyAnimation(state, id, eventHandler, gameState) {
 	if(!state.animations) {
 		return {...state, animations: animations};
+	}
+	if(id in gameState.stats && 'health' in gameState.stats[id] && gameState.stats[id].health <= 0 ) {
+		return {
+			...state, playingAnimation: true, 
+			animationName: state.animations.dead
+		};
 	}
 	if(id in gameState.input && gameState.input[id].buttons[0] === true && !state.playingAnimation) {
 		return {
@@ -327,6 +354,7 @@ function applyAnimation(state, id, eventHandler, gameState) {
 			animationName: state.animations.special
 		};
 	}
+
 
 	if('playingAnimation' in state && state.playingAnimation === true) {
 		if(id in gameState.motion && (Math.abs(gameState.motion[id].fx)+Math.abs(gameState.motion[id].fz)) > 0.0001) {
@@ -389,6 +417,28 @@ function applyStatsEffect(stats1, stats2, id, otherId, gameState) {
 	return stats1;
 }
 
+/*
+ 	Shoots out a damage text given text from position of gameState.physics[id]
+*/
+function createDamageText(state, id, eventHandler, gameState, text) {
+	const rScale = 0.04;
+	const x = gameState.physics[id].x;
+	const y = gameState.physics[id].y;
+	const z = gameState.physics[id].z;
+	const fx = (((Math.random() - 0.5)*2.0)*rScale);
+	const fz = (((Math.random() - 0.5)*2.0)*rScale);
+	createEntity({
+		"entity": {x: x, y: y, z: z },
+		"render": { type: "3dText", string: ""+text, size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
+		"physics": {x: x, y: y, z: z, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 },
+		"particle": {maxAge: 70, damping: 0.5 },
+		"motion": {fx: fx, fy: 0.1, fz: fz}
+	});
+}
+
+/*
+
+*/
 function applyStats(state, id, eventHandler, gameState) { 
 	if('hitCooldown' in state && state.hitCooldown > 0) {
 		return {...state, hitCooldown: state.hitCooldown - 1};
@@ -400,25 +450,23 @@ function applyStats(state, id, eventHandler, gameState) {
 			if(gameState.collision[id].colliding[index].id in gameState.stats) {
 				const otherId = gameState.collision[id].colliding[index].id;
 				const otherStats = gameState.stats[otherId];
+				if (otherStats.origin === id) {
+					return state;
+				}
 				const beforeApplyStats = newState;
+
 				newState = applyStatsEffect(newState, otherStats, id, otherId, gameState);
 				if(beforeApplyStats != newState) {
-					const rScale = 0.04;
-					const x = gameState.physics[id].x;
-					const y = gameState.physics[id].y;
-					const z = gameState.physics[id].z;
-					const fx = (((Math.random() - 0.5)*2.0)*rScale);
-					const fz = (((Math.random() - 0.5)*2.0)*rScale);
+					if(newState.health <= 0 && id in gameState.ai) {
+						delete gameState.ai[id];
+						delete gameState.motion[id];
+						return state;
+					}
 					const totalDamage = beforeApplyStats.health - newState.health;
-					createEntity({
-						"entity": {x: x, y: y, z: z },
-						"render": { type: "3dText", string: ""+totalDamage, size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
-						"physics": {x: x, y: y, z: z, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 },
-						"particle": {maxAge: 70, damping: 0.5 },
-						"motion": {fx: fx, fy: 0.1, fz: fz}
-					});
+					createDamageText(state, id, eventHandler, gameState, totalDamage);
+
 				}
-				newState['hitCooldown'] = 50;
+				newState['hitCooldown'] = 5;  // invincibility frames
 			}
 		}
 		return newState;
