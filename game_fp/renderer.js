@@ -153,18 +153,27 @@ const loaders = {
 
 function createThreeLight(state, id, eventHandler, gameState) {
 	//state.lightType;
-	const light = createLight([2, 5, 30], [0,0,0], settings);
-	//scene.add(light);
+	//const light = createLight([state.x, state.y, state.z], [0,0,0], settings);
+	const pos = [state.x, state.y, state.z];
+	const tar = [0,0,0]
+	//const light = createSpotLight(pos, tar, settings);
+	//const light = createRectLight(pos);
+	const light = createPointLight(pos, {...settings, enableShadows: false})
+	light.intensity = 20000;
+	light.distance = 1000;
+
 	var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 2.0 );
 	var bulbMat = new THREE.MeshStandardMaterial( {
 		emissive: 0xffffee,
-		emissiveIntensity: 1,
+		emissiveIntensity: 10000000,
 		color: 0x000000
 	});
 	var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
+	mesh.position.fromArray(pos);
 	mesh.castShadow = false;
 	mesh.receiveShadow = false;
 	//scene.add(mesh);
+	light.position.set(0,0,0);
 	mesh.add(light);
 	loadedObjects[id] = mesh;
 	
@@ -389,7 +398,20 @@ function dataCallback(gltf, state, id) {
 	for(var i in gltf.scene.children) {
 		gltf.scene.children[i].animations = gltf.animations;
 	}
-	loadedObjects[id] = gltf.scene;
+	if('objectName' in state) {
+		var scene = new THREE.Scene();
+		for(let i in gltf.scene.children) {
+			if(gltf.scene.children[i].name == state.objectName) {
+				//scene.add(gltf.scene.children[i]);
+				loadedObjects[id] = gltf.scene.children[i];
+				//console.log(gltf.scene.children[i].position, gltf.scene.children[i].quaternion);
+				break;
+			}
+		}
+		//loadedObjects[id] = scene;
+	} else {
+		loadedObjects[id] = gltf.scene;
+	}
 	updateCubeMaps();
 }
 
@@ -397,11 +419,15 @@ function loadGLTF(state, id) {
 	function loaderCallback( gltf ) {
 		dataCallback(gltf, state, id);
 	}
+	loadMeshFile(loaderCallback, state);
+}
+
+function loadMeshFile(callbackFn, state) {
 	let extension = state.filename.split('.').pop().toLowerCase();
 	if(extension === 'json') {
-		Loader.loadThreeJS(state, loaderCallback);
+		Loader.loadThreeJS(state, callbackFn);
 	} else {
-		Loader.loadGLTF(state, loaderCallback);
+		Loader.loadGLTF(state, callbackFn);
 	}
 }
 
@@ -486,8 +512,8 @@ function makeTextSprite( message, parameters ) {
 };
 
 function createRectLight( pos ) {
-	const width = .5;
-	const height = .5;
+	const width = 1.5;
+	const height = 1.5;
 	var bulbLight = new THREE.RectAreaLight( 0xffee88, 1, width, height );
 	bulbLight.position.set( pos[0], pos[1], pos[2] );
 	var rectLightMesh = new THREE.Mesh( new THREE.PlaneBufferGeometry(), new THREE.MeshBasicMaterial() );
@@ -502,7 +528,7 @@ function createRectLight( pos ) {
 function createPointLight(pos, settings) {
 	var bulbLight = new THREE.PointLight( 0xffee88, 1, 100, 2 );
 	bulbLight.position.set( pos[0], pos[1], pos[2] );
-	var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
+	/*var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
 	var bulbMat = new THREE.MeshStandardMaterial( {
 		emissive: 0xffffee,
 		emissiveIntensity: 1,
@@ -511,7 +537,7 @@ function createPointLight(pos, settings) {
 	var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
 	mesh.castShadow = false;
 	mesh.receiveShadow = false;
-	bulbLight.add( mesh );
+	bulbLight.add( mesh );*/
 	if(settings.enableShadows) {
 		setupShadows(bulbLight, settings);
 	}
@@ -937,7 +963,20 @@ function renderObject(state, id, eventHandler, gameState) {
 			return {...state, loading: false};
 		}
 
-		const bounds = calculateBoundsDeep(loadedObjects[id]);
+		if(loadedObjects[id].geometry) {
+			loadedObjects[id].geometry.computeBoundingBox();
+			let min = [99999,99999,99999];
+			let max = [-99999,-99999,-99999];
+			min[0] = Math.min(min[0], loadedObjects[id].geometry.boundingBox.min.x);
+			min[1] = Math.min(min[1], loadedObjects[id].geometry.boundingBox.min.y);
+			min[2] = Math.min(min[2], loadedObjects[id].geometry.boundingBox.min.z);
+			max[0] = Math.max(max[0], loadedObjects[id].geometry.boundingBox.max.x);
+			max[1] = Math.max(max[1], loadedObjects[id].geometry.boundingBox.max.y);
+			max[2] = Math.max(max[2], loadedObjects[id].geometry.boundingBox.max.z);
+			var bounds = [min, max];
+		} else {
+			var bounds = calculateBoundsDeep(loadedObjects[id]);
+		}
 		tempThreeVector1.fromArray(bounds[0]); //min
 		tempThreeVector2.fromArray(bounds[1]); //max
 		tempThreeVector3.addVectors(tempThreeVector1, tempThreeVector2).multiplyScalar(0.5); //midpoint (center mass)
@@ -965,16 +1004,23 @@ function renderObject(state, id, eventHandler, gameState) {
 			delete loadedObjects[id];
 			loadedObjects[id] = new THREE.Object3D();
 		} else {
-			try {
-			updateObject(state, gameState.entity[id], loadedObjects[id]);
-			} catch(e){}
+			if(id in gameState.entity) {
+				try {
+					updateObject(state, gameState.entity[id], loadedObjects[id]);
+				} catch(e){
+					console.log(e);
+				}
+			}
 		}
 
 		return {
 			...state, 
 			loading: false,
 			offsetX: -tempThreeVector3.x, offsetY: -tempThreeVector3.y, offsetZ: -tempThreeVector3.z,
-			boundsX:  tempThreeVector4.x, boundsY:  tempThreeVector4.y, boundsZ:  tempThreeVector4.z
+			boundsX:  tempThreeVector4.x, boundsY:  tempThreeVector4.y, boundsZ:  tempThreeVector4.z,
+			xpos: loadedObjects[id].position.x, ypos: loadedObjects[id].position.y, zpos: loadedObjects[id].position.z,
+			xquat: loadedObjects[id].quaternion.x, yquat: loadedObjects[id].quaternion.y, 
+			zquat: loadedObjects[id].quaternion.z, wquat: loadedObjects[id].quaternion.w
 		};
 	}
 
@@ -983,11 +1029,13 @@ function renderObject(state, id, eventHandler, gameState) {
 	}
 
 	if(DEBUG_PHYSICS && !(id in physicsDebugObjects)) {
-		if(id in gameState.physics && 'shape' in gameState.physics[id]) {
-			let physicsState = gameState.physics[id];
-			let mesh = createPhysicsDebugMesh(physicsState);
-			physicsDebugObjects[id] = mesh;
-			GLOBAL_SCENE.add(mesh);
+		if('physics' in gameState && id in gameState.physics && 'shape' in gameState.physics[id]) {
+			if('x' in gameState.physics[id].shape || 'radius' in gameState.physics[id].shape) {
+				let physicsState = gameState.physics[id];
+				let mesh = createPhysicsDebugMesh(physicsState);
+				physicsDebugObjects[id] = mesh;
+				GLOBAL_SCENE.add(mesh);
+			}
 		}
 	}
 	//compare states of deps (memory address compare)
@@ -1132,5 +1180,5 @@ function renderFunction() {
 	}
 }
 
-export { renderObject, init, updateCamera, renderFunction };
+export { renderObject, init, updateCamera, renderFunction, loadMeshFile };
 

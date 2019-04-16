@@ -147,7 +147,14 @@ function localCreateRigidBody(mass, startTransform, shape) {
 };
 function createBody(shape, state) {	
 	var bodyInfo = { ...state };
-	var body = localCreateRigidBody(bodyInfo.mass, getMat3({x:bodyInfo.x,y:bodyInfo.y,z:bodyInfo.z}), shape);
+	if(bodyInfo.staticObject) { bodyInfo.mass = 0;}
+	let rotation = null;
+	if('rotation' in bodyInfo) {
+		rotation = {x:bodyInfo.rotation.x||0,y:bodyInfo.rotation.y||0,z:bodyInfo.rotation.z||0,w:bodyInfo.rotation.w||1};
+	}
+	var body = localCreateRigidBody(bodyInfo.mass, getMat3(
+		{x:bodyInfo.x,y:bodyInfo.y,z:bodyInfo.z}, rotation
+	), shape);
 	var flags = [];
 
 	if(bodyInfo.noContact) flags.push(collisionFlags.CF_NO_CONTACT_RESPONSE);
@@ -261,6 +268,10 @@ function getMat3(pos, rot) {
 	temp_trans_1.setIdentity();
 	temp_vec3_1.setValue(pos.x, pos.y, pos.z);
 	temp_trans_1.setOrigin(temp_vec3_1);
+	if(rot){ 
+		temp_quat_1.setValue(rot.x, rot.y, rot.z, rot.w);
+		temp_trans_1.setRotation(temp_quat_1);
+	}
 	return temp_trans_1;
 }
 
@@ -330,10 +341,25 @@ function applyPhysics(state, id, eventHandler, gameState) {
 
 	if(!(id in bodies) || !bodies[id]) {
 		var shapeInfo = { ...state.shape };
-		const getShapeFromLoadedGeometry = gameState.render[id].type === 'animatedMesh' || gameState.render[id].type === 'heightField'
-		if(id in gameState.render && getShapeFromLoadedGeometry) { // 
+		if(id in gameState.render && (gameState.render[id].type === 'animatedMesh' || gameState.render[id].type === 'heightField')) { 
 			if(!('loading' in gameState.render[id]) || gameState.render[id].loading === true) {
 				return state;
+			}
+			if(!('x' in state) && gameState.render[id].xpos) {
+				return {...state, 
+					x: gameState.render[id].xpos,
+					y: gameState.render[id].ypos,
+					z: gameState.render[id].zpos,
+				};
+			}
+			if(!('rotation' in state) && gameState.render[id].xquat) {
+				return {...state, rotation: {
+						x: gameState.render[id].xquat,
+						y: gameState.render[id].yquat,
+						z: gameState.render[id].zquat,
+						w: gameState.render[id].wquat
+					}
+				};
 			}
 			if(shapeInfo.type == 'box' && gameState.render[id].boundsY) {
 				shapeInfo = {

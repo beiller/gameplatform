@@ -227,10 +227,10 @@ function applyMotion(state, id, eventHandler, gameState) {
 		}
 	}
 
-	if(id in gameState.input && 'x' in gameState.input[id] && 'y' in gameState.input[id]) {
+	if('input' in gameState && id in gameState.input && 'x' in gameState.input[id] && 'y' in gameState.input[id]) {
 		dep = gameState.input[id];
 	}
-	if(id in gameState.ai && 'x' in gameState.ai[id] && 'y' in gameState.ai[id]) {
+	if('ai' in gameState && id in gameState.ai && 'x' in gameState.ai[id] && 'y' in gameState.ai[id]) {
 		dep = gameState.ai[id];
 	}
 	if(dep) {
@@ -275,10 +275,10 @@ function normalizeXYZ(point) {
 }
 
 function applyEntity(state, id, eventHandler, gameState) {
-	if(id in gameState.physics) {
+	if('physics' in gameState && id in gameState.physics) {
 		// Move the entity according to physics simulation
 		if(gameState.physics[id].x != state.x || gameState.physics[id].y != state.y || gameState.physics[id].z != state.z) {
-			if(id in gameState.input || id in gameState.ai) {
+			if(id in gameState.input || ('ai' in gameState && id in gameState.ai)) {
 				//fake rotation by pointing the character if its controlled by AI or KB
 				return {
 					...pointCharacter(state, id, gameState), 
@@ -299,6 +299,9 @@ function applyEntity(state, id, eventHandler, gameState) {
 	}
 	if(id in gameState.camera && gameState.camera[id].type == 'follow') {
 		// Move the camera track a character
+		if(!('physics' in gameState) || !(gameState.camera[id].entityName in gameState.physics)) {
+			return state;
+		}
 		const physicsState = gameState.physics[gameState.camera[id].entityName];
 		if(physicsState.x !== state.x || (physicsState.z + 2) !== state.z) {
 			return {
@@ -357,12 +360,14 @@ function applyAnimation(state, id, eventHandler, gameState) {
 
 
 	if('playingAnimation' in state && state.playingAnimation === true) {
-		if(id in gameState.motion && (Math.abs(gameState.motion[id].fx)+Math.abs(gameState.motion[id].fz)) > 0.0001) {
-			return {...state, playingAnimation: false};	
+		if('motion' in gameState) {
+			if(id in gameState.motion && (Math.abs(gameState.motion[id].fx)+Math.abs(gameState.motion[id].fz)) > 0.0001) {
+				return {...state, playingAnimation: false};	
+			}
 		}
 		return state;
 	}
-	if(id in gameState.motion) {
+	if('motion' in gameState && id in gameState.motion) {
 		var totalMotion = Math.abs(gameState.motion[id].fx) + Math.abs(gameState.motion[id].fz);
 		if(totalMotion > 0.0001 && state.animationName != state.animations.run) {
 			return {...state, animationName: state.animations.run};
@@ -499,7 +504,7 @@ function resetWorld() {
 }
 
 function main() {
-	var initialState = LEVEL.level1(systems);
+	var initialState = LEVEL.level2(systems);
 	var middleware = [
 		InspectorMiddleware.middleware
 	];

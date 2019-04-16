@@ -258,18 +258,13 @@
             ],
 	        "equipment": [
 				"uunp_head1",
-
 				"uunp_hands",
-
-				
-				
-				"pants1",
-				"shirt2",
-
-				"shoes1",
-	        	
-
-				"uunp_gens_f"
+				"uunp_hair2",
+				"uunp_boots3",	        	
+				"uunp_gens_f",
+				"uunp_panty2",
+				"uunp_belly_ring",
+				"uunp_bikini_top1"
 	        ],
 	        "inventory": [
 	        	"uunp_nipple_ring_l",
@@ -351,10 +346,10 @@
                 }
             ],
 	        "equipment": [
-	        	"miku_prisoner_outfit",
-	        	"miku_hair_moonrise_dynamic"
+	        	"miku_prisoner_outfit"
 	        ],
 	        "inventory": [
+	        	"miku_hair_moonrise_dynamic",
 	        	"miku_mage_apprentice",
 	        	"miku_dynamic_hair",
 	        	"miku_outfit1",
