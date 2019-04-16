@@ -3,7 +3,6 @@ import * as TREE from './lib/tree.js';
 import * as Effects from './Effects.js';
 import * as Loader from './Loader.js';
 import * as MESH_UTILS from './mesh_utils.js';
-import * as LEVEL from './level.js';
 
 var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
@@ -15,7 +14,6 @@ var loadedObjects = {};
 var physicsDebugObjects = {};
 var healthBarSprites = {};
 
-var loaderCallbackFunction = null;
 var hdrCubeRenderTarget = null;
 
 var getAnimationMixer = null;
@@ -73,38 +71,41 @@ function loadTextureOnce(url, callback) {
 	}
 }
 
+/*
+	Environment Map - updating all objects to set an env map
+*/
+function setEnvMapValues(material, envMap, intensity) {
+	material["envMap"] = envMap;
+	material["envMapIntensity"] = intensity;
+	material["needsUpdate"] = true;	
+}
+
+function setEnv(ob, envMap, intensity) {
+	if('children' in ob && ob.children.length > 0) {
+		for(var c in ob.children) {
+			setEnv(ob.children[c], envMap, intensity);
+		}
+	}
+	if('material' in ob) {
+		if(Array.isArray(ob.material)) {
+			for(let k = 0; k < ob.material.length; k++) { setEnvMapValues(ob.material[k], envMap, intensity); }
+		} else {
+			setEnvMapValues(ob.material, envMap, intensity);
+		}
+	}
+}
+
 function updateCubeMaps() {
 	if(!hdrCubeRenderTarget) return;
 
-    function setEnv(ob, envMap) {
-    	if('children' in ob && ob.children.length > 0) {
-    		for(var c in ob.children) {
-    			setEnv(ob.children[c], envMap);
-    		}
-    	}
-    	if('material' in ob) {
-    		if(Array.isArray(ob.material)) {
-    			for(let k = 0; k < ob.material.length; k++) {
-	    			ob.material[k]["envMap"] = envMap;
-		    		ob.material[k]["envMapIntensity"] = 10000.0;
-		    		ob.material[k]["needsUpdate"] = true;	
-    			}
-    		} else {
-	    		ob.material["envMap"] = envMap;
-	    		ob.material["envMapIntensity"] = 10000.0;
-	    		ob.material["needsUpdate"] = true;
-    		}
-    	}
-    }
+	const intensity = 10000.0;
+
     for(var k in loadedObjects) {
-    	setEnv(loadedObjects[k], hdrCubeRenderTarget.texture);
+    	setEnv(loadedObjects[k], hdrCubeRenderTarget.texture, intensity);
     }
     const globalMaterials = [grassMaterial, rockMaterial, treeMaterial];
     for(let i in globalMaterials) {
-    	//let mat = ;
-    	globalMaterials[i]["envMap"] = hdrCubeRenderTarget.texture;
-		globalMaterials[i]["envMapIntensity"] = 10000.0;
-		globalMaterials[i]["needsUpdate"] = true;
+		setEnvMapValues(globalMaterials[i], hdrCubeRenderTarget.texture, intensity);
 	}
 };
 
@@ -1087,7 +1088,6 @@ function init(initialState) {
 	GLOBAL_ORBIT_CONTROLS = null;
 	loadedObjects = {};
 	physicsDebugObjects = {};
-	loaderCallbackFunction = null;
 	hdrCubeRenderTarget = null;
 	getAnimationMixer = createCache(createMixer);
 	getAnimationClip = createCache(createClip);

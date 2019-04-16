@@ -307,8 +307,8 @@ function applyEntity(state, id, eventHandler, gameState) {
 			return {
 				...state,
 				x: physicsState.x, 
-				y: 4.0, 
-				z: physicsState.z + 2
+				y: physicsState.shape.height + physicsState.y, 
+				z: physicsState.z + 0.4
 			};
 		}
 	}
