@@ -140,6 +140,7 @@ function loadEXRMap() {
 const loaders = {
 	"camera": loadCamera,
 	"animatedMesh": loadGLTF,
+	"library": loadGLTF,
 	"sphere": createSphere,
 	"box": createBox,
 	"heightField": createWorld,
@@ -158,8 +159,8 @@ function createThreeLight(state, id, eventHandler, gameState) {
 	const pos = [state.x, state.y, state.z];
 	const tar = [0,0,0]
 	//const light = createSpotLight(pos, tar, settings);
-	//const light = createRectLight(pos);
-	const light = createPointLight(pos, {...settings, enableShadows: false})
+	const light = createRectLight(pos);
+	//const light = createPointLight(pos, {...settings, enableShadows: false})
 	light.intensity = 20000;
 	light.distance = 1000;
 
@@ -399,18 +400,16 @@ function dataCallback(gltf, state, id) {
 	for(var i in gltf.scene.children) {
 		gltf.scene.children[i].animations = gltf.animations;
 	}
-	if('objectName' in state) {
-		var scene = new THREE.Scene();
+	if('objectName' in state) {	
+		//library mode
 		for(let i in gltf.scene.children) {
 			if(gltf.scene.children[i].name == state.objectName) {
-				//scene.add(gltf.scene.children[i]);
 				loadedObjects[id] = gltf.scene.children[i];
-				//console.log(gltf.scene.children[i].position, gltf.scene.children[i].quaternion);
 				break;
 			}
 		}
-		//loadedObjects[id] = scene;
 	} else {
+		// this path is followed when we loading a gltf character with animation
 		loadedObjects[id] = gltf.scene;
 	}
 	updateCubeMaps();

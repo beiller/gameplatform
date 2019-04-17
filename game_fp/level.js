@@ -50,7 +50,7 @@ function level2(systems) {
 	for(let i in groups) {
 		const group = groups[i];
 		initialState.state[group] ={
-			"render": {type: "animatedMesh", filename: "/game_fp/bedroom.gltf", objectName: group},
+			"render": {type: "library", filename: "/game_fp/bedroom.gltf.glb", objectName: group},
 			"physics": {"shape": {type: "box"}, staticObject: true}
 		}
 	}

@@ -4,6 +4,9 @@ import * as INPUT from './input.js';
 import * as PHYSICS from './physics.js';
 import * as LEVEL from './level.js';
 import * as THREE from './lib/three.module.js';
+
+import './lib/RectAreaLightUniformsLib.js';
+
 import * as InspectorMiddleware from './InspectorMiddleware.js';
 
 //welcome!
