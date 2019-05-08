@@ -118,7 +118,7 @@ function loadAllMeshes(metaData, callback) {
 	});
 }
 const slotMapping = {
-	'diffuse': 'map', 'roughness': 'roughnessMap', 'bump': 'bumpMap', 'normal': 'normalMap'
+	'diffuse': 'map', 'roughness': 'roughnessMap', 'bump': 'bumpMap'/*, 'normal': 'normalMap'*/
 };
 function loadAllTextures(metaData, callback) {
 	let promises = [];
@@ -128,7 +128,9 @@ function loadAllTextures(metaData, callback) {
 			for(let prop in material) {
 				if(prop.endsWith('Path')) {
 					let slot = prop.replace('Path', '')
-					promises.push(texturePromise(i, j, slotMapping[slot], '/'+material[prop]));
+					if(slot in slotMapping) {
+						promises.push(texturePromise(i, j, slotMapping[slot], '/'+material[prop]));
+					}
 				}
 			}
 		}

@@ -1,8 +1,8 @@
-import * as THREE from './lib/three.module.js';
-import * as TREE from './lib/tree.js';
-import * as Effects from './Effects.js';
-import * as Loader from './Loader.js';
-import * as MESH_UTILS from './mesh_utils.js';
+import * as THREE from '../lib/three.module.js';
+import * as Effects from '../Effects.js';
+import * as MESH_UTILS from '../mesh_utils.js';
+import * as LOADER from './loader.js';
+import * as OBJECTS from './objects.js';
 
 var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
@@ -10,11 +10,11 @@ var GLOBAL_RENDERER = null;
 var GLOBAL_ORBIT_CONTROLS = null;
 var DEBUG_PHYSICS = false;
 
+var hdrCubeRenderTarget = null
+
 var loadedObjects = {};
 var physicsDebugObjects = {};
 var healthBarSprites = {};
-
-var hdrCubeRenderTarget = null;
 
 var getAnimationMixer = null;
 var getAnimationClip = null;
@@ -25,9 +25,7 @@ const settings = {
 	enableAA: false
 };
 
-const customDepthMaterial = new THREE.MeshDepthMaterial( {
-	depthPacking: THREE.RGBADepthPacking, alphaTest: 0.25
-});
+// TODO deduplicate this
 const grassMaterial = new THREE.MeshStandardMaterial({
 	//color: new THREE.Color(0x99CC99),
 	roughness: 0.5,
@@ -39,10 +37,23 @@ const rockMaterial = new THREE.MeshStandardMaterial(
 	{color: new THREE.Color(0x888890), roughness: 0.65}
 )
 const treeMaterial = new THREE.MeshStandardMaterial({roughness: 0.85, color: new THREE.Color(0x332525)});
-const defaultMaterial = new THREE.MeshStandardMaterial({roughness: 0.5});
-const groundMaterial = new THREE.MeshStandardMaterial( { roughness: 0.65 } );
+const customDepthMaterial = new THREE.MeshDepthMaterial( {
+	depthPacking: THREE.RGBADepthPacking, alphaTest: 0.25
+});
+//end TODO
 
-const textureCache = {};
+function meshPostProcess(threeObject) {
+	if(threeObject.geometry) {
+		threeObject.castShadow = true;
+		threeObject.receiveShadow = true;
+	}
+	if(threeObject.children.length > 0) {
+		for(let i = 0; i < threeObject.children.length; i++) {
+			meshPostProcess(threeObject.children[i]);
+		}
+	}
+}
+
 const meshInstance = {  //not really instanced but large static
 	grass: new THREE.Mesh(new THREE.BufferGeometry(), grassMaterial),
 	rock: new THREE.Mesh(new THREE.BufferGeometry(), rockMaterial),
@@ -53,23 +64,6 @@ for(let i in meshInstance) {
 	meshPostProcess(meshInstance[i]);
 }
 
-function loadTextureOnce(url, callback) {
-	if(!(url in textureCache)) {
-		textureCache[url] = 'loading'
-		Loader.loadTexture(url).then(function(tex) {
-	    	textureCache[url] = tex;
-	    	callback(tex);
-	    })	
-	} else {
-		if(textureCache[url] === 'loading') {
-			let u = url;
-			let c = callback;
-			setTimeout(function() { loadTextureOnce(u, c) }, 1000);
-		} else {
-			callback(textureCache[url]);
-		}
-	}
-}
 
 /*
 	Environment Map - updating all objects to set an env map
@@ -95,7 +89,7 @@ function setEnv(ob, envMap, intensity) {
 	}
 }
 
-function updateCubeMaps() {
+function updateCubeMaps(hdrCubeRenderTarget) {
 	if(!hdrCubeRenderTarget) return;
 
 	const intensity = 10000.0;
@@ -108,290 +102,6 @@ function updateCubeMaps() {
 		setEnvMapValues(globalMaterials[i], hdrCubeRenderTarget.texture, intensity);
 	}
 };
-
-function loadEXRMap() {
-	return new Promise(function(resolve) { 
-		var genCubeUrls = function( prefix, postfix ) {
-			return [
-				prefix + 'px' + postfix, prefix + 'nx' + postfix,
-				prefix + 'py' + postfix, prefix + 'ny' + postfix,
-				prefix + 'pz' + postfix, prefix + 'nz' + postfix
-			];
-		};
-		var hdrUrls = genCubeUrls( '/textures/park1/', '.hdr' );
-		new THREE.HDRCubeTextureLoader().load( THREE.UnsignedByteType, hdrUrls, function ( hdrCubeMap ) {
-
-			var pmremGenerator = new THREE.PMREMGenerator( hdrCubeMap );
-			pmremGenerator.update( GLOBAL_RENDERER );
-
-			var pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( pmremGenerator.cubeLods );
-			pmremCubeUVPacker.update( GLOBAL_RENDERER );
-
-			hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
-
-			hdrCubeMap.dispose();
-	        updateCubeMaps();
-
-			resolve(pmremCubeUVPacker.CubeUVRenderTarget);
-		} );
-	});
-};
-
-const loaders = {
-	"camera": loadCamera,
-	"animatedMesh": loadGLTF,
-	"library": loadGLTF,
-	"sphere": createSphere,
-	"box": createBox,
-	"heightField": createWorld,
-	"tree": createTree,
-	"grass": createGrass,
-	"rock": createRock,
-	"brick": createBox,
-	"cone": createCone,
-	"3dText": create3DTextState,
-	"light": createThreeLight
-}
-
-function createThreeLight(state, id, eventHandler, gameState) {
-	//state.lightType;
-	//const light = createLight([state.x, state.y, state.z], [0,0,0], settings);
-	const pos = [state.x, state.y, state.z];
-	const tar = [0,0,0]
-	//const light = createSpotLight(pos, tar, settings);
-	const light = createRectLight(pos);
-	//const light = createPointLight(pos, {...settings, enableShadows: false})
-	light.intensity = 20000;
-	light.distance = 1000;
-
-	var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 2.0 );
-	var bulbMat = new THREE.MeshStandardMaterial( {
-		emissive: 0xffffee,
-		emissiveIntensity: 10000000,
-		color: 0x000000
-	});
-	var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
-	mesh.position.fromArray(pos);
-	mesh.castShadow = false;
-	mesh.receiveShadow = false;
-	//scene.add(mesh);
-	light.position.set(0,0,0);
-	mesh.add(light);
-	loadedObjects[id] = mesh;
-	
-}
-
-function meshPostProcess(threeObject) {
-	if(threeObject.geometry) {
-		threeObject.castShadow = true;
-		threeObject.receiveShadow = true;
-	}
-	if(threeObject.children.length > 0) {
-		for(let i = 0; i < threeObject.children.length; i++) {
-			meshPostProcess(threeObject.children[i]);
-		}
-	}
-}
-
-function createWorld(state, id, eventHandler, gameState) {
-	const wSeg = gameState.physics[id].shape.terrainWidthExtents;
-	const hSeg = gameState.physics[id].shape.terrainDepthExtents;
-	const width = gameState.physics[id].shape.x;
-	const height = gameState.physics[id].shape.z;
-	const heightMap = gameState.physics[id].shape.heightMapData; 
-
-	const simp = new MESH_UTILS.SimplexNoise();
-	const scale = 50.0;
-	/*function vertexFunction(x, y, z) {
-		const sY = simp.noise3d((x/width)*scale, y, (z/height)*scale);
-		return [x, (sY-0.5)*0.5, z];
-	}*/
-	function vertexFunction(x, y, z) {
-		return [x, heightMap[x][z], z];
-	}
-
-	const pmesh = new THREE.PlaneBufferGeometry( wSeg, hSeg, width - 1, height - 1);
-    pmesh.rotateX( -Math.PI / 2 );
-    var vertices = pmesh.attributes.position.array;
-    for ( var i = 0, j = 0, l = vertices.length; i < l; i++, j += 3 ) {
-            vertices[ j + 1 ] = heightMap[i];
-    }
-	pmesh.computeVertexNormals();
-	
-	const mesh = new THREE.Mesh(
-		pmesh, 
-		groundMaterial
-	);
-	loadedObjects[id] = mesh;
-    loadTextureOnce('textures/ground_hhh316.jpg', function(tex) {
-	    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-	    tex.offset.set( 0, 0 );
-	    tex.repeat.set( 4, 4 );
-    	groundMaterial.map = tex;
-    	groundMaterial.bumpMap = tex;
-    	groundMaterial.bumpScale = 0.05;
-    	groundMaterial.needsUpdate = true;
-    })
-}
-
-function createRock(state, id) {
-	const iter = 1;
-	const radius = (Math.random() * 0.6) + 0.3;
-	const simp = new MESH_UTILS.SimplexNoise();
-	const scale = 150.0;
-	function vertexFunction(x, y, z) {
-		const sX = simp.noise3d(x, 0, 0) - 0.5;
-		const sY = simp.noise3d(x, y, z) - 0.5;
-		const sZ = simp.noise3d(0, 0, z) - 0.5;
-		const scale = 0.2;
-		return [scale*sX+x, scale*sY+y, scale*sZ+z];
-	}
-
-	const gmesh = new THREE.IcosahedronGeometry( radius, iter )
-	for(let i = 0; i < gmesh.vertices.length; i++) {
-		gmesh.vertices[i].fromArray(vertexFunction(gmesh.vertices[i].x, gmesh.vertices[i].y, gmesh.vertices[i].z));
-	}
-	gmesh.computeVertexNormals();
-	const pmesh = new THREE.BufferGeometry().fromGeometry( gmesh ) ;
-
-	const mesh = new THREE.Mesh(
-		pmesh, rockMaterial
-	);
-	loadedObjects[id] = mesh;
-	loadTextureOnce('textures/stone1.jpeg', function(tex) {
-    	rockMaterial.map = tex;
-    	rockMaterial.bumpMap = tex;
-    	rockMaterial.bumpScale = 0.05;
-    	rockMaterial.needsUpdate = true;
-    });
-}
-
-var cachedSphereGeometry = new THREE.SphereGeometry(1.0, 12, 12);
-function createSphere(state, id) {
-	loadedObjects[id] = new THREE.Mesh(
-    	cachedSphereGeometry,
-    	defaultMaterial
-    );
-    loadedObjects[id].scale.set(state.radius, state.radius, state.radius);
-}
-
-var cachedConeGeometry = new THREE.ConeGeometry();
-function createCone(state, id) {
-	loadedObjects[id] = new THREE.Mesh(
-    	cachedConeGeometry,
-    	defaultMaterial
-    );
-    loadedObjects[id].scale.set(state.radius, state.height, state.radius);
-}
-
-function createBox(state, id) {
-	loadedObjects[id] = new THREE.Mesh(
-    	new THREE.BoxGeometry( state.x, state.y, state.z ),
-    	defaultMaterial
-    );
-}
-
-function create3DTextState(state, id) {
-	//makeTextSprite("Z", {backgroundColor: {r: 0.9, g: 0.9, b: 1.0, a: 1.0}});
-	loadedObjects[id] = makeTextSprite(state.string, {backgroundColor: {r: 0.9, g: 0.9, b: 1.0, a: 1.0}});
-}
-
-function create3DText(string, size, height, colorIntHex, x, y, z) {
-	var textGeo = new THREE.TextGeometry(string, {
-		size: size,
-		height: height
-	});
-	var color = new THREE.Color(colorIntHex);
-	var textMaterial = new THREE.MeshStandardMaterial({ emissive: color });
-	var text = new THREE.Mesh(textGeo, textMaterial);
-	text.position.set(x, y, z);
-	return text;
-}
-
-var cachedGrassGeom = null;
-//function createCachedGrassGeom() {
-const geometry = new THREE.Geometry();
-geometry.faceVertexUvs[0] = [];
-
-function addBlade(geometry, offsetX, offsetZ) {
-	const bladeWidth = 1.25;
-	const bladeHeight = 1.0;
-	const r1 = ((Math.random() -0.5)*2) * 0.25;
-	const r2 = ((Math.random() -0.5)*2) * 1.0;
-	const r3 = ((Math.random() -0.5)*2) * 0.25;
-	const r4 = ((Math.random() -0.5)*2) * 1.0;
-	const root = 0.0;
-
-	geometry.vertices.push(new THREE.Vector3( offsetX+bladeWidth+r1,  root+bladeHeight,  offsetZ+r2));  //right top
-	geometry.vertices.push(new THREE.Vector3( offsetX,             root,    offsetZ));            //bottom center
-	geometry.vertices.push(new THREE.Vector3( offsetX-bladeWidth+r3,  root+bladeHeight,  offsetZ+r4));  //left top
-
-	geometry.faces.push(new THREE.Face3(
-		geometry.vertices.length-3, 
-		geometry.vertices.length-2, 
-		geometry.vertices.length-1,
-	));
-
-	geometry.faceVertexUvs[0].push([
-		new THREE.Vector2(1,1),
-		new THREE.Vector2(0,1),
-		new THREE.Vector2(0,0)
-	]);
-	geometry.uvsNeedUpdate = true;
-}
-const maxDist = 0.50;
-for(let i = 0; i < 5; i++) {
-	addBlade(geometry, ((Math.random() -0.5)*2)*maxDist, ((Math.random() -0.5)*2)*maxDist)
-}
-//addBlade(geometry, 0, 0);
-cachedGrassGeom = new THREE.BufferGeometry().fromGeometry( geometry );
-
-function createGrass(state, id) {
-	const mesh = new THREE.Mesh(
-    	cachedGrassGeom,
-    	grassMaterial
-    );
-    mesh.customDepthMaterial = customDepthMaterial;
-
-    loadedObjects[id] = mesh;
-    loadedObjects[id].rotation.y = Math.random() * 3.1415;
-
-    loadTextureOnce('textures/flower1.png', function(tex) {
-    	grassMaterial.map = tex;
-    	grassMaterial.needsUpdate = true;
-    	customDepthMaterial.map = tex;
-    	customDepthMaterial.needsUpdate = true;
-    });
-}
-
-let tree = new TREE.Tree({
-    generations : 4,        // # for branch' hierarchy
-    length      : 5.0,      // length of root branch
-    uvLength    : 20.0,     // uv.v ratio against geometry length (recommended is generations * length)
-    radius      : 0.3,      // radius of root branch
-    radiusSegments : 5,     // # of radius segments for each branch geometry
-    heightSegments : 3      // # of height segments for each branch geometry
-});
-
-let treeGeometry = TREE.TreeGeometry.build(tree);
-treeGeometry = new THREE.BufferGeometry().fromGeometry( treeGeometry );
-
-function createTree(state, id) {
-	let mesh = new THREE.Mesh(
-	    treeGeometry, treeMaterial
-	);	
-	mesh.position.y -= 3.25;
-	mesh.rotation.y = Math.random() * 3.1415;
-	loadedObjects[id] = mesh;
-    loadTextureOnce('textures/treebark1.jpeg', function(tex) {
-    	treeMaterial.map = tex;
-    	treeMaterial.needsUpdate = true;
-    })
-}
-
-function loadCamera(state, id) {
-	loadedObjects[id] = GLOBAL_CAMERA
-}
 
 function dataCallback(gltf, state, id) {
 	if('scale' in state) {
@@ -408,209 +118,18 @@ function dataCallback(gltf, state, id) {
 				break;
 			}
 		}
+		//if it is light type
+		if(loadedObjects[id] && !loadedObjects[id].geometry && 'libraryType' in state && state.libraryType == 'light') {
+			const light = OBJECTS.createLight({x:0, y:0, z:0}, OBJECTS.createPointLight);
+			loadedObjects[id].add(light);
+		}
 	} else {
 		// this path is followed when we loading a gltf character with animation
 		loadedObjects[id] = gltf.scene;
 	}
-	updateCubeMaps();
+	updateCubeMaps(hdrCubeRenderTarget);
 }
 
-function loadGLTF(state, id) {
-	function loaderCallback( gltf ) {
-		dataCallback(gltf, state, id);
-	}
-	loadMeshFile(loaderCallback, state);
-}
-
-function loadMeshFile(callbackFn, state) {
-	let extension = state.filename.split('.').pop().toLowerCase();
-	if(extension === 'json') {
-		Loader.loadThreeJS(state, callbackFn);
-	} else {
-		Loader.loadGLTF(state, callbackFn);
-	}
-}
-
-const toneMappingOptions = {
-	None: THREE.NoToneMapping,
-	Linear: THREE.LinearToneMapping,
-	Reinhard: THREE.ReinhardToneMapping,
-	Uncharted2: THREE.Uncharted2ToneMapping,
-	Cineon: THREE.CineonToneMapping
-};
-const bulbLuminousPowers = {
-	"110000 lm (1000W)": 110000,
-	"3500 lm (300W)": 3500,
-	"1700 lm (100W)": 1700,
-	"800 lm (60W)": 800,
-	"400 lm (40W)": 400,
-	"180 lm (25W)": 180,
-	"75 lm (15W)": 75,
-	"20 lm (4W)": 20,
-	"Off": 0
-};
-// ref for solar irradiances: https://en.wikipedia.org/wiki/Lux
-const hemiLuminousIrradiances = {
-	"0.0001 lx (Moonless Night)": 0.0001,
-	"0.002 lx (Night Airglow)": 0.002,
-	"0.5 lx (Full Moon)": 0.5,
-	"3.4 lx (City Twilight)": 3.4,
-	"25 lx (Shade)": 25,
-	"50 lx (Living Room)": 50,
-	"100 lx (Very Overcast)": 100,
-	"350 lx (Office Room)": 350,
-	"400 lx (Sunrise/Sunset)": 400,
-	"1000 lx (Overcast)": 1000,
-	"18000 lx (Daylight)": 18000,
-	"50000 lx (Direct Sun)": 50000,
-};
-
-function makeTextTexture( message, parameters ) {
-	if ( parameters === undefined ) parameters = {};
-	var fontface = parameters.hasOwnProperty("fontface") ? parameters["fontface"] : "MainFont";
-	var fontsize = parameters.hasOwnProperty("fontsize") ? parameters["fontsize"] : 48;
-	var borderThickness = parameters.hasOwnProperty("borderThickness") ? parameters["borderThickness"] : 0.1;
-	var borderColor = parameters.hasOwnProperty("borderColor") ? parameters["borderColor"] : { r:0, g:0, b:0, a:1.0 };
-	var backgroundColor = parameters.hasOwnProperty("backgroundColor") ? parameters["backgroundColor"] : { r:255, g:255, b:255, a:1.0 };
-	var canvas = document.createElement('canvas');
-	canvas.width = parameters.width || 512;
-	canvas.height = parameters.height || 256;
-	canvas.lineWidth = 1;
-	var context = canvas.getContext('2d');
-	context.font = fontsize + 'px ' + fontface;
-
-	// get size data (height depends only on font size)
-	var metrics = context.measureText( message );
-	var textWidth = metrics.width;
-
-	// background color
-	context.fillStyle   = "rgba(" + backgroundColor.r + "," + backgroundColor.g + ","
-	    + backgroundColor.b + "," + backgroundColor.a + ")";
-	// border color
-	context.strokeStyle = "rgba(" + borderColor.r + "," + borderColor.g + ","
-	    + borderColor.b + "," + borderColor.a + ")";
-	context.textAlign = "center";
-	context.lineWidth = borderThickness;
-
-	context.strokeText( message, canvas.width/2, fontsize + 5);
-	context.fillText( message, canvas.width/2, fontsize + 5);
-
-	// canvas contents will be used for a texture
-	var texture = new THREE.Texture(canvas);
-	texture.needsUpdate = true;
-	return texture;
-}
-
-function makeTextSprite( message, parameters ) {
-	var texture = makeTextTexture(message, parameters);
-	const spriteMaterial = new THREE.SpriteMaterial(
-	    { map: texture, lights: false }
-	);
-    var sprite = new THREE.Sprite( spriteMaterial );
-    sprite.scale.set(10,5,5);
-    return sprite;
-};
-
-function createRectLight( pos ) {
-	const width = 1.5;
-	const height = 1.5;
-	var bulbLight = new THREE.RectAreaLight( 0xffee88, 1, width, height );
-	bulbLight.position.set( pos[0], pos[1], pos[2] );
-	var rectLightMesh = new THREE.Mesh( new THREE.PlaneBufferGeometry(), new THREE.MeshBasicMaterial() );
-	rectLightMesh.scale.x = bulbLight.width;
-	rectLightMesh.scale.y = bulbLight.height;
-	bulbLight.add( rectLightMesh );
-	var rectLightMeshBack = new THREE.Mesh( new THREE.PlaneBufferGeometry(), new THREE.MeshBasicMaterial( { color: 0x080808 } ) );
-	rectLightMeshBack.rotation.y = Math.PI;
-	rectLightMesh.add( rectLightMeshBack );
-	return bulbLight;
-}
-function createPointLight(pos, settings) {
-	var bulbLight = new THREE.PointLight( 0xffee88, 1, 100, 2 );
-	bulbLight.position.set( pos[0], pos[1], pos[2] );
-	/*var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
-	var bulbMat = new THREE.MeshStandardMaterial( {
-		emissive: 0xffffee,
-		emissiveIntensity: 1,
-		color: 0x000000
-	});
-	var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
-	mesh.castShadow = false;
-	mesh.receiveShadow = false;
-	bulbLight.add( mesh );*/
-	if(settings.enableShadows) {
-		setupShadows(bulbLight, settings);
-	}
-	return bulbLight;
-}
-function createSpotLight(pos, tar, settings) {
-	var bulbLight = new THREE.SpotLight( 0xffee88, 1, 100, 2 );
-	bulbLight.position.set( pos[0], pos[1], pos[2] );
-	bulbLight.target.position.set( tar[0], tar[1], tar[2] );
-	var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 8 );
-	var bulbMat = new THREE.MeshStandardMaterial( {
-		emissive: 0xffffee,
-		emissiveIntensity: 1,
-		color: 0x000000
-	});
-	var mesh = new THREE.Mesh( bulbGeometry, bulbMat );
-	mesh.castShadow = false;
-	mesh.receiveShadow = false;
-	bulbLight.add( mesh );
-	if(settings.enableShadows) {
-		setupShadows(bulbLight, settings);
-	}
-	bulbLight.angle = 150.0;
-	return bulbLight;
-}
-function createDirectionLight(pos, settings) {
-	var light = new THREE.DirectionalLight( 0xffee88, 1.75 );
-	light.position.set( pos[0], pos[1], pos[2] );
-
-	if(settings.enableShadows) {
-		setupShadows(light, settings);
-	}
-	/*light.castShadow = true;
-	light.shadow.mapSize.width = 4096;
-	light.shadow.mapSize.height = 4096;
-	light.shadow.camera.near = 2;
-	light.shadow.camera.far = 10;*/
-	light.shadow.camera.left = -2;
-	light.shadow.camera.right = 2;
-	light.shadow.camera.top = 2;
-	light.shadow.camera.bottom = -2;
-
-	var helper = new THREE.DirectionalLightHelper( light );
-	light.add(helper);
-
-	//light.intensity = bulbLuminousPowers["20 lm (4W)"];
-	light.intensity = 50000;
-	light.distance = 100;
-
-	return light;
-}
-function setupShadows(light, settings) {
-	
-	light.castShadow = true;
-	light.shadow.mapSize = new THREE.Vector2( settings.shadowResolution, settings.shadowResolution );
-	
-	light.shadow.camera.fov = 1.0;
-	light.shadow.camera.near = 0.1;
-	light.shadow.camera.far = 50.0;
-	//light.shadow.bias = 0.00075;
-	//light.shadow.radius = 1;
-}
-function createLight(pos, tar, settings) {
-	
-	//var bulbLight = createRectLight(pos);
-	var bulbLight = createSpotLight(pos, tar, settings);
-	//var bulbLight = createDirectionLight(pos, tar);
-	
-	//bulbLight.intensity = bulbLuminousPowers["75 lm (15W)"];
-	bulbLight.intensity = 5000000;
-	bulbLight.distance = 10000;
-	return bulbLight;
-}
 function initRendering(scene, settings, camera) {
 	if(settings.usePCSS) {
 		// overwrite shadowmap code
@@ -709,12 +228,6 @@ function initRendering(scene, settings, camera) {
     };
 };
 
-function setupLighting(settings) {
-	//this.spot1 = createLight([0.5, 0, -4], [0, -2.5, 0]);
-	//this.spot2 = createLight([0.5, 0, 2], [0, -2.5, 0]);
-	return createLight([2, 5, 30], [0,0,0], settings);
-}
-
 function createRenderFunction(sceneData, scene, camera, useSSAO) {
 	function render() {
 	    sceneData.renderer.clear();
@@ -736,7 +249,16 @@ function createHealthBar() {
 };
 
 function loadAssets(state, id, eventHandler, gameState) {
-	loaders[state.type](state, id, eventHandler, gameState);
+	if(state.type == 'camera') {
+		loadedObjects[id] = GLOBAL_CAMERA;
+	} else if(state.type == 'animatedMesh' || state.type == 'library') {
+		function loaderCallback( gltf ) {
+			dataCallback(gltf, state, id);
+		}
+		LOADER.loadMeshFile(loaderCallback, state);
+	} else {
+		loadedObjects[id] = OBJECTS.loaders[state.type](state, id, eventHandler, gameState);
+	}
 }
 
 function createCache(fn) {
@@ -837,17 +359,6 @@ function updateCamera(state, id, eventHandler, gameState) {
 	return state;
 }
 
-function createDebugAxis() {
-	var axis = new THREE.AxesHelper();
-	//var X = create3DText("X", 1.0, 0.5, 0xFFEEEE, 1, 0, 0);
-	var X = makeTextSprite("X", {backgroundColor: {r: 1.0, g: 0.9, b: 0.9, a: 1.0}});
-	var Y = makeTextSprite("Y", {backgroundColor: {r: 0.9, g: 1.0, b: 0.9, a: 1.0}});
-	var Z = makeTextSprite("Z", {backgroundColor: {r: 0.9, g: 0.9, b: 1.0, a: 1.0}});
-	X.position.set(1,0,0); Y.position.set(0,1,0); Z.position.set(0,0,1);
-	return axis.add(X).add(Y).add(Z);
-	//return axis;
-}
-
 const physicsDebugMaterial = new THREE.MeshStandardMaterial({ 
 	wireframe: true, emissive: new THREE.Color(0xFFFFFF)
 });
@@ -860,13 +371,13 @@ function createPhysicsDebugMesh(state) {
 	    		state.shape.z * 2.001
 	    	),
 	    	physicsDebugMaterial
-	    ).add(createDebugAxis());
+	    ).add(OBJECTS.createDebugAxis());
 	}
 	if(state.shape.type == 'sphere') {
 		return new THREE.Mesh(
 	    	new THREE.SphereGeometry(state.shape.radius * 1.001, 8, 8), 
 	    	physicsDebugMaterial
-	    ).add(createDebugAxis());
+	    ).add(OBJECTS.createDebugAxis());
 	}
 	if(state.shape.type == 'capsule') {
 		var r = state.shape.radius;
@@ -878,15 +389,15 @@ function createPhysicsDebugMesh(state) {
 	    m1.position.set(0,  state.shape.height*0.5, 0);
 	    m2.position.set(0, -state.shape.height*0.5, 0);
 	    m2.rotation.x = Math.PI;
-	    return new THREE.Object3D().add(m1).add(m2).add(m3).add(createDebugAxis());
+	    return new THREE.Object3D().add(m1).add(m2).add(m3).add(OBJECTS.createDebugAxis());
 	}
 	if(state.shape.type == 'cone') {
 		return new THREE.Mesh(
 	    	new THREE.ConeGeometry(state.shape.radius, state.shape.height), 
 	    	physicsDebugMaterial
-	    ).add(createDebugAxis());
+	    ).add(OBJECTS.createDebugAxis());
 	}
-	return new THREE.Object3D().add(createDebugAxis());
+	return new THREE.Object3D().add(OBJECTS.createDebugAxis());
 }
 
 var previousEntity = {};
@@ -953,7 +464,7 @@ function renderObject(state, id, eventHandler, gameState) {
 	const instanceable = state.type in meshInstance;
 
 	if(immediate || ((id in loadedObjects) && state.loading)) {
-		updateCubeMaps();
+		updateCubeMaps(hdrCubeRenderTarget);
 		meshPostProcess(loadedObjects[id]);
 
 		GLOBAL_SCENE.add(loadedObjects[id]);
@@ -1087,7 +598,6 @@ function init(initialState) {
 	GLOBAL_ORBIT_CONTROLS = null;
 	loadedObjects = {};
 	physicsDebugObjects = {};
-	hdrCubeRenderTarget = null;
 	getAnimationMixer = createCache(createMixer);
 	getAnimationClip = createCache(createClip);
 
@@ -1102,7 +612,10 @@ function init(initialState) {
 	var sceneData = initRendering(scene, settings, camera);
 	sceneData.gameState = initialState;
 
-	loadEXRMap();
+	LOADER.loadEXRMap(GLOBAL_RENDERER).then(function(rt) { 
+		hdrCubeRenderTarget = rt;
+		updateCubeMaps(rt);
+	});
 	initSkyShader();
 
 	render = createRenderFunction(sceneData, scene, camera);
@@ -1178,6 +691,7 @@ function renderFunction() {
 		}
 	}
 }
+const loadMeshFile = LOADER.loadMeshFile;
 
 export { renderObject, init, updateCamera, renderFunction, loadMeshFile };
 

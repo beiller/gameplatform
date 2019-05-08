@@ -1,4 +1,3 @@
-import * as RENDERER from './renderer.js';
 
 const collisionLayers = {
 	PLAYER:   1,
@@ -135,10 +134,10 @@ function localCreateRigidBody(mass, startTransform, shape) {
 		shape.calculateLocalInertia(mass, localInertia);	
 	} 
 	var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
-	cInfo.friction = 5.0;
+	cInfo.friction = 0.9;
 	var btBody = new Ammo.btRigidBody(cInfo);
 	btBody.setActivationState(4); //disables sleep
-	btBody.setFriction(1.2);
+	btBody.setFriction(0.9);
 	//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
@@ -309,12 +308,23 @@ function readPhysicsState(state, id) {
 }
 
 function applyMotionPhysics(state, id, eventHandler, gameState) {
-	temp_vec3_1.setValue(
-		gameState.motion[id].fx*stepDt, 
-		gameState.motion[id].fy*stepDt, 
-		gameState.motion[id].fz*stepDt
-	);
-	bodies[id].applyImpulse(temp_vec3_1);
+	const motion = gameState.motion[id];
+	if(Math.abs(motion.fx)+Math.abs(motion.fz) > 0) {
+		bodies[id].setFriction(0.2);
+		temp_vec3_1.setValue(
+			gameState.motion[id].fx*stepDt, 
+			gameState.motion[id].fy*stepDt, 
+			gameState.motion[id].fz*stepDt
+		);
+		bodies[id].applyImpulse(temp_vec3_1);
+
+		//face us towards that inpulse
+		/*var rotation = Math.atan2(motion.fx, motion.fz);
+		temp_vec3_1.setValue(0, rotation*stepDt*0.1, 0);
+		bodies[id].applyTorqueImpulse(temp_vec3_1);*/
+	} else {
+		bodies[id].setFriction(1.5);
+	}
 }
 
 function resetWorld() {

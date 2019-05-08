@@ -1,11 +1,44 @@
-import * as ROT from './lib/rot.js';
-import * as LOADER from './Loader.js';
+import * as ROT from './lib/rot.js';  // dungeon generation library
 
-function level2(systems) {
-	var initialState = {
-		"events": {
-
+const marie = {
+	"animation": { animationName: 'idle', playingAnimation: true,
+		animations: {
+			special: 'block',
+			run: 'walk',
+			idle: 'idle',
+			dead: 'fall_backwards',
+			attack: 'attack'
+		}
+	},
+	"render": { 
+		type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "marie_rose_v2"
+	},
+}
+const defender = {
+	"animation": {},
+	"render": { 
+		type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.265
+	},
+}
+function generateCharacter(xPos, yPos) {
+	var xPos = xPos || (Math.random()-0.5)*2*20;
+	var zPos = yPos || (Math.random()-0.5)*2*20;
+	return {
+		...defender,
+		"entity": {x: xPos, y: 0, z: zPos },
+		"collision": { type: "ouchie" },
+		"ai": { x: 1.0, y: 0.2, mode: 1 },
+		"motion": {fx: 0, fy: 0, fz: 0},
+		"physics": {x: xPos, y: 0.8, z: zPos, 
+			shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
+			mass: 45.35, damping: 0.9, lockRotation: true
 		},
+		"stats": {health: 100, maxHealth: 100}
+	}
+}
+
+function level2() {
+	var initialState = {
 		"state": {
 			"camera1": {
 				"input": { "controllerId": "0" },  // needs input to toggle modes
@@ -13,10 +46,10 @@ function level2(systems) {
 				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
 				"render": {type: "camera"},
 			},
-      "light1": {
+      /*"light1": {
 				"entity": {x: 1.1, y: 0.8, z: 1 },
 				"render": { type: "light", lightType: "spot"}
-			},
+			},*/
 			/*
 			"mytext1": {
 				"entity": {x: 2, y: 1, z: 0 },
@@ -24,17 +57,13 @@ function level2(systems) {
 				//"physics": {x: 2, y: 1, z: 0, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 }
 			},*/
 			"character1": {
-				"entity": {x: 1, y: 0, z: 1 },
+				...defender,
+				"entity": { x: 1, y: 0.2, z: 2 },
 				"collision": { type: "ouchie" },
 				"magic": null,
-				"animation": { animationName: 'DE_Dance', playingAnimation: true },
-				"render": { 
-					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.285
-				},
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
-				"physics": {x: 0, y: 2.8, z: 0, 
-					//shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
+				"physics": {x: 1, y: 0.2, z: 2, 
 					shape: {type: "capsule", radius: 0.3, margin: 0.001},
 					mass: 45.35, damping: 0.9, lockRotation: true
 				},
@@ -43,27 +72,35 @@ function level2(systems) {
 		}
 	};
 
+	// we load each of these objects and use a square bounding box for it (to create floors/walls/etc)
+	// that is why it is per object. If we did the entire thing it wouldnt be explorable
 	const groups = [
 		"Floor", "Ceiling", "Cube009", "Cube007", "Cube013", "Cube015", "Cube001", "Cube000", "Cube008", "Cube011", "Cube012", "Cube010",
 		"Cube006", "Cabinet", "Cabinet001", "Shelves", "Shelves001", "Bed", "Bed001", "Table", "Table001", "Window", "Window001", "Window002"
 	];
 	for(let i in groups) {
 		const group = groups[i];
-		initialState.state[group] ={
-			"render": {type: "library", filename: "/game_fp/bedroom.gltf.glb", objectName: group},
+		initialState.state[group] = {
+			"render": {type: "animatedMesh", filename: "/game_fp/bedroom.gltf.glb", objectName: group},
 			"physics": {"shape": {type: "box"}, staticObject: true}
 		}
 	}
+	// a hacky way to import lights from a gltf exported file
+	initialState.state["Point"] = {
+		"render": {type: "animatedMesh", filename: "/game_fp/bedroom.gltf.glb", objectName: "Point", libraryType: "light"},
+		"physics": {"shape": {type: "box", x: .1, y: .1, z: .1}, staticObject: true}
+	}
 
-	initialState.systems = systems;
+	var numCharacters = 2;
+	for(var i = 0; i < numCharacters; i++) {
+		initialState['state']["character"+(i+999)] = generateCharacter(1,2);
+	}
+
 	return initialState;
 }
 
-function level1(systems) {
+function level1() {
 	var initialState = {
-		"events": {
-
-		},
 		"state": {
 			"camera1": {
 				"input": { "controllerId": "0" },  // needs input to toggle modes
@@ -71,12 +108,6 @@ function level1(systems) {
 				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
 				"render": {type: "camera"},
 			},
-			/*"thisisafuckingroom?": {
-				"entity": {x: 0, y: 1.25, z: 0},
-				"render": {
-					type: "animatedMesh", filename: "/environments/room2.gltf", scale: 1.0
-				}
-			},*/
 			"groundplane1": {
 				"render": { type: "heightField" },
 				"physics": {
@@ -84,8 +115,8 @@ function level1(systems) {
 					shape: {
 						type: "heightField", x: 60, z: 60, margin: 0.5,
 						terrainWidthExtents: 150, terrainDepthExtents: 150,
-						//heightMapData: createHeightMap(60, 60, 15)
-						heightMapData: createDungeon(60, 60, -5)
+						heightMapData: createHeightMap(60, 60, 15)
+						//heightMapData: createDungeon(60, 60, -5)
 						//heightMapData: generateAFuckingGrid3(60, 60, -5)
 					}
 				}
@@ -119,26 +150,11 @@ function level1(systems) {
 				"render": { type: "3dText", string: "Hello", size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
 				"physics": {x: 2, y: 1, z: 0, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 }
 			},*/
-			"monster1123": {
-				"entity": {x: 0, y: 0, z: 0 },
-				"animation": { animationName: 'XP32_CombatBlock', playingAnimation: true },
-				"render": { 
-					type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "necker"
-				},
-				"physics": {x: 0, y: 2.8, z: 0, 
-					//shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
-					shape: {type: "capsule", radius: 0.3, margin: 0.001},
-					mass: 45.35, damping: 0.9, lockRotation: true
-				}
-			},
 			"character1": {
 				"entity": {x: 0, y: 0, z: 0 },
 				"collision": { type: "ouchie" },
 				"magic": null,
-				"animation": { animationName: 'DE_Dance', playingAnimation: true },
-				"render": { 
-					type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.285
-				},
+				...defender,
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
 				"physics": {x: 0, y: 2.8, z: 0, 
@@ -151,54 +167,9 @@ function level1(systems) {
 		}
 	};
 
-	var numCharacters = 2;
+	var numCharacters = 4;
 	for(var i = 0; i < numCharacters; i++) {
-		var xPos = (Math.random()-0.5)*2*20;
-		var zPos = (Math.random()-0.5)*2*20;
-		initialState['state']["character"+(i+999)] = {
-			"entity": {x: xPos, y: 0, z: zPos },
-			"animation": { animationName: 'DE_Dance', playingAnimation: true },
-			"render": { 
-				type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.285
-			},
-			"collision": { type: "ouchie" },
-			"ai": { x: 1.0, y: 0.0, mode: 1 },
-			"motion": {fx: 0, fy: 0, fz: 0},
-			"physics": {x: xPos, y: 0.8, z: zPos, 
-				shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
-				mass: 45.35, damping: 0.9, lockRotation: true
-			},
-			"stats": {health: 100, maxHealth: 100}
-		}
-	}
-
-	var numMonsters = 2;
-	for(var i = 0; i < numMonsters; i++) {
-		var xPos = (Math.random()-0.5)*2*20;
-		var zPos = (Math.random()-0.5)*2*20;
-		initialState['state']["character"+(i+1999)] = {
-			"entity": {x: xPos, y: 0, z: zPos },
-			"animation": { animationName: 'XP32_NormalIddle', playingAnimation: true,
-				animations: {
-					special: 'XP32_CombatBlock',
-					run: 'XP32_NormalRun',
-					idle: 'XP32_NormalIddle',
-					dead: 'arest',
-					attack: 'XP32_CombatAttack'
-				}
-			},
-			"render": { 
-				type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "necker"
-			},
-			"collision": { type: "ouchie" },
-			"ai": { x: 1.0, y: 0.0, mode: 2 },
-			"motion": {fx: 0, fy: 0, fz: 0},
-			"physics": {x: xPos, y: 0.8, z: zPos, 
-				shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
-				mass: 45.35, damping: 0.9, lockRotation: true
-			},
-			"stats": {health: 500, maxHealth: 500}
-		}
+		initialState['state']["character"+(i+999)] = generateCharacter();
 	}
 
 	const tileFunctions = {
@@ -246,7 +217,6 @@ function level1(systems) {
 		}
 	}
 
-	initialState.systems = systems;
 	return initialState;
 }
 
@@ -475,6 +445,6 @@ function generateHeight( width, depth, minHeight, maxHeight ) {
     return data;
 }
 
+const mainLevel = level2;
 
-
-export { level1, createHeightMap, level2 }
+export { level1, createHeightMap, level2, mainLevel }

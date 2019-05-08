@@ -1,9 +1,10 @@
-import * as RENDERER from './renderer.js';
+import * as RENDERER from './renderer/renderer.js';
 import * as ENGINE from './engine.js';
 import * as INPUT from './input.js';
 import * as PHYSICS from './physics.js';
 import * as LEVEL from './level.js';
 import * as THREE from './lib/three.module.js';
+import * as AI from './modules/ai.js';
 
 import './lib/RectAreaLightUniformsLib.js';
 
@@ -175,48 +176,7 @@ function applyInput(state, id, eventHandler, gameState) {
 	return {...state, ...INPUT.getControllerState(state.controllerId)};	
 }
 
-function changeDirections(state, fieldName) {
-	if(Math.random() > 0.95) { // 5% chance to change behavioud
-		if(Math.random() > 0.5) {
-			return {...state, [fieldName]: 0}; //50% chance to stop
-		} else {
-			if(Math.random() > 0.5) { //50% chance to move
-				return {...state, [fieldName]: 1.0};
-			} else {
-				return {...state, [fieldName]: -1.0};
-			}
-		}
-	}
-	return state;
-}
-function applyAI(state, id, eventHandler, gameState) {
-	if(!('mode' in state)) {
-		return {...state, mode: 1} //wander mode
-	}
-	if(state.mode === 1) { //wander mode
-		var newState = changeDirections(state, "x");
-		if(newState !== state) {
-			return newState;
-		}
-		var newState = changeDirections(state, "y");
-		if(newState !== state) {
-			return newState;
-		}
-		return state;
-	}
-	if(state.mode === 2) { //attack mode
-		const distx = gameState["entity"]["character1"].x - gameState.entity[id].x;
-		const distz = gameState["entity"]["character1"].z - gameState.entity[id].z;
-		if(( Math.abs(distx) + Math.abs(distz) ) > 5.0) {
-			return {...state, x: distx, y: -distz};
-		}
-		return {...state, x: 0, y: 0};
-	}
-	
-}
-
 const movementSpeed = 0.58;
-const upforce = 0.45;
 function applyMotion(state, id, eventHandler, gameState) {
 	var dep = null; // will contain an object that contains x, y, and z field
 	var damping = 1.0; // 1.0 - no damping. 0.0 - full damping
@@ -247,7 +207,7 @@ function applyMotion(state, id, eventHandler, gameState) {
 			return {
 				...state,
 				fx: fx,
-				fy: useFacing ? upforce : 0, //apply small upward force while walking
+				fy: 0, //apply small upward force while walking
 				fz: fz,
 				facingX: facingX,
 				facingY: 0,
@@ -256,10 +216,6 @@ function applyMotion(state, id, eventHandler, gameState) {
 		}
 	}
 	return state;
-}
-
-function applyPhysics(state, id, eventHandler, gameState) {
-	return PHYSICS.applyPhysics(state, id, eventHandler, gameState);
 }
 
 function normalizeXY(point) {
@@ -281,7 +237,7 @@ function applyEntity(state, id, eventHandler, gameState) {
 	if('physics' in gameState && id in gameState.physics) {
 		// Move the entity according to physics simulation
 		if(gameState.physics[id].x != state.x || gameState.physics[id].y != state.y || gameState.physics[id].z != state.z) {
-			if(id in gameState.input || ('ai' in gameState && id in gameState.ai)) {
+			/*if(id in gameState.input || ('ai' in gameState && id in gameState.ai)) {
 				//fake rotation by pointing the character if its controlled by AI or KB
 				return {
 					...pointCharacter(state, id, gameState), 
@@ -289,7 +245,7 @@ function applyEntity(state, id, eventHandler, gameState) {
 					y: gameState.physics[id].y,
 					z: gameState.physics[id].z
 				}
-			} else {
+			} else {*/
 				//use physics sim rotation
 				return {
 					rotation: {...gameState.physics[id].rotation},
@@ -297,7 +253,7 @@ function applyEntity(state, id, eventHandler, gameState) {
 					y: gameState.physics[id].y,
 					z: gameState.physics[id].z
 				}
-			}
+			//}
 		}
 	}
 	if(id in gameState.camera && gameState.camera[id].type == 'follow') {
@@ -306,32 +262,13 @@ function applyEntity(state, id, eventHandler, gameState) {
 			return state;
 		}
 		const physicsState = gameState.physics[gameState.camera[id].entityName];
-		if(physicsState.x !== state.x || (physicsState.z + 2) !== state.z) {
-			return {
-				...state,
-				x: physicsState.x, 
-				y: physicsState.shape.height + physicsState.y, 
-				z: physicsState.z + 0.4
-			};
-		}
-	}
-	return state;
-}
-function pointCharacter(state, id, gameState) {
-	if(id in gameState.motion) {
-		const motion = gameState.motion[id];
-	//point character
-		if(Math.abs(motion.fx)+Math.abs(motion.fz) > 0) {
-			var rotation = Math.atan2(motion.fx, motion.fz);
-			return {
-				...state,
-				rotation: {
-					x: 0, 
-					y: rotation,
-					z: 0
-				}
-			};
-		}
+
+		return {
+			...state,
+			x: physicsState.x, 
+			y: physicsState.shape.height + physicsState.y + 0.2, 
+			z: physicsState.z + 0.8
+		};
 	}
 	return state;
 }
@@ -381,14 +318,6 @@ function applyAnimation(state, id, eventHandler, gameState) {
 	}
 	
 	return state;
-}
-
-function applyRender(state, id, eventHandler, gameState) {
-	return RENDERER.renderObject(state, id, eventHandler, gameState);
-}
-
-function applyCamera(state, id, eventHandler, gameState) {
-	return RENDERER.updateCamera(state, id, eventHandler, gameState);
 }
 
 function applyParticle(state, id, eventHandler, gameState) {
@@ -484,34 +413,30 @@ function applyStats(state, id, eventHandler, gameState) {
 
 const systems = [	
 	{ name: "input", func: applyInput },
-	{ name: "ai", func: applyAI },
+	{ name: "ai", func: AI.applyAI },
 	{ name: "particle", func: applyParticle },
 	{ name: "motion", func: applyMotion },
-	{ name: "physics", func: applyPhysics },
+	{ name: "physics", func: PHYSICS.applyPhysics },
 	{ name: "magic", func: applyMagic },
 	{ name: "collision", func: applyCollision },
-	{ name: "camera", func: applyCamera },
+	{ name: "camera", func: RENDERER.updateCamera },
 	{ name: "entity", func: applyEntity },
 	{ name: "stats", func: applyStats },
 	{ name: "animation", func: applyAnimation },
-	{ name: "render", func: applyRender },
+	{ name: "render", func: RENDERER.renderObject },
 ];
 
-
-
 function resetWorld() {
-	var initialState = LEVEL.level1(systems);
-	var gameState = ENGINE.loadState(initialState);
+	var gameState = ENGINE.loadState({...LEVEL.mainLevel(), systems: systems});
 	window.gameState = gameState;
 	PHYSICS.resetWorld();
 }
 
 function main() {
-	var initialState = LEVEL.level2(systems);
 	var middleware = [
 		InspectorMiddleware.middleware
 	];
-	var gameState = ENGINE.init(initialState, middleware);
+	var gameState = ENGINE.init({...LEVEL.mainLevel(), systems: systems}, middleware);
 	console.log(gameState);
 	window.gameState = gameState;
 
