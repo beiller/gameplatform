@@ -1,15 +1,18 @@
 
 
-var controller = {
+const DEFAULT_CONTROLS = {
 	x: 0,
 	y: 0,
 	buttons: [false, false, false, false, false, false, false, false, false, false, false]
 };
+var controller = {
+	...DEFAULT_CONTROLS
+};
 
 var controller1 = {
+	...DEFAULT_CONTROLS,
 	x: -1,
 	y: 0,
-	buttons: [false, false, false, false, false, false, false, false, false, false, false]
 };
 
 function getControllerState(controllerId) {
@@ -90,5 +93,4 @@ document.addEventListener("mousedown", function(e) {
 	controller = bmap[e.button](controller);
 }, false);
 
-export { getControllerState };
-
+export { getControllerState, DEFAULT_CONTROLS };

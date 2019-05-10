@@ -33,9 +33,7 @@ function loadTextureOnce(url, callback) {
 	    })	
 	} else {
 		if(textureCache[url] === 'loading') {
-			let u = url;
-			let c = callback;
-			setTimeout(function() { loadTextureOnce(u, c) }, 1000);
+			setTimeout(function() { loadTextureOnce(url, callback) }, 1000);
 		} else {
 			callback(textureCache[url]);
 		}

@@ -20,6 +20,7 @@ const defender = {
 		type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.265
 	},
 }
+
 function generateCharacter(xPos, yPos) {
 	var xPos = xPos || (Math.random()-0.5)*2*20;
 	var zPos = yPos || (Math.random()-0.5)*2*20;
@@ -27,7 +28,9 @@ function generateCharacter(xPos, yPos) {
 		...defender,
 		"entity": {x: xPos, y: 0, z: zPos },
 		"collision": { type: "ouchie" },
-		"ai": { x: 1.0, y: 0.2, mode: 1 },
+		"ai": { x: 1.0, y: 0.2, mode: 2 },
+		"input": { },
+		"magic": null,
 		"motion": {fx: 0, fy: 0, fz: 0},
 		"physics": {x: xPos, y: 0.8, z: zPos, 
 			shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
@@ -114,7 +117,7 @@ function level1() {
 					mass: 0, x: 0, y: 0, z: 0, staticObject: true, neverSleep: true,
 					shape: {
 						type: "heightField", x: 60, z: 60, margin: 0.5,
-						terrainWidthExtents: 150, terrainDepthExtents: 150,
+						terrainWidthExtents: 50, terrainDepthExtents: 50,
 						heightMapData: createHeightMap(60, 60, 15)
 						//heightMapData: createDungeon(60, 60, -5)
 						//heightMapData: generateAFuckingGrid3(60, 60, -5)
@@ -201,7 +204,7 @@ function level1() {
 	const depthInterval = depthExtents / depth;
 
 	const types = ["tree", "rock", "grass"];
-	const num = [150, 250, 1000];
+	const num = [25, 75, 100];
 
 	for(let t = 0; t < types.length; t++) {
 		for(let k = 0; k < num[t]; k++) {
@@ -445,6 +448,6 @@ function generateHeight( width, depth, minHeight, maxHeight ) {
     return data;
 }
 
-const mainLevel = level2;
+const mainLevel = level1;
 
-export { level1, createHeightMap, level2, mainLevel }
+export { createHeightMap, mainLevel }

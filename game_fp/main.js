@@ -81,15 +81,15 @@ function getProjectileCollidingSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats
 
 const defaultStats = { 
 	effect: {
-		fire: 50
+		fire: 5
 	}
 };
 function getSwordAttack(id, x, y, z, facingX, facingZ) {
-	const stats = {...defaultStats, origin: id};
+	const stats = {effect: {physical: 7}, origin: id};
 	return getAttackVolume(id, 1.0, x, y, z, facingX, 0, facingZ, stats);
 }
 function getFireSpell(id, x, y, z, facingX, facingZ) {
-	const stats = {...defaultStats, origin: id};
+	const stats = {effect: {fire: 5}, origin: id};
 	const fireballForce = 0.01;
 	const nVec = normalizeXY({x: facingX, y: facingZ});
 	const fx = nVec.x * fireballForce;
@@ -106,7 +106,7 @@ function getFireSpell(id, x, y, z, facingX, facingZ) {
 	return getProjectileSpell(radius, x, y, z, fx+r1, fy, fz+r2, stats);
 }
 function getMeteorSpell(id, x, y, z, facingX, facingZ) {
-	const stats = {...defaultStats, origin: id};
+	const stats = {effect: {fire: 25}, origin: id};
 	
 	const fireballForce = 0.0025;
 	const rAmt = 0.3333 * fireballForce; //random direction scale
@@ -173,7 +173,11 @@ function applyMagic(state, id, eventHandler, gameState) {
 	return {...state, cooldowns: state.cooldowns.map(x => Math.max(0, x-1))}
 }
 function applyInput(state, id, eventHandler, gameState) {
-	return {...state, ...INPUT.getControllerState(state.controllerId)};	
+	if(id in gameState.ai) {
+		return {...state, ...gameState.ai[id]};	
+	} else {
+		return {...state, ...INPUT.getControllerState(state.controllerId)};	
+	}
 }
 
 const movementSpeed = 0.58;
@@ -192,9 +196,6 @@ function applyMotion(state, id, eventHandler, gameState) {
 
 	if('input' in gameState && id in gameState.input && 'x' in gameState.input[id] && 'y' in gameState.input[id]) {
 		dep = gameState.input[id];
-	}
-	if('ai' in gameState && id in gameState.ai && 'x' in gameState.ai[id] && 'y' in gameState.ai[id]) {
-		dep = gameState.ai[id];
 	}
 	if(dep) {
 		var normalized = normalizeXY(dep);

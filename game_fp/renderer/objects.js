@@ -1,6 +1,7 @@
 import * as THREE from '../lib/three.module.js';
 import * as TREE from '../lib/tree.js';
 import * as LOADER from './loader.js';
+import * as MESH_UTILS from '../mesh_utils.js';
 
 const customDepthMaterial = new THREE.MeshDepthMaterial( {
 	depthPacking: THREE.RGBADepthPacking, alphaTest: 0.25
@@ -202,7 +203,7 @@ function createWorld(state, id, eventHandler, gameState) {
 		pmesh, 
 		groundMaterial
 	);
-    LOADER.loadTextureOnce('textures/ground_hhh316.jpg', function(tex) {
+    LOADER.loadTextureOnce('/game_fp/textures/ground_hhh316.jpg', function(tex) {
 	    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
 	    tex.offset.set( 0, 0 );
 	    tex.repeat.set( 4, 4 );
@@ -237,7 +238,7 @@ function createRock(state, id) {
 	const mesh = new THREE.Mesh(
 		pmesh, rockMaterial
 	);
-	LOADER.loadTextureOnce('textures/stone1.jpeg', function(tex) {
+	LOADER.loadTextureOnce('/game_fp/textures/stone1.jpeg', function(tex) {
     	rockMaterial.map = tex;
     	rockMaterial.bumpMap = tex;
     	rockMaterial.bumpScale = 0.05;
@@ -394,7 +395,7 @@ function createGrass(state, id) {
 
     mesh.rotation.y = Math.random() * 3.1415;
 
-    LOADER.loadTextureOnce('textures/flower1.png', function(tex) {
+    LOADER.loadTextureOnce('/game_fp/textures/flower1.png', function(tex) {
     	grassMaterial.map = tex;
     	grassMaterial.needsUpdate = true;
     	customDepthMaterial.map = tex;
@@ -421,7 +422,7 @@ function createTree(state, id) {
 	);	
 	mesh.position.y -= 3.25;
 	mesh.rotation.y = Math.random() * 3.1415;
-    LOADER.loadTextureOnce('textures/treebark1.jpeg', function(tex) {
+    LOADER.loadTextureOnce('/game_fp/textures/treebark1.jpeg', function(tex) {
     	treeMaterial.map = tex;
     	treeMaterial.needsUpdate = true;
     });
