@@ -267,9 +267,22 @@ function createCone(state, id) {
     return mesh;
 }
 
+function createCapsule(state, id) {
+	var r = state.radius;
+	var m1 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 8, 6, 0, Math.PI*2, 0, Math.PI/2), defaultMaterial);
+	var m2 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 8, 6, 0, Math.PI*2, 0, Math.PI/2), defaultMaterial);
+	var m3 = new THREE.Mesh(new THREE.CylinderGeometry( 
+		r * 1.0001, r * 1.0001, state.height, 8, 5, true 
+	), defaultMaterial);
+	m1.position.set(0,  state.height*0.5, 0);
+	m2.position.set(0, -state.height*0.5, 0);
+	m2.rotation.x = Math.PI;
+	return new THREE.Object3D().add(m1).add(m2).add(m3)
+}
+
 function createBox(state, id) {
 	return new THREE.Mesh(
-    	new THREE.BoxGeometry( state.x, state.y, state.z ),
+    	new THREE.BoxGeometry( state.x * 2, state.y * 2, state.z * 2 ),
     	defaultMaterial
     );
 }
@@ -441,6 +454,7 @@ const loaders = {
 	"rock": createRock,
 	"brick": createBox,
 	"cone": createCone,
+	"capsule": createCapsule,
 	"3dText": create3DTextState,
 	"light": createThreeLight
 }

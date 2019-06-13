@@ -482,28 +482,31 @@ function level3() {
 	LOADER.loadGLTF("zoey.glb").then(gltf => {
 		console.log(gltf);
 		const armature = gltf.scene.children[1].children[0].skeleton;
-		const shape = "sphere"; 
-		const radius = 0.05;
+		const shape = "capsule"; 
+		const radius = 0.115; 
+		const height = 0.14;
 		const mass = 1.0; 
-		/*for(let i = 0; i < armature.bones.length; i++) {	
+		for(let i = 0; i < armature.bones.length; i++) {	
 			const bone = armature.bones[i];
 			const vec3 = bone.position.clone();
+			const quat = bone.quaternion.clone();
 			bone.getWorldPosition(vec3);
+			bone.getWorldQuaternion(quat);
 			const xPos = vec3.x; 
 			const yPos = vec3.y; 
 			const zPos = vec3.z; 
 			createEntity({
-				"entity": {x: xPos, y: yPos, z: zPos},
-				"render": {type: shape, radius: radius, height: 1.0, ignoreOffset: true},
-				"motion": {fx: 0, fy: 0, fz: 0},
+				"entity": {},
+				"render": {type: shape, radius: radius, height: height},
 				"physics": {x: xPos, y: yPos, z: zPos, 
-					shape: {type: shape, radius: radius, height: 1.0 }, mass: mass, staticObject: true
+					rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w},
+					shape: {type: shape, radius: radius, height: height }, mass: mass
 				}
 			});
-		}*/
-		createEntity({
-			"entity": {x: 0, y: 0, z: 0}, "render": { type: "animatedMesh", filename: "zoey.glb" }
-		}, 'AAAAA');
+		}
+		/*createEntity({
+			"entity": {x: 0, y: 0, z: 0}, "render": { type: "animatedMesh", filename: "zoey.glb", ignoreOffset: true }
+		}, 'AAAAA');*/
 	});
 
 	return {
@@ -513,6 +516,11 @@ function level3() {
 				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
 				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
 				"render": {type: "camera"},
+			},
+			"floor": {
+				"entity": {x: 0, y: -5, z: 0},
+				"render": {type: "box", x: 10, y: 1, z: 10},
+				"physics": {x: 0, y: -5, z: 0, shape: {type: "box", x: 10, y: 1, z: 10}, mass: 5, staticObject: true}
 			}
 		}
 	};
