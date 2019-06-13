@@ -1,6 +1,8 @@
 import * as ROT from './lib/rot.js';  // dungeon generation library
+import * as LOADER from './renderer/loader.js'; 
+import * as ENGINE from './engine.js';
 
-const marie = {
+const legacyChars = {
 	"animation": { animationName: 'idle', playingAnimation: true,
 		animations: {
 			special: 'block',
@@ -9,10 +11,19 @@ const marie = {
 			dead: 'fall_backwards',
 			attack: 'attack'
 		}
-	},
-	"render": { 
-		type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "marie_rose_v2"
-	},
+	}
+}
+const renderLookup = {
+	type: "animatedMesh", filename: "asdfake.json", jsonType: "character", lookup: "marie_rose_v2"
+}
+const marie = {
+	...legacyChars, "render": { ...renderLookup, lookup: "marie_rose_v2" },
+}
+const sarah = {
+	...legacyChars, "render": { ...renderLookup, lookup: "sarah" },
+}
+const cicero = {
+	...legacyChars, "render": { ...renderLookup, lookup: "cicero" },
 }
 const defender = {
 	"animation": {},
@@ -20,12 +31,38 @@ const defender = {
 		type: "animatedMesh", filename: "DefenderLingerie00.glb", scale: 0.265
 	},
 }
+const zoey = {
+	"animation": { animationName: 'idle', playingAnimation: true,
+		animations: {
+			special: 'walk',
+			run: 'walk',
+			idle: 'idle',
+			dead: 'dead',
+			attack: 'attack'
+		}
+	},
+	"render": { 
+		type: "animatedMesh", filename: "zoey.glb"
+	},
+}
+const jessica = {
+	"animation": { animationName: 'idle', playingAnimation: true,
+		animations: {
+			special: 'mbate',
+			run: 'walk',
+			idle: 'idle',
+			dead: 'dead',
+			attack: 'attack'
+		}
+	},
+	"render": { type: "animatedMesh", filename: "jessica.glb" }
+}
 
 function generateCharacter(xPos, yPos) {
 	var xPos = xPos || (Math.random()-0.5)*2*20;
 	var zPos = yPos || (Math.random()-0.5)*2*20;
 	return {
-		...defender,
+		...zoey,
 		"entity": {x: xPos, y: 0, z: zPos },
 		"collision": { type: "ouchie" },
 		"ai": { x: 1.0, y: 0.2, mode: 2 },
@@ -36,7 +73,7 @@ function generateCharacter(xPos, yPos) {
 			shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
 			mass: 45.35, damping: 0.9, lockRotation: true
 		},
-		"stats": {health: 100, maxHealth: 100}
+		"stats": {health: 10, maxHealth: 10}
 	}
 }
 
@@ -49,18 +86,8 @@ function level2() {
 				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
 				"render": {type: "camera"},
 			},
-      /*"light1": {
-				"entity": {x: 1.1, y: 0.8, z: 1 },
-				"render": { type: "light", lightType: "spot"}
-			},*/
-			/*
-			"mytext1": {
-				"entity": {x: 2, y: 1, z: 0 },
-				"render": { type: "3dText", string: "LEVEL 2 BBB", size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
-				//"physics": {x: 2, y: 1, z: 0, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 }
-			},*/
-			"character1": {
-				...defender,
+			/*"character1": {
+				...jessica,
 				"entity": { x: 1, y: 0.2, z: 2 },
 				"collision": { type: "ouchie" },
 				"magic": null,
@@ -70,7 +97,17 @@ function level2() {
 					shape: {type: "capsule", radius: 0.3, margin: 0.001},
 					mass: 45.35, damping: 0.9, lockRotation: true
 				},
-				"stats": {health: 100, maxHealth: 100}
+				"stats": {health: 50, maxHealth: 50}
+			},*/
+			"character1": {
+				...jessica,
+				"entity": { x: 1, y: 0.8, z: 2 },
+				"animation": {...jessica.animation, animationName: 'dog_give'}
+			},
+			"character3": {
+				...jessica,
+				"entity": { x: 1, y: 0.8, z: 2 },
+				"animation": {...jessica.animation, animationName: 'dog_recv'}
 			}
 		}
 	};
@@ -94,7 +131,7 @@ function level2() {
 		"physics": {"shape": {type: "box", x: .1, y: .1, z: .1}, staticObject: true}
 	}
 
-	var numCharacters = 2;
+	var numCharacters = 0;
 	for(var i = 0; i < numCharacters; i++) {
 		initialState['state']["character"+(i+999)] = generateCharacter(1,2);
 	}
@@ -107,8 +144,8 @@ function level1() {
 		"state": {
 			"camera1": {
 				"input": { "controllerId": "0" },  // needs input to toggle modes
-				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
-				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
+				"entity": {x: 0, y: 0, z: 0, rotation: {x: -0.95, y: 0.0, z: 0.0}},
+				"camera": {fov: 60.0, type: 'follow', entityName: 'character1', offsetY: 0.6, offsetZ: 1.6, exposure: Math.pow(0.31, 7) },
 				"render": {type: "camera"},
 			},
 			"groundplane1": {
@@ -116,9 +153,9 @@ function level1() {
 				"physics": {
 					mass: 0, x: 0, y: 0, z: 0, staticObject: true, neverSleep: true,
 					shape: {
-						type: "heightField", x: 60, z: 60, margin: 0.5,
+						type: "heightField", x: 20, z: 20, margin: 0.5,
 						terrainWidthExtents: 50, terrainDepthExtents: 50,
-						heightMapData: createHeightMap(60, 60, 15)
+						heightMapData: createHeightMap(20, 20, 15)
 						//heightMapData: createDungeon(60, 60, -5)
 						//heightMapData: generateAFuckingGrid3(60, 60, -5)
 					}
@@ -130,34 +167,20 @@ function level1() {
 			},
 			"sword": {
 				"entity": {x: 1, y: 9, z: 0 },
-				"render": { 
-					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "firesword"
-				},
-				"physics": {x: 1, y: 9, z: 0, 
-					//shape: {type: "sphere", radius: .1 },
-					shape: {
-						type: "box", y: 0.15
-					},
-					mass: 0.25
-				}
+				"render": { type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "firesword" },
+				"physics": {x: 1, y: 9, z: 0, shape: { type: "box", y: 0.15 }, mass: 0, noContact: true, kinematic: true},
+				"constraint": {},
 			},
 			"icestaff1": {
 				"entity": {x: 0, y: 9, z: 0 },
-				"render": { 
-					type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "icestaff"
-				},
+				"render": { type: "animatedMesh", filename: "/uunp_test/body.json", jsonType: "item", lookup: "icestaff" },
 				"physics": {x: 0, y: 9, z: 0, shape: { type: "box" }, mass: 0.25 }
 			},
-			/*"mytext1": {
-				"entity": {x: 2, y: 1, z: 0 },
-				"render": { type: "3dText", string: "Hello", size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
-				"physics": {x: 2, y: 1, z: 0, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 }
-			},*/
 			"character1": {
+				...jessica,
 				"entity": {x: 0, y: 0, z: 0 },
 				"collision": { type: "ouchie" },
 				"magic": null,
-				...defender,
 				"input": { "controllerId": "0" },
 				"motion": {fx: 0, fy: 0, fz: 0},
 				"physics": {x: 0, y: 2.8, z: 0, 
@@ -448,6 +471,53 @@ function generateHeight( width, depth, minHeight, maxHeight ) {
     return data;
 }
 
-const mainLevel = level1;
+function createEntity(entity, id) {
+	if(!id) id = 'baddy'+(Math.random() * 100);
+	ENGINE.queueCommand(function(gameState) {
+		ENGINE.createEntity(gameState, id, entity);
+	});
+}
+
+function level3() {
+	LOADER.loadGLTF("zoey.glb").then(gltf => {
+		console.log(gltf);
+		const armature = gltf.scene.children[1].children[0].skeleton;
+		const shape = "sphere"; 
+		const radius = 0.05;
+		const mass = 1.0; 
+		/*for(let i = 0; i < armature.bones.length; i++) {	
+			const bone = armature.bones[i];
+			const vec3 = bone.position.clone();
+			bone.getWorldPosition(vec3);
+			const xPos = vec3.x; 
+			const yPos = vec3.y; 
+			const zPos = vec3.z; 
+			createEntity({
+				"entity": {x: xPos, y: yPos, z: zPos},
+				"render": {type: shape, radius: radius, height: 1.0, ignoreOffset: true},
+				"motion": {fx: 0, fy: 0, fz: 0},
+				"physics": {x: xPos, y: yPos, z: zPos, 
+					shape: {type: shape, radius: radius, height: 1.0 }, mass: mass, staticObject: true
+				}
+			});
+		}*/
+		createEntity({
+			"entity": {x: 0, y: 0, z: 0}, "render": { type: "animatedMesh", filename: "zoey.glb" }
+		}, 'AAAAA');
+	});
+
+	return {
+		"state": {
+			"camera1": {
+				"input": { "controllerId": "0" },  // needs input to toggle modes
+				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
+				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
+				"render": {type: "camera"},
+			}
+		}
+	};
+}
+
+const mainLevel = level3;
 
 export { createHeightMap, mainLevel }

@@ -12,6 +12,34 @@ import * as InspectorMiddleware from './InspectorMiddleware.js';
 
 //welcome!
 
+//
+function loadRenderableEntity() {
+	return {
+		"animation": { animationName: 'idle', playingAnimation: true,
+			animations: {
+				special: 'mbate',
+				run: 'walk',
+				idle: 'idle',
+				dead: 'dead',
+				attack: 'attack'
+			}
+		},
+		"render": { type: "animatedMesh", filename: "jessica.glb" },
+		"entity": {x: 0, y: 0, z: 0 },
+		"collision": { type: "ouchie" },
+		"magic": null,
+		"input": { "controllerId": "0" },
+		"motion": {fx: 0, fy: 0, fz: 0},
+		"physics": {x: 0, y: 2.8, z: 0, 
+			//shape: {type: "capsule", radius: 0.4, height: 0.9, margin: 0.00001},
+			shape: {type: "capsule", radius: 0.3, margin: 0.001},
+			mass: 45.35, damping: 0.9, lockRotation: true
+		},
+		"stats": {health: 100, maxHealth: 100}
+	}
+}
+//
+
 function getShapeFunction(shape) {
 	return function(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats) {
 		return {
@@ -47,9 +75,9 @@ function getAttackVolume(id, radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 	zPos += nVec.y * (cRadius + (height / 2)); 
 	return {
 		"entity": {x: xPos, y: yPos, z: zPos, rotation: {x: q1.x, y: q1.y, z: q1.z, w: q1.w}},
-		"render": { 
+		/*"render": { 
 			type: "box", x: radius, y: radius, z: radius
-		},
+		},*/
 		"motion": {fx: 0, fy: 0, fz: 0},
 		"physics": {x: xPos, y: yPos, z: zPos, 
 			rotation: {x: q1.x, y: q1.y, z: q1.z, w: q1.w},
@@ -65,7 +93,7 @@ function getProjectileSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats) {
 	const fDamping = 0.8;
 	const mass = 0.05;
 	const noContact = false;
-	const maxAge = 1000;
+	const maxAge = 30;
 	const damping = 0.09;
 	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
 }
@@ -74,7 +102,7 @@ function getProjectileCollidingSpell(radius, xPos, yPos, zPos, fx, fy, fz, stats
 	const fDamping = 0.9;
 	const mass = 10.0;
 	const noContact = false;
-	const maxAge = 50;
+	const maxAge = 40;
 	const damping = 0.5;
 	return getSpell(radius, xPos, yPos, zPos, fx, fy, fz, fDamping, mass, noContact, maxAge, damping, stats);
 }
@@ -85,11 +113,11 @@ const defaultStats = {
 	}
 };
 function getSwordAttack(id, x, y, z, facingX, facingZ) {
-	const stats = {effect: {physical: 7}, origin: id};
+	const stats = {effect: {physical: 3}, origin: id};
 	return getAttackVolume(id, 1.0, x, y, z, facingX, 0, facingZ, stats);
 }
 function getFireSpell(id, x, y, z, facingX, facingZ) {
-	const stats = {effect: {fire: 5}, origin: id};
+	const stats = {effect: {fire: 2}, origin: id};
 	const fireballForce = 0.01;
 	const nVec = normalizeXY({x: facingX, y: facingZ});
 	const fx = nVec.x * fireballForce;
@@ -173,16 +201,16 @@ function applyMagic(state, id, eventHandler, gameState) {
 	return {...state, cooldowns: state.cooldowns.map(x => Math.max(0, x-1))}
 }
 function applyInput(state, id, eventHandler, gameState) {
-	if(id in gameState.ai) {
+	if('ai' in gameState && id in gameState.ai) {
 		return {...state, ...gameState.ai[id]};	
 	} else {
 		return {...state, ...INPUT.getControllerState(state.controllerId)};	
 	}
 }
 
-const movementSpeed = 0.58;
+//const movementSpeed = 0.58;
+const movementSpeed = 0.5;
 function applyMotion(state, id, eventHandler, gameState) {
-	var dep = null; // will contain an object that contains x, y, and z field
 	var damping = 1.0; // 1.0 - no damping. 0.0 - full damping
 	if('particle' in gameState && id in gameState.particle) {
 		damping = gameState.particle[id].damping;
@@ -193,12 +221,8 @@ function applyMotion(state, id, eventHandler, gameState) {
 			fz: state.fz * damping
 		}
 	}
-
 	if('input' in gameState && id in gameState.input && 'x' in gameState.input[id] && 'y' in gameState.input[id]) {
-		dep = gameState.input[id];
-	}
-	if(dep) {
-		var normalized = normalizeXY(dep);
+		var normalized = normalizeXY(gameState.input[id]);
 		if(state.fx !== normalized.x || state.fz !== normalized.y) {
 			const fx = (normalized.x * movementSpeed);
 			const fz = (-normalized.y * movementSpeed);
@@ -233,12 +257,30 @@ function normalizeXYZ(point) {
 	}
 	return {x: 0, y: 0, z: 0};
 }
+function pointCharacter(state, id, gameState) {
+	if(id in gameState.motion) {
+		const motion = gameState.motion[id];
+	//point character
+		if(Math.abs(motion.fx)+Math.abs(motion.fz) > 0) {
+			var rotation = Math.atan2(motion.fx, motion.fz);
+			return {
+				...state,
+				rotation: {
+					x: 0, 
+					y: rotation,
+					z: 0
+				}
+			};
+		}
+	}
+	return state;
+}
 
 function applyEntity(state, id, eventHandler, gameState) {
 	if('physics' in gameState && id in gameState.physics) {
 		// Move the entity according to physics simulation
 		if(gameState.physics[id].x != state.x || gameState.physics[id].y != state.y || gameState.physics[id].z != state.z) {
-			/*if(id in gameState.input || ('ai' in gameState && id in gameState.ai)) {
+			if(id in gameState.input) {
 				//fake rotation by pointing the character if its controlled by AI or KB
 				return {
 					...pointCharacter(state, id, gameState), 
@@ -246,7 +288,7 @@ function applyEntity(state, id, eventHandler, gameState) {
 					y: gameState.physics[id].y,
 					z: gameState.physics[id].z
 				}
-			} else {*/
+			} else {
 				//use physics sim rotation
 				return {
 					rotation: {...gameState.physics[id].rotation},
@@ -254,7 +296,7 @@ function applyEntity(state, id, eventHandler, gameState) {
 					y: gameState.physics[id].y,
 					z: gameState.physics[id].z
 				}
-			//}
+			}
 		}
 	}
 	if(id in gameState.camera && gameState.camera[id].type == 'follow') {
@@ -263,12 +305,14 @@ function applyEntity(state, id, eventHandler, gameState) {
 			return state;
 		}
 		const physicsState = gameState.physics[gameState.camera[id].entityName];
+		const offsetY = gameState.camera[id].offsetY || 0.2;
+		const offsetZ = gameState.camera[id].offsetZ || 0.8;
 
 		return {
 			...state,
 			x: physicsState.x, 
-			y: physicsState.shape.height + physicsState.y + 0.2, 
-			z: physicsState.z + 0.8
+			y: physicsState.shape.height + physicsState.y + offsetY, 
+			z: physicsState.z + offsetZ
 		};
 	}
 	return state;
@@ -286,20 +330,22 @@ function applyAnimation(state, id, eventHandler, gameState) {
 	if(!state.animations) {
 		return {...state, animations: animations};
 	}
-	if(id in gameState.stats && 'health' in gameState.stats[id] && gameState.stats[id].health <= 0 ) {
+	if(gameState.stats && id in gameState.stats && 'health' in gameState.stats[id] && gameState.stats[id].health <= 0 ) {
+		// alas you have died
 		return {
 			...state, playingAnimation: true, 
-			animationName: state.animations.dead
+			animationName: state.animations.dead, animationLoop: false
 		};
 	}
-	if(id in gameState.input && gameState.input[id].buttons[0] === true && !state.playingAnimation) {
+	if(gameState.input && id in gameState.input && gameState.input[id].buttons[0] === true && !state.playingAnimation) {
+		// play special animation on button
 		return {
 			...state, playingAnimation: true, 
-			animationName: state.animations.special
+			animationName: state.animations.special, animationLoop: true
 		};
 	}
 
-
+	//end playing an animation if we use movement keys
 	if('playingAnimation' in state && state.playingAnimation === true) {
 		if('motion' in gameState) {
 			if(id in gameState.motion && (Math.abs(gameState.motion[id].fx)+Math.abs(gameState.motion[id].fz)) > 0.0001) {
@@ -308,13 +354,21 @@ function applyAnimation(state, id, eventHandler, gameState) {
 		}
 		return state;
 	}
+	// attacking
+	if(gameState.magic && id in gameState.magic && gameState.magic[id].cooldowns[2] > 0.0) {
+		if(state.animationName != state.animations.attack) {
+			state = {...state, animationName: state.animations.attack, animationLoop: false}
+		}
+		return state;
+	} 
+	//walking
 	if('motion' in gameState && id in gameState.motion) {
 		var totalMotion = Math.abs(gameState.motion[id].fx) + Math.abs(gameState.motion[id].fz);
 		if(totalMotion > 0.0001 && state.animationName != state.animations.run) {
-			return {...state, animationName: state.animations.run};
+			return {...state, animationName: state.animations.run, animationLoop: true};
 		}
 		if(totalMotion < 0.0001 && state.animationName != state.animations.idle) {
-			return {...state, animationName: state.animations.idle};
+			return {...state, animationName: state.animations.idle, animationLoop: true};
 		}
 	}
 	
@@ -398,6 +452,7 @@ function applyStats(state, id, eventHandler, gameState) {
 					if(newState.health <= 0 && id in gameState.ai) {
 						delete gameState.ai[id];
 						delete gameState.motion[id];
+						delete gameState.input[id];
 						return state;
 					}
 					const totalDamage = beforeApplyStats.health - newState.health;
@@ -412,19 +467,42 @@ function applyStats(state, id, eventHandler, gameState) {
 	return state; 
 }
 
+function copyToPhysics(body, positionArray, rotationArray) {
+	var t = body.getWorldTransform();
+	t.getRotation().setValue(rotationArray[0], rotationArray[1], rotationArray[2], rotationArray[3]);
+	t.getOrigin().setValue(positionArray[0], positionArray[1], positionArray[2]);
+}
+function applyConstraints(state, id, eventHandler, gameState) {
+	/*switch(state.type) {
+		case 'copytransforms':
+		default:
+			const skeleton = RENDERER.loadedObjects['character1'].children[1].skeleton;
+			const bone = skeleton.getBoneByName('Armature_arm_wristL');
+			const body = PHYSICS.bodies[id];
+			const vec3 = bone.position.clone();
+			const qua4 = bone.quaternion.clone();
+			bone.getWorldPosition(vec3);
+			bone.getWorldQuaternion(qua4);
+			copyToPhysics(body, vec3.toArray(), qua4.toArray());
+			break;
+	}*/
+	return state;
+}
+
 const systems = [	
 	{ name: "input", func: applyInput },
 	{ name: "ai", func: AI.applyAI },
 	{ name: "particle", func: applyParticle },
 	{ name: "motion", func: applyMotion },
+	{ name: "animation", func: applyAnimation },
+	{ name: "constraint", func: applyConstraints },
 	{ name: "physics", func: PHYSICS.applyPhysics },
 	{ name: "magic", func: applyMagic },
 	{ name: "collision", func: applyCollision },
 	{ name: "camera", func: RENDERER.updateCamera },
 	{ name: "entity", func: applyEntity },
 	{ name: "stats", func: applyStats },
-	{ name: "animation", func: applyAnimation },
-	{ name: "render", func: RENDERER.renderObject },
+	{ name: "render", func: RENDERER.renderObject }
 ];
 
 function resetWorld() {

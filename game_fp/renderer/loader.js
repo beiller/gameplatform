@@ -1,5 +1,8 @@
 import * as THREE from '../lib/three.module.js';
 import * as Loader from '../Loader.js';
+import * as GLTF from '../GLTFLoader.js';
+
+const GLTFLoader = new GLTF.GLTFLoader();
 
 function loadEXRMap(renderer) {
 	return new Promise(function(resolve) { 
@@ -23,21 +26,63 @@ function loadEXRMap(renderer) {
 	});
 };
 
-const textureCache = {};
-function loadTextureOnce(url, callback) {
-	if(!(url in textureCache)) {
-		textureCache[url] = 'loading'
-		Loader.loadTexture(url).then(function(tex) {
-	    	textureCache[url] = tex;
-	    	callback(tex);
-	    })	
-	} else {
-		if(textureCache[url] === 'loading') {
-			setTimeout(function() { loadTextureOnce(url, callback) }, 1000);
-		} else {
-			callback(textureCache[url]);
-		}
+
+function loadGLTF(url) {
+	return new Promise((resolve, reject) => {
+		GLTFLoader.load(
+			url, gltf => resolve(gltf),
+			function ( xhr ) {
+				console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
+			}, reject
+		);
+	});
+}
+
+
+function createCache(functionToCache) {
+	let globalCache = {};
+	return function cachedFunc(url) {
+		return new Promise((resolve, reject) => {
+			let loadCounter = 0;
+			function loadWaiter(url) {
+				if(loadCounter > 50) { reject('Unable to load file after 50 seconds!') }
+				if(!(url in globalCache)) {
+					globalCache[url] = 'loading';
+					functionToCache(url).then(function(tex) { globalCache[url] = tex; resolve(tex) });
+				} else {
+					if(globalCache[url] === 'loading') {
+						loadCounter = loadCounter + 1;
+						setTimeout(function() { loadWaiter(url) }, 1000);
+					} else {
+						resolve(globalCache[url]);
+					}
+				}
+			}
+			loadWaiter(url);
+		});
 	}
+}
+
+const loadGLTFCached = createCache(loadGLTF);
+const loadTextureCached = createCache(Loader.loadTexture);
+const loadTextureOnce = (url, callback) => loadTextureCached(url).then(callback);
+
+function loadGLTFOnce(url, callback) {
+	//loadGLTFCached(url).then(result => callback(result.scene.children[1].clone()));
+	function clone(result) {
+		/*let newScene = new THREE.Scene();
+		newScene.add(result.scene.children[0].clone());
+		newScene.add(result.scene.children[1].clone());*/
+		const newScene = result.scene.clone();
+		newScene.traverse(function(object) {
+			if ( object.isMesh ) {
+				object.material = object.material.clone();
+				object.skeleton = object.skeleton.clone();
+			}
+		});
+		return {'scene': newScene, animations: result.animations};
+	}
+	loadGLTFCached(url).then(result => callback(clone(result)));
 }
 
 function loadMeshFile(callbackFn, state) {
@@ -45,8 +90,10 @@ function loadMeshFile(callbackFn, state) {
 	if(extension === 'json') {
 		Loader.loadThreeJS(state, callbackFn);
 	} else {
-		Loader.loadGLTF(state, callbackFn);
+		//Loader.loadGLTF(state, callbackFn);
+		loadGLTF(state.filename).then(gltf => callbackFn(gltf));
+		//loadGLTFOnce(state.filename, callbackFn);
 	}
 }
 
-export {loadEXRMap, loadTextureOnce, loadMeshFile}
+export {loadEXRMap, loadTextureOnce, loadMeshFile, loadGLTF}

@@ -310,7 +310,7 @@ function readPhysicsState(state, id) {
 function applyMotionPhysics(state, id, eventHandler, gameState) {
 	const motion = gameState.motion[id];
 	if(Math.abs(motion.fx)+Math.abs(motion.fz) > 0) {
-		bodies[id].setFriction(0.2);
+		bodies[id].setFriction(0.45);
 		temp_vec3_1.setValue(
 			gameState.motion[id].fx*stepDt, 
 			gameState.motion[id].fy*stepDt, 
@@ -338,15 +338,17 @@ function applyPhysics(state, id, eventHandler, gameState) {
 	if(!world) return state;
 
 	var character = gameState.physics['character1']; //hack
-	temp_vec3_1.setValue(character.x - state.x, character.y - state.y, character.z - state.z);
-	const len = Math.abs(temp_vec3_1.length());
-	if(state.staticObject && id !== 'character1' && len > 15.0) {
-		//console.log("Far away");
-		if(!state.neverSleep && id in bodies) {
-			world.m_dynamicsWorld.removeRigidBody(bodies[id]);
-			delete bodies[id];
+	if(character) { // remove from sim things that are far away from player
+		temp_vec3_1.setValue(character.x - state.x, character.y - state.y, character.z - state.z);
+		const len = Math.abs(temp_vec3_1.length());
+		if(state.staticObject && id !== 'character1' && len > 15.0) {
+			//console.log("Far away");
+			if(!state.neverSleep && id in bodies) {
+				world.m_dynamicsWorld.removeRigidBody(bodies[id]);
+				delete bodies[id];
+			}
+			return state;
 		}
-		return state;
 	}
 
 	if(!(id in bodies) || !bodies[id]) {
@@ -445,7 +447,7 @@ function applyPhysics(state, id, eventHandler, gameState) {
 		}
 	}
 
-	if(id in gameState.motion) {
+	if(gameState.motion && id in gameState.motion) {
 		applyMotionPhysics(state, id, eventHandler, gameState);
 	}
 	state = readPhysicsState(state, id);
@@ -472,4 +474,4 @@ function stepWorld() {
 }
 
 
-export { init, applyPhysics, resetWorld, applyCollision, stepWorld }
+export { init, applyPhysics, resetWorld, applyCollision, stepWorld, bodies }

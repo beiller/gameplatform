@@ -1,6 +1,7 @@
 import * as THREE from './lib/three.module.js';
 import * as GLTF from './GLTFLoader.js';
 import * as MESH_UTILS from './mesh_utils.js';
+import * as RENDER_LOADER from './renderer/loader.js';
 
 // Instantiate a loader
 let loader = new GLTF.GLTFLoader();
@@ -100,9 +101,12 @@ function loadTexture(url) {
 
 function texturePromise(meshIndex, materialIndex, slot, url) {
 	return new Promise(function (resolve, reject) {
-        texloader.load(url + '?cache=' + new Date().getTime(), function(tex) {
+        /*texloader.load(url + '?cache=' + new Date().getTime(), function(tex) {
         	resolve([meshIndex, materialIndex, slot, tex]);
-        });
+		});*/
+		RENDER_LOADER.loadTextureOnce(url, function(tex) {
+			resolve([meshIndex, materialIndex, slot, tex]);
+		})
     });
 }
 

@@ -5,25 +5,14 @@ const DEFAULT_CONTROLS = {
 	y: 0,
 	buttons: [false, false, false, false, false, false, false, false, false, false, false]
 };
-var controller = {
-	...DEFAULT_CONTROLS
-};
 
-var controller1 = {
-	...DEFAULT_CONTROLS,
-	x: -1,
-	y: 0,
-};
+const CONTROLLERS = {
+	'0': {...DEFAULT_CONTROLS},
+	'1': {...DEFAULT_CONTROLS}
+}
 
 function getControllerState(controllerId) {
-	if(controllerId == "0") {
-		return controller;
-	}
-	if(controllerId == "1") {
-		return controller1;
-	}
-
-	return controller;
+	return CONTROLLERS[controllerId];
 }
 function setButton(state, buttonIndex, buttonValue) {
 	if(buttonIndex == 0) {
@@ -54,7 +43,7 @@ document.addEventListener('keyup', function (e) {
 		'KeyN': c=>({...c, buttons: buttonUp(c, 4)}),
 		'KeyM': c=>({...c, buttons: buttonUp(c, 5)})
 	}
-	controller = kmap[e.code](controller);
+	CONTROLLERS['0'] = kmap[e.code](CONTROLLERS['0']);
 }, false);
 
 document.addEventListener('keydown', function (e) {
@@ -70,7 +59,7 @@ document.addEventListener('keydown', function (e) {
 		'KeyN': c=>({...c, buttons: buttonDown(c, 4)}),
 		'KeyM': c=>({...c, buttons: buttonDown(c, 5)})
 	}
-	controller = kmap[e.code](controller);
+	CONTROLLERS['0'] = kmap[e.code](CONTROLLERS['0']);
 }, false);
 
 document.addEventListener("mouseup", function(e) {
@@ -80,7 +69,7 @@ document.addEventListener("mouseup", function(e) {
 		2: c=>({...c, buttons: buttonUp(c, 8)}),
 		3: c=>({...c, buttons: buttonUp(c, 9)})
 	}
-	controller = bmap[e.button](controller);
+	CONTROLLERS['0'] = bmap[e.button](CONTROLLERS['0']);
 }, false);
 
 document.addEventListener("mousedown", function(e) {
@@ -90,7 +79,7 @@ document.addEventListener("mousedown", function(e) {
 		2: c=>({...c, buttons: buttonDown(c, 8)}),
 		3: c=>({...c, buttons: buttonDown(c, 9)})
 	}
-	controller = bmap[e.button](controller);
+	CONTROLLERS['0'] = bmap[e.button](CONTROLLERS['0']);
 }, false);
 
 export { getControllerState, DEFAULT_CONTROLS };

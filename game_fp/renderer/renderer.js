@@ -308,15 +308,23 @@ function updateObject(renderState, entity, threeObject) {
 function animateObject(state, id, gameState) {
 	if(!('currentAnimation' in state)) {
 		getAnimationClip(id, gameState.animation[id].animationName).play();
-		return {
+		state = {
 			...state,
 			currentAnimation: gameState.animation[id].animationName
 		};
 	}
 	if(state.currentAnimation !== gameState.animation[id].animationName) {
 		getAnimationClip(id, state.currentAnimation).stop();
-		getAnimationClip(id, gameState.animation[id].animationName).play();
-		return {
+
+		const clip = getAnimationClip(id, gameState.animation[id].animationName);
+		let loop = THREE.LoopRepeat;
+		if('animationLoop' in gameState.animation[id] && gameState.animation[id].animationLoop === false) {
+			loop = THREE.LoopOnce;
+			clip.clampWhenFinished = true;
+		}
+		clip.loop = loop;
+		clip.play();
+		state = {
 			...state,
 			currentAnimation: gameState.animation[id].animationName
 		};
@@ -340,7 +348,7 @@ function updateCamera(state, id, eventHandler, gameState) {
 			GLOBAL_ORBIT_CONTROLS.dispose();
 			GLOBAL_ORBIT_CONTROLS = null;
 		}
-		return state;
+		//return state;
 	} else {
 		if(!GLOBAL_ORBIT_CONTROLS) {
 			GLOBAL_ORBIT_CONTROLS = new THREE.OrbitControls( GLOBAL_CAMERA, document.getElementsByTagName('canvas')[0] );
@@ -354,7 +362,10 @@ function updateCamera(state, id, eventHandler, gameState) {
 			GLOBAL_ORBIT_CONTROLS.target.y += 1.15;
 		}
 		GLOBAL_ORBIT_CONTROLS.update();
-		return state;
+		//return state;
+	}
+	if('exposure' in state && GLOBAL_RENDERER.toneMappingExposure != state.exposure) {
+		GLOBAL_RENDERER.toneMappingExposure = state.exposure;
 	}
 	return state;
 }
@@ -565,7 +576,7 @@ function renderObject(state, id, eventHandler, gameState) {
 		return state;
 	}
 
-	if(id in gameState.animation) {
+	if('animation' in gameState && id in gameState.animation) {
 		if(!('animations' in state)) {
 			const animationNames = loadedObjects[id].children[0].animations.map(x=>x.name);
 			console.log(animationNames);
@@ -576,7 +587,7 @@ function renderObject(state, id, eventHandler, gameState) {
 		}
 		state = animateObject(state, id, gameState);
 	}
-	if(id in gameState.stats && gameState.stats[id].health) {
+	if('stats' in gameState && id in gameState.stats && gameState.stats[id].health) {
 		if(!(id in healthBarSprites)) {
 			let sprite = createHealthBar();
 			healthBarSprites[id] = sprite;
@@ -693,5 +704,5 @@ function renderFunction() {
 }
 const loadMeshFile = LOADER.loadMeshFile;
 
-export { renderObject, init, updateCamera, renderFunction, loadMeshFile };
+export { renderObject, init, updateCamera, renderFunction, loadMeshFile, loadedObjects };
 
