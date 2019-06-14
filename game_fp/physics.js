@@ -163,6 +163,39 @@ function createBody(shape, state) {
 	setBodyFlags(body, flags);
 	return body;
 }
+function createConstraint(type, bodyA, bodyB, localA, localB, options) {
+	/*
+		bodyA: parent body
+		bodyB: child body
+		localA: local coordinates of connection in A
+		lobalB: local coordinates of connection in B
+	*/
+	switch(type) {
+		case "BALL":
+			return this.createConstraintBall(bodyA, bodyB, localA, localB, options);
+			break;
+		case "6DOF":
+			return this.createConstraint6DOF(bodyA, bodyB, localA, localB, options);
+			break;
+		case "CONE":
+			return this.createConstraintCone(bodyA, bodyB, localA, localB, options);
+			break;
+		default:
+			throw("Invalid constraint type: " + type);
+	}
+};
+function createConstraintBall(bodyA, bodyB, localA, localB, options) {
+	temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
+	temp_vec3_2.setValue(localB[0], localB[1], localB[2]);
+	var constraint = new Ammo.btPoint2PointConstraint(
+		bodyA.body, 
+		bodyB.body, 
+		temp_vec3_1, 
+		temp_vec3_2
+	);
+	this.m_dynamicsWorld.addConstraint(constraint, true);
+	return constraint;
+};
 
 function createTerrainShape(
 	terrainDepth, terrainWidth, heightData, terrainWidthExtents, terrainDepthExtents

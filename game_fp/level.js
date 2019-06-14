@@ -483,7 +483,7 @@ function level3() {
 		console.log(gltf);
 		const armature = gltf.scene.children[1].children[0].skeleton;
 		const shape = "capsule"; 
-		const radius = 0.015; 
+		const radius = 0.01; 
 		const mass = 1.0; 
 		const pairs = [
 			["Armature_pelvis", "Armature_spine_lower"],
@@ -515,29 +515,103 @@ function level3() {
 			bone.getWorldPosition(vec3);
 			bone.getWorldQuaternion(quat);
 		}
-		for(let i = 0; i < pairs.length; i++) {	
-			const bone = armature.getBoneByName(pairs[i][0]);
-			const bone2 = armature.getBoneByName(pairs[i][1]);
-			const vec3 = bone.position.clone();
+
+		function calculateRigidBodyLength(boneName1, boneName2) {
+			const bone = armature.getBoneByName(boneName1);
+			const bone2 = armature.getBoneByName(boneName2);
 			const vec3_end = bone.position.clone();
+			const vec3_temp = bone.position.clone();
+			bone.getWorldPosition(vec3_temp);
+			bone2.getWorldPosition(vec3_end);
+			return vec3_temp.sub(vec3_end).length();
+		}
+		function getRigidBodyWorldCoordinates(boneName1, height) {
+			const bone = armature.getBoneByName(boneName1);
+			const vec3 = bone.position.clone();
 			const vec3_temp = bone.position.clone();
 			const quat = bone.quaternion.clone();
 			bone.getWorldPosition(vec3);
 			bone.getWorldPosition(vec3_temp);
-			bone2.getWorldPosition(vec3_end);
 			bone.getWorldQuaternion(quat);
-			const height = vec3_temp.sub(vec3_end).length();
-			vec3_temp.set(0, height / 2.0, 0).applyQuaternion(quat);//.add(vec3);
+			vec3_temp.set(0, height / 2.0, 0).applyQuaternion(quat);
 			vec3.add(vec3_temp);
-			const xPos = vec3.x; const yPos = vec3.y; const zPos = vec3.z;
-			createEntity({
+			return [vec3, quat];
+		}
+		function calculateLocalPosition(bone, entity) {
+			const vec3 = bone.position.clone().set(entity.physics.x, entity.physics.y, entity.physics.z);
+			const local = bone.position.clone();
+			bone.getWorldPosition(local);
+			const quat = bone.quaternion.clone().set(
+				entity.physics.rotation.x, entity.physics.rotation.y, entity.physics.rotation.z, entity.physics.rotation.w
+			);
+			quat.inverse()
+			vec3.sub(local).applyQuaternion(quat);
+			return vec3;
+		}
+
+		const entities = {};
+		for(let i = 0; i < pairs.length; i++) {	
+			/*
+				Create the rigid body
+			*/
+			const length = calculateRigidBodyLength(pairs[i][0], pairs[i][1])
+			const coordinates = getRigidBodyWorldCoordinates(pairs[i][0], length);
+			const vec3 = coordinates[0];
+			const quat = coordinates[1];
+			entities["zoey.bone."+pairs[i][0]] = {
 				"entity": {},
-				"render": {type: shape, radius: radius, height: height, ignoreOffset: true},
-				"physics": {x: xPos, y: yPos, z: zPos, 
+				"render": {type: shape, radius: radius, height: length, ignoreOffset: true},
+				"physics": {x: vec3.x, y: vec3.y, z: vec3.z, 
 					rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w},
-					shape: {type: shape, radius: radius, height: height }, mass: mass, staticObject: true
+					shape: {type: shape, radius: radius, height: length }, mass: mass, staticObject: true
 				}
-			});
+			};
+		}
+
+		for(let i = 0; i < pairs.length; i++) {	
+			/*
+				Connect rigid bodies
+			*/
+			const entity1 = entities["zoey.bone."+pairs[i][0]];
+			const entity2 = entities["zoey.bone."+pairs[i][1]];
+			if(!entity2) continue;
+			const bone1 = armature.getBoneByName(pairs[i][0]);
+			const bone2 = armature.getBoneByName(pairs[i][1]);
+
+			const local1 = calculateLocalPosition(bone1, entity1); //calc bone1's location according to entity1
+			const local2 = calculateLocalPosition(bone1, entity2); //calc bone1's location according to entity2
+
+			//hack commence THIS HAS BUGS FUCK
+			local2.set(0, entity2.physics.shape.height / 2.0, 0);
+			
+			//DEBUG
+			const vec3 = bone1.position.clone();
+			const quat = bone1.quaternion.clone();
+			vec3.set(entity1.physics.x, entity1.physics.y, entity1.physics.z);
+			bone1.getWorldQuaternion(quat);
+			local1.applyQuaternion(quat);
+			vec3.add(local1);
+
+			entities["zoey.constraint."+pairs[i][0]+"."+pairs[i][1]+'.1'] = {
+				"entity": {x: vec3.x, y: vec3.y, z: vec3.z},
+				"render": {type: "axis", ignoreOffset: true},
+			};
+
+			//DEBUG2
+			vec3.set(entity2.physics.x, entity2.physics.y, entity2.physics.z);
+			bone2.getWorldQuaternion(quat);
+			local2.applyQuaternion(quat);
+			vec3.sub(local2);
+			entities["zoey.constraint."+pairs[i][0]+"."+pairs[i][1]+'.2'] = {
+				"entity": {x: vec3.x, y: vec3.y, z: vec3.z},
+				"render": {type: "sphere", radius: 0.02, ignoreOffset: true},
+			};
+
+
+			//END DEBUG
+		}
+		for(let eid in entities) {
+			createEntity(entities[eid], eid);
 		}
 		/*createEntity({
 			"entity": {x: 0, y: 0, z: 0}, "render": { type: "animatedMesh", filename: "zoey.glb", ignoreOffset: true }
