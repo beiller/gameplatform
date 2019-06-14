@@ -357,8 +357,9 @@ function createDebugAxis() {
 	var Y = makeTextSprite("Y", {backgroundColor: {r: 0.9, g: 1.0, b: 0.9, a: 1.0}});
 	var Z = makeTextSprite("Z", {backgroundColor: {r: 0.9, g: 0.9, b: 1.0, a: 1.0}});
 	X.position.set(1,0,0); Y.position.set(0,1,0); Z.position.set(0,0,1);
-	return axis.add(X).add(Y).add(Z);
-	//return axis;
+	axis.add(X).add(Y).add(Z);
+	axis.scale.set(0.25, 0.25, 0.25);
+	return axis;
 }
 
 var cachedGrassGeom = null;
@@ -456,7 +457,8 @@ const loaders = {
 	"cone": createCone,
 	"capsule": createCapsule,
 	"3dText": create3DTextState,
-	"light": createThreeLight
+	"light": createThreeLight,
+	"axis": createDebugAxis
 }
 
 export {loaders, createLight, createPointLight, createDebugAxis}

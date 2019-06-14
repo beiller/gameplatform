@@ -30,8 +30,7 @@ const bodies = {};
 
 function step(m_dynamicsWorld, dispatcher) {
 	const dt = stepDt;
-	//var numIterations = stepHz / 30;
-	const numIterations = 1;
+	const numIterations = 2;
 	for(var i = 0; i < numIterations; i++) {
 		m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/stepHz/numIterations);
 	}
@@ -48,7 +47,7 @@ function buildBodyIdMap() {
 	}
 }
 
-function readCollisionData(objectId) {
+function readCollisionData() {
 	buildBodyIdMap();
 	var data = [];
 	var i,

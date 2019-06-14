@@ -483,24 +483,59 @@ function level3() {
 		console.log(gltf);
 		const armature = gltf.scene.children[1].children[0].skeleton;
 		const shape = "capsule"; 
-		const radius = 0.115; 
-		const height = 0.14;
+		const radius = 0.015; 
 		const mass = 1.0; 
+		const pairs = [
+			["Armature_pelvis", "Armature_spine_lower"],
+			["Armature_spine_lower", "Armature_spine_upper"],
+			["Armature_spine_upper", "Armature_head_neck_lower"],
+			["Armature_head_neck_lower", "Armature_head_neck_upper"],
+			//head?
+			["Armature_leg_thighL", "Armature_leg_kneeL"],
+			["Armature_leg_kneeL", "Armature_leg_ankleL"],
+			["Armature_leg_ankleL", "Armature_leg_toesL"],
+			["Armature_leg_thighR", "Armature_leg_kneeR"],
+			["Armature_leg_kneeR", "Armature_leg_ankleR"],
+			["Armature_leg_ankleR", "Armature_leg_toesR"],
+
+			["Armature_arm_shoulder_1L", "Armature_arm_shoulder_2L"],
+			["Armature_arm_shoulder_2L", "Armature_arm_elbowL"],
+			["Armature_arm_elbowL", "Armature_arm_wristL"],
+			["Armature_arm_shoulder_1R", "Armature_arm_shoulder_2R"],
+			["Armature_arm_shoulder_2R", "Armature_arm_elbowR"],
+			["Armature_arm_elbowR", "Armature_arm_wristR"]
+		]
+		// Hack - iterate over all bones and make sure their global matrices are updated
+		// apparently this must be done I checked....
 		for(let i = 0; i < armature.bones.length; i++) {	
 			const bone = armature.bones[i];
+			console.log(bone.name);
 			const vec3 = bone.position.clone();
 			const quat = bone.quaternion.clone();
 			bone.getWorldPosition(vec3);
 			bone.getWorldQuaternion(quat);
-			const xPos = vec3.x; 
-			const yPos = vec3.y; 
-			const zPos = vec3.z; 
+		}
+		for(let i = 0; i < pairs.length; i++) {	
+			const bone = armature.getBoneByName(pairs[i][0]);
+			const bone2 = armature.getBoneByName(pairs[i][1]);
+			const vec3 = bone.position.clone();
+			const vec3_end = bone.position.clone();
+			const vec3_temp = bone.position.clone();
+			const quat = bone.quaternion.clone();
+			bone.getWorldPosition(vec3);
+			bone.getWorldPosition(vec3_temp);
+			bone2.getWorldPosition(vec3_end);
+			bone.getWorldQuaternion(quat);
+			const height = vec3_temp.sub(vec3_end).length();
+			vec3_temp.set(0, height / 2.0, 0).applyQuaternion(quat);//.add(vec3);
+			vec3.add(vec3_temp);
+			const xPos = vec3.x; const yPos = vec3.y; const zPos = vec3.z;
 			createEntity({
 				"entity": {},
-				"render": {type: shape, radius: radius, height: height},
+				"render": {type: shape, radius: radius, height: height, ignoreOffset: true},
 				"physics": {x: xPos, y: yPos, z: zPos, 
 					rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w},
-					shape: {type: shape, radius: radius, height: height }, mass: mass
+					shape: {type: shape, radius: radius, height: height }, mass: mass, staticObject: true
 				}
 			});
 		}
