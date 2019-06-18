@@ -486,6 +486,8 @@ function applyConstraints(state, id, eventHandler, gameState) {
 			copyToPhysics(body, vec3.toArray(), qua4.toArray());
 			break;
 	}*/
+	state = PHYSICS.applyConstraints(state, id, eventHandler, gameState);
+	state = RENDERER.applyConstraints(state, id, eventHandler, gameState);
 	return state;
 }
 
@@ -495,8 +497,8 @@ const systems = [
 	{ name: "particle", func: applyParticle },
 	{ name: "motion", func: applyMotion },
 	{ name: "animation", func: applyAnimation },
-	{ name: "constraint", func: applyConstraints },
 	{ name: "physics", func: PHYSICS.applyPhysics },
+	{ name: "constraint", func: applyConstraints },
 	{ name: "magic", func: applyMagic },
 	{ name: "collision", func: applyCollision },
 	{ name: "camera", func: RENDERER.updateCamera },

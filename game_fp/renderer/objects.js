@@ -269,15 +269,14 @@ function createCone(state, id) {
 
 function createCapsule(state, id) {
 	var r = state.radius;
-	var m1 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 8, 6, 0, Math.PI*2, 0, Math.PI/2), defaultMaterial);
-	var m2 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 8, 6, 0, Math.PI*2, 0, Math.PI/2), defaultMaterial);
-	var m3 = new THREE.Mesh(new THREE.CylinderGeometry( 
-		r * 1.0001, r * 1.0001, state.height, 8, 5, true 
-	), defaultMaterial);
-	m1.position.set(0,  state.height*0.5, 0);
-	m2.position.set(0, -state.height*0.5, 0);
-	m2.rotation.x = Math.PI;
-	return new THREE.Object3D().add(m1).add(m2).add(m3)
+	var g1 = new THREE.SphereGeometry(r, 8, 6, 0, Math.PI*2, 0, Math.PI/2).translate(0, ( state.height*0.5), 0);
+	var g2 = new THREE.SphereGeometry(r, 8, 6, 0, Math.PI*2, 0, Math.PI/2).rotateX(Math.PI).translate(0, (-state.height*0.5), 0);
+	var g3 = new THREE.CylinderGeometry( 
+		r, r, Math.max(state.height, 0.01), 8, 5, true 
+	)
+	g1.merge(g2);
+	g1.merge(g3);
+	return new THREE.Mesh(g1, defaultMaterial);
 }
 
 function createBox(state, id) {

@@ -23,17 +23,14 @@ const collisionFlags = {
 
 const stepHz = 30;
 const stepDt = 1000/stepHz;
-const constraintSolverIterations = 10;
+const constraintSolverIterations = 1000;
 const globalCollisionMap = {};
 const bodyIdMap = {};
 const bodies = {};
 
 function step(m_dynamicsWorld, dispatcher) {
-	const dt = stepDt;
-	const numIterations = 2;
-	for(var i = 0; i < numIterations; i++) {
-		m_dynamicsWorld.stepSimulation(dt/numIterations, 1, 1/stepHz/numIterations);
-	}
+	//const dt = stepDt;
+	m_dynamicsWorld.stepSimulation(1/stepHz, 5000, 1/1000);
 };
 
 function buildBodyIdMap() {
@@ -172,13 +169,13 @@ function createConstraint(type, bodyA, bodyB, localA, localB, options) {
 	*/
 	switch(type) {
 		case "BALL":
-			return this.createConstraintBall(bodyA, bodyB, localA, localB, options);
+			return createConstraintBall(bodyA, bodyB, localA, localB, options);
 			break;
 		case "6DOF":
-			return this.createConstraint6DOF(bodyA, bodyB, localA, localB, options);
+			return createConstraint6DOF(bodyA, bodyB, localA, localB, options);
 			break;
 		case "CONE":
-			return this.createConstraintCone(bodyA, bodyB, localA, localB, options);
+			return createConstraintCone(bodyA, bodyB, localA, localB, options);
 			break;
 		default:
 			throw("Invalid constraint type: " + type);
@@ -188,14 +185,88 @@ function createConstraintBall(bodyA, bodyB, localA, localB, options) {
 	temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
 	temp_vec3_2.setValue(localB[0], localB[1], localB[2]);
 	var constraint = new Ammo.btPoint2PointConstraint(
-		bodyA.body, 
-		bodyB.body, 
+		bodyA, 
+		bodyB, 
 		temp_vec3_1, 
 		temp_vec3_2
 	);
-	this.m_dynamicsWorld.addConstraint(constraint, true);
+	let disableConnectedCollisions = false;
+	if('disableCollision' in options && options['disableCollision'] === true) {
+		disableConnectedCollisions = options['disableCollision'];
+	}
+	world.m_dynamicsWorld.addConstraint(constraint, disableConnectedCollisions);
 	return constraint;
 };
+
+function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
+	const qq1 = bodyA.getWorldTransform().getRotation();
+	const qq2 = bodyB.getWorldTransform().getRotation();
+	const q1 = {x: qq1.x(), y: qq1.y(), z: qq1.z(), w: qq1.w()};
+	const q2 = {x: qq2.x(), y: qq2.y(), z: qq2.z(), w: qq2.w()};
+
+	temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
+	//temp_quat_1.setValue(q1.x, q1.y, q1.z, q1.w);
+	temp_quat_1.setValue(options.quaternionA[0], options.quaternionA[1], options.quaternionA[2], options.quaternionA[3]);
+	temp_trans_1.setIdentity();
+	temp_trans_1.setRotation(temp_quat_1);
+	temp_trans_1.setOrigin(temp_vec3_1);
+
+	temp_vec3_2.setValue(localB[0], localB[1], localB[2]);
+	//temp_quat_2.setValue(q2.x, q2.y, q2.z, q2.w);
+	temp_quat_2.setValue(options.quaternionB[0], options.quaternionB[1], options.quaternionB[2], options.quaternionB[3]);
+	temp_trans_2.setIdentity();
+	temp_trans_2.setRotation(temp_quat_2);
+	temp_trans_2.setOrigin(temp_vec3_2);
+	
+	var constraint = new Ammo.btGeneric6DofSpringConstraint(
+		bodyA, 
+		bodyB, 
+		temp_trans_1,
+		temp_trans_2,
+		true,
+	);
+
+	if(!options) {
+		options = {};
+	}
+	const defaultLim = Math.PI / 3.0;
+	var angleLow = options.rotationLimitsLow ? options.rotationLimitsLow : [-defaultLim, -defaultLim, -defaultLim];
+	var angleHigh = options.rotationLimitsHigh ? options.rotationLimitsHigh : [defaultLim, defaultLim, defaultLim];
+	temp_vec3_1.setValue(angleLow[0], angleLow[1], angleLow[2]);
+	temp_vec3_2.setValue(angleHigh[0], angleHigh[1], angleHigh[2]);
+	constraint.setAngularLowerLimit(temp_vec3_1);
+	constraint.setAngularUpperLimit(temp_vec3_2);
+
+	if(options.spring) {
+		constraint.enableSpring(3, true);
+		constraint.enableSpring(4, true);
+		constraint.enableSpring(5, true);
+
+		constraint.setStiffness(3, options.stiffness || 5.0);
+		constraint.setStiffness(4, options.stiffness || 5.0);
+		constraint.setStiffness(5, options.stiffness || 5.0);
+
+		constraint.setDamping(3, options.damping || 15);
+		constraint.setDamping(4, options.damping || 15);
+		constraint.setDamping(5, options.damping || 15);
+
+		dist = options.distance || 1.5;
+		temp_vec3_1.setValue(-dist, -dist, -0);
+		constraint.setAngularLowerLimit(temp_vec3_1);
+		temp_vec3_1.setValue(dist, dist, 0);
+		constraint.setAngularUpperLimit(temp_vec3_1);
+	} else {
+		temp_vec3_1.setValue(0,0,0);
+		constraint.setLinearLowerLimit(temp_vec3_1);
+		constraint.setLinearUpperLimit(temp_vec3_1);	
+	}
+	let disableConnectedCollisions = false;
+	if('disableCollision' in options && options['disableCollision'] === true) {
+		disableConnectedCollisions = options['disableCollision'];
+	}
+	world.m_dynamicsWorld.addConstraint(constraint, disableConnectedCollisions);
+	return constraint;
+}
 
 function createTerrainShape(
 	terrainDepth, terrainWidth, heightData, terrainWidthExtents, terrainDepthExtents
@@ -258,21 +329,21 @@ function createShape(shapeInfo) {
 	var shape = null;
 	switch(shapeInfo.type) {
 		case "sphere":
-			if(! 'radius' in shapeInfo) throw("Must specify radius in shape info");
+			if(!('radius' in shapeInfo)) throw("Must specify radius in shape info");
 			shape = new Ammo.btSphereShape(shapeInfo.radius);
 			break;
 		case "cone":
-			if(! 'radius' in shapeInfo || ! 'height' in shapeInfo) throw("Must specify radius and height in shape info");
+			if(!('radius' in shapeInfo) || !('height' in shapeInfo)) throw("Must specify radius and height in shape info");
 			shape = new Ammo.btConeShape(shapeInfo.radius, shapeInfo.height);
 			break;
 		case "box":
-			if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
+			if(!('x' in shapeInfo) || !('y' in shapeInfo) || !('z' in shapeInfo)) throw("Must specify x, y, z in shape info");
 			temp_vec3_1.setValue(shapeInfo.x, shapeInfo.y, shapeInfo.z);
 		    shape = new Ammo.btBoxShape(temp_vec3_1);
 		    break;
 		case "capsule":
-			if(! 'height' in shapeInfo) throw("Must specify height and radius in shape info");
-		    shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height);
+			if(!('height' in shapeInfo) || !('radius' in shapeInfo)) throw("Must specify height and radius in shape info");
+		    shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height-(shapeInfo.radius*4));
 		    break;
 		case "heightField":
 			/*if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
@@ -491,6 +562,18 @@ function applyCollision(state, id, eventHandler, gameState) {
 	return { ...state, colliding: id in globalCollisionMap? globalCollisionMap[id] : [] };
 }
 
+const constraints = {};
+function applyConstraints(state, id, eventHandler, gameState) {
+	if(!(id in constraints) && state.bodyA in bodies && state.bodyB in bodies) {
+		constraints[id] = createConstraint(
+			state.type, bodies[state.bodyA], bodies[state.bodyB], state.localA, state.localB, state.options
+		);
+		console.log("Constraint created");
+		console.log(constraints[id]);
+	}
+	return state;
+}
+
 function stepWorld() {
 	step(world.m_dynamicsWorld, world.dispatcher);
 	/*
@@ -506,4 +589,4 @@ function stepWorld() {
 }
 
 
-export { init, applyPhysics, resetWorld, applyCollision, stepWorld, bodies }
+export { init, applyPhysics, resetWorld, applyCollision, stepWorld, bodies, applyConstraints }

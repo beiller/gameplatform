@@ -1,6 +1,7 @@
 import * as ROT from './lib/rot.js';  // dungeon generation library
 import * as LOADER from './renderer/loader.js'; 
 import * as ENGINE from './engine.js';
+import * as THREE from './lib/three.module.js';
 
 const legacyChars = {
 	"animation": { animationName: 'idle', playingAnimation: true,
@@ -478,33 +479,53 @@ function createEntity(entity, id) {
 	});
 }
 
-function level3() {
+function calculateRigidBodyLength(armature, boneName1, boneName2) {
+	const bone1 = armature.getBoneByName(boneName1);
+	const bone2 = armature.getBoneByName(boneName2);
+	const vec3_end = bone1.position.clone();
+	const vec3_temp = bone2.position.clone();
+	bone1.getWorldPosition(vec3_temp);
+	bone2.getWorldPosition(vec3_end);
+	return Math.abs(vec3_temp.sub(vec3_end).length());
+}
+function getRigidBodyWorldCoordinates(armature, boneName, height) {
+	const bone = armature.getBoneByName(boneName);
+	const vec3 = bone.position.clone();
+	const vec3_temp = bone.position.clone();
+	const quat = bone.quaternion.clone();
+	bone.getWorldPosition(vec3);
+	bone.getWorldPosition(vec3_temp);
+	bone.getWorldQuaternion(quat);
+	vec3.add(vec3_temp.set(0, height / 2.0, 0).applyQuaternion(quat));
+	return [vec3, quat];
+}
+function calculateLocalConnectionFromWorld(physicsStateA, physicsStateB, x, y, z) {
+	return {
+		localA: getLocalCoordiantes(physicsStateA, x, y, z),
+		localB: getLocalCoordiantes(physicsStateB, x, y, z)
+	}
+}
+
+function getLocalCoordiantes(physicsState, x, y, z) {
+	const vecA = new THREE.Vector3(physicsState.x, physicsState.y, physicsState.z);
+	const rA = physicsState.rotation;
+	const quaA = new THREE.Quaternion(rA.x, rA.y, rA.z, rA.w);
+	const vecWorld = new THREE.Vector3(x, y, z);
+	const scale = new THREE.Vector3(1,1,1);
+	const m1 = new THREE.Matrix4().compose(vecA, quaA, scale);
+	m1.getInverse(m1.clone());
+	return vecWorld.applyMatrix4(m1).toArray();
+}
+
+function spawnRagdoll(namePrefix, meshName) {
+	if(!meshName) meshName = "jessica.glb";
 	LOADER.loadGLTF("zoey.glb").then(gltf => {
 		console.log(gltf);
 		const armature = gltf.scene.children[1].children[0].skeleton;
-		const shape = "capsule"; 
-		const radius = 0.01; 
-		const mass = 1.0; 
-		const pairs = [
-			["Armature_pelvis", "Armature_spine_lower"],
-			["Armature_spine_lower", "Armature_spine_upper"],
-			["Armature_spine_upper", "Armature_head_neck_lower"],
-			["Armature_head_neck_lower", "Armature_head_neck_upper"],
-			//head?
-			["Armature_leg_thighL", "Armature_leg_kneeL"],
-			["Armature_leg_kneeL", "Armature_leg_ankleL"],
-			["Armature_leg_ankleL", "Armature_leg_toesL"],
-			["Armature_leg_thighR", "Armature_leg_kneeR"],
-			["Armature_leg_kneeR", "Armature_leg_ankleR"],
-			["Armature_leg_ankleR", "Armature_leg_toesR"],
+		const shape = "box"; 
+		const radius = 0.035; 
+		const mass = 0.1; 
 
-			["Armature_arm_shoulder_1L", "Armature_arm_shoulder_2L"],
-			["Armature_arm_shoulder_2L", "Armature_arm_elbowL"],
-			["Armature_arm_elbowL", "Armature_arm_wristL"],
-			["Armature_arm_shoulder_1R", "Armature_arm_shoulder_2R"],
-			["Armature_arm_shoulder_2R", "Armature_arm_elbowR"],
-			["Armature_arm_elbowR", "Armature_arm_wristR"]
-		]
 		// Hack - iterate over all bones and make sure their global matrices are updated
 		// apparently this must be done I checked....
 		for(let i = 0; i < armature.bones.length; i++) {	
@@ -515,108 +536,201 @@ function level3() {
 			bone.getWorldPosition(vec3);
 			bone.getWorldQuaternion(quat);
 		}
+		//-=-=-=-=--=-=-=- Map of Rigid Bodies -=-=-=-=--=-=-=-
+		const pairs = [
+			["Armature_pelvis", 0.1],
+			["Armature_spine_lower", "Armature_spine_upper"],
+			["Armature_spine_upper", 0.2],
+			["Armature_head_neck_lower", "Armature_head_neck_upper"],
+			["Armature_head_neck_upper", 0.1],
+			//head?
+			["Armature_leg_thighL", "Armature_leg_kneeL"],
+			["Armature_leg_kneeL", "Armature_leg_ankleL"],
+			["Armature_leg_ankleL", "Armature_leg_toesL"],
+			["Armature_leg_toesL", 0.1],
 
-		function calculateRigidBodyLength(boneName1, boneName2) {
-			const bone = armature.getBoneByName(boneName1);
-			const bone2 = armature.getBoneByName(boneName2);
-			const vec3_end = bone.position.clone();
-			const vec3_temp = bone.position.clone();
-			bone.getWorldPosition(vec3_temp);
-			bone2.getWorldPosition(vec3_end);
-			return vec3_temp.sub(vec3_end).length();
-		}
-		function getRigidBodyWorldCoordinates(boneName1, height) {
-			const bone = armature.getBoneByName(boneName1);
-			const vec3 = bone.position.clone();
-			const vec3_temp = bone.position.clone();
-			const quat = bone.quaternion.clone();
-			bone.getWorldPosition(vec3);
-			bone.getWorldPosition(vec3_temp);
-			bone.getWorldQuaternion(quat);
-			vec3_temp.set(0, height / 2.0, 0).applyQuaternion(quat);
-			vec3.add(vec3_temp);
-			return [vec3, quat];
-		}
-		function calculateLocalPosition(bone, entity) {
-			const vec3 = bone.position.clone().set(entity.physics.x, entity.physics.y, entity.physics.z);
-			const local = bone.position.clone();
-			bone.getWorldPosition(local);
-			const quat = bone.quaternion.clone().set(
-				entity.physics.rotation.x, entity.physics.rotation.y, entity.physics.rotation.z, entity.physics.rotation.w
-			);
-			quat.inverse()
-			vec3.sub(local).applyQuaternion(quat);
-			return vec3;
-		}
+			["Armature_leg_thighR", "Armature_leg_kneeR"],
+			["Armature_leg_kneeR", "Armature_leg_ankleR"],
+			["Armature_leg_ankleR", "Armature_leg_toesR"],
+			["Armature_leg_toesR", 0.1],
+
+			["Armature_arm_shoulder_1L", "Armature_arm_shoulder_2L"],
+			["Armature_arm_shoulder_2L", "Armature_arm_elbowL"],
+			["Armature_arm_elbowL", "Armature_arm_wristL"],
+			["Armature_arm_wristL", 0.1],
+			["Armature_arm_shoulder_1R", "Armature_arm_shoulder_2R"],
+			["Armature_arm_shoulder_2R", "Armature_arm_elbowR"],
+			["Armature_arm_elbowR", "Armature_arm_wristR"],
+			["Armature_arm_wristR", 0.1]
+		];
+
+		// -=-=-=-=--=-=-=- Map of Joints -=-=-=-=--=-=-=-
+		const twoPI = Math.PI;
+		const PI2 = Math.PI / 4;
+		const PI4 = Math.PI / 8;
+		const EPS = 0.15;
+		const pairs2 = [
+			["Armature_spine_lower", "Armature_pelvis", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+			["Armature_spine_upper", "Armature_spine_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+			["Armature_head_neck_lower", "Armature_spine_upper", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+			["Armature_head_neck_upper", "Armature_head_neck_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+			["Armature_arm_shoulder_1L", "Armature_spine_upper"],
+			["Armature_arm_shoulder_2L", "Armature_arm_shoulder_1L", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+			["Armature_arm_elbowL", "Armature_arm_shoulder_2L", [-PI2, EPS, EPS], [EPS, EPS, EPS]],
+			["Armature_arm_wristL", "Armature_arm_elbowL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+			["Armature_arm_shoulder_1R", "Armature_spine_upper"],
+			["Armature_arm_shoulder_2R", "Armature_arm_shoulder_1R", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+			["Armature_arm_elbowR", "Armature_arm_shoulder_2R", [EPS, EPS, EPS], [EPS, EPS, PI2]],
+			["Armature_arm_wristR", "Armature_arm_elbowR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+			["Armature_leg_thighL", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+			["Armature_leg_kneeL", "Armature_leg_thighL", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
+			["Armature_leg_ankleL", "Armature_leg_kneeL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+			["Armature_leg_toesL", "Armature_leg_ankleL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+			["Armature_leg_thighR", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+			["Armature_leg_kneeR", "Armature_leg_thighR", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
+			["Armature_leg_ankleR", "Armature_leg_kneeR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+			["Armature_leg_toesR", "Armature_leg_ankleR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]]
+		]
 
 		const entities = {};
 		for(let i = 0; i < pairs.length; i++) {	
 			/*
 				Create the rigid body
 			*/
-			const length = calculateRigidBodyLength(pairs[i][0], pairs[i][1])
-			const coordinates = getRigidBodyWorldCoordinates(pairs[i][0], length);
+			let length = 0.1;
+			if(typeof pairs[i][1] == 'number') {
+				length = pairs[i][1];
+			} else {
+				length = calculateRigidBodyLength(armature, pairs[i][0], pairs[i][1]);
+			}
+			const coordinates = getRigidBodyWorldCoordinates(armature, pairs[i][0], length);
 			const vec3 = coordinates[0];
 			const quat = coordinates[1];
-			entities["zoey.bone."+pairs[i][0]] = {
+			//length -= (radius * 2);
+			entities[namePrefix+".bone."+pairs[i][0]] = {
 				"entity": {},
-				"render": {type: shape, radius: radius, height: length, ignoreOffset: true},
-				"physics": {x: vec3.x, y: vec3.y, z: vec3.z, 
-					rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w},
-					shape: {type: shape, radius: radius, height: length }, mass: mass, staticObject: true
+				//"render": {type: "axis", radius: radius, height: length, ignoreOffset: true, x: radius, y: length/2, z: radius},
+				"physics": {x: vec3.x, y: vec3.y, z: vec3.z,
+					rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w}, kinematic: false, 
+					shape: {type: shape, radius: radius, height: length, x: radius, y: length/2, z: radius }, mass: mass,
+					//damping: .99
 				}
 			};
 		}
+		//entities[namePrefix+".bone.Armature_head_neck_upper"].physics['kinematic'] = true;
+		//entities[namePrefix+".bone.Armature_head_neck_upper"].physics['mass'] = 0;
 
-		for(let i = 0; i < pairs.length; i++) {	
+		for(let i = 0; i < pairs2.length; i++) {	
 			/*
-				Connect rigid bodies
+				Connect joints
 			*/
-			const entity1 = entities["zoey.bone."+pairs[i][0]];
-			const entity2 = entities["zoey.bone."+pairs[i][1]];
-			if(!entity2) continue;
-			const bone1 = armature.getBoneByName(pairs[i][0]);
-			const bone2 = armature.getBoneByName(pairs[i][1]);
+			const entity1 = entities[namePrefix+".bone."+pairs2[i][0]];
+			if(!entity1) throw("Unable to find bone: "+pairs2[i][0]);
+			const entity2 = entities[namePrefix+".bone."+pairs2[i][1]];
+			if(!entity2) throw("Unable to find bone: "+pairs2[i][1]);
+			const bone1 = armature.getBoneByName(pairs2[i][0]);
+			const bone2 = armature.getBoneByName(pairs2[i][1]);
+			const b1 = bone1.position.clone();
+			bone1.getWorldPosition(b1);
+			const locals = calculateLocalConnectionFromWorld(
+				entity1.physics, entity2.physics, b1.x, b1.y, b1.z
+			)
 
-			const local1 = calculateLocalPosition(bone1, entity1); //calc bone1's location according to entity1
-			const local2 = calculateLocalPosition(bone1, entity2); //calc bone1's location according to entity2
+			const defaultLim = Math.PI;
+			const lim = 20;
+			let low = [-defaultLim / lim, -defaultLim / lim, -defaultLim / lim];
+			let high = [defaultLim / lim, defaultLim / lim, defaultLim / lim];
+			if(pairs2[i][2]) {
+				low = pairs2[i][2].map(x=>x * 0.5);
+			}
+			if(pairs2[i][3]) {
+				high = pairs2[i][3].map(x=>x * 0.5);
+			}
+			const q1 = bone1.quaternion.clone()
+			bone1.getWorldQuaternion(q1);
+			const q2 = bone2.quaternion.clone()
+			bone2.getWorldQuaternion(q2);
 
-			//hack commence THIS HAS BUGS FUCK
-			local2.set(0, entity2.physics.shape.height / 2.0, 0);
-			
-			//DEBUG
-			const vec3 = bone1.position.clone();
-			const quat = bone1.quaternion.clone();
-			vec3.set(entity1.physics.x, entity1.physics.y, entity1.physics.z);
-			bone1.getWorldQuaternion(quat);
-			local1.applyQuaternion(quat);
-			vec3.add(local1);
-
-			entities["zoey.constraint."+pairs[i][0]+"."+pairs[i][1]+'.1'] = {
-				"entity": {x: vec3.x, y: vec3.y, z: vec3.z},
-				"render": {type: "axis", ignoreOffset: true},
+			entities[namePrefix+".constraint."+pairs2[i][0]+"."+pairs2[i][1]] = {
+				"constraint": {
+					type: "6DOF",
+					//type: "BALL",
+					bodyA: namePrefix+".bone."+pairs2[i][0],
+					bodyB: namePrefix+".bone."+pairs2[i][1],
+					localA: locals.localA,
+					localB: locals.localB,
+					options: {
+						quaternionA: [q1.x, q1.y, q1.z, -q1.w],
+						quaternionB: [q2.x, q2.y, q2.z, -q2.w],
+						disableCollision: true,
+						rotationLimitsLow : low,
+						rotationLimitsHigh : high
+					}
+				}
 			};
-
-			//DEBUG2
-			vec3.set(entity2.physics.x, entity2.physics.y, entity2.physics.z);
-			bone2.getWorldQuaternion(quat);
-			local2.applyQuaternion(quat);
-			vec3.sub(local2);
-			entities["zoey.constraint."+pairs[i][0]+"."+pairs[i][1]+'.2'] = {
-				"entity": {x: vec3.x, y: vec3.y, z: vec3.z},
-				"render": {type: "sphere", radius: 0.02, ignoreOffset: true},
-			};
-
-
-			//END DEBUG
 		}
 		for(let eid in entities) {
 			createEntity(entities[eid], eid);
 		}
-		/*createEntity({
-			"entity": {x: 0, y: 0, z: 0}, "render": { type: "animatedMesh", filename: "zoey.glb", ignoreOffset: true }
-		}, 'AAAAA');*/
+		
+		createEntity({
+			"entity": {x: 0, y: 0, z: 0}, "render": { type: "animatedMesh", filename: meshName, ignoreOffset: true },
+			"constraint": {
+				boneConstraints: pairs.map(
+					function(boneData) { return {id: namePrefix+".bone."+boneData[0], boneName: boneData[0]}; }
+				)
+			}
+		}, namePrefix+'.characterMesh');
 	});
+}
+function level3() {
+	spawnRagdoll("asdf12345"+Math.random());
+	setTimeout(function() { spawnRagdoll("asdf12345"+Math.random(), "zoey.glb"); }, 5000);
+	setTimeout(function() { spawnRagdoll("asdf12345"+Math.random()); "jessica.glb"}, 10000);
+
+	return {
+		"state": {
+			"camera1": {
+				"input": { "controllerId": "0" },  // needs input to toggle modes
+				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
+				"camera": {fov: 60.0, type: 'sexycam', entityName: 'zoey.bone.Armature_pelvis' },
+				"render": {type: "camera"},
+			},
+			"floor": {
+				"entity": {x: 0, y: -2, z: 0},
+				"render": {type: "box", x: 10, y: 2, z: 10},
+				"physics": {x: 0, y: -2, z: 0, shape: {type: "box", x: 10, y: 2, z: 10}, mass: 5, staticObject: true}
+			}
+		}
+	};
+}
+
+function level4() {
+	const JOIN_TYPE="6DOF";
+	const shapeInfo = { type: "capsule", radius: 0.25, height: 0.5 };
+	//const shapeInfo = { type: "box", x: 0.25, y: 0.5, z: 0.25 };
+	const baseEntity = {"entity": {}, render: { ...shapeInfo } };
+
+	const entities = {
+		"sphere0": { ...baseEntity, "physics": {x: 0, y: 0, z: 0, shape: shapeInfo, mass: 1} }
+	};
+	for(var i = 1; i < 100; i++) {
+		entities['sphere'+i] = { ...baseEntity, "physics": {x: 0, y: i, z: 0, shape: shapeInfo, mass: 1} };
+		entities['constraint'+i] = {
+			"constraint": {
+				type: JOIN_TYPE, bodyA: 'sphere'+(i-1), bodyB: 'sphere'+i,
+				localA: [0, 0.5, 0], localB: [0, -0.5, 0], options: {disableCollision: false}
+			}
+		};
+	}
+
+	for(let eid in entities) {
+		createEntity(entities[eid], eid);
+	}
 
 	return {
 		"state": {
@@ -627,9 +741,9 @@ function level3() {
 				"render": {type: "camera"},
 			},
 			"floor": {
-				"entity": {x: 0, y: -5, z: 0},
+				"entity": {x: 0, y: -2.52, z: 0},
 				"render": {type: "box", x: 10, y: 1, z: 10},
-				"physics": {x: 0, y: -5, z: 0, shape: {type: "box", x: 10, y: 1, z: 10}, mass: 5, staticObject: true}
+				"physics": {x: 0, y: -2.52, z: 0, shape: {type: "box", x: 10, y: 1, z: 10}, mass: 5, staticObject: true}
 			}
 		}
 	};

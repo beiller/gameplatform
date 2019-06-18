@@ -616,9 +616,6 @@ function init(initialState) {
 	var camera = new THREE.PerspectiveCamera(70, window.innerWidth/window.innerHeight, 0.01, 100);
 	GLOBAL_CAMERA = camera;
 	GLOBAL_SCENE = scene;
-	for(let i in meshInstance) {
-		GLOBAL_SCENE.add(meshInstance[i]);	
-	}
 
 	var sceneData = initRendering(scene, settings, camera);
 	sceneData.gameState = initialState;
@@ -682,6 +679,13 @@ function initSkyShader() {
 }
 
 function renderFunction() {
+	// If the instancing mesh has geometry, add it to scene
+	// to avoid opengl warnings
+	for(let i in meshInstance) {
+		if(Object.keys(meshInstance[i].geometry.attributes).length > 0) {
+			GLOBAL_SCENE.add(meshInstance[i]);	
+		}
+	}
 	render();
 
 	/*
@@ -704,5 +708,67 @@ function renderFunction() {
 }
 const loadMeshFile = LOADER.loadMeshFile;
 
-export { renderObject, init, updateCamera, renderFunction, loadMeshFile, loadedObjects };
+const tempMat4_1 = new THREE.Matrix4();
+const tempMat4_2 = new THREE.Matrix4();
+const tempVec3_1 = new THREE.Vector3();
+const tempVec3_2 = new THREE.Vector3();
+const tempQua3_1 = new THREE.Quaternion();
+
+function searchById(gameState, systemName, searchString) {
+	for(let id in gameState[systemName]) {
+		if(id.includes('.') && id.split('.').length > 3 && id.split('.')[2].toLowerCase() == searchString.toLowerCase()) {
+			return id;
+		}
+	}
+	return null;
+}
+
+function copyPhysObjectToBone(armature, gameState, entityId, boneName) {
+	if('physics' in gameState && entityId in gameState.physics) {
+		const bone = armature.getBoneByName(boneName);
+		const physicsState = gameState.physics[entityId];
+
+		//get bone parent inverse
+		tempMat4_1.copy(bone.parent.matrixWorld);
+		tempMat4_2.getInverse(tempMat4_1);
+
+		//calculate a bone offset
+		tempVec3_1.set(physicsState.x, physicsState.y, physicsState.z);
+		tempQua3_1.set(physicsState.rotation.x, physicsState.rotation.y, physicsState.rotation.z, physicsState.rotation.w)
+
+		//move bone by offset
+		tempVec3_2.set(0, physicsState.shape.height / -2, 0).applyQuaternion(tempQua3_1);
+		tempVec3_1.add(tempVec3_2);
+		
+		//get physics world matrix
+		tempMat4_1.compose(tempVec3_1, tempQua3_1, tempVec3_2.set(1,1,1))
+
+		//apply bone parent inverse to physics
+		tempMat4_2.multiply(tempMat4_1).decompose(tempVec3_1, tempQua3_1, tempVec3_2);
+
+		//copy result to bone local coords
+		bone.position.copy(tempVec3_1);  
+		bone.quaternion.copy(tempQua3_1);
+
+		//update matrix world bone?
+		bone.updateMatrixWorld(true);
+	}
+}
+
+function findSkeleton(scene) {
+	var skeleton = null;
+	scene.traverse(function(obj) { 'skeleton' in obj ? skeleton = obj.skeleton : null });
+	return skeleton;
+}
+
+function applyConstraints(state, id, eventHandler, gameState) {
+	if('boneConstraints' in state) {
+		const armature = findSkeleton(loadedObjects[id]); 
+		state.boneConstraints.map(dat=>copyPhysObjectToBone(armature, gameState, dat.id, dat.boneName));
+		return state;
+	}
+	return state;
+}
+
+export { renderObject, init, updateCamera, renderFunction, loadMeshFile, loadedObjects, applyConstraints };
 
