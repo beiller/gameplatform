@@ -78,6 +78,34 @@ function generateCharacter(xPos, yPos) {
 	}
 }
 
+function toTriangles(geometry) {
+	const vertices = geometry.vertices;
+	const triangles = [];
+	for ( i = 0; i < geometry.faces.length; i++ ) {
+		const face = geometry.faces[i];
+		if (!( 'd' in face )) {
+			triangles.push([
+				{ x: vertices[face.a].x, y: vertices[face.a].y, z: vertices[face.a].z },
+				{ x: vertices[face.b].x, y: vertices[face.b].y, z: vertices[face.b].z },
+				{ x: vertices[face.c].x, y: vertices[face.c].y, z: vertices[face.c].z }
+			]);
+		} else if ( 'd' in face ) {
+			triangles.push([
+				{ x: vertices[face.a].x, y: vertices[face.a].y, z: vertices[face.a].z },
+				{ x: vertices[face.b].x, y: vertices[face.b].y, z: vertices[face.b].z },
+				{ x: vertices[face.d].x, y: vertices[face.d].y, z: vertices[face.d].z }
+			]);
+			triangles.push([
+				{ x: vertices[face.b].x, y: vertices[face.b].y, z: vertices[face.b].z },
+				{ x: vertices[face.c].x, y: vertices[face.c].y, z: vertices[face.c].z },
+				{ x: vertices[face.d].x, y: vertices[face.d].y, z: vertices[face.d].z }
+			]);
+
+		}
+	}
+	return triangles;
+}
+
 function level2() {
 	var initialState = {
 		"state": {
@@ -517,14 +545,181 @@ function getLocalCoordiantes(physicsState, x, y, z) {
 	return vecWorld.applyMatrix4(m1).toArray();
 }
 
+function findSkeleton(rootObject) {
+	var skeleton = null;
+	rootObject.traverse(function(obj) { 'skeleton' in obj ? skeleton = obj.skeleton : null });
+	return skeleton;
+}
+
+/*//-=-=-=-=--=-=-=- Map of Rigid Bodies -=-=-=-=--=-=-=-
+//for zoey.glb
+const pairs = [
+	["Armature_pelvis", 0.1],
+	["Armature_spine_lower", "Armature_spine_upper"],
+	["Armature_spine_upper", 0.2],
+	["Armature_head_neck_lower", "Armature_head_neck_upper"],
+	["Armature_head_neck_upper", 0.1],
+	//head?
+	["Armature_leg_thighL", "Armature_leg_kneeL"],
+	["Armature_leg_kneeL", "Armature_leg_ankleL"],
+	["Armature_leg_ankleL", "Armature_leg_toesL"],
+	["Armature_leg_toesL", 0.1],
+
+	["Armature_leg_thighR", "Armature_leg_kneeR"],
+	["Armature_leg_kneeR", "Armature_leg_ankleR"],
+	["Armature_leg_ankleR", "Armature_leg_toesR"],
+	["Armature_leg_toesR", 0.1],
+
+	["Armature_arm_shoulder_1L", "Armature_arm_shoulder_2L"],
+	["Armature_arm_shoulder_2L", "Armature_arm_elbowL"],
+	["Armature_arm_elbowL", "Armature_arm_wristL"],
+	["Armature_arm_wristL", 0.1],
+	["Armature_arm_shoulder_1R", "Armature_arm_shoulder_2R"],
+	["Armature_arm_shoulder_2R", "Armature_arm_elbowR"],
+	["Armature_arm_elbowR", "Armature_arm_wristR"],
+	["Armature_arm_wristR", 0.1]
+];
+
+// -=-=-=-=--=-=-=- Map of Joints -=-=-=-=--=-=-=-
+
+const twoPI = Math.PI;
+const PI2 = Math.PI / 4;
+const PI4 = Math.PI / 8;
+const EPS = 0.15;
+const pairs2 = [
+	["Armature_spine_lower", "Armature_pelvis", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+	["Armature_spine_upper", "Armature_spine_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+	["Armature_head_neck_lower", "Armature_spine_upper", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+	["Armature_head_neck_upper", "Armature_head_neck_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+	["Armature_arm_shoulder_1L", "Armature_spine_upper"],
+	["Armature_arm_shoulder_2L", "Armature_arm_shoulder_1L", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+	["Armature_arm_elbowL", "Armature_arm_shoulder_2L", [-PI2, EPS, EPS], [EPS, EPS, EPS]],
+	["Armature_arm_wristL", "Armature_arm_elbowL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+	["Armature_arm_shoulder_1R", "Armature_spine_upper"],
+	["Armature_arm_shoulder_2R", "Armature_arm_shoulder_1R", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+	["Armature_arm_elbowR", "Armature_arm_shoulder_2R", [EPS, EPS, EPS], [EPS, EPS, PI2]],
+	["Armature_arm_wristR", "Armature_arm_elbowR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+	["Armature_leg_thighL", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+	["Armature_leg_kneeL", "Armature_leg_thighL", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
+	["Armature_leg_ankleL", "Armature_leg_kneeL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+	["Armature_leg_toesL", "Armature_leg_ankleL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+	["Armature_leg_thighR", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+	["Armature_leg_kneeR", "Armature_leg_thighR", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
+	["Armature_leg_ankleR", "Armature_leg_kneeR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+	["Armature_leg_toesR", "Armature_leg_ankleR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]]
+]*/
+
+//-=-=-=-=--=-=-=- Map of Rigid Bodies -=-=-=-=--=-=-=-
+var pairs = [
+	["RootNode_pelvis", 0.05],
+	["RootNode_abdomenLower", "RootNode_abdomenUpper"],
+	["RootNode_abdomenUpper", "RootNode_chestLower"],
+	["RootNode_chestLower", "RootNode_chestUpper"],
+
+	["RootNode_rPectoral", 0.2],
+	["RootNode_lPectoral", 0.2],
+
+	["RootNode_chestUpper", "RootNode_neckLower"],
+	["RootNode_neckLower", "RootNode_neckUpper"],
+	["RootNode_neckUpper", "RootNode_head"],
+	["RootNode_head", 0.15],
+
+	["RootNode_rCollar", "RootNode_rShldrBend"],
+	["RootNode_rShldrBend", "RootNode_rShldrTwist"],
+	["RootNode_rShldrTwist", "RootNode_rForearmBend"],
+	["RootNode_rForearmBend", "RootNode_rForearmTwist"],
+	["RootNode_rForearmTwist", "RootNode_rHand"],
+	["RootNode_rHand", 0.1],
+	["RootNode_lCollar", "RootNode_lShldrBend"],
+	["RootNode_lShldrBend", "RootNode_lShldrTwist"],
+	["RootNode_lShldrTwist", "RootNode_lForearmBend"],
+	["RootNode_lForearmBend", "RootNode_lForearmTwist"],
+	["RootNode_lForearmTwist", "RootNode_lHand"],
+	["RootNode_lHand", 0.1],
+
+	["RootNode_rThighBend", "RootNode_rThighTwist"],
+	["RootNode_rThighTwist", "RootNode_rShin"],
+	["RootNode_rShin", "RootNode_rFoot"],
+	["RootNode_rFoot", "RootNode_rToe"],
+	["RootNode_rFoot", "RootNode_rMetatarsals"],
+	["RootNode_rMetatarsals", 0.12],
+
+	["RootNode_lThighBend", "RootNode_lThighTwist"],
+	["RootNode_lThighTwist", "RootNode_lShin"],
+	["RootNode_lShin", "RootNode_lFoot"],
+	["RootNode_lFoot", "RootNode_lMetatarsals"],
+	["RootNode_lMetatarsals", 0.12],
+];
+// -=-=-=-=--=-=-=- Map of Joints -=-=-=-=--=-=-=-
+const ARMLEG_TWIST = Math.PI * 0.20;
+const THIGH_BEND = Math.PI;
+const THIGH_ROTATE = Math.PI/2;
+const SPINE_BEND = 0.5;
+const SPINE_TWIST = 0.15;
+const COLLAR = Math.PI / 8;
+const SHLDR = Math.PI;
+const KNEE = Math.PI;
+const ELBOW = Math.PI;
+const FOOT_BEND = Math.PI * 0.35;
+const FOOT_TWIST = Math.PI * 0.15;
+const HAND_BEND = Math.PI * 0.5;
+const HAND_TWIST = Math.PI * 0.15;
+const EPS = 0.05;
+const CHEST = 0.25;
+var pairs2 = [
+	["RootNode_abdomenLower", "RootNode_pelvis", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+	["RootNode_abdomenUpper", "RootNode_abdomenLower", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+	["RootNode_chestLower", "RootNode_abdomenUpper", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+	["RootNode_chestUpper", "RootNode_chestLower", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+	["RootNode_neckLower", "RootNode_chestUpper", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+	["RootNode_neckUpper", "RootNode_neckLower", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+	["RootNode_head", "RootNode_neckUpper", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+
+	["RootNode_rPectoral", "RootNode_chestLower", [-CHEST, -CHEST, -CHEST], [CHEST, CHEST, CHEST]],
+	["RootNode_lPectoral", "RootNode_chestLower", [-CHEST, -CHEST, -CHEST], [CHEST, CHEST, CHEST]],
+
+	["RootNode_rCollar", "RootNode_chestUpper", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
+	["RootNode_rShldrBend", "RootNode_rCollar", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
+	["RootNode_rShldrTwist", "RootNode_rShldrBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+	["RootNode_rForearmBend", "RootNode_rShldrTwist", [-EPS, -EPS, -EPS], [EPS, EPS, ELBOW]],
+	["RootNode_rForearmTwist", "RootNode_rForearmBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+	["RootNode_rHand", "RootNode_rForearmTwist", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
+
+	["RootNode_lCollar", "RootNode_chestUpper", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
+	["RootNode_lShldrBend", "RootNode_lCollar", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
+	["RootNode_lShldrTwist", "RootNode_lShldrBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+	["RootNode_lForearmBend", "RootNode_lShldrTwist", [-EPS, -EPS, -ELBOW], [EPS, EPS, EPS]],
+	["RootNode_lForearmTwist", "RootNode_lForearmBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+	["RootNode_lHand", "RootNode_lForearmTwist", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
+
+	["RootNode_rThighBend", "RootNode_pelvis", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
+	["RootNode_rThighTwist", "RootNode_rThighBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+	["RootNode_rShin", "RootNode_rThighTwist", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
+	["RootNode_rFoot", "RootNode_rShin", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+	["RootNode_rMetatarsals", "RootNode_rFoot", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+
+	["RootNode_lThighBend", "RootNode_pelvis", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
+	["RootNode_lThighTwist", "RootNode_lThighBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+	["RootNode_lShin", "RootNode_lThighTwist", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
+	["RootNode_lFoot", "RootNode_lShin", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+	["RootNode_lMetatarsals", "RootNode_lFoot", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]]
+]
+
 function spawnRagdoll(namePrefix, meshName) {
-	if(!meshName) meshName = "jessica.glb";
-	LOADER.loadGLTF("zoey.glb").then(gltf => {
+	//if(!meshName) meshName = "jessica.glb";
+	meshName = 'princess.glb';
+	//LOADER.loadGLTF("zoey.glb").then(gltf => {
+	LOADER.loadGLTF("princess.glb").then(gltf => {		
 		console.log(gltf);
-		const armature = gltf.scene.children[1].children[0].skeleton;
+		const armature = findSkeleton(gltf.scene);
+		//const shape = "capsule"; 
 		const shape = "box"; 
 		const radius = 0.035; 
-		const mass = 0.1; 
+		const mass = 0.05; 
 
 		// Hack - iterate over all bones and make sure their global matrices are updated
 		// apparently this must be done I checked....
@@ -536,65 +731,7 @@ function spawnRagdoll(namePrefix, meshName) {
 			bone.getWorldPosition(vec3);
 			bone.getWorldQuaternion(quat);
 		}
-		//-=-=-=-=--=-=-=- Map of Rigid Bodies -=-=-=-=--=-=-=-
-		const pairs = [
-			["Armature_pelvis", 0.1],
-			["Armature_spine_lower", "Armature_spine_upper"],
-			["Armature_spine_upper", 0.2],
-			["Armature_head_neck_lower", "Armature_head_neck_upper"],
-			["Armature_head_neck_upper", 0.1],
-			//head?
-			["Armature_leg_thighL", "Armature_leg_kneeL"],
-			["Armature_leg_kneeL", "Armature_leg_ankleL"],
-			["Armature_leg_ankleL", "Armature_leg_toesL"],
-			["Armature_leg_toesL", 0.1],
 
-			["Armature_leg_thighR", "Armature_leg_kneeR"],
-			["Armature_leg_kneeR", "Armature_leg_ankleR"],
-			["Armature_leg_ankleR", "Armature_leg_toesR"],
-			["Armature_leg_toesR", 0.1],
-
-			["Armature_arm_shoulder_1L", "Armature_arm_shoulder_2L"],
-			["Armature_arm_shoulder_2L", "Armature_arm_elbowL"],
-			["Armature_arm_elbowL", "Armature_arm_wristL"],
-			["Armature_arm_wristL", 0.1],
-			["Armature_arm_shoulder_1R", "Armature_arm_shoulder_2R"],
-			["Armature_arm_shoulder_2R", "Armature_arm_elbowR"],
-			["Armature_arm_elbowR", "Armature_arm_wristR"],
-			["Armature_arm_wristR", 0.1]
-		];
-
-		// -=-=-=-=--=-=-=- Map of Joints -=-=-=-=--=-=-=-
-		const twoPI = Math.PI;
-		const PI2 = Math.PI / 4;
-		const PI4 = Math.PI / 8;
-		const EPS = 0.15;
-		const pairs2 = [
-			["Armature_spine_lower", "Armature_pelvis", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-			["Armature_spine_upper", "Armature_spine_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-			["Armature_head_neck_lower", "Armature_spine_upper", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-			["Armature_head_neck_upper", "Armature_head_neck_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-
-			["Armature_arm_shoulder_1L", "Armature_spine_upper"],
-			["Armature_arm_shoulder_2L", "Armature_arm_shoulder_1L", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
-			["Armature_arm_elbowL", "Armature_arm_shoulder_2L", [-PI2, EPS, EPS], [EPS, EPS, EPS]],
-			["Armature_arm_wristL", "Armature_arm_elbowL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-
-			["Armature_arm_shoulder_1R", "Armature_spine_upper"],
-			["Armature_arm_shoulder_2R", "Armature_arm_shoulder_1R", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
-			["Armature_arm_elbowR", "Armature_arm_shoulder_2R", [EPS, EPS, EPS], [EPS, EPS, PI2]],
-			["Armature_arm_wristR", "Armature_arm_elbowR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-
-			["Armature_leg_thighL", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
-			["Armature_leg_kneeL", "Armature_leg_thighL", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
-			["Armature_leg_ankleL", "Armature_leg_kneeL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-			["Armature_leg_toesL", "Armature_leg_ankleL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-
-			["Armature_leg_thighR", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
-			["Armature_leg_kneeR", "Armature_leg_thighR", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
-			["Armature_leg_ankleR", "Armature_leg_kneeR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-			["Armature_leg_toesR", "Armature_leg_ankleR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]]
-		]
 
 		const entities = {};
 		for(let i = 0; i < pairs.length; i++) {	
@@ -613,16 +750,14 @@ function spawnRagdoll(namePrefix, meshName) {
 			//length -= (radius * 2);
 			entities[namePrefix+".bone."+pairs[i][0]] = {
 				"entity": {},
-				//"render": {type: "axis", radius: radius, height: length, ignoreOffset: true, x: radius, y: length/2, z: radius},
+				//"render": {type: shape, radius: radius, height: length, ignoreOffset: true, x: radius, y: length/2, z: radius},
 				"physics": {x: vec3.x, y: vec3.y, z: vec3.z,
 					rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w}, kinematic: false, 
 					shape: {type: shape, radius: radius, height: length, x: radius, y: length/2, z: radius }, mass: mass,
-					//damping: .99
+					damping: .99
 				}
 			};
 		}
-		//entities[namePrefix+".bone.Armature_head_neck_upper"].physics['kinematic'] = true;
-		//entities[namePrefix+".bone.Armature_head_neck_upper"].physics['mass'] = 0;
 
 		for(let i = 0; i < pairs2.length; i++) {	
 			/*
@@ -655,7 +790,7 @@ function spawnRagdoll(namePrefix, meshName) {
 			const q2 = bone2.quaternion.clone()
 			bone2.getWorldQuaternion(q2);
 
-			entities[namePrefix+".constraint."+pairs2[i][0]+"."+pairs2[i][1]] = {
+			entities[namePrefix+".constraint."+pairs2[i][0]] = {
 				"constraint": {
 					type: "6DOF",
 					//type: "BALL",
@@ -673,6 +808,56 @@ function spawnRagdoll(namePrefix, meshName) {
 				}
 			};
 		}
+		/*let pins = [];
+		for(let i = 0; i < pairs.length; i++) {
+			pins.push(pairs[i][0]);
+		}*/
+		const pins = [
+			/*"RootNode_rHand",
+			"RootNode_lHand",
+			//"RootNode_rForearmBend",
+			//"RootNode_lForearmBend",
+			"RootNode_head"*/
+		];
+		for(let i in pins) {
+			const constraint = namePrefix+".constraint."+pins[i];
+			if(!(constraint in entities)) {
+				continue;
+			}
+			
+			const pin = namePrefix+".pin."+pins[i];
+			const bone = namePrefix+".bone."+pins[i];
+			const localA = entities[constraint].constraint.localA;
+			const x = entities[bone].physics.x + localA[0];
+			const y = entities[bone].physics.y + localA[1];
+			const z = entities[bone].physics.z + localA[2];
+			/*const localToWorldEquilibrium = [
+				x - entities[bone].physics.x, y - entities[bone].physics.y, z - entities[bone].physics.z
+			];*/
+			entities[pin] = {
+				"render": {type: "sphere", radius: 0.05}, "entity": {x: x, y: y, z: z},
+				"physics": {x: x, y: y, z: z, shape: {type: "sphere", radius: 0.05 }, mass: 0, noContact: true, kinematic: true},
+				"constraint": {
+					type: "6DOF", bodyA: bone, localA: localA,
+					options: {
+						disableCollision: true, spring: true, stiffness: 40.0, damping: 0.5, distance: 1.0,
+						//equilibriumPoint: localToWorldEquilibrium
+					}
+				}
+			}
+		}
+
+		entities[namePrefix+".constraint.RootNode_rPectoral"] = {
+			...entities[namePrefix+".constraint.RootNode_rPectoral"],
+			constraint: {
+				...entities[namePrefix+".constraint.RootNode_rPectoral"].constraint,
+				options: {
+					...entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options,
+					spring: true, stiffness: 50.0/*, damping: 0.01, distance: 1.0,*/
+				}
+			}
+		}
+
 		for(let eid in entities) {
 			createEntity(entities[eid], eid);
 		}
@@ -688,42 +873,77 @@ function spawnRagdoll(namePrefix, meshName) {
 	});
 }
 function level3() {
-	spawnRagdoll("asdf12345"+Math.random());
+	/*spawnRagdoll("asdf12345"+Math.random(), "zoey.glb");
 	setTimeout(function() { spawnRagdoll("asdf12345"+Math.random(), "zoey.glb"); }, 5000);
-	setTimeout(function() { spawnRagdoll("asdf12345"+Math.random()); "jessica.glb"}, 10000);
+	setTimeout(function() { spawnRagdoll("asdf12345"+Math.random()); "zoey.glb"}, 10000);*/
+
+	spawnRagdoll("PRIN");
 
 	return {
 		"state": {
 			"camera1": {
 				"input": { "controllerId": "0" },  // needs input to toggle modes
 				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
-				"camera": {fov: 60.0, type: 'sexycam', entityName: 'zoey.bone.Armature_pelvis' },
+				"camera": {fov: 60.0, type: 'sexycam', entityName: 'PRIN.bone.RootNode_head' },
 				"render": {type: "camera"},
 			},
 			"floor": {
-				"entity": {x: 0, y: -2, z: 0},
+				"entity": {x: 0, y: -3, z: 0},
 				"render": {type: "box", x: 10, y: 2, z: 10},
-				"physics": {x: 0, y: -2, z: 0, shape: {type: "box", x: 10, y: 2, z: 10}, mass: 5, staticObject: true}
+				"physics": {x: 0, y: -3, z: 0, shape: {type: "box", x: 10, y: 2, z: 10}, mass: 5, staticObject: true}
 			}
 		}
 	};
 }
 
+const defaultState = {
+	"state": {
+		"camera1": {
+			"input": { "controllerId": "0" },  // needs input to toggle modes
+			"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
+			"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
+			"render": {type: "camera"},
+		},
+		"floor": {
+			"entity": {x: 0, y: -2.52, z: 0},
+			"render": {type: "box", x: 10, y: 1, z: 10},
+			"physics": {x: 0, y: -2.52, z: 0, shape: {type: "box", x: 10, y: 1, z: 10}, mass: 5, staticObject: true}
+		}
+	}
+};
+
 function level4() {
 	const JOIN_TYPE="6DOF";
-	const shapeInfo = { type: "capsule", radius: 0.25, height: 0.5 };
-	//const shapeInfo = { type: "box", x: 0.25, y: 0.5, z: 0.25 };
-	const baseEntity = {"entity": {}, render: { ...shapeInfo } };
+	const NUM_CHAINS=30;
+	const shapeInfo1 = { type: "capsule", radius: 0.25, height: 1.0 };
+	const shapeInfo2 = { type: "box", x: 0.25, y: 0.5, z: 0.25 };
+	const baseEntity1 = {"entity": {}, render: { ...shapeInfo1 } };
+	const baseEntity2 = {"entity": {}, render: { ...shapeInfo2 } };
 
 	const entities = {
-		"sphere0": { ...baseEntity, "physics": {x: 0, y: 0, z: 0, shape: shapeInfo, mass: 1} }
+		"sphere0": { ...baseEntity1, "physics": {x: 1, y: 0, z: 0, shape: shapeInfo1, mass: 1} }
 	};
-	for(var i = 1; i < 100; i++) {
-		entities['sphere'+i] = { ...baseEntity, "physics": {x: 0, y: i, z: 0, shape: shapeInfo, mass: 1} };
+	for(var i = 1; i < NUM_CHAINS; i++) {
+		entities['sphere'+i] = { ...baseEntity1, "physics": {x: 1, y: i, z: 0, shape: shapeInfo1, mass: 1} };
 		entities['constraint'+i] = {
 			"constraint": {
 				type: JOIN_TYPE, bodyA: 'sphere'+(i-1), bodyB: 'sphere'+i,
-				localA: [0, 0.5, 0], localB: [0, -0.5, 0], options: {disableCollision: false}
+				localA: [0, 0.5, 0], localB: [0, -0.5, 0], options: {
+					disableCollision: true, quaternionA: [0,0,0,1], quaternionB: [0,0,0,1]
+				}
+			}
+		};
+	}
+
+	entities["box0"] = { ...baseEntity2, "physics": {x: -1, y: 0, z: 0, shape: shapeInfo2, mass: 1} };
+	for(var i = 1; i < NUM_CHAINS; i++) {
+		entities['box'+i] = { ...baseEntity2, "physics": {x: -1, y: i, z: 0, shape: shapeInfo2, mass: 1} };
+		entities['constraint-box'+i] = {
+			"constraint": {
+				type: JOIN_TYPE, bodyA: 'box'+(i-1), bodyB: 'box'+i,
+				localA: [0, 0.5, 0], localB: [0, -0.5, 0], options: {
+					disableCollision: true, quaternionA: [0,0,0,1], quaternionB: [0,0,0,1]
+				}
 			}
 		};
 	}
@@ -732,23 +952,9 @@ function level4() {
 		createEntity(entities[eid], eid);
 	}
 
-	return {
-		"state": {
-			"camera1": {
-				"input": { "controllerId": "0" },  // needs input to toggle modes
-				"entity": {x: 0, y: 4, z: 2, rotation: {x: -0.95, y: 0.0, z: 0.0}},
-				"camera": {fov: 60.0, type: 'follow', entityName: 'character1' },
-				"render": {type: "camera"},
-			},
-			"floor": {
-				"entity": {x: 0, y: -2.52, z: 0},
-				"render": {type: "box", x: 10, y: 1, z: 10},
-				"physics": {x: 0, y: -2.52, z: 0, shape: {type: "box", x: 10, y: 1, z: 10}, mass: 5, staticObject: true}
-			}
-		}
-	};
+	return defaultState;
 }
 
-const mainLevel = level3;
+const mainLevel = level4;
 
 export { createHeightMap, mainLevel }

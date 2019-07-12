@@ -107,6 +107,7 @@ function dataCallback(gltf, state, id) {
 	if('scale' in state) {
 		gltf.scene.scale.set(state.scale, state.scale, state.scale);
 	}
+	gltf.scene.traverse(object=>object.frustumCulled = false);
 	for(var i in gltf.scene.children) {
 		gltf.scene.children[i].animations = gltf.animations;
 	}
@@ -751,7 +752,7 @@ function copyPhysObjectToBone(armature, gameState, entityId, boneName) {
 		bone.quaternion.copy(tempQua3_1);
 
 		//update matrix world bone?
-		bone.updateMatrixWorld(true);
+		bone.updateMatrixWorld();
 	}
 }
 
@@ -762,7 +763,7 @@ function findSkeleton(scene) {
 }
 
 function applyConstraints(state, id, eventHandler, gameState) {
-	if('boneConstraints' in state) {
+	if('boneConstraints' in state && id in loadedObjects) {
 		const armature = findSkeleton(loadedObjects[id]); 
 		state.boneConstraints.map(dat=>copyPhysObjectToBone(armature, gameState, dat.id, dat.boneName));
 		return state;

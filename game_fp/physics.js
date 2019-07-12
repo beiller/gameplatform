@@ -23,14 +23,15 @@ const collisionFlags = {
 
 const stepHz = 30;
 const stepDt = 1000/stepHz;
-const constraintSolverIterations = 1000;
+const constraintSolverIterations = 10000;
 const globalCollisionMap = {};
 const bodyIdMap = {};
 const bodies = {};
 
 function step(m_dynamicsWorld, dispatcher) {
 	//const dt = stepDt;
-	m_dynamicsWorld.stepSimulation(1/stepHz, 5000, 1/1000);
+	//m_dynamicsWorld.stepSimulation(1/stepHz, 2000, 1/1500);
+	m_dynamicsWorld.stepSimulation(1/stepHz, 10);
 };
 
 function buildBodyIdMap() {
@@ -199,62 +200,54 @@ function createConstraintBall(bodyA, bodyB, localA, localB, options) {
 };
 
 function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
-	const qq1 = bodyA.getWorldTransform().getRotation();
-	const qq2 = bodyB.getWorldTransform().getRotation();
-	const q1 = {x: qq1.x(), y: qq1.y(), z: qq1.z(), w: qq1.w()};
-	const q2 = {x: qq2.x(), y: qq2.y(), z: qq2.z(), w: qq2.w()};
+	if(!options) { options = {} };
+	if(!options.quaternionA) { options.quaternionA = [0,0,0,1] };
+	if(!options.quaternionB) { options.quaternionB = [0,0,0,1] };
 
 	temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
-	//temp_quat_1.setValue(q1.x, q1.y, q1.z, q1.w);
 	temp_quat_1.setValue(options.quaternionA[0], options.quaternionA[1], options.quaternionA[2], options.quaternionA[3]);
 	temp_trans_1.setIdentity();
 	temp_trans_1.setRotation(temp_quat_1);
 	temp_trans_1.setOrigin(temp_vec3_1);
 
-	temp_vec3_2.setValue(localB[0], localB[1], localB[2]);
-	//temp_quat_2.setValue(q2.x, q2.y, q2.z, q2.w);
-	temp_quat_2.setValue(options.quaternionB[0], options.quaternionB[1], options.quaternionB[2], options.quaternionB[3]);
-	temp_trans_2.setIdentity();
-	temp_trans_2.setRotation(temp_quat_2);
-	temp_trans_2.setOrigin(temp_vec3_2);
-	
-	var constraint = new Ammo.btGeneric6DofSpringConstraint(
-		bodyA, 
-		bodyB, 
-		temp_trans_1,
-		temp_trans_2,
-		true,
-	);
-
-	if(!options) {
-		options = {};
+	if(localB) {
+		temp_vec3_2.setValue(localB[0], localB[1], localB[2]);
+		temp_quat_2.setValue(options.quaternionB[0], options.quaternionB[1], options.quaternionB[2], options.quaternionB[3]);
+		temp_trans_2.setIdentity();
+		temp_trans_2.setRotation(temp_quat_2);
+		temp_trans_2.setOrigin(temp_vec3_2);
 	}
-	const defaultLim = Math.PI / 3.0;
-	var angleLow = options.rotationLimitsLow ? options.rotationLimitsLow : [-defaultLim, -defaultLim, -defaultLim];
-	var angleHigh = options.rotationLimitsHigh ? options.rotationLimitsHigh : [defaultLim, defaultLim, defaultLim];
+	const useLinearReferenceFrameB = false;
+	if(bodyB) {
+		var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, bodyB, temp_trans_1, temp_trans_2, useLinearReferenceFrameB);
+	} else {
+		var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, temp_trans_1, useLinearReferenceFrameB);
+	}
+
+	var angleLow = options.rotationLimitsLow ? options.rotationLimitsLow : [-Math.PI, -Math.PI/2, -Math.PI];
+	var angleHigh = options.rotationLimitsHigh ? options.rotationLimitsHigh : [Math.PI, Math.PI/2, Math.PI];
 	temp_vec3_1.setValue(angleLow[0], angleLow[1], angleLow[2]);
 	temp_vec3_2.setValue(angleHigh[0], angleHigh[1], angleHigh[2]);
 	constraint.setAngularLowerLimit(temp_vec3_1);
 	constraint.setAngularUpperLimit(temp_vec3_2);
 
 	if(options.spring) {
-		constraint.enableSpring(3, true);
-		constraint.enableSpring(4, true);
-		constraint.enableSpring(5, true);
-
-		constraint.setStiffness(3, options.stiffness || 5.0);
-		constraint.setStiffness(4, options.stiffness || 5.0);
-		constraint.setStiffness(5, options.stiffness || 5.0);
-
-		constraint.setDamping(3, options.damping || 15);
-		constraint.setDamping(4, options.damping || 15);
-		constraint.setDamping(5, options.damping || 15);
-
-		dist = options.distance || 1.5;
-		temp_vec3_1.setValue(-dist, -dist, -0);
-		constraint.setAngularLowerLimit(temp_vec3_1);
-		temp_vec3_1.setValue(dist, dist, 0);
-		constraint.setAngularUpperLimit(temp_vec3_1);
+		for(let i = 0; i < 7; i++) {
+			constraint.enableSpring(i, true);
+			constraint.setStiffness(i, options.stiffness || 25.0);
+			constraint.setDamping(i, options.damping || 15);
+		}
+		const dist = options.distance || 0.1;
+		temp_vec3_1.setValue(-dist, -dist, -dist);
+		constraint.setLinearLowerLimit(temp_vec3_1);
+		temp_vec3_2.setValue(dist, dist, dist);
+		constraint.setLinearLowerLimit(temp_vec3_2);
+		if('equilibriumPoint' in options) {
+			constraint.setEquilibriumPoint();
+			constraint.setEquilibriumPoint(0, options.equilibriumPoint[0]);
+			constraint.setEquilibriumPoint(1, options.equilibriumPoint[1]);
+			constraint.setEquilibriumPoint(2, options.equilibriumPoint[2]);
+		}
 	} else {
 		temp_vec3_1.setValue(0,0,0);
 		constraint.setLinearLowerLimit(temp_vec3_1);
@@ -343,7 +336,8 @@ function createShape(shapeInfo) {
 		    break;
 		case "capsule":
 			if(!('height' in shapeInfo) || !('radius' in shapeInfo)) throw("Must specify height and radius in shape info");
-		    shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height-(shapeInfo.radius*4));
+			if(shapeInfo.height < shapeInfo.radius) throw("Height must be greater than or equal to radius")
+			shape = new Ammo.btCapsuleShape(shapeInfo.radius, (shapeInfo.height-(shapeInfo.radius*2))/2);
 		    break;
 		case "heightField":
 			/*if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
@@ -564,12 +558,40 @@ function applyCollision(state, id, eventHandler, gameState) {
 
 const constraints = {};
 function applyConstraints(state, id, eventHandler, gameState) {
-	if(!(id in constraints) && state.bodyA in bodies && state.bodyB in bodies) {
+	if(!(id in constraints) && state.bodyA in bodies) {
 		constraints[id] = createConstraint(
 			state.type, bodies[state.bodyA], bodies[state.bodyB], state.localA, state.localB, state.options
 		);
 		console.log("Constraint created");
 		console.log(constraints[id]);
+	}
+	if('type' in state && state.type == 'spring') {
+		const pstate = gameState.physics[id];
+		if(!state.target) {
+			state = {...state, target: [pstate.x, pstate.y, pstate.z]}
+			return state;
+		}
+		temp_vec3_1.setValue(pstate.x - state.target[0], pstate.y - state.target[1], pstate.z - state.target[2]);
+		const x = temp_vec3_1.length();
+		const d = 0.01; //rest length
+		const k = 5.0; //spring force
+		//const b = 1.0; //damping constant
+		//const v = bodies[id].getLinearVelocity().length();
+		//const F = -k * (x - d) - b * v;
+		const F = -k * Math.max(x - d, 0);
+		temp_vec3_1.normalize();
+		temp_vec3_1.setValue(temp_vec3_1.x() * F, temp_vec3_1.y() * F, temp_vec3_1.z() * F);
+		//DO LERP
+		/*const linVec = bodies[id].getLinearVelocity();
+		const t = 0.5;
+		temp_vec3_1.setValue(
+			(1 - t) * temp_vec3_1.x() + t * linVec.x(),
+			(1 - t) * temp_vec3_1.y() + t * linVec.y(),
+			(1 - t) * temp_vec3_1.z() + t * linVec.z()
+		)*/
+		//bodies[id].setLinearVelocity(temp_vec3_1);
+		bodies[id].applyImpulse(temp_vec3_1);
+		
 	}
 	return state;
 }
