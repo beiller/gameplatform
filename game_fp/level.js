@@ -754,7 +754,7 @@ function spawnRagdoll(namePrefix, meshName) {
 				"physics": {x: vec3.x, y: vec3.y, z: vec3.z,
 					rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w}, kinematic: false, 
 					shape: {type: shape, radius: radius, height: length, x: radius, y: length/2, z: radius }, mass: mass,
-					damping: .99
+					damping: .9999999, friction: 10.0
 				}
 			};
 		}
@@ -921,10 +921,10 @@ function level4() {
 	const baseEntity2 = {"entity": {}, render: { ...shapeInfo2 } };
 
 	const entities = {
-		"sphere0": { ...baseEntity1, "physics": {x: 1, y: 0, z: 0, shape: shapeInfo1, mass: 1} }
+		"sphere0": { ...baseEntity1, "physics": {x: 1, y: 0, z: 0, shape: shapeInfo1, mass: 1, friction: 5.0} }
 	};
 	for(var i = 1; i < NUM_CHAINS; i++) {
-		entities['sphere'+i] = { ...baseEntity1, "physics": {x: 1, y: i, z: 0, shape: shapeInfo1, mass: 1} };
+		entities['sphere'+i] = { ...baseEntity1, "physics": {x: 1, y: i, z: 0, shape: shapeInfo1, mass: 1, friction: 5.0} };
 		entities['constraint'+i] = {
 			"constraint": {
 				type: JOIN_TYPE, bodyA: 'sphere'+(i-1), bodyB: 'sphere'+i,
@@ -947,6 +947,8 @@ function level4() {
 			}
 		};
 	}
+
+	entities["particles1"] = { entity: {}, particles: {} };
 
 	for(let eid in entities) {
 		createEntity(entities[eid], eid);

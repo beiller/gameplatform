@@ -23,15 +23,15 @@ const collisionFlags = {
 
 const stepHz = 30;
 const stepDt = 1000/stepHz;
-const constraintSolverIterations = 10000;
+const constraintSolverIterations = 10; //seems to have no effect
 const globalCollisionMap = {};
 const bodyIdMap = {};
 const bodies = {};
 
 function step(m_dynamicsWorld, dispatcher) {
 	//const dt = stepDt;
-	//m_dynamicsWorld.stepSimulation(1/stepHz, 2000, 1/1500);
-	m_dynamicsWorld.stepSimulation(1/stepHz, 10);
+	m_dynamicsWorld.stepSimulation(1/stepHz, 1000, 1/500);
+	//m_dynamicsWorld.stepSimulation(1/stepHz, 10);
 };
 
 function buildBodyIdMap() {
@@ -131,10 +131,9 @@ function localCreateRigidBody(mass, startTransform, shape) {
 		shape.calculateLocalInertia(mass, localInertia);	
 	} 
 	var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
-	cInfo.friction = 0.9;
+	//cInfo.friction = 0.9;
 	var btBody = new Ammo.btRigidBody(cInfo);
 	btBody.setActivationState(4); //disables sleep
-	btBody.setFriction(0.9);
 	//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
@@ -152,6 +151,7 @@ function createBody(shape, state) {
 		{x:bodyInfo.x,y:bodyInfo.y,z:bodyInfo.z}, rotation
 	), shape);
 	var flags = [];
+	body.setFriction(state.friction || 0.9);
 
 	if(bodyInfo.noContact) flags.push(collisionFlags.CF_NO_CONTACT_RESPONSE);
 	if(bodyInfo.staticObject) flags.push(collisionFlags.CF_STATIC_OBJECT);
@@ -337,7 +337,7 @@ function createShape(shapeInfo) {
 		case "capsule":
 			if(!('height' in shapeInfo) || !('radius' in shapeInfo)) throw("Must specify height and radius in shape info");
 			if(shapeInfo.height < shapeInfo.radius) throw("Height must be greater than or equal to radius")
-			shape = new Ammo.btCapsuleShape(shapeInfo.radius, (shapeInfo.height-(shapeInfo.radius*2))/2);
+			shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height - ( shapeInfo.radius * 2 ) );
 		    break;
 		case "heightField":
 			/*if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");

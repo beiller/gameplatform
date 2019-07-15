@@ -504,6 +504,7 @@ const systems = [
 	{ name: "camera", func: RENDERER.updateCamera },
 	{ name: "entity", func: applyEntity },
 	{ name: "stats", func: applyStats },
+	{ name: "particles", func: RENDERER.applyParticles },
 	{ name: "render", func: RENDERER.renderObject }
 ];
 

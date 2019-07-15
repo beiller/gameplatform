@@ -771,5 +771,91 @@ function applyConstraints(state, id, eventHandler, gameState) {
 	return state;
 }
 
-export { renderObject, init, updateCamera, renderFunction, loadMeshFile, loadedObjects, applyConstraints };
+const particleSystems = {};
+//const heartTexture = OBJECTS.makeTextTexture("💧", {width: 64, height: 64});
+const heartTexture = OBJECTS.makeTextTexture("♥", {width: 64, height: 64});
+//const heartTexture = OBJECTS.makeTextTexture("a", {width: 64, height: 64});
+
+function spawnParticles(numParticles, position) {
+	numParticles = numParticles || 100;
+	position = position || [0,0,0];
+	var force = 7.0;
+	
+	var particles = new THREE.Geometry();
+	particles.ages = new Array();
+	console.log(particles);
+	var pMaterial = new THREE.PointsMaterial({
+		color: new THREE.Color( 0xff0000 ),
+		map: heartTexture,
+		size: 1,
+		alphaTest: 0.5, transparent: true
+	});
+
+	var size = 0.01;
+	var TIIIEEEGHTness = 1;
+	var maxAge = 10;
+	// now create the individual particles
+	for (var p = 0; p < numParticles; p++) {
+		// add it to the geometry
+		particles.vertices.push(new THREE.Vector3(0,0,0));
+		// add random velocities
+		particles.colors.push(new THREE.Vector3(
+			((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
+			((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
+			((Math.random() - 0.5) * 2) * TIIIEEEGHTness
+		).normalize().multiplyScalar(force));
+		particles.ages.push(Math.round(Math.random() * maxAge) - 1); // used for age
+	}
+
+	// create the particle system
+	var particleSystem = new THREE.Points(particles, pMaterial);
+	particleSystem.position.fromArray(position);
+
+	// add it to the scene
+	return particleSystem;
+}
+
+function updateParticlesFunction(particleSystem) {
+	const maxAge = 50;
+	const gravity = 9.85;
+	const wind = 0.1; //scale gravity by "wind" to make floaty
+	const dt = 30/1000;
+	const particles = particleSystem.geometry;
+	const TIIIEEEGHTness = 1;
+	const force = 7.0;
+	let pCount = particles.vertices.length;
+	//tempThreeVector1.set(0, 0, 0)
+	while (pCount--) {
+		particles.ages[pCount] += 1;
+		particles.vertices[pCount].y -= gravity * dt * wind;
+		tempThreeVector1.copy(particles.colors[pCount]).multiplyScalar(dt);
+		// and the position
+		particles.vertices[pCount].add(tempThreeVector1);
+		particles.colors[pCount].multiplyScalar(0.9);
+		// check if we need to reset
+		if (particles.ages[pCount] > maxAge) {
+			particles.vertices[pCount].set(0,0,0)
+			particles.colors[pCount].set(
+				((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
+				((Math.random() - 0.5) * 2) * TIIIEEEGHTness,
+				((Math.random() - 0.5) * 2) * TIIIEEEGHTness
+			).normalize().multiplyScalar(force);
+			particles.ages[pCount] = 0;
+		}
+	}
+	particleSystem.geometry.verticesNeedUpdate = true;
+};
+
+
+function applyParticles(state, id, eventHandler, gameState) {
+	if(!(id in particleSystems)) {
+		particleSystems[id] = spawnParticles(100, [0,0,0]);  //new THREE.Mesh(new THREE.SphereGeometry(), new THREE.MeshStandardMaterial());
+		GLOBAL_SCENE.add(particleSystems[id]);
+	} else {
+		updateParticlesFunction(particleSystems[id]);
+	}
+	return state;
+}
+
+export { renderObject, init, updateCamera, renderFunction, loadMeshFile, loadedObjects, applyConstraints, applyParticles };
 

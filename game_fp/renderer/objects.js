@@ -460,4 +460,4 @@ const loaders = {
 	"axis": createDebugAxis
 }
 
-export {loaders, createLight, createPointLight, createDebugAxis}
+export {loaders, createLight, createPointLight, createDebugAxis, makeTextTexture}
