@@ -711,9 +711,9 @@ var pairs2 = [
 
 function spawnRagdoll(namePrefix, meshName) {
 	//if(!meshName) meshName = "jessica.glb";
-	meshName = 'princess.glb';
+	meshName = 'nonfree/princess.glb';
 	//LOADER.loadGLTF("zoey.glb").then(gltf => {
-	LOADER.loadGLTF("princess.glb").then(gltf => {		
+	LOADER.loadGLTF("nonfree/princess.glb").then(gltf => {		
 		console.log(gltf);
 		const armature = findSkeleton(gltf.scene);
 		//const shape = "capsule"; 
@@ -754,7 +754,7 @@ function spawnRagdoll(namePrefix, meshName) {
 				"physics": {x: vec3.x, y: vec3.y, z: vec3.z,
 					rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w}, kinematic: false, 
 					shape: {type: shape, radius: radius, height: length, x: radius, y: length/2, z: radius }, mass: mass,
-					damping: .9999999, friction: 10.0
+					damping: .99/*, friction: 10.0*/
 				}
 			};
 		}
@@ -813,11 +813,11 @@ function spawnRagdoll(namePrefix, meshName) {
 			pins.push(pairs[i][0]);
 		}*/
 		const pins = [
-			/*"RootNode_rHand",
-			"RootNode_lHand",
+			//"RootNode_rHand",
+			//"RootNode_lHand",
 			//"RootNode_rForearmBend",
 			//"RootNode_lForearmBend",
-			"RootNode_head"*/
+			"RootNode_head"
 		];
 		for(let i in pins) {
 			const constraint = namePrefix+".constraint."+pins[i];
@@ -957,6 +957,12 @@ function level4() {
 	return defaultState;
 }
 
-const mainLevel = level4;
+const mainLevel = level3;
+const levels = {
+	level1: level1,
+	level2: level2,
+	level3: level3,
+	level4: level4,
+}
 
-export { createHeightMap, mainLevel }
+export { createHeightMap, mainLevel, levels }

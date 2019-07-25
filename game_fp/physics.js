@@ -21,23 +21,21 @@ const collisionFlags = {
 	CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
 };
 
-const stepHz = 30;
-const stepDt = 1000/stepHz;
-const constraintSolverIterations = 10; //seems to have no effect
+const stepHz = 60;
+const constraintSolverIterations = null;
+const useSplitImpulse = null;
 const globalCollisionMap = {};
 const bodyIdMap = {};
 const bodies = {};
 
-function step(m_dynamicsWorld, dispatcher) {
-	//const dt = stepDt;
+function step(m_dynamicsWorld, dispatcher) {	
 	m_dynamicsWorld.stepSimulation(1/stepHz, 1000, 1/500);
-	//m_dynamicsWorld.stepSimulation(1/stepHz, 10);
 };
 
-function buildBodyIdMap() {
+function buildBodyIdMap(gameState) {
 	// clean bodyIdMap object
 	for(let oid in bodies) {
-		if(!(oid in window.gameState.state.physics)) {
+		if(!(oid in gameState.state.physics)) {
 			delete bodyIdMap[bodies[oid].a];
 		} else {
 			bodyIdMap[bodies[oid].a] = oid;
@@ -45,8 +43,8 @@ function buildBodyIdMap() {
 	}
 }
 
-function readCollisionData() {
-	buildBodyIdMap();
+function readCollisionData(gameState) {
+	buildBodyIdMap(gameState);
 	var data = [];
 	var i,
 	    dp = world.dispatcher,
@@ -55,7 +53,7 @@ function readCollisionData() {
 
 	// clean globalCollisionMap object
 	for(let oid in globalCollisionMap) {
-		if(!(oid in window.gameState.state.physics)) {
+		if(!(oid in gameState.state.physics)) {
 			delete globalCollisionMap[oid];
 		} else {
 			globalCollisionMap[oid] = []; // does this avoid GC?
@@ -92,14 +90,23 @@ function initPhysics() {
 	// Bullet-interfacing code
 	var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
 	var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-	var overlappingPairCache = new Ammo.btDbvtBroadphase();
+	const useSweep = true;
+	if(useSweep) {
+		temp_vec3_1.setValue(-10000,-10000,-10000);
+		temp_vec3_2.setValue(10000,10000,10000);
+		var overlappingPairCache = new Ammo.btAxisSweep3 (temp_vec3_1, temp_vec3_2);
+	} else {
+		var overlappingPairCache = new Ammo.btDbvtBroadphase();
+	}
 
 	var solver = new Ammo.btSequentialImpulseConstraintSolver();
 	var m_dynamicsWorld = new Ammo.btDiscreteDynamicsWorld(dispatcher, overlappingPairCache, solver, collisionConfiguration);
 	
 	var s = m_dynamicsWorld.getSolverInfo();
-	s.set_m_splitImpulse(true);
-	s.set_m_numIterations(constraintSolverIterations);
+	if(useSplitImpulse)
+		s.set_m_splitImpulse(useSplitImpulse);
+	if(constraintSolverIterations)
+		s.set_m_numIterations(constraintSolverIterations);
 
 	temp_vec3_1.setValue(0, -9.82, 0);
 	m_dynamicsWorld.setGravity(temp_vec3_1);
@@ -379,7 +386,7 @@ var temp_vec3_2 = null
 var temp_quat_1 = null
 var temp_quat_2 = null
 
-function init(gameState) {
+function init() {
 	temp_trans_1 = new Ammo.btTransform();
 	temp_trans_2 = new Ammo.btTransform();
 	temp_vec3_1 = new Ammo.btVector3(0,0,0);
@@ -387,8 +394,6 @@ function init(gameState) {
 	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
 	world = initPhysics();
-	console.log('Iterations', world.m_dynamicsWorld.getSolverInfo().m_numIterations);
-	world.m_dynamicsWorld.getSolverInfo().m_numIterations = 1;
 }
 
 function readPhysicsState(state, id) {
@@ -596,18 +601,18 @@ function applyConstraints(state, id, eventHandler, gameState) {
 	return state;
 }
 
-function stepWorld() {
+function stepWorld(gameState) {
 	step(world.m_dynamicsWorld, world.dispatcher);
 	/*
 		Clean up aka garbage collect unused game objects from physics simulation
 	*/
 	for(var objectId in bodies) {
-		if(!(objectId in window.gameState.state.physics)) {
+		if(!(objectId in gameState.state.physics)) {
 			world.m_dynamicsWorld.removeRigidBody(bodies[objectId]);
 			delete bodies[objectId];
 		}
 	}
-	readCollisionData();
+	readCollisionData(gameState);
 }
 
 

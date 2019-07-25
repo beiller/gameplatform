@@ -77,7 +77,7 @@ function getEventHandler(events) {
 */
 function doStateTransition(state, objectId, systemName, systemFunc, eventHandler, gameState) {
 	try {
-		const oldState = state;
+		//const oldState = state;
 		const newState = deepFreeze(	
 			systemFunc(
 				state,
@@ -156,27 +156,37 @@ function loadState(initialState) {
 }
 
 var nextStateFn = null;
+var GAME_STATE = null;
+
 function init(initialState, middleware) {
+	nextStateFn = null;
+	GAME_STATE = null;
 	nextStateFn = nextState;
 	for(var i = 0; i < middleware.length; i++) {
-		nextStateFn = middleware[i](nextStateFn);
+		addMiddleware(middleware[i])
 	}
-	window.gameState = loadState(initialState);
-	//requestAnimationFrame(tick);
-	//const frameTime = 1000/60;
-	//setInterval(tick, frameTime);
-	return gameState;
+	setState(initialState);
+	return GAME_STATE;
 }
 
 function tick() {
-	//window.gameState = ENGINE.nextState(window.gameState);
-	window.gameState = nextStateFn(window.gameState);
-	//renderFunction();
-	//requestAnimationFrame(tick);
+	GAME_STATE = nextStateFn(GAME_STATE);
+}
+
+function setState(newInitialState) {
+	GAME_STATE = loadState(newInitialState);
+}
+
+function getState() {
+	return GAME_STATE;
+}
+
+function addMiddleware(newMiddleware) {
+	nextStateFn = newMiddleware(nextStateFn);
 }
 
 export { 
 	init, nextState, loadState, deepFreeze, 
 	addSystem, createEntity, queueCommand, 
-	deleteEntity, removeBehaviour, tick 
+	deleteEntity, removeBehaviour, tick, getState, setState, addMiddleware
 }

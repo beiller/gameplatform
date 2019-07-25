@@ -603,7 +603,7 @@ function renderObject(state, id, eventHandler, gameState) {
 
 var render = null;  // the render function...
 
-function init(initialState) {
+function init() {
 	GLOBAL_CAMERA = null;
 	GLOBAL_SCENE = null;
 	GLOBAL_RENDERER = null;
@@ -619,7 +619,6 @@ function init(initialState) {
 	GLOBAL_SCENE = scene;
 
 	var sceneData = initRendering(scene, settings, camera);
-	sceneData.gameState = initialState;
 
 	LOADER.loadEXRMap(GLOBAL_RENDERER).then(function(rt) { 
 		hdrCubeRenderTarget = rt;
@@ -679,7 +678,7 @@ function initSkyShader() {
 	uniforms[ "sunPosition" ].value.copy( sunSphere.position );
 }
 
-function renderFunction() {
+function renderFunction(gameState) {
 	// If the instancing mesh has geometry, add it to scene
 	// to avoid opengl warnings
 	for(let i in meshInstance) {
@@ -693,7 +692,7 @@ function renderFunction() {
 		Clean up aka garbage collect unused game objects from scene
 	*/
 	for(var objectId in loadedObjects) {
-		if(!(objectId in window.gameState.state.render)) {
+		if(!(objectId in gameState.state.render)) {
 			GLOBAL_SCENE.remove(loadedObjects[objectId]);
 			delete loadedObjects[objectId];
 			if(objectId in physicsDebugObjects) {

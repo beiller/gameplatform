@@ -508,40 +508,42 @@ const systems = [
 	{ name: "render", func: RENDERER.renderObject }
 ];
 
-function resetWorld() {
-	var gameState = ENGINE.loadState({...LEVEL.mainLevel(), systems: systems});
-	window.gameState = gameState;
+const middleware = [
+	InspectorMiddleware.middleware
+];
+
+function loadWorld(worldFunction) {
+	ENGINE.init({...worldFunction, systems: systems}, middleware);
 	PHYSICS.resetWorld();
 }
 
 function main() {
-	var middleware = [
-		InspectorMiddleware.middleware
-	];
-	var gameState = ENGINE.init({...LEVEL.mainLevel(), systems: systems}, middleware);
-	console.log(gameState);
-	window.gameState = gameState;
-
-	RENDERER.init(gameState);
+	ENGINE.init({...LEVEL.mainLevel(), systems: systems}, middleware);
+	console.log(ENGINE.getState());
+	RENDERER.init();
 	Ammo().then(function() {  // must initialize ammo
-		PHYSICS.init(gameState);
+		PHYSICS.init();
 	});
 	//start game loop
-	var fps = 30;
-	var now;
-	var then = Date.now();
+	var fps = 60;
+	//var now = Date.now();
+	//var then = Date.now();
+	var lastFrame = Date.now();
 	var interval = 1000/fps;
 	var delta;
 	function mainLoop() {
 		requestAnimationFrame(mainLoop);
-		now = Date.now();
-	    delta = now - then; 
-	    if (delta > interval) {
-	    	then = now - (delta % interval);
+	    //delta = Date.now() - lastFrame; 
+	    //if (delta > interval) {
+		//then = now - (delta % interval);
+		const gameState = ENGINE.getState();
+		setTimeout(function() { // delay this call?
 			ENGINE.tick();
-			PHYSICS.stepWorld();
-			RENDERER.renderFunction();
-		}
+			PHYSICS.stepWorld(gameState);
+		}, 0);
+		RENDERER.renderFunction(gameState);
+		//lastFrame = Date.now();
+		//}
 	}
 	requestAnimationFrame(mainLoop);
 }
