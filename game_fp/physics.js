@@ -345,7 +345,19 @@ function createShape(shapeInfo) {
 			if(!('height' in shapeInfo) || !('radius' in shapeInfo)) throw("Must specify height and radius in shape info");
 			if(shapeInfo.height < shapeInfo.radius) throw("Height must be greater than or equal to radius")
 			shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height - ( shapeInfo.radius * 2 ) );
-		    break;
+			break;
+		case "concave":
+			if(!('triangles' in shapeInfo)) throw("Must specify triangles in shape info");
+			let i, triangle, triangle_mesh = new Ammo.btTriangleMesh;
+			for ( i = 0; i < shapeInfo.triangles.length; i++ ) {
+				triangle = shapeInfo.triangles[i];
+				temp_vec3_1.setValue(triangle[0].x, triangle[0].y, triangle[0].z);
+				temp_vec3_2.setValue(triangle[1].x, triangle[1].y, triangle[1].z);
+				temp_vec3_3.setValue(triangle[2].x, triangle[2].y, triangle[2].z);
+				triangle_mesh.addTriangle(temp_vec3_1, temp_vec3_2, temp_vec3_3, true);
+			}
+			shape = new Ammo.btBvhTriangleMeshShape(triangle_mesh, true, true);
+			break;
 		case "heightField":
 			/*if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
 			temp_vec3_1.setValue(shapeInfo.x, shapeInfo.y, shapeInfo.z);
@@ -379,18 +391,20 @@ function getMat3(pos, rot) {
 }
 
 var world = null;
-var temp_trans_1 = null
-var temp_trans_2 = null
-var temp_vec3_1 = null
-var temp_vec3_2 = null
-var temp_quat_1 = null
-var temp_quat_2 = null
+var temp_trans_1 = null;
+var temp_trans_2 = null;
+var temp_vec3_1 = null;
+var temp_vec3_2 = null;
+var temp_vec3_3 = null;
+var temp_quat_1 = null;
+var temp_quat_2 = null;
 
 function init() {
 	temp_trans_1 = new Ammo.btTransform();
 	temp_trans_2 = new Ammo.btTransform();
 	temp_vec3_1 = new Ammo.btVector3(0,0,0);
 	temp_vec3_2 = new Ammo.btVector3(0,0,0);
+	temp_vec3_3 = new Ammo.btVector3(0,0,0);
 	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
 	world = initPhysics();

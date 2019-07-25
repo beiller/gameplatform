@@ -8,12 +8,10 @@ var GLOBAL_CAMERA = null;
 var GLOBAL_SCENE = null;
 var GLOBAL_RENDERER = null;
 var GLOBAL_ORBIT_CONTROLS = null;
-var DEBUG_PHYSICS = false;
 
 var hdrCubeRenderTarget = null
 
 var loadedObjects = {};
-var physicsDebugObjects = {};
 var healthBarSprites = {};
 
 var getAnimationMixer = null;
@@ -371,47 +369,6 @@ function updateCamera(state, id, eventHandler, gameState) {
 	return state;
 }
 
-const physicsDebugMaterial = new THREE.MeshStandardMaterial({ 
-	wireframe: true, emissive: new THREE.Color(0xFFFFFF)
-});
-function createPhysicsDebugMesh(state) {
-	if(state.shape.type == 'box') {
-		return new THREE.Mesh(
-	    	new THREE.BoxGeometry( 
-	    		state.shape.x * 2.001, 
-	    		state.shape.y * 2.001, 
-	    		state.shape.z * 2.001
-	    	),
-	    	physicsDebugMaterial
-	    ).add(OBJECTS.createDebugAxis());
-	}
-	if(state.shape.type == 'sphere') {
-		return new THREE.Mesh(
-	    	new THREE.SphereGeometry(state.shape.radius * 1.001, 8, 8), 
-	    	physicsDebugMaterial
-	    ).add(OBJECTS.createDebugAxis());
-	}
-	if(state.shape.type == 'capsule') {
-		var r = state.shape.radius;
-		var m1 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 12, 6, 0, Math.PI*2, 0, Math.PI/2), physicsDebugMaterial);
-		var m2 = new THREE.Mesh(new THREE.SphereGeometry(r * 1.0001, 12, 6, 0, Math.PI*2, 0, Math.PI/2), physicsDebugMaterial);
-		var m3 = new THREE.Mesh(new THREE.CylinderGeometry( 
-			r * 1.0001, r * 1.0001, state.shape.height, 12, 5, true 
-		), physicsDebugMaterial);
-	    m1.position.set(0,  state.shape.height*0.5, 0);
-	    m2.position.set(0, -state.shape.height*0.5, 0);
-	    m2.rotation.x = Math.PI;
-	    return new THREE.Object3D().add(m1).add(m2).add(m3).add(OBJECTS.createDebugAxis());
-	}
-	if(state.shape.type == 'cone') {
-		return new THREE.Mesh(
-	    	new THREE.ConeGeometry(state.shape.radius, state.shape.height), 
-	    	physicsDebugMaterial
-	    ).add(OBJECTS.createDebugAxis());
-	}
-	return new THREE.Object3D().add(OBJECTS.createDebugAxis());
-}
-
 var previousEntity = {};
 var tempThreeVector1 = new THREE.Vector3();
 var tempThreeVector2 = new THREE.Vector3();
@@ -551,25 +508,11 @@ function renderObject(state, id, eventHandler, gameState) {
 		return state;
 	}
 
-	if(DEBUG_PHYSICS && !(id in physicsDebugObjects)) {
-		if('physics' in gameState && id in gameState.physics && 'shape' in gameState.physics[id]) {
-			if('x' in gameState.physics[id].shape || 'radius' in gameState.physics[id].shape) {
-				let physicsState = gameState.physics[id];
-				let mesh = createPhysicsDebugMesh(physicsState);
-				physicsDebugObjects[id] = mesh;
-				GLOBAL_SCENE.add(mesh);
-			}
-		}
-	}
 	//compare states of deps (memory address compare)
 	if(id in gameState.entity && !(id in previousEntity) || previousEntity[id] !== gameState.entity[id]) {
 		let ent = gameState.entity[id];
 		updateObject(state, ent, loadedObjects[id]);
 		previousEntity[id] = gameState.entity[id];
-	}
-
-	if(DEBUG_PHYSICS && id in physicsDebugObjects) {
-		updateObject({}, gameState.physics[id], physicsDebugObjects[id]);
 	}
 
 	if(id in gameState.input && gameState.input[id].buttons[1] === true && loadedObjects[id].children.length > 0) {
@@ -609,7 +552,6 @@ function init() {
 	GLOBAL_RENDERER = null;
 	GLOBAL_ORBIT_CONTROLS = null;
 	loadedObjects = {};
-	physicsDebugObjects = {};
 	getAnimationMixer = createCache(createMixer);
 	getAnimationClip = createCache(createClip);
 
@@ -695,10 +637,6 @@ function renderFunction(gameState) {
 		if(!(objectId in gameState.state.render)) {
 			GLOBAL_SCENE.remove(loadedObjects[objectId]);
 			delete loadedObjects[objectId];
-			if(objectId in physicsDebugObjects) {
-				GLOBAL_SCENE.remove(physicsDebugObjects[objectId]);
-				delete physicsDebugObjects[objectId];
-			}
 			if(objectId in healthBarSprites) {
 				GLOBAL_SCENE.remove(healthBarSprites[objectId]);
 				delete healthBarSprites[objectId];

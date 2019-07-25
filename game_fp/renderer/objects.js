@@ -279,6 +279,13 @@ function createCapsule(state, id) {
 	return new THREE.Mesh(g1, defaultMaterial);
 }
 
+function createTorusKnot(state, id) {
+	return new THREE.Mesh(
+    	new THREE.TorusKnotBufferGeometry( state.radius, state.tube ),
+    	defaultMaterial
+    );
+}
+
 function createBox(state, id) {
 	return new THREE.Mesh(
     	new THREE.BoxGeometry( state.x * 2, state.y * 2, state.z * 2 ),
@@ -457,7 +464,8 @@ const loaders = {
 	"capsule": createCapsule,
 	"3dText": create3DTextState,
 	"light": createThreeLight,
-	"axis": createDebugAxis
+	"axis": createDebugAxis,
+	"torusknot": createTorusKnot
 }
 
 export {loaders, createLight, createPointLight, createDebugAxis, makeTextTexture}

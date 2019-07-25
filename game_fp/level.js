@@ -81,6 +81,7 @@ function generateCharacter(xPos, yPos) {
 function toTriangles(geometry) {
 	const vertices = geometry.vertices;
 	const triangles = [];
+	let i = 0;
 	for ( i = 0; i < geometry.faces.length; i++ ) {
 		const face = geometry.faces[i];
 		if (!( 'd' in face )) {
@@ -89,7 +90,7 @@ function toTriangles(geometry) {
 				{ x: vertices[face.b].x, y: vertices[face.b].y, z: vertices[face.b].z },
 				{ x: vertices[face.c].x, y: vertices[face.c].y, z: vertices[face.c].z }
 			]);
-		} else if ( 'd' in face ) {
+		} else if ( 'd' in face ) {  // The face is a quad
 			triangles.push([
 				{ x: vertices[face.a].x, y: vertices[face.a].y, z: vertices[face.a].z },
 				{ x: vertices[face.b].x, y: vertices[face.b].y, z: vertices[face.b].z },
@@ -102,6 +103,20 @@ function toTriangles(geometry) {
 			]);
 
 		}
+	}
+	return triangles;
+}
+function toTrianglesFromBuffer(geometry) {
+	const triangles = [];
+	const triangle = [null, null, null];
+	for ( let i = 0; i < geometry.index.count; i += 3 ) { 
+		for(let j = 0; j < 3; j++) {
+			const x = geometry.attributes.position.array[geometry.index.array[i+j]];
+			const y = geometry.attributes.position.array[geometry.index.array[i+j]+1];
+			const z = geometry.attributes.position.array[geometry.index.array[i+j]+2];
+			triangle[j] = {x: x, y: y, z: z};
+		}
+		triangles.push([...triangle]);
 	}
 	return triangles;
 }
@@ -948,6 +963,19 @@ function level4() {
 		};
 	}
 
+	const cube = new THREE.BoxBufferGeometry( 1, 1, 1 );
+	//const cube = new THREE.TorusKnotBufferGeometry( 1, .2, 100, 16 );
+	//const buffer = new THREE.BufferGeometry().fromGeometry(cube);
+	//const triangles = toTriangles(cube);
+	const triangles = toTrianglesFromBuffer(cube);
+	console.log("Triangles", triangles, cube.toJSON());
+	entities["textTriangleMesh"] = { 
+		entity: {}, 
+		//render: { type: "torusknot", radius: 1, tube: .2 }, 
+		render: { type: "box", x: .5, y: .5, z: .5 }, 
+		physics: {x: 0, y: 3, z: 0, shape: { type: "concave", triangles: triangles }, mass: 1} 
+	};
+
 	entities["particles1"] = { entity: {}, particles: {} };
 
 	for(let eid in entities) {
@@ -957,12 +985,53 @@ function level4() {
 	return defaultState;
 }
 
-const mainLevel = level3;
+function level5() {
+	const shapeInfo1 = { type: "capsule", radius: 0.25, height: 1.0 };
+	const shapeInfo2 = { type: "box", x: 0.25, y: 0.5, z: 0.25 };
+	const baseEntity1 = {"entity": {}, render: { ...shapeInfo1 } };
+	const baseEntity2 = {"entity": {}, render: { ...shapeInfo2 } };
+	const entities = {
+		"sphere0": { 
+			...baseEntity1, 
+			"physics": {x: 1, y: 0, z: 0, shape: shapeInfo1, mass: 1, friction: 5.0} 
+		}
+	};
+
+	const cube = new THREE.BoxBufferGeometry( 1, 1, 1 );
+	//const cube = new THREE.ConeBufferGeometry( 1, -2 );
+	//const buffer = new THREE.BufferGeometry().fromGeometry(cube);
+	//const triangles = toTriangles(cube);
+	const triangles = toTrianglesFromBuffer(cube);
+	console.log("Triangles", triangles, cube.toJSON());
+	entities["textTriangleMesh"] = { 
+		entity: {}, 
+		//render: { type: "cone", radius: 1, height: -2 }, 
+		render: { type: "box", x: .5, y: .5, z: .5 }, 
+		physics: {x: 0, y: 7, z: 0, shape: { type: "concave", triangles: triangles }, mass: 1} 
+	};
+	entities["textTriangleMesh2"] = { 
+		entity: {}, 
+		//render: { type: "cone", radius: 1, height: -2 }, 
+		render: { type: "box", x: .5, y: .5, z: .5 }, 
+		physics: {x: 0, y: 9, z: 0, shape: { type: "concave", triangles: triangles }, mass: 1} 
+	};
+
+	//entities["particles1"] = { entity: {}, particles: {} };
+
+	for(let eid in entities) {
+		createEntity(entities[eid], eid);
+	}
+
+	return defaultState;
+}
+
+const mainLevel = level5;
 const levels = {
 	level1: level1,
 	level2: level2,
 	level3: level3,
 	level4: level4,
+	level5: level5,
 }
 
 export { createHeightMap, mainLevel, levels }

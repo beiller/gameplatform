@@ -1,16 +1,12 @@
 import * as RENDERER from './renderer/renderer.js';
 import * as ENGINE from './engine.js';
 import * as INPUT from './input.js';
-import * as PHYSICS from './physics.js';
 import * as LEVEL from './level.js';
 import * as THREE from './lib/three.module.js';
 import * as AI from './modules/ai.js';
-
 import './lib/RectAreaLightUniformsLib.js';
-
 import * as InspectorMiddleware from './InspectorMiddleware.js';
-
-//welcome!
+import * as PHYSICS from './physics.js';
 
 //
 function loadRenderableEntity() {
@@ -497,7 +493,7 @@ const systems = [
 	{ name: "particle", func: applyParticle },
 	{ name: "motion", func: applyMotion },
 	{ name: "animation", func: applyAnimation },
-	{ name: "physics", func: PHYSICS.applyPhysics },
+	{ name: "physics", func: PHYSICS.applyPhysics, module: './physics.js', loadedModule: null, funcName: 'applyPhysics' },
 	{ name: "constraint", func: applyConstraints },
 	{ name: "magic", func: applyMagic },
 	{ name: "collision", func: applyCollision },
@@ -521,9 +517,19 @@ function main() {
 	ENGINE.init({...LEVEL.mainLevel(), systems: systems}, middleware);
 	console.log(ENGINE.getState());
 	RENDERER.init();
+	/*import('./physics.js').then((module) => {
+		// Do something with the module.
+		PHYSICS.applyConstraints = module.applyConstraints;
+		PHYSICS.applyPhysics = module.applyPhysics;
+		PHYSICS.applyCollision = module.applyCollision;
+		PHYSICS.init = module.init;
+		PHYSICS.stepWorld = module.stepWorld;
+		
+	});*/
 	Ammo().then(function() {  // must initialize ammo
 		PHYSICS.init();
 	});
+
 	//start game loop
 	var fps = 60;
 	//var now = Date.now();
