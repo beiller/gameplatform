@@ -985,6 +985,7 @@ function level4() {
 	return defaultState;
 }
 
+// Triangle Mesh Test (Fail)
 function level5() {
 	const shapeInfo1 = { type: "capsule", radius: 0.25, height: 1.0 };
 	const shapeInfo2 = { type: "box", x: 0.25, y: 0.5, z: 0.25 };
@@ -993,30 +994,22 @@ function level5() {
 	const entities = {
 		"sphere0": { 
 			...baseEntity1, 
-			"physics": {x: 1, y: 0, z: 0, shape: shapeInfo1, mass: 1, friction: 5.0} 
+			"physics": {x: 0, y: 0, z: 0, shape: shapeInfo1, mass: 1, friction: 5.0} 
 		}
 	};
 
-	const cube = new THREE.BoxBufferGeometry( 1, 1, 1 );
-	//const cube = new THREE.ConeBufferGeometry( 1, -2 );
-	//const buffer = new THREE.BufferGeometry().fromGeometry(cube);
-	//const triangles = toTriangles(cube);
-	const triangles = toTrianglesFromBuffer(cube);
-	console.log("Triangles", triangles, cube.toJSON());
-	entities["textTriangleMesh"] = { 
-		entity: {}, 
-		//render: { type: "cone", radius: 1, height: -2 }, 
-		render: { type: "box", x: .5, y: .5, z: .5 }, 
-		physics: {x: 0, y: 7, z: 0, shape: { type: "concave", triangles: triangles }, mass: 1} 
-	};
-	entities["textTriangleMesh2"] = { 
-		entity: {}, 
-		//render: { type: "cone", radius: 1, height: -2 }, 
-		render: { type: "box", x: .5, y: .5, z: .5 }, 
-		physics: {x: 0, y: 9, z: 0, shape: { type: "concave", triangles: triangles }, mass: 1} 
-	};
-
-	//entities["particles1"] = { entity: {}, particles: {} };
+	const cube = new THREE.SphereGeometry(.2, 10, 10);
+	const triangles = toTriangles(cube);
+	for(let i = 0; i < 50; i++) {
+		const r1 = (Math.random()-0.5)*2;
+		const r2 = (Math.random()-0.5)*2;
+		const r3 = (Math.random()-0.5)*4;
+		entities["textTriangleMesh"+i] = { 
+			entity: {}, 
+			render: { type: "sphere", radius: .2 }, 
+			physics: {x: r1, y: 4+r3, z: r2, shape: { type: "concave", triangles: triangles }, mass: 1, friction: 5.0} 
+		};
+	}
 
 	for(let eid in entities) {
 		createEntity(entities[eid], eid);

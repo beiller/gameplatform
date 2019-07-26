@@ -90,7 +90,7 @@ function initPhysics() {
 	// Bullet-interfacing code
 	var collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
 	var dispatcher = new Ammo.btCollisionDispatcher(collisionConfiguration);
-	const useSweep = true;
+	const useSweep = false;
 	if(useSweep) {
 		temp_vec3_1.setValue(-10000,-10000,-10000);
 		temp_vec3_2.setValue(10000,10000,10000);
@@ -140,7 +140,7 @@ function localCreateRigidBody(mass, startTransform, shape) {
 	var cInfo = new Ammo.btRigidBodyConstructionInfo(mass, myMotionState, shape, localInertia);
 	//cInfo.friction = 0.9;
 	var btBody = new Ammo.btRigidBody(cInfo);
-	btBody.setActivationState(4); //disables sleep
+	//btBody.setActivationState(4); //disables sleep
 	//btBody.setLinearVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setAngularVelocity(new Ammo.btVector3(0, 0, 0));
 	//btBody.setContactProcessingThreshold(this.m_defaultContactProcessingThreshold);
@@ -348,7 +348,8 @@ function createShape(shapeInfo) {
 			break;
 		case "concave":
 			if(!('triangles' in shapeInfo)) throw("Must specify triangles in shape info");
-			let i, triangle, triangle_mesh = new Ammo.btTriangleMesh;
+			let i, triangle = null;
+			const triangle_mesh = new Ammo.btTriangleMesh();
 			for ( i = 0; i < shapeInfo.triangles.length; i++ ) {
 				triangle = shapeInfo.triangles[i];
 				temp_vec3_1.setValue(triangle[0].x, triangle[0].y, triangle[0].z);
