@@ -29,7 +29,7 @@ const bodyIdMap = {};
 const bodies = {};
 
 function step(m_dynamicsWorld, dispatcher) {	
-	m_dynamicsWorld.stepSimulation(1/stepHz, 1000, 1/500);
+	m_dynamicsWorld.stepSimulation(1/stepHz);
 };
 
 function buildBodyIdMap(gameState) {
@@ -358,6 +358,15 @@ function createShape(shapeInfo) {
 				triangle_mesh.addTriangle(temp_vec3_1, temp_vec3_2, temp_vec3_3, true);
 			}
 			shape = new Ammo.btBvhTriangleMeshShape(triangle_mesh, true, true);
+			break;
+		case "convex":
+			if(!('points' in shapeInfo)) throw("Must specify triangles in shape info");
+			shape = new Ammo.btConvexHullShape();
+			for ( let i = 0; i < shapeInfo.points.length; i++ ) {
+				const point = shapeInfo.points[i];
+				temp_vec3_1.setValue(point.x, point.y, point.z);
+				shape.addPoint(temp_vec3_1);
+			}
 			break;
 		case "heightField":
 			/*if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");

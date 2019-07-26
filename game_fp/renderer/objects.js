@@ -286,6 +286,14 @@ function createTorusKnot(state, id) {
     );
 }
 
+function createConvexHull(state, id) {
+	const newPoints = state.points.map(p => new THREE.Vector3(p.x, p.y, p.z));
+	return new THREE.Mesh(
+    	new THREE.ConvexGeometry( newPoints ),
+    	defaultMaterial
+    );
+}
+
 function createBox(state, id) {
 	return new THREE.Mesh(
     	new THREE.BoxGeometry( state.x * 2, state.y * 2, state.z * 2 ),
@@ -465,7 +473,8 @@ const loaders = {
 	"3dText": create3DTextState,
 	"light": createThreeLight,
 	"axis": createDebugAxis,
-	"torusknot": createTorusKnot
+	"torusknot": createTorusKnot,
+	"convex": createConvexHull
 }
 
 export {loaders, createLight, createPointLight, createDebugAxis, makeTextTexture}

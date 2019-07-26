@@ -1,6 +1,7 @@
 
 
 function deepFreeze(object) {
+	return object;/*
 	if(Object.isFrozen(object)) return object;
 	// Retrieve the property names defined on object
 	var propNames = Object.getOwnPropertyNames(object);
@@ -9,7 +10,7 @@ function deepFreeze(object) {
 		let value = object[name];
 		object[name] = value && typeof value === "object" ? deepFreeze(value) : value;
 	}
-	return Object.freeze(object);
+	return Object.freeze(object);*/
 }
 
 function addSystem(gameState, systemName, func) {

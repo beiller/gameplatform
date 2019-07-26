@@ -1018,13 +1018,49 @@ function level5() {
 	return defaultState;
 }
 
-const mainLevel = level5;
+
+// Triangle Mesh Test (Fail)
+function generateRandomPoints(numPoints, minList, maxList) {
+	if(!minList) { minList = [-.5,-.5,-.5]; }
+	if(!maxList) { maxList = [ .5, .5, .5]; }
+	const newPoints = [];
+	for(let i = 0; i < numPoints; i++) {
+		const r1 = Math.random() * (maxList[0] - minList[0]) + minList[0];
+		const r2 = Math.random() * (maxList[1] - minList[1]) + minList[1];
+		const r3 = Math.random() * (maxList[2] - minList[2]) + minList[2];
+		newPoints.push({x: r1, y: r2, z: r3});
+	}
+	return newPoints;
+}
+function level6() {
+	const entities = {};
+	for(let i = 0; i < 50; i++) {
+		const r1 = (Math.random()-0.5)*2;
+		const r2 = (Math.random()-0.5)*2;
+		const r3 = (Math.random()-0.5)*4+4;
+		const points = generateRandomPoints(100);
+		entities["testConvexMesh"+i] = { 
+			entity: {}, 
+			render: { type: "convex", points: points }, 
+			physics: {x: r1, y: r3, z: r2, shape: { type: "convex", points: points }, mass: 1, friction: 5.0} 
+		};
+	}
+
+	for(let eid in entities) {
+		createEntity(entities[eid], eid);
+	}
+
+	return defaultState;
+}
+
+const mainLevel = level6;
 const levels = {
 	level1: level1,
 	level2: level2,
 	level3: level3,
 	level4: level4,
 	level5: level5,
+	level6: level6,
 }
 
 export { createHeightMap, mainLevel, levels }
