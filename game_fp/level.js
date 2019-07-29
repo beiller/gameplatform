@@ -582,108 +582,10 @@ function findSkinnedMesh(root) {
 
 
 //-=-=-=-=--=-=-=- Map of Rigid Bodies -=-=-=-=--=-=-=-
-//for zoey.glb
-const pairs = [
-	["Armature_pelvis", 0.1],
-	["Armature_spine_lower", "Armature_spine_upper"],
-	["Armature_spine_upper", 0.2],
-	["Armature_head_neck_lower", "Armature_head_neck_upper"],
-	["Armature_head_neck_upper", 0.1],
-	//head?
-	["Armature_leg_thighL", "Armature_leg_kneeL"],
-	["Armature_leg_kneeL", "Armature_leg_ankleL"],
-	["Armature_leg_ankleL", "Armature_leg_toesL"],
-	["Armature_leg_toesL", 0.1],
-
-	["Armature_leg_thighR", "Armature_leg_kneeR"],
-	["Armature_leg_kneeR", "Armature_leg_ankleR"],
-	["Armature_leg_ankleR", "Armature_leg_toesR"],
-	["Armature_leg_toesR", 0.1],
-
-	["Armature_arm_shoulder_1L", "Armature_arm_shoulder_2L"],
-	["Armature_arm_shoulder_2L", "Armature_arm_elbowL"],
-	["Armature_arm_elbowL", "Armature_arm_wristL"],
-	["Armature_arm_wristL", 0.1],
-	["Armature_arm_shoulder_1R", "Armature_arm_shoulder_2R"],
-	["Armature_arm_shoulder_2R", "Armature_arm_elbowR"],
-	["Armature_arm_elbowR", "Armature_arm_wristR"],
-	["Armature_arm_wristR", 0.1]
-];
-
-// -=-=-=-=--=-=-=- Map of Joints -=-=-=-=--=-=-=-
-
 const twoPI = Math.PI;
 const PI2 = Math.PI / 4;
 const PI4 = Math.PI / 8;
-const EPS = 0.15;
-const pairs2 = [
-	["Armature_spine_lower", "Armature_pelvis", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-	["Armature_spine_upper", "Armature_spine_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-	["Armature_head_neck_lower", "Armature_spine_upper", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-	["Armature_head_neck_upper", "Armature_head_neck_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-
-	["Armature_arm_shoulder_1L", "Armature_spine_upper"],
-	["Armature_arm_shoulder_2L", "Armature_arm_shoulder_1L", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
-	["Armature_arm_elbowL", "Armature_arm_shoulder_2L", [-PI2, EPS, EPS], [EPS, EPS, EPS]],
-	["Armature_arm_wristL", "Armature_arm_elbowL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-
-	["Armature_arm_shoulder_1R", "Armature_spine_upper"],
-	["Armature_arm_shoulder_2R", "Armature_arm_shoulder_1R", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
-	["Armature_arm_elbowR", "Armature_arm_shoulder_2R", [EPS, EPS, EPS], [EPS, EPS, PI2]],
-	["Armature_arm_wristR", "Armature_arm_elbowR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-
-	["Armature_leg_thighL", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
-	["Armature_leg_kneeL", "Armature_leg_thighL", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
-	["Armature_leg_ankleL", "Armature_leg_kneeL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-	["Armature_leg_toesL", "Armature_leg_ankleL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-
-	["Armature_leg_thighR", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
-	["Armature_leg_kneeR", "Armature_leg_thighR", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
-	["Armature_leg_ankleR", "Armature_leg_kneeR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
-	["Armature_leg_toesR", "Armature_leg_ankleR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]]
-]
-/*
-//-=-=-=-=--=-=-=- Map of Rigid Bodies -=-=-=-=--=-=-=-
-var pairs = [
-	["RootNode_pelvis", 0.05],
-	["RootNode_abdomenLower", "RootNode_abdomenUpper"],
-	["RootNode_abdomenUpper", "RootNode_chestLower"],
-	["RootNode_chestLower", "RootNode_chestUpper"],
-
-	["RootNode_rPectoral", 0.2],
-	["RootNode_lPectoral", 0.2],
-
-	["RootNode_chestUpper", "RootNode_neckLower"],
-	["RootNode_neckLower", "RootNode_neckUpper"],
-	["RootNode_neckUpper", "RootNode_head"],
-	["RootNode_head", 0.15],
-
-	["RootNode_rCollar", "RootNode_rShldrBend"],
-	["RootNode_rShldrBend", "RootNode_rShldrTwist"],
-	["RootNode_rShldrTwist", "RootNode_rForearmBend"],
-	["RootNode_rForearmBend", "RootNode_rForearmTwist"],
-	["RootNode_rForearmTwist", "RootNode_rHand"],
-	["RootNode_rHand", 0.1],
-	["RootNode_lCollar", "RootNode_lShldrBend"],
-	["RootNode_lShldrBend", "RootNode_lShldrTwist"],
-	["RootNode_lShldrTwist", "RootNode_lForearmBend"],
-	["RootNode_lForearmBend", "RootNode_lForearmTwist"],
-	["RootNode_lForearmTwist", "RootNode_lHand"],
-	["RootNode_lHand", 0.1],
-
-	["RootNode_rThighBend", "RootNode_rThighTwist"],
-	["RootNode_rThighTwist", "RootNode_rShin"],
-	["RootNode_rShin", "RootNode_rFoot"],
-	["RootNode_rFoot", "RootNode_rMetatarsals"],
-	["RootNode_rMetatarsals", 0.12],
-
-	["RootNode_lThighBend", "RootNode_lThighTwist"],
-	["RootNode_lThighTwist", "RootNode_lShin"],
-	["RootNode_lShin", "RootNode_lFoot"],
-	["RootNode_lFoot", "RootNode_lMetatarsals"],
-	["RootNode_lMetatarsals", 0.12],
-];
-// -=-=-=-=--=-=-=- Map of Joints -=-=-=-=--=-=-=-
+const EPS = 0.05;
 const ARMLEG_TWIST = Math.PI * 0.20;
 const THIGH_BEND = Math.PI;
 const THIGH_ROTATE = Math.PI/2;
@@ -697,46 +599,145 @@ const FOOT_BEND = Math.PI * 0.35;
 const FOOT_TWIST = Math.PI * 0.15;
 const HAND_BEND = Math.PI * 0.5;
 const HAND_TWIST = Math.PI * 0.15;
-const EPS = 0.05;
 const CHEST = 0.25;
-var pairs2 = [
-	["RootNode_abdomenLower", "RootNode_pelvis", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
-	["RootNode_abdomenUpper", "RootNode_abdomenLower", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
-	["RootNode_chestLower", "RootNode_abdomenUpper", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
-	["RootNode_chestUpper", "RootNode_chestLower", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
-	["RootNode_neckLower", "RootNode_chestUpper", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
-	["RootNode_neckUpper", "RootNode_neckLower", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
-	["RootNode_head", "RootNode_neckUpper", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
 
-	["RootNode_rPectoral", "RootNode_chestLower", [-CHEST, -CHEST, -CHEST], [CHEST, CHEST, CHEST]],
-	["RootNode_lPectoral", "RootNode_chestLower", [-CHEST, -CHEST, -CHEST], [CHEST, CHEST, CHEST]],
+const jointData = {
+	'xnalara': {
+		pairs: [
+		["Armature_pelvis", 0.1],
+		["Armature_spine_lower", "Armature_spine_upper"],
+		["Armature_spine_upper", 0.2],
+		["Armature_head_neck_lower", "Armature_head_neck_upper"],
+		["Armature_head_neck_upper", 0.1],
+		//head?
+		["Armature_leg_thighL", "Armature_leg_kneeL"],
+		["Armature_leg_kneeL", "Armature_leg_ankleL"],
+		["Armature_leg_ankleL", "Armature_leg_toesL"],
+		["Armature_leg_toesL", 0.1],
 
-	["RootNode_rCollar", "RootNode_chestUpper", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
-	["RootNode_rShldrBend", "RootNode_rCollar", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
-	["RootNode_rShldrTwist", "RootNode_rShldrBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
-	["RootNode_rForearmBend", "RootNode_rShldrTwist", [-EPS, -EPS, -EPS], [EPS, EPS, ELBOW]],
-	["RootNode_rForearmTwist", "RootNode_rForearmBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
-	["RootNode_rHand", "RootNode_rForearmTwist", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
+		["Armature_leg_thighR", "Armature_leg_kneeR"],
+		["Armature_leg_kneeR", "Armature_leg_ankleR"],
+		["Armature_leg_ankleR", "Armature_leg_toesR"],
+		["Armature_leg_toesR", 0.1],
 
-	["RootNode_lCollar", "RootNode_chestUpper", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
-	["RootNode_lShldrBend", "RootNode_lCollar", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
-	["RootNode_lShldrTwist", "RootNode_lShldrBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
-	["RootNode_lForearmBend", "RootNode_lShldrTwist", [-EPS, -EPS, -ELBOW], [EPS, EPS, EPS]],
-	["RootNode_lForearmTwist", "RootNode_lForearmBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
-	["RootNode_lHand", "RootNode_lForearmTwist", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
+		["Armature_arm_shoulder_1L", "Armature_arm_shoulder_2L"],
+		["Armature_arm_shoulder_2L", "Armature_arm_elbowL"],
+		["Armature_arm_elbowL", "Armature_arm_wristL"],
+		["Armature_arm_wristL", 0.1],
+		["Armature_arm_shoulder_1R", "Armature_arm_shoulder_2R"],
+		["Armature_arm_shoulder_2R", "Armature_arm_elbowR"],
+		["Armature_arm_elbowR", "Armature_arm_wristR"],
+		["Armature_arm_wristR", 0.1]
+		],
 
-	["RootNode_rThighBend", "RootNode_pelvis", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
-	["RootNode_rThighTwist", "RootNode_rThighBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
-	["RootNode_rShin", "RootNode_rThighTwist", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
-	["RootNode_rFoot", "RootNode_rShin", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
-	["RootNode_rMetatarsals", "RootNode_rFoot", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+		// -=-=-=-=--=-=-=- Map of Joints -=-=-=-=--=-=-=-
+		pairs2: [
+		["Armature_spine_lower", "Armature_pelvis", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+		["Armature_spine_upper", "Armature_spine_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+		["Armature_head_neck_lower", "Armature_spine_upper", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+		["Armature_head_neck_upper", "Armature_head_neck_lower", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
 
-	["RootNode_lThighBend", "RootNode_pelvis", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
-	["RootNode_lThighTwist", "RootNode_lThighBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
-	["RootNode_lShin", "RootNode_lThighTwist", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
-	["RootNode_lFoot", "RootNode_lShin", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
-	["RootNode_lMetatarsals", "RootNode_lFoot", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]]
-]*/
+		["Armature_arm_shoulder_1L", "Armature_spine_upper"],
+		["Armature_arm_shoulder_2L", "Armature_arm_shoulder_1L", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+		["Armature_arm_elbowL", "Armature_arm_shoulder_2L", [-PI2, EPS, EPS], [EPS, EPS, EPS]],
+		["Armature_arm_wristL", "Armature_arm_elbowL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+		["Armature_arm_shoulder_1R", "Armature_spine_upper"],
+		["Armature_arm_shoulder_2R", "Armature_arm_shoulder_1R", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+		["Armature_arm_elbowR", "Armature_arm_shoulder_2R", [EPS, EPS, EPS], [EPS, EPS, PI2]],
+		["Armature_arm_wristR", "Armature_arm_elbowR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+		["Armature_leg_thighL", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+		["Armature_leg_kneeL", "Armature_leg_thighL", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
+		["Armature_leg_ankleL", "Armature_leg_kneeL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+		["Armature_leg_toesL", "Armature_leg_ankleL", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+
+		["Armature_leg_thighR", "Armature_pelvis", [-twoPI, -PI2, -twoPI], [twoPI, PI2, twoPI]],
+		["Armature_leg_kneeR", "Armature_leg_thighR", [EPS, -PI4, EPS], [PI2, PI4, EPS]],
+		["Armature_leg_ankleR", "Armature_leg_kneeR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]],
+		["Armature_leg_toesR", "Armature_leg_ankleR", [-PI4, -PI4, -PI4], [PI4, PI4, PI4]]
+		]
+	},
+	'princess': {
+		pairs: [
+		["RootNode_pelvis", 0.05],
+		["RootNode_abdomenLower", "RootNode_abdomenUpper"],
+		["RootNode_abdomenUpper", "RootNode_chestLower"],
+		["RootNode_chestLower", "RootNode_chestUpper"],
+	
+		["RootNode_rPectoral", 0.2],
+		["RootNode_lPectoral", 0.2],
+	
+		["RootNode_chestUpper", "RootNode_neckLower"],
+		["RootNode_neckLower", "RootNode_neckUpper"],
+		["RootNode_neckUpper", "RootNode_head"],
+		["RootNode_head", 0.15],
+	
+		["RootNode_rCollar", "RootNode_rShldrBend"],
+		["RootNode_rShldrBend", "RootNode_rShldrTwist"],
+		["RootNode_rShldrTwist", "RootNode_rForearmBend"],
+		["RootNode_rForearmBend", "RootNode_rForearmTwist"],
+		["RootNode_rForearmTwist", "RootNode_rHand"],
+		["RootNode_rHand", 0.1],
+		["RootNode_lCollar", "RootNode_lShldrBend"],
+		["RootNode_lShldrBend", "RootNode_lShldrTwist"],
+		["RootNode_lShldrTwist", "RootNode_lForearmBend"],
+		["RootNode_lForearmBend", "RootNode_lForearmTwist"],
+		["RootNode_lForearmTwist", "RootNode_lHand"],
+		["RootNode_lHand", 0.1],
+	
+		["RootNode_rThighBend", "RootNode_rThighTwist"],
+		["RootNode_rThighTwist", "RootNode_rShin"],
+		["RootNode_rShin", "RootNode_rFoot"],
+		["RootNode_rFoot", "RootNode_rMetatarsals"],
+		["RootNode_rMetatarsals", 0.12],
+	
+		["RootNode_lThighBend", "RootNode_lThighTwist"],
+		["RootNode_lThighTwist", "RootNode_lShin"],
+		["RootNode_lShin", "RootNode_lFoot"],
+		["RootNode_lFoot", "RootNode_lMetatarsals"],
+		["RootNode_lMetatarsals", 0.12],
+		],
+		pairs2: [
+		["RootNode_abdomenLower", "RootNode_pelvis", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+		["RootNode_abdomenUpper", "RootNode_abdomenLower", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+		["RootNode_chestLower", "RootNode_abdomenUpper", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+		["RootNode_chestUpper", "RootNode_chestLower", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+		["RootNode_neckLower", "RootNode_chestUpper", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+		["RootNode_neckUpper", "RootNode_neckLower", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+		["RootNode_head", "RootNode_neckUpper", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+	
+		["RootNode_rPectoral", "RootNode_chestLower", [-CHEST, -CHEST, -CHEST], [CHEST, CHEST, CHEST]],
+		["RootNode_lPectoral", "RootNode_chestLower", [-CHEST, -CHEST, -CHEST], [CHEST, CHEST, CHEST]],
+	
+		["RootNode_rCollar", "RootNode_chestUpper", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
+		["RootNode_rShldrBend", "RootNode_rCollar", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
+		["RootNode_rShldrTwist", "RootNode_rShldrBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+		["RootNode_rForearmBend", "RootNode_rShldrTwist", [-EPS, -EPS, -EPS], [EPS, EPS, ELBOW]],
+		["RootNode_rForearmTwist", "RootNode_rForearmBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+		["RootNode_rHand", "RootNode_rForearmTwist", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
+	
+		["RootNode_lCollar", "RootNode_chestUpper", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
+		["RootNode_lShldrBend", "RootNode_lCollar", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
+		["RootNode_lShldrTwist", "RootNode_lShldrBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+		["RootNode_lForearmBend", "RootNode_lShldrTwist", [-EPS, -EPS, -ELBOW], [EPS, EPS, EPS]],
+		["RootNode_lForearmTwist", "RootNode_lForearmBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+		["RootNode_lHand", "RootNode_lForearmTwist", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
+	
+		["RootNode_rThighBend", "RootNode_pelvis", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
+		["RootNode_rThighTwist", "RootNode_rThighBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+		["RootNode_rShin", "RootNode_rThighTwist", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
+		["RootNode_rFoot", "RootNode_rShin", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+		["RootNode_rMetatarsals", "RootNode_rFoot", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+	
+		["RootNode_lThighBend", "RootNode_pelvis", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
+		["RootNode_lThighTwist", "RootNode_lThighBend", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+		["RootNode_lShin", "RootNode_lThighTwist", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
+		["RootNode_lFoot", "RootNode_lShin", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+		["RootNode_lMetatarsals", "RootNode_lFoot", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]]
+	]
+	}
+};
 
 const defaultState = {
 	"state": {
@@ -969,7 +970,7 @@ function getRandomSubarray(arr, size) {
 
 	Will output rigid bodies matching the makeup given in "pairs"
 */
-function createCubeMesh(skinnedMesh, namePrefix) {
+function createCubeMesh(skinnedMesh, namePrefix, pairs) {
 	const armature = skinnedMesh.skeleton;
 	//const shape = "capsule"; 
 	const shape = "box"; 
@@ -1018,7 +1019,7 @@ function createCubeMesh(skinnedMesh, namePrefix) {
 
 	Will output rigid bodies matching the mesh using convex hull
 */
-function createConvexHullMesh(skinnedMesh, namePrefix) {		
+function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {		
 	const MAX_VERTICES = 75;
 	const bonesList = skinnedMesh.skeleton.bones;
 	const position = vectorizeBuffer(skinnedMesh.geometry.attributes.position);
@@ -1078,7 +1079,7 @@ params
 	armature: THREE.Skeleton instane
 	namePrefix: namePrefix given to the entities and to these constraints
 */
-function connectRigidBodies(entities, armature, namePrefix) {
+function connectRigidBodies(entities, armature, namePrefix, pairs2) {
 	const newEntities = {...entities};
 	for(let i = 0; i < pairs2.length; i++) {	
 		/*
@@ -1131,18 +1132,7 @@ function connectRigidBodies(entities, armature, namePrefix) {
 	return newEntities;
 }
 
-function pinConstriants(entities, namePrefix) {
-	/*let pins = [];
-	for(let i = 0; i < pairs.length; i++) {
-		pins.push(pairs[i][0]);
-	}*/
-	const pins = [
-		/*"RootNode_rHand",
-		"RootNode_lHand",
-		//"RootNode_rForearmBend",
-		//"RootNode_lForearmBend",
-		"RootNode_head"*/
-	];
+function pinConstriants(entities, namePrefix, pins) {
 	for(let i in pins) {
 		const constraint = namePrefix+".constraint."+pins[i];
 		if(!(constraint in entities)) {
@@ -1165,25 +1155,45 @@ function pinConstriants(entities, namePrefix) {
 					disableCollision: true,
 					rotationLimitsLow : [-0,-0,-0],
 					rotationLimitsHigh : [0, 0, 0],
-					spring: true, stiffness: 40.0, damping: 1, distance: 1,
+					spring: true, stiffness: 35.0, damping: .5, distance: 1,
 					//equilibriumPoint: localToWorldEquilibrium
 				}
 			}
 		}
 	}
 
-	/*entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['spring'] = true;
-	entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 50.0;
-	entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['spring'] = true;
-	entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 50.0;*/
+	try {
+		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['spring'] = true;
+		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 50.0;
+		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['spring'] = true;
+		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 50.0;
+	} catch(e) { console.warn(e); }
 
 	return entities;
 }
 
 
 function level8() {
-	//const meshName = 'nonfree/princess.glb';
+	/*const meshName = 'nonfree/princess.glb';
+	const pairs = jointData['princess'].pairs;
+	const pairs2 = jointData['princess'].pairs2;*/
+	
 	const meshName = 'jessica.glb';
+	const pairs = jointData['xnalara'].pairs;
+	const pairs2 = jointData['xnalara'].pairs2;
+
+	/*let pins = [];
+	for(let i = 0; i < pairs.length; i++) {
+		pins.push(pairs[i][0]);
+	}*/
+	/*const pins = [
+		"RootNode_rHand",
+		"RootNode_lHand",
+		//"RootNode_rForearmBend",
+		//"RootNode_lForearmBend",
+		"RootNode_head"
+	];*/
+	const pins = [];
 	
 	LOADER.loadGLTF(meshName).then(gltf => {
 		const skinnedMeshList = findSkinnedMesh(gltf.scene);  // Gather all skinned mesh
@@ -1198,10 +1208,10 @@ function level8() {
 		}
 
 		const namePrefix = "character1";
-		//let entities = createConvexHullMesh(armature, namePrefix);
-		let entities = createCubeMesh(armature, namePrefix);
-		entities = connectRigidBodies(entities, armature.skeleton, namePrefix);
-		entities = pinConstriants(entities, namePrefix);
+		//let entities = createConvexHullMesh(armature, namePrefix, pairs);
+		let entities = createCubeMesh(armature, namePrefix, pairs);
+		entities = connectRigidBodies(entities, armature.skeleton, namePrefix, pairs2);
+		entities = pinConstriants(entities, namePrefix, pins);
 
 		for(let eid in entities) {
 			createEntity(entities[eid], eid);
