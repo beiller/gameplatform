@@ -650,6 +650,7 @@ const tempMat4_1 = new THREE.Matrix4();
 const tempMat4_2 = new THREE.Matrix4();
 const tempVec3_1 = new THREE.Vector3();
 const tempVec3_2 = new THREE.Vector3();
+const tempVec3_3 = new THREE.Vector3();
 const tempQua3_1 = new THREE.Quaternion();
 
 function searchById(gameState, systemName, searchString) {
@@ -674,8 +675,9 @@ function copyPhysObjectToBone(armature, gameState, entityId, boneName) {
 		tempVec3_1.set(physicsState.x, physicsState.y, physicsState.z);
 		tempQua3_1.set(physicsState.rotation.x, physicsState.rotation.y, physicsState.rotation.z, physicsState.rotation.w)
 
-		//move bone by offset
-		tempVec3_2.set(0, physicsState.shape.height / -2, 0).applyQuaternion(tempQua3_1);
+		//move bone by offset //TODO this can be more robust and not working with convex
+		tempVec3_2.set(physicsState.boneOffsetX, physicsState.boneOffsetY, physicsState.boneOffsetZ);
+		tempVec3_2.applyQuaternion(tempQua3_1);
 		tempVec3_1.add(tempVec3_2);
 		
 		//get physics world matrix

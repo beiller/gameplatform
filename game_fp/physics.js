@@ -22,14 +22,16 @@ const collisionFlags = {
 };
 
 const stepHz = 60;
-const constraintSolverIterations = null;
+//const constraintSolverIterations = null;  // use null for default
+const constraintSolverIterations = 150;  // use null for default
 const useSplitImpulse = null;
 const globalCollisionMap = {};
 const bodyIdMap = {};
 const bodies = {};
 
 function step(m_dynamicsWorld, dispatcher) {	
-	m_dynamicsWorld.stepSimulation(1/stepHz);
+	//m_dynamicsWorld.stepSimulation(1/stepHz);
+	m_dynamicsWorld.stepSimulation(1/stepHz, 200, 1/120);
 };
 
 function buildBodyIdMap(gameState) {
@@ -347,7 +349,7 @@ function createShape(shapeInfo) {
 			shape = new Ammo.btCapsuleShape(shapeInfo.radius, shapeInfo.height - ( shapeInfo.radius * 2 ) );
 			break;
 		case "concave":
-			if(!('triangles' in shapeInfo)) throw("Must specify triangles in shape info");
+			if(!('triangles' in shapeInfo) || !shapeInfo.triangles) throw("Must specify triangles in shape info");
 			let i, triangle = null;
 			const triangle_mesh = new Ammo.btTriangleMesh();
 			for ( i = 0; i < shapeInfo.triangles.length; i++ ) {
@@ -361,12 +363,14 @@ function createShape(shapeInfo) {
 			break;
 		case "convex":
 			if(!('points' in shapeInfo)) throw("Must specify triangles in shape info");
+			console.log('Building convex hull');
 			shape = new Ammo.btConvexHullShape();
 			for ( let i = 0; i < shapeInfo.points.length; i++ ) {
 				const point = shapeInfo.points[i];
 				temp_vec3_1.setValue(point.x, point.y, point.z);
 				shape.addPoint(temp_vec3_1);
 			}
+			console.log('Done');
 			break;
 		case "heightField":
 			/*if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
@@ -531,6 +535,9 @@ function applyPhysics(state, id, eventHandler, gameState) {
 					radius: r
 				}
 			} 
+			if(shapeInfo.type == 'concave' && ('mass' in state && state.mass > 0)) {
+				throw("Cannot create a concave mesh with mass. Concave mesh (triangle mesh) must be static");
+			}
 			//create bodies
 			var shape = createShape(shapeInfo);
 			bodies[id] = createBody(shape, state);
@@ -553,6 +560,9 @@ function applyPhysics(state, id, eventHandler, gameState) {
 			};
 		} else {
 			//create bodies
+			if(shapeInfo.type == 'concave' && ('mass' in state && state.mass > 0)) {
+				throw("Cannot create a concave mesh with mass. Concave mesh (triangle mesh) must be static");
+			}
 			var shape = createShape(shapeInfo);
 			bodies[id] = createBody(shape, state);
 			addBody(world.m_dynamicsWorld, bodies[id]);

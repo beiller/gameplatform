@@ -366,13 +366,12 @@ function create3DText(string, size, height, colorIntHex, x, y, z) {
 
 function createDebugAxis() {
 	var axis = new THREE.AxesHelper();
-	//var X = create3DText("X", 1.0, 0.5, 0xFFEEEE, 1, 0, 0);
-	var X = makeTextSprite("X", {backgroundColor: {r: 1.0, g: 0.9, b: 0.9, a: 1.0}});
+	axis.geometry.scale(0.25, 0.25, 0.25);
+	/*var X = makeTextSprite("X", {backgroundColor: {r: 1.0, g: 0.9, b: 0.9, a: 1.0}});
 	var Y = makeTextSprite("Y", {backgroundColor: {r: 0.9, g: 1.0, b: 0.9, a: 1.0}});
 	var Z = makeTextSprite("Z", {backgroundColor: {r: 0.9, g: 0.9, b: 1.0, a: 1.0}});
-	X.position.set(1,0,0); Y.position.set(0,1,0); Z.position.set(0,0,1);
-	axis.add(X).add(Y).add(Z);
-	axis.scale.set(0.25, 0.25, 0.25);
+	X.position.set(.25,0,0); Y.position.set(0,.25,0); Z.position.set(0,0,.25);
+	axis.add(X).add(Y).add(Z);*/
 	return axis;
 }
 
