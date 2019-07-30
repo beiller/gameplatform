@@ -35,8 +35,8 @@ const BT_CONSTRAINT_CFM = 3;
 const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
-	//m_dynamicsWorld.stepSimulation(1/stepHz);
-	m_dynamicsWorld.stepSimulation(1/stepHz, 10, 1./240);
+	m_dynamicsWorld.stepSimulation(1/stepHz);
+	//m_dynamicsWorld.stepSimulation(1/stepHz, 10, 1./240);
 };
 
 function buildBodyIdMap(gameState) {
@@ -372,14 +372,14 @@ function createShape(shapeInfo) {
 			break;
 		case "convex":
 			if(!('points' in shapeInfo)) throw("Must specify triangles in shape info");
-			console.log('Building convex hull');
+			//console.log('Building convex hull');
 			shape = new Ammo.btConvexHullShape();
 			for ( let i = 0; i < shapeInfo.points.length; i++ ) {
 				const point = shapeInfo.points[i];
 				temp_vec3_1.setValue(point.x, point.y, point.z);
 				shape.addPoint(temp_vec3_1);
 			}
-			console.log('Done');
+			//console.log('Done');
 			break;
 		case "heightField":
 			/*if(! 'x' in shapeInfo) throw("Must specify x, y, z in shape info");
@@ -612,34 +612,6 @@ function applyConstraints(state, id, eventHandler, gameState) {
 		);
 		console.log("Constraint created");
 		console.log(constraints[id]);
-	}
-	if('type' in state && state.type == 'spring') {
-		const pstate = gameState.physics[id];
-		if(!state.target) {
-			state = {...state, target: [pstate.x, pstate.y, pstate.z]}
-			return state;
-		}
-		temp_vec3_1.setValue(pstate.x - state.target[0], pstate.y - state.target[1], pstate.z - state.target[2]);
-		const x = temp_vec3_1.length();
-		const d = 0.01; //rest length
-		const k = 5.0; //spring force
-		//const b = 1.0; //damping constant
-		//const v = bodies[id].getLinearVelocity().length();
-		//const F = -k * (x - d) - b * v;
-		const F = -k * Math.max(x - d, 0);
-		temp_vec3_1.normalize();
-		temp_vec3_1.setValue(temp_vec3_1.x() * F, temp_vec3_1.y() * F, temp_vec3_1.z() * F);
-		//DO LERP
-		/*const linVec = bodies[id].getLinearVelocity();
-		const t = 0.5;
-		temp_vec3_1.setValue(
-			(1 - t) * temp_vec3_1.x() + t * linVec.x(),
-			(1 - t) * temp_vec3_1.y() + t * linVec.y(),
-			(1 - t) * temp_vec3_1.z() + t * linVec.z()
-		)*/
-		//bodies[id].setLinearVelocity(temp_vec3_1);
-		bodies[id].applyImpulse(temp_vec3_1);
-		
 	}
 	return state;
 }

@@ -78,33 +78,28 @@ function getEventHandler(events) {
 */
 function doStateTransition(state, objectId, systemName, systemFunc, eventHandler, gameState) {
 	try {
-		//const oldState = state;
-		const newState = deepFreeze(	
-			systemFunc(
-				state,
-				objectId, 
-				eventHandler,
-				gameState.state
-			)
+		return systemFunc(
+			state,
+			objectId, 
+			eventHandler,
+			gameState.state
 		);
-		/*if(oldState !== newState) {
-			console.log("State changed", systemName, oldState, newState)
-		}*/
-		return newState;
 	} catch(e) {
 		console.log(e);
 		return state;
 	}
 }
 function processSystem(systemStates, system, eventHandler, gameState) {
-	/* Iterate through systems states and process them in sequence */
-	//mutate systemStates
-	for(let objectId in systemStates) {
-		systemStates[objectId] = doStateTransition(
-			systemStates[objectId], objectId, system["name"], system["func"], eventHandler, gameState
-		)
-	}
-	return systemStates;
+	return new Promise(function(resolve, reject) {
+		/* Iterate through systems states and process them in sequence */
+		const newStates = {};
+		for(let objectId in systemStates) {
+			newStates[objectId] = doStateTransition(
+				systemStates[objectId], objectId, system["name"], system["func"], eventHandler, gameState
+			)
+		}
+		resolve(newStates);
+	});
 }
 
 let commandQueue = [];
@@ -114,18 +109,27 @@ function queueCommand(command) {
 }
 
 function nextState(gameState) {
-	/* Iterate through systems and process them system by system */
-	const eventHandler = getEventHandler(gameState["events"]);
-	let system = null;
-	for(let i = 0; i < gameState.systems.length; i++) { // system in gameState["systems"]) {
-		system = gameState.systems[i];
-		processSystem(gameState["state"][system["name"]], system, eventHandler, gameState); //mutate 1st arg
-	}
-	for(let i = 0; i < commandQueue.length; i++) {
-		commandQueue[i](gameState);
-	}
-	commandQueue.length = 0;
-	return gameState;
+	return new Promise(function(resolve, reject) {
+		/* Iterate through systems and process them system by system */
+		const eventHandler = getEventHandler(gameState["events"]);
+		let system = null;
+		let promises = [];
+		for(let i = 0; i < gameState.systems.length; i++) { // system in gameState["systems"]) {
+			system = gameState.systems[i];
+			//gameState.state[system.name] = processSystem(gameState.state[system.name], system, eventHandler, gameState);
+			promises[i] = processSystem(gameState.state[system.name], system, eventHandler, gameState);
+		}
+		Promise.all(promises).then(function(values) {
+			for(let i = 0; i < gameState.systems.length; i++) {
+				gameState.state[gameState.systems[i].name] = values[i];
+			}
+			for(let i = 0; i < commandQueue.length; i++) {
+				commandQueue[i](gameState);
+			}
+			commandQueue.length = 0;
+			resolve(gameState);
+		});
+	});
 }
 
 function createEntity(gameState, objectId, state) {
@@ -156,22 +160,21 @@ function loadState(initialState) {
 	return gameState;
 }
 
-var nextStateFn = null;
 var GAME_STATE = null;
-
 function init(initialState, middleware) {
-	nextStateFn = null;
 	GAME_STATE = null;
-	nextStateFn = nextState;
-	for(var i = 0; i < middleware.length; i++) {
-		addMiddleware(middleware[i])
-	}
 	setState(initialState);
 	return GAME_STATE;
 }
 
+let LOCK = false;
 function tick() {
-	GAME_STATE = nextStateFn(GAME_STATE);
+	if(LOCK) return;
+	LOCK = true;
+	nextState(GAME_STATE).then((result) => { 
+		GAME_STATE = result;
+		LOCK = false;
+	});
 }
 
 function setState(newInitialState) {

@@ -691,7 +691,8 @@ function copyPhysObjectToBone(armature, gameState, entityId, boneName) {
 		bone.quaternion.copy(tempQua3_1);
 
 		//update matrix world bone?
-		bone.updateMatrixWorld();
+		//Turns out I can comment this out and it still works
+		//bone.updateMatrixWorld();
 	}
 }
 
@@ -786,7 +787,7 @@ function updateParticlesFunction(particleSystem) {
 };
 
 
-function applyParticles(state, id, eventHandler, gameState) {
+function applyGPUParticles(state, id, eventHandler, gameState) {
 	if(!(id in particleSystems)) {
 		particleSystems[id] = spawnParticles(100, [0,0,0]);  //new THREE.Mesh(new THREE.SphereGeometry(), new THREE.MeshStandardMaterial());
 		GLOBAL_SCENE.add(particleSystems[id]);
@@ -796,5 +797,5 @@ function applyParticles(state, id, eventHandler, gameState) {
 	return state;
 }
 
-export { renderObject, init, updateCamera, renderFunction, loadMeshFile, loadedObjects, applyConstraints, applyParticles };
+export { renderObject, init, updateCamera, renderFunction, loadMeshFile, loadedObjects, applyConstraints, applyGPUParticles };
 

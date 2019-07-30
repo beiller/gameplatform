@@ -810,7 +810,7 @@ function level4() {
 		physics: {x: 0, y: 3, z: 0, shape: { type: "concave", triangles: triangles }, mass: 1} 
 	};
 
-	entities["particles1"] = { entity: {}, particles: {} };
+	entities["particles1"] = { entity: {}, GPUparticles: {} };
 
 	for(let eid in entities) {
 		createEntity(entities[eid], eid);
@@ -899,10 +899,10 @@ function level7() {
 			entity: {}, 
 			render: { type: "convex", points: points }, 
 			physics: {x: r1, y: r3, z: r2, shape: { type: "convex", points: points }, mass: 1, friction: 5.0},
-			particle: {maxAge: 500 }
+			particle: {maxAge: 250 }
 		}, "testConvexMesh"+i);
 		i+=1;
-	}, 50);
+	}, 150);
 
 	for(let eid in entities) {
 		createEntity(entities[eid], eid);
@@ -1179,7 +1179,7 @@ function level8() {
 	const pairs = jointData['princess'].pairs;
 	const pairs2 = jointData['princess'].pairs2;*/
 	
-	const meshName = 'zoey.glb';
+	const meshName = 'jessica.glb';
 	const pairs = jointData['xnalara'].pairs;
 	const pairs2 = jointData['xnalara'].pairs2;
 
@@ -1225,7 +1225,7 @@ function level8() {
 	return defaultState;
 }
 
-const mainLevel = level8;
+const mainLevel = level7;
 const levels = {
 	level1: level1,
 	level2: level2,

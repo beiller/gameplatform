@@ -7,7 +7,6 @@ import * as AI from './modules/ai.js';
 import './lib/RectAreaLightUniformsLib.js';
 import * as InspectorMiddleware from './InspectorMiddleware.js';
 import * as PHYSICS from './physics.js';
-import * as WTFERY from './modules/physics/main.js';
 
 //
 function loadRenderableEntity() {
@@ -501,7 +500,7 @@ const systems = [
 	{ name: "camera", func: RENDERER.updateCamera },
 	{ name: "entity", func: applyEntity },
 	{ name: "stats", func: applyStats },
-	{ name: "particles", func: RENDERER.applyParticles },
+	{ name: "GPUparticles", func: RENDERER.applyGPUParticles },
 	{ name: "render", func: RENDERER.renderObject }
 ];
 
