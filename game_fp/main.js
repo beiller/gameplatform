@@ -499,7 +499,7 @@ const systems = [
 	{ name: "collision", func: applyCollision },
 	{ name: "camera", func: RENDERER.updateCamera },
 	{ name: "entity", func: applyEntity },
-	{ name: "stats", func: applyStats },
+	//{ name: "stats", func: applyStats },
 	{ name: "GPUparticles", func: RENDERER.applyGPUParticles },
 	{ name: "render", func: RENDERER.renderObject }
 ];

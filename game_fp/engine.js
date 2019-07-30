@@ -1,4 +1,22 @@
 
+const worker = new Worker('modules/stats.js');
+const workerPromises = [];
+let counter = 0;
+
+function processWorkerStates(systemName, gameState) {
+	worker.postMessage({
+		responseId: counter,
+		systemName: systemName,
+		gameState: gameState.state
+	}); // Send data to our worker.
+	const promise = new Promise((resolve, reject)=>{workerPromises[counter] = resolve});
+	counter += 1;
+	return promise;
+}
+worker.addEventListener('message', function(e) {
+	workerPromises[e.data.responseId](e.data.response);
+	delete workerPromises[e.data.responseId];
+}, false);
 
 function deepFreeze(object) {
 	return object;/*
@@ -127,7 +145,10 @@ function nextState(gameState) {
 				commandQueue[i](gameState);
 			}
 			commandQueue.length = 0;
-			resolve(gameState);
+			processWorkerStates('stats', gameState).then(function(response) {
+				gameState.state['stats'] = response;
+				resolve(gameState);
+			});
 		});
 	});
 }

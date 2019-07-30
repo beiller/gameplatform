@@ -899,7 +899,8 @@ function level7() {
 			entity: {}, 
 			render: { type: "convex", points: points }, 
 			physics: {x: r1, y: r3, z: r2, shape: { type: "convex", points: points }, mass: 1, friction: 5.0},
-			particle: {maxAge: 250 }
+			particle: {maxAge: 250 },
+			stats: {hitCooldown: 5}
 		}, "testConvexMesh"+i);
 		i+=1;
 	}, 150);
