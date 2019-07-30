@@ -1,6 +1,6 @@
 
 const worker = new Worker('modules/stats.js');
-const workerPromises = [];
+const workerPromises = {};
 let counter = 0;
 
 function processWorkerStates(systemName, gameState) {
