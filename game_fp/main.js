@@ -7,6 +7,7 @@ import * as AI from './modules/ai.js';
 import './lib/RectAreaLightUniformsLib.js';
 import * as InspectorMiddleware from './InspectorMiddleware.js';
 import * as PHYSICS from './physics.js';
+import * as WTFERY from './modules/physics/main.js';
 
 //
 function loadRenderableEntity() {
@@ -493,7 +494,7 @@ const systems = [
 	{ name: "particle", func: applyParticle },
 	{ name: "motion", func: applyMotion },
 	{ name: "animation", func: applyAnimation },
-	{ name: "physics", func: PHYSICS.applyPhysics, module: './physics.js', loadedModule: null, funcName: 'applyPhysics' },
+	{ name: "physics", func: PHYSICS.applyPhysics/*, onEnd: PHYSICS.stepWorld */},
 	{ name: "constraint", func: applyConstraints },
 	{ name: "magic", func: applyMagic },
 	{ name: "collision", func: applyCollision },
@@ -517,15 +518,6 @@ function main() {
 	ENGINE.init({...LEVEL.mainLevel(), systems: systems}, middleware);
 	console.log(ENGINE.getState());
 	RENDERER.init();
-	/*import('./physics.js').then((module) => {
-		// Do something with the module.
-		PHYSICS.applyConstraints = module.applyConstraints;
-		PHYSICS.applyPhysics = module.applyPhysics;
-		PHYSICS.applyCollision = module.applyCollision;
-		PHYSICS.init = module.init;
-		PHYSICS.stepWorld = module.stepWorld;
-		
-	});*/
 	Ammo().then(function() {  // must initialize ammo
 		PHYSICS.init();
 	});
@@ -546,6 +538,7 @@ function main() {
 		setTimeout(function() { // delay this call?
 			ENGINE.tick();
 			PHYSICS.stepWorld(gameState);
+			//WTFERY.workerFunctionCall({fname: 'stepWorld', gameState: gameState.state})
 		}, 0);
 		RENDERER.renderFunction(gameState);
 		//lastFrame = Date.now();

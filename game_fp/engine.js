@@ -13,9 +13,9 @@ function deepFreeze(object) {
 	return Object.freeze(object);*/
 }
 
-function addSystem(gameState, systemName, func) {
+function addSystem(gameState, item) {
 	if(!("systems" in gameState)) gameState["systems"] = [];
-	gameState["systems"].push({"name": systemName, "func": func});
+	gameState["systems"].push(item);
 }
 
 function addBehaviour(gameState, behaviourName, objectId, initialState) {
@@ -147,7 +147,7 @@ function loadState(initialState) {
 	//parse initialState
 	var gameState = {};
 	initialState.systems.forEach(item=>{
-		addSystem(gameState, item.name, item.func)
+		addSystem(gameState, item)
 	});
 	for(var objectId in initialState['state']) {
 		gameState = createEntity(gameState, objectId, initialState['state'][objectId]);

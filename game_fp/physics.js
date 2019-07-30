@@ -29,9 +29,14 @@ const globalCollisionMap = {};
 const bodyIdMap = {};
 const bodies = {};
 
+const BT_CONSTRAINT_ERP = 1;
+const BT_CONSTRAINT_STOP_ERP = 2;
+const BT_CONSTRAINT_CFM = 3;
+const BT_CONSTRAINT_STOP_CFM = 4;
+
 function step(m_dynamicsWorld, dispatcher) {	
 	//m_dynamicsWorld.stepSimulation(1/stepHz);
-	m_dynamicsWorld.stepSimulation(1/stepHz, 200, 1/120);
+	m_dynamicsWorld.stepSimulation(1/stepHz, 10, 1./240);
 };
 
 function buildBodyIdMap(gameState) {
@@ -267,6 +272,10 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 		disableConnectedCollisions = options['disableCollision'];
 	}
 	world.m_dynamicsWorld.addConstraint(constraint, disableConnectedCollisions);
+	for(let i = 0; i < 6; i++) {
+		constraint.setParam( BT_CONSTRAINT_STOP_CFM, 0.1, i );
+		constraint.setParam( BT_CONSTRAINT_STOP_ERP, 0.9, i );
+	}
 	return constraint;
 }
 
@@ -644,6 +653,22 @@ function stepWorld(gameState) {
 		if(!(objectId in gameState.state.physics)) {
 			world.m_dynamicsWorld.removeRigidBody(bodies[objectId]);
 			delete bodies[objectId];
+		}
+	}
+	//delete no longer active constraints.
+	let constraintDeleted = false;
+	for(var objectId in constraints) {
+		if(!(objectId in gameState.state.constraint)) {
+			world.m_dynamicsWorld.removeConstraint(constraints[objectId]);
+			delete constraints[objectId];
+			constraintDeleted = true;
+		}
+	}
+	//If a constraint is deleted, we should wake up all the bodies
+	//because it doesn't seem to wake them. TODO we could probably just wake affected bodies
+	if(constraintDeleted) {
+		for(var objectId in bodies) {
+			bodies[objectId].activate();
 		}
 	}
 	readCollisionData(gameState);

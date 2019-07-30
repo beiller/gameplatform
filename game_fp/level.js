@@ -1155,18 +1155,19 @@ function pinConstriants(entities, namePrefix, pins) {
 					disableCollision: true,
 					rotationLimitsLow : [-0,-0,-0],
 					rotationLimitsHigh : [0, 0, 0],
-					spring: true, stiffness: 35.0, damping: .5, distance: 1,
+					spring: true, stiffness: 50.0
 					//equilibriumPoint: localToWorldEquilibrium
 				}
-			}
+			},
+			"particle": {maxAge: 500}
 		}
 	}
 
 	try {
 		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['spring'] = true;
-		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 50.0;
+		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 20.0;
 		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['spring'] = true;
-		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 50.0;
+		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 20.0;
 	} catch(e) { console.warn(e); }
 
 	return entities;
@@ -1178,28 +1179,22 @@ function level8() {
 	const pairs = jointData['princess'].pairs;
 	const pairs2 = jointData['princess'].pairs2;*/
 	
-	const meshName = 'jessica.glb';
+	const meshName = 'zoey.glb';
 	const pairs = jointData['xnalara'].pairs;
 	const pairs2 = jointData['xnalara'].pairs2;
 
-	/*let pins = [];
+	let pins = [];
 	for(let i = 0; i < pairs.length; i++) {
 		pins.push(pairs[i][0]);
-	}*/
-	/*const pins = [
-		"RootNode_rHand",
-		"RootNode_lHand",
-		//"RootNode_rForearmBend",
-		//"RootNode_lForearmBend",
-		"RootNode_head"
-	];*/
-	const pins = [];
+	}
+	pins = getRandomSubarray(pins, 2);
+	//const pins = [];
 	
 	LOADER.loadGLTF(meshName).then(gltf => {
 		const skinnedMeshList = findSkinnedMesh(gltf.scene);  // Gather all skinned mesh
 		// join all meshes together into one
-		let armature = skinnedMeshList[0];
-		for(let i = 1; i < skinnedMeshList.length; i++) {
+		let armature = skinnedMeshList[2];
+		for(let i = 3; i < skinnedMeshList.length; i++) {
 			try{
 				armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
 			} catch(e) {
@@ -1224,7 +1219,7 @@ function level8() {
 				boneConstraints: pairs.map(
 					(boneData) => { return {id: namePrefix+".bone."+boneData[0], boneName: boneData[0]}; }
 				)
-			}
+			},
 		}, namePrefix+'.characterMesh');
 	});
 	return defaultState;
