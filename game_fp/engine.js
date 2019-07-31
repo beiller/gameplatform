@@ -1,34 +1,38 @@
 
-const worker = new Worker('modules/stats.js');
-const workerPromises = {};
-let counter = 0;
 
-function processWorkerStates(systemName, gameState) {
-	worker.postMessage({
-		responseId: counter,
-		systemName: systemName,
-		gameState: gameState.state
-	}); // Send data to our worker.
-	const promise = new Promise((resolve, reject)=>{workerPromises[counter] = resolve});
-	counter += 1;
-	return promise;
-}
-worker.addEventListener('message', function(e) {
-	workerPromises[e.data.responseId](e.data.response);
-	delete workerPromises[e.data.responseId];
-}, false);
-
-function deepFreeze(object) {
-	return object;/*
-	if(Object.isFrozen(object)) return object;
-	// Retrieve the property names defined on object
-	var propNames = Object.getOwnPropertyNames(object);
-	// Freeze properties before freezing self
-	for (let name of propNames) {
-		let value = object[name];
-		object[name] = value && typeof value === "object" ? deepFreeze(value) : value;
+class ThreadWorker {
+	constructor(system) {
+		if(!('workerPath' in system)) 
+			throw("ThreadWorker requires workerPath parameter. eg new ThreadWorker({workerPath: './path.js'})");
+		this.system = system;
+		this.worker = new Worker(system.workerPath);
+		this.workerPromises = {};
+		this.counter = 0;
+		let _self = this;
+		this.worker.addEventListener('message', function(e) {
+			_self.workerPromises[e.data.responseId](e.data.response);
+			delete _self.workerPromises[e.data.responseId];
+		}, false);
 	}
-	return Object.freeze(object);*/
+	processWorkerStates(gameState) {
+		this.worker.postMessage({
+			responseId: this.counter,
+			systemName: this.system.name,
+			gameState: gameState.state
+		}); // Send data to our worker.
+		const promise = new Promise((resolve, reject)=>{this.workerPromises[this.counter] = resolve});
+		this.counter += 1;
+		return promise;
+	}
+}
+
+class SyncWorker {
+	constructor(system) {
+		this.system = system
+	}
+	processWorkerStates(gameState) {
+		return processSystem(gameState.state[this.system.name], this.system, {}, gameState.state);
+	}
 }
 
 function addSystem(gameState, item) {
@@ -100,7 +104,7 @@ function doStateTransition(state, objectId, systemName, systemFunc, eventHandler
 			state,
 			objectId, 
 			eventHandler,
-			gameState.state
+			gameState
 		);
 	} catch(e) {
 		console.log(e);
@@ -134,8 +138,16 @@ function nextState(gameState) {
 		let promises = [];
 		for(let i = 0; i < gameState.systems.length; i++) { // system in gameState["systems"]) {
 			system = gameState.systems[i];
+			if(!('handler' in system)) {
+				if('workerPath' in system) {
+					system.handler = new ThreadWorker(system);
+				} else {
+					system.handler = new SyncWorker(system);
+				}
+			}
 			//gameState.state[system.name] = processSystem(gameState.state[system.name], system, eventHandler, gameState);
-			promises[i] = processSystem(gameState.state[system.name], system, eventHandler, gameState);
+			//promises[i] = processSystem(gameState.state[system.name], system, eventHandler, gameState);
+			promises[i] = system.handler.processWorkerStates(gameState);
 		}
 		Promise.all(promises).then(function(values) {
 			for(let i = 0; i < gameState.systems.length; i++) {
@@ -145,10 +157,7 @@ function nextState(gameState) {
 				commandQueue[i](gameState);
 			}
 			commandQueue.length = 0;
-			processWorkerStates('stats', gameState).then(function(response) {
-				gameState.state['stats'] = response;
-				resolve(gameState);
-			});
+			resolve(gameState);
 		});
 	});
 }
@@ -211,7 +220,7 @@ function addMiddleware(newMiddleware) {
 }
 
 export { 
-	init, nextState, loadState, deepFreeze, 
+	init, nextState, loadState, 
 	addSystem, createEntity, queueCommand, 
 	deleteEntity, removeBehaviour, tick, getState, setState, addMiddleware
 }

@@ -92,7 +92,7 @@ function setDeep(obj, path, val) {
         returnRef = returnRef[parr[i]];
     }
     var endPath = parr.pop();
-    returnRef[endPath] = ENGINE.deepFreeze(newRet);
+    returnRef[endPath] = newRet;
 }
 
 var modifiers = [];
