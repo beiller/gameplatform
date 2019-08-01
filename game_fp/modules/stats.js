@@ -1,4 +1,24 @@
 
+/*
+ 	Shoots out a damage text given text from position of gameState.physics[id]
+*/
+function createDamageText(state, id, eventHandler, gameState, text) {
+	const rScale = 0.04;
+	const x = gameState.physics[id].x;
+	const y = gameState.physics[id].y;
+	const z = gameState.physics[id].z;
+	const fx = (((Math.random() - 0.5)*2.0)*rScale);
+	const fz = (((Math.random() - 0.5)*2.0)*rScale);
+	//createEntity();
+	return {
+		"entity": {x: x, y: y, z: z },
+		"render": { type: "3dText", string: ""+text, size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
+		"physics": {x: x, y: y, z: z, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 },
+		"particle": {maxAge: 70, damping: 0.5 },
+		"motion": {fx: fx, fy: 0.1, fz: fz}
+	}
+}
+
 function applyStatsEffect(stats1, stats2, id, otherId, gameState) {
 	if('effect' in stats2 && 'health' in stats1 && id != otherId) {
 		let totalDamage = 0;
@@ -30,17 +50,21 @@ function applyStats(state, id, eventHandler, gameState) {
 				const beforeApplyStats = newState;
 
 				newState = applyStatsEffect(newState, otherStats, id, otherId, gameState);
-				/*if(beforeApplyStats != newState) {
+				if(beforeApplyStats != newState) {
 					if(newState.health <= 0 && id in gameState.ai) {
-						delete gameState.ai[id];
+						/*delete gameState.ai[id];
 						delete gameState.motion[id];
-						delete gameState.input[id];
+						delete gameState.input[id];*/
+						eventHandler.removeBehaviour("ai", id);
+						eventHandler.removeBehaviour("motion", id);
+						eventHandler.removeBehaviour("input", id);
 						return state;
 					}
 					const totalDamage = beforeApplyStats.health - newState.health;
-					createDamageText(state, id, eventHandler, gameState, totalDamage);
+					//function createEntity(gameState, objectId, state) {
+					eventHandler.createEntity(createDamageText(state, id, eventHandler, gameState, totalDamage));
 
-				}*/
+				}
 				newState['hitCooldown'] = 5;  // invincibility frames
 			}
 		}
@@ -49,34 +73,6 @@ function applyStats(state, id, eventHandler, gameState) {
 	return state; 
 }
 
-function doStateTransition(state, objectId, systemName, systemFunc, eventHandler, gameState) {
-	try {
-		return systemFunc(
-			state,
-			objectId, 
-			eventHandler,
-			gameState
-		);
-	} catch(e) {
-		console.log(e);
-		return state;
-	}
-}
-function processSystemWorker(systemName, systemFunc, gameState) {
-    const systemStates = gameState[systemName];
-    const newStates = {};
-    for(let objectId in systemStates) {
-        newStates[objectId] = doStateTransition(
-            systemStates[objectId], objectId, systemName, systemFunc, null, gameState
-        )
-    }
-    return newStates;
-}
+importScripts('../engine_worker.js');
 
-self.addEventListener('message', function(e) {
-    self.postMessage({
-        responseId: e.data.responseId,
-        response: processSystemWorker(e.data.systemName, applyStats, e.data.gameState)
-    });
-}, false);
-
+registerSystemFunction("stats", applyStats);

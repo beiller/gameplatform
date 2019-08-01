@@ -196,6 +196,7 @@ function applyMagic(state, id, eventHandler, gameState) {
 	}
 	return {...state, cooldowns: state.cooldowns.map(x => Math.max(0, x-1))}
 }
+
 function applyInput(state, id, eventHandler, gameState) {
 	if('ai' in gameState && id in gameState.ai) {
 		return {...state, ...gameState.ai[id]};	
@@ -371,16 +372,6 @@ function applyAnimation(state, id, eventHandler, gameState) {
 	return state;
 }
 
-function applyParticle(state, id, eventHandler, gameState) {
-	if('age' in state && 'maxAge' in state && state.age > state.maxAge) {
-		var myId = id;
-		ENGINE.queueCommand(function(gameState) {
-			ENGINE.deleteEntity(gameState, myId);
-		});
-	}
-	return { ...state, age: (state.age || 0)+1, maxAge: state.maxAge || 100 };
-}
-
 /*
 	Read intersections from physics library
 */
@@ -388,118 +379,20 @@ function applyCollision(state, id, eventHandler, gameState) {
 	return PHYSICS.applyCollision(state, id, eventHandler, gameState);
 }
 
-/*
-	
-*/
-function applyStatsEffect(stats1, stats2, id, otherId, gameState) {
-	if('effect' in stats2 && 'health' in stats1 && id != otherId) {
-		let totalDamage = 0;
-		for(let effectType in stats2.effect) {
-			totalDamage += Math.max(stats2.effect[effectType] - (stats1[effectType] || 0), 0);
-		}
-		console.log('Inflicted', totalDamage, 'hp damage');
-		return {
-			...stats1, health: stats1.health - totalDamage
-		};
-	}
-	return stats1;
-}
-
-/*
- 	Shoots out a damage text given text from position of gameState.physics[id]
-*/
-function createDamageText(state, id, eventHandler, gameState, text) {
-	const rScale = 0.04;
-	const x = gameState.physics[id].x;
-	const y = gameState.physics[id].y;
-	const z = gameState.physics[id].z;
-	const fx = (((Math.random() - 0.5)*2.0)*rScale);
-	const fz = (((Math.random() - 0.5)*2.0)*rScale);
-	createEntity({
-		"entity": {x: x, y: y, z: z },
-		"render": { type: "3dText", string: ""+text, size: 1.0, height: 0.5, colorIntHex: 0xFFAAAA },
-		"physics": {x: x, y: y, z: z, shape: { type: "sphere", radius: 0.5 }, mass: 0.25 },
-		"particle": {maxAge: 70, damping: 0.5 },
-		"motion": {fx: fx, fy: 0.1, fz: fz}
-	});
-}
-
-/*
-
-*/
-function applyStats(state, id, eventHandler, gameState) { 
-	if('hitCooldown' in state && state.hitCooldown > 0) {
-		return {...state, hitCooldown: state.hitCooldown - 1};
-	}
-
-	if(id in gameState.collision) { 
-		let newState = {...state};
-		for(var index in gameState.collision[id].colliding) {
-			if(gameState.collision[id].colliding[index].id in gameState.stats) {
-				const otherId = gameState.collision[id].colliding[index].id;
-				const otherStats = gameState.stats[otherId];
-				if (otherStats.origin === id) {
-					return state;
-				}
-				const beforeApplyStats = newState;
-
-				newState = applyStatsEffect(newState, otherStats, id, otherId, gameState);
-				if(beforeApplyStats != newState) {
-					if(newState.health <= 0 && id in gameState.ai) {
-						delete gameState.ai[id];
-						delete gameState.motion[id];
-						delete gameState.input[id];
-						return state;
-					}
-					const totalDamage = beforeApplyStats.health - newState.health;
-					createDamageText(state, id, eventHandler, gameState, totalDamage);
-
-				}
-				newState['hitCooldown'] = 5;  // invincibility frames
-			}
-		}
-		return newState;
-	}
-	return state; 
-}
-
-function copyToPhysics(body, positionArray, rotationArray) {
-	var t = body.getWorldTransform();
-	t.getRotation().setValue(rotationArray[0], rotationArray[1], rotationArray[2], rotationArray[3]);
-	t.getOrigin().setValue(positionArray[0], positionArray[1], positionArray[2]);
-}
-function applyConstraints(state, id, eventHandler, gameState) {
-	/*switch(state.type) {
-		case 'copytransforms':
-		default:
-			const skeleton = RENDERER.loadedObjects['character1'].children[1].skeleton;
-			const bone = skeleton.getBoneByName('Armature_arm_wristL');
-			const body = PHYSICS.bodies[id];
-			const vec3 = bone.position.clone();
-			const qua4 = bone.quaternion.clone();
-			bone.getWorldPosition(vec3);
-			bone.getWorldQuaternion(qua4);
-			copyToPhysics(body, vec3.toArray(), qua4.toArray());
-			break;
-	}*/
-	state = PHYSICS.applyConstraints(state, id, eventHandler, gameState);
-	state = RENDERER.applyConstraints(state, id, eventHandler, gameState);
-	return state;
-}
-
 const systems = [	
 	{ name: "input", func: applyInput },
 	{ name: "ai", func: AI.applyAI },
-	{ name: "particle", func: applyParticle },
+	{ name: "particle", workerPath: 'modules/particle.js' },
 	{ name: "motion", func: applyMotion },
 	{ name: "animation", func: applyAnimation },
-	{ name: "physics", func: PHYSICS.applyPhysics/*, onEnd: PHYSICS.stepWorld */},
-	{ name: "constraint", func: applyConstraints },
+	{ name: "physics", func: PHYSICS.applyPhysics},
+	{ name: "constraint", func: PHYSICS.applyConstraints },
+	{ name: "physBone", func: RENDERER.applyConstraints },
 	{ name: "magic", func: applyMagic },
 	{ name: "collision", func: applyCollision },
 	{ name: "camera", func: RENDERER.updateCamera },
 	{ name: "entity", func: applyEntity },
-	{ name: "stats", func: applyStats, workerPath: 'modules/stats.js' },
+	{ name: "stats", workerPath: 'modules/stats.js' },
 	{ name: "GPUparticles", func: RENDERER.applyGPUParticles },
 	{ name: "render", func: RENDERER.renderObject }
 ];
@@ -537,7 +430,6 @@ function main() {
 		setTimeout(function() { // delay this call?
 			ENGINE.tick();
 			PHYSICS.stepWorld(gameState);
-			//WTFERY.workerFunctionCall({fname: 'stepWorld', gameState: gameState.state})
 		}, 0);
 		RENDERER.renderFunction(gameState);
 		//lastFrame = Date.now();

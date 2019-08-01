@@ -1,40 +1,5 @@
 
 
-class ThreadWorker {
-	constructor(system) {
-		if(!('workerPath' in system)) 
-			throw("ThreadWorker requires workerPath parameter. eg new ThreadWorker({workerPath: './path.js'})");
-		this.system = system;
-		this.worker = new Worker(system.workerPath);
-		this.workerPromises = {};
-		this.counter = 0;
-		let _self = this;
-		this.worker.addEventListener('message', function(e) {
-			_self.workerPromises[e.data.responseId](e.data.response);
-			delete _self.workerPromises[e.data.responseId];
-		}, false);
-	}
-	processWorkerStates(gameState) {
-		this.worker.postMessage({
-			responseId: this.counter,
-			systemName: this.system.name,
-			gameState: gameState.state
-		}); // Send data to our worker.
-		const promise = new Promise((resolve, reject)=>{this.workerPromises[this.counter] = resolve});
-		this.counter += 1;
-		return promise;
-	}
-}
-
-class SyncWorker {
-	constructor(system) {
-		this.system = system
-	}
-	processWorkerStates(gameState) {
-		return processSystem(gameState.state[this.system.name], this.system, {}, gameState.state);
-	}
-}
-
 function addSystem(gameState, item) {
 	if(!("systems" in gameState)) gameState["systems"] = [];
 	gameState["systems"].push(item);
@@ -50,6 +15,86 @@ function removeBehaviour(gameState, behaviourName, objectId) {
 	if("state" in gameState && behaviourName in gameState.state && objectId in gameState.state[behaviourName]) {
 		//gameState.state[behaviourName][objectId] = undefined;
 		delete gameState.state[behaviourName][objectId];
+	}
+}
+
+let counter = 0;
+function generateObjectId() {
+	counter += 1;
+	return counter;
+}
+
+//function createEntity(gameState, objectId, state) {
+function createEntity(gameState, arg1, arg2) {
+	let objectId = arg1;
+	let state = arg2;
+	if(!state) {
+		objectId = generateObjectId();
+		state = arg1;
+	}
+	for(var systemName in state) {
+		addBehaviour(gameState, systemName, objectId, state[systemName]);
+	}
+	return gameState;
+}
+
+function deleteEntity(gameState, objectId) {
+	if(!("state" in gameState)) return;
+	for(var systemName in gameState.state) {
+		removeBehaviour(gameState, systemName, objectId);
+	}
+	return gameState;
+}
+
+const functionMap = {
+	"createEntity": createEntity,
+	"deleteEntity": deleteEntity,
+	"addBehaviour": addBehaviour,
+	"removeBehaviour": deleteEntity
+}
+
+function processEvents(eventList) {
+	for(let i = 0; i < eventList.length; i++) {
+		const event = eventList[i];
+		queueCommand(function(gameState) {
+			functionMap[event[0]](gameState, ...event.slice(1))
+		});
+	}
+}
+
+class SyncWorker {
+	constructor(system) {
+		this.system = system
+	}
+	processWorkerStates(gameState) {
+		return processSystem(gameState.state[this.system.name], this.system, {}, gameState.state);
+	}
+}
+
+class ThreadWorker  {
+	constructor(system) {
+		if(!('workerPath' in system)) 
+			throw("ThreadWorker requires workerPath parameter. eg new ThreadWorker({workerPath: './path.js'})");
+		this.system = system;
+		this.worker = new Worker(system.workerPath);
+		this.workerPromises = {};
+		this.counter = 0;
+		let _self = this;
+		this.worker.addEventListener('message', function(e) {
+			_self.workerPromises[e.data.responseId](e.data.response);
+			delete _self.workerPromises[e.data.responseId];
+			processEvents(e.data.events);
+		}, false);
+	}
+	processWorkerStates(gameState) {
+		this.worker.postMessage({
+			responseId: this.counter,
+			systemName: this.system.name,
+			gameState: gameState.state
+		}); // Send data to our worker.
+		const promise = new Promise((resolve, reject)=>{this.workerPromises[this.counter] = resolve});
+		this.counter += 1;
+		return promise;
 	}
 }
 
@@ -145,8 +190,6 @@ function nextState(gameState) {
 					system.handler = new SyncWorker(system);
 				}
 			}
-			//gameState.state[system.name] = processSystem(gameState.state[system.name], system, eventHandler, gameState);
-			//promises[i] = processSystem(gameState.state[system.name], system, eventHandler, gameState);
 			promises[i] = system.handler.processWorkerStates(gameState);
 		}
 		Promise.all(promises).then(function(values) {
@@ -160,21 +203,6 @@ function nextState(gameState) {
 			resolve(gameState);
 		});
 	});
-}
-
-function createEntity(gameState, objectId, state) {
-	for(var systemName in state) {
-		addBehaviour(gameState, systemName, objectId, state[systemName]);
-	}
-	return gameState;
-}
-
-function deleteEntity(gameState, objectId) {
-	if(!("state" in gameState)) return;
-	for(var systemName in gameState.state) {
-		removeBehaviour(gameState, systemName, objectId);
-	}
-	return gameState;
 }
 
 function loadState(initialState) {
@@ -220,7 +248,6 @@ function addMiddleware(newMiddleware) {
 }
 
 export { 
-	init, nextState, loadState, 
-	addSystem, createEntity, queueCommand, 
-	deleteEntity, removeBehaviour, tick, getState, setState, addMiddleware
+	init, nextState, loadState, queueCommand, createEntity,
+	addSystem, tick, getState, setState, addMiddleware
 }

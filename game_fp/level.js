@@ -797,17 +797,17 @@ function level4() {
 		};
 	}
 
-	const cube = new THREE.BoxBufferGeometry( 1, 1, 1 );
-	//const cube = new THREE.TorusKnotBufferGeometry( 1, .2, 100, 16 );
+	//const cube = new THREE.BoxBufferGeometry( 1, 1, 1 );
+	const cube = new THREE.TorusKnotBufferGeometry( 1, .2 );
 	//const buffer = new THREE.BufferGeometry().fromGeometry(cube);
 	//const triangles = toTriangles(cube);
 	const triangles = toTrianglesFromBuffer(cube);
 	console.log("Triangles", triangles, cube.toJSON());
 	entities["textTriangleMesh"] = { 
-		entity: {}, 
-		//render: { type: "torusknot", radius: 1, tube: .2 }, 
-		render: { type: "box", x: .5, y: .5, z: .5 }, 
-		physics: {x: 0, y: 3, z: 0, shape: { type: "concave", triangles: triangles }, mass: 1} 
+		entity: {x: 0, y: 3, z: 0}, 
+		render: { type: "torusknot", radius: 1, tube: .5 }, 
+		//render: { type: "box", x: .5, y: .5, z: .5 }, 
+		physics: {x: 0, y: 3, z: 0, shape: { type: "concave", triangles: triangles }, mass: 0, staticObject: true} 
 	};
 
 	entities["particles1"] = { entity: {}, GPUparticles: {} };
@@ -1035,7 +1035,7 @@ function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {
 
 		console.log('Building', boneName);
 		const boneIndex = findBoneIndex(boneName, bonesList);
-		let boneVertexList = gatherVertices(boneIndex, skinIndex, skinWeight, position, 0.4)
+		let boneVertexList = gatherVertices(boneIndex, skinIndex, skinWeight, position, 0.4);
 
 		if(boneVertexList.length > 3) { // need at least 4 vtx for convex hull
 			if(boneVertexList.length > MAX_VERTICES) { // limit to MAX_VERTICES vertex count
@@ -1156,7 +1156,7 @@ function pinConstriants(entities, namePrefix, pins) {
 					disableCollision: true,
 					rotationLimitsLow : [-0,-0,-0],
 					rotationLimitsHigh : [0, 0, 0],
-					spring: true, stiffness: 50.0
+					spring: true, stiffness: 5.0, damping: 0.1, distance: 0.01
 					//equilibriumPoint: localToWorldEquilibrium
 				}
 			},
@@ -1165,10 +1165,14 @@ function pinConstriants(entities, namePrefix, pins) {
 	}
 
 	try {
+		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['disableCollision'] = false;
 		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['spring'] = true;
-		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 20.0;
+		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 15.0;
+		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['damping'] = 1;
+		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['disableCollision'] = false;
 		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['spring'] = true;
-		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 20.0;
+		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 15.0;
+		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['damping'] = 1;
 	} catch(e) { console.warn(e); }
 
 	return entities;
@@ -1216,7 +1220,7 @@ function level8() {
 		createEntity({
 			"entity": {x: 0, y: 0, z: 0}, 
 			"render": { type: "animatedMesh", filename: meshName, ignoreOffset: true },
-			"constraint": {
+			"physBone": {
 				boneConstraints: pairs.map(
 					(boneData) => { return {id: namePrefix+".bone."+boneData[0], boneName: boneData[0]}; }
 				)

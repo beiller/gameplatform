@@ -692,7 +692,7 @@ function copyPhysObjectToBone(armature, gameState, entityId, boneName) {
 
 		//update matrix world bone?
 		//Turns out I can comment this out and it still works
-		//bone.updateMatrixWorld();
+		bone.updateMatrixWorld();
 	}
 }
 

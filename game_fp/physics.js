@@ -22,6 +22,7 @@ const collisionFlags = {
 };
 
 const stepHz = 60;
+const stepDt = 1/stepHz;
 //const constraintSolverIterations = null;  // use null for default
 const constraintSolverIterations = 150;  // use null for default
 const useSplitImpulse = null;
@@ -35,8 +36,8 @@ const BT_CONSTRAINT_CFM = 3;
 const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
-	m_dynamicsWorld.stepSimulation(1/stepHz);
-	//m_dynamicsWorld.stepSimulation(1/stepHz, 10, 1./240);
+	m_dynamicsWorld.stepSimulation(stepDt);
+	//m_dynamicsWorld.stepSimulation(stepDt, 10, 1./240);
 };
 
 function buildBodyIdMap(gameState) {
@@ -165,12 +166,12 @@ function createBody(shape, state) {
 		{x:bodyInfo.x,y:bodyInfo.y,z:bodyInfo.z}, rotation
 	), shape);
 	var flags = [];
-	body.setFriction(state.friction || 0.9);
+	if(state.friction) body.setFriction(state.friction);
 
 	if(bodyInfo.noContact) flags.push(collisionFlags.CF_NO_CONTACT_RESPONSE);
 	if(bodyInfo.staticObject) flags.push(collisionFlags.CF_STATIC_OBJECT);
 	if(bodyInfo.kinematic) flags.push(collisionFlags.CF_KINEMATIC_OBJECT);
-	body.setDamping(bodyInfo.damping || 0.2, bodyInfo.damping || 0.2);
+	if(bodyInfo.damping) body.setDamping(bodyInfo.damping, bodyInfo.damping);
 	
 	setBodyFlags(body, flags);
 	return body;
@@ -248,14 +249,14 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	if(options.spring) {
 		for(let i = 0; i < 7; i++) {
 			constraint.enableSpring(i, true);
-			constraint.setStiffness(i, options.stiffness || 25.0);
-			constraint.setDamping(i, options.damping || 15);
+			if(options.stiffness) constraint.setStiffness(i, options.stiffness || 25.0);
+			if(options.damping) constraint.setDamping(i, options.damping || 0.9);
 		}
 		const dist = options.distance || 0.1;
 		temp_vec3_1.setValue(-dist, -dist, -dist);
 		constraint.setLinearLowerLimit(temp_vec3_1);
 		temp_vec3_2.setValue(dist, dist, dist);
-		constraint.setLinearLowerLimit(temp_vec3_2);
+		constraint.setLinearUpperLimit(temp_vec3_2);
 		if('equilibriumPoint' in options) {
 			constraint.setEquilibriumPoint();
 			constraint.setEquilibriumPoint(0, options.equilibriumPoint[0]);
