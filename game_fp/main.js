@@ -7,6 +7,8 @@ import * as AI from './modules/ai.js';
 import './lib/RectAreaLightUniformsLib.js';
 import * as InspectorMiddleware from './InspectorMiddleware.js';
 import * as PHYSICS from './physics.js';
+import * as PARTICLE from './modules/particle.js';
+import * as STATS from './modules/stats.js';
 
 //
 function loadRenderableEntity() {
@@ -379,20 +381,26 @@ function applyCollision(state, id, eventHandler, gameState) {
 	return PHYSICS.applyCollision(state, id, eventHandler, gameState);
 }
 
+//const worker1 = new ENGINE.ThreadWorker({workerPath: 'modules/physics.js'})
 const systems = [	
 	{ name: "input", func: applyInput },
 	{ name: "ai", func: AI.applyAI },
-	{ name: "particle", workerPath: 'modules/particle.js' },
+	//{ name: "particle", workerPath: 'modules/particle.js' },
+	{ name: "particle", func: applyParticle },
 	{ name: "motion", func: applyMotion },
 	{ name: "animation", func: applyAnimation },
+
 	{ name: "physics", func: PHYSICS.applyPhysics},
 	{ name: "constraint", func: PHYSICS.applyConstraints },
-	{ name: "physBone", func: RENDERER.applyConstraints },
+	{ name: "collision", func: PHYSICS.applyCollision },
+
 	{ name: "magic", func: applyMagic },
-	{ name: "collision", func: applyCollision },
-	{ name: "camera", func: RENDERER.updateCamera },
 	{ name: "entity", func: applyEntity },
-	{ name: "stats", workerPath: 'modules/stats.js' },
+	//{ name: "stats", workerPath: 'modules/stats.js' },
+	{ name: "stats", func: applyStats },
+
+	{ name: "physBone", func: RENDERER.applyConstraints },
+	{ name: "camera", func: RENDERER.updateCamera },
 	{ name: "GPUparticles", func: RENDERER.applyGPUParticles },
 	{ name: "render", func: RENDERER.renderObject }
 ];

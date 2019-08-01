@@ -52,16 +52,12 @@ function applyStats(state, id, eventHandler, gameState) {
 				newState = applyStatsEffect(newState, otherStats, id, otherId, gameState);
 				if(beforeApplyStats != newState) {
 					if(newState.health <= 0 && id in gameState.ai) {
-						/*delete gameState.ai[id];
-						delete gameState.motion[id];
-						delete gameState.input[id];*/
 						eventHandler.removeBehaviour("ai", id);
 						eventHandler.removeBehaviour("motion", id);
 						eventHandler.removeBehaviour("input", id);
 						return state;
 					}
 					const totalDamage = beforeApplyStats.health - newState.health;
-					//function createEntity(gameState, objectId, state) {
 					eventHandler.createEntity(createDamageText(state, id, eventHandler, gameState, totalDamage));
 
 				}
@@ -73,6 +69,9 @@ function applyStats(state, id, eventHandler, gameState) {
 	return state; 
 }
 
-importScripts('../engine_worker.js');
-
-registerSystemFunction("stats", applyStats);
+if(typeof importScripts === 'function') {
+	importScripts('../engine_worker.js');
+	registerSystemFunction("stats", applyStats);
+} else {
+	window.applyStats = applyStats;
+}

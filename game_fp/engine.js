@@ -62,12 +62,24 @@ function processEvents(eventList) {
 	}
 }
 
+const eventHandlerBase = {
+	//events: [],
+	removeBehaviour: function(arg1, arg2) {this.events.push(['removeBehaviour', arg1, arg2])},
+	addBehaviour: function(arg1, arg2, arg3) {this.events.push(['addBehaviour', arg1, arg2, arg3])},
+	createEntity: function(arg1, arg2) {this.events.push(['createEntity', arg1, arg2])},
+	deleteEntity: function(arg1) {this.events.push(['deleteEntity', arg1])},
+	popEvents: function() { const e = this.events; this.events = []; return e; }
+}
+
 class SyncWorker {
 	constructor(system) {
 		this.system = system
 	}
-	processWorkerStates(gameState) {
-		return processSystem(gameState.state[this.system.name], this.system, {}, gameState.state);
+	processWorkerStates(gameState, systemName) {
+		const e = {...eventHandlerBase, events: []};
+		const result = processSystem(gameState.state[systemName], this.system, e, gameState.state);
+		processEvents(e.popEvents());
+		return result;
 	}
 }
 
@@ -86,15 +98,20 @@ class ThreadWorker  {
 			processEvents(e.data.events);
 		}, false);
 	}
-	processWorkerStates(gameState) {
-		this.worker.postMessage({
+	processThreadedWorkerStates(gameState, systemName) {
+		if(!systemName) systemName = this.system.name;
+		const message = {
 			responseId: this.counter,
-			systemName: this.system.name,
+			systemName: systemName,
 			gameState: gameState.state
-		}); // Send data to our worker.
+		};
+		this.worker.postMessage(message); // Send data to our worker.
 		const promise = new Promise((resolve, reject)=>{this.workerPromises[this.counter] = resolve});
 		this.counter += 1;
 		return promise;
+	}
+	processWorkerStates(gameState, systemName) {
+		return this.processThreadedWorkerStates(gameState, systemName);
 	}
 }
 
@@ -190,7 +207,7 @@ function nextState(gameState) {
 					system.handler = new SyncWorker(system);
 				}
 			}
-			promises[i] = system.handler.processWorkerStates(gameState);
+			promises[i] = system.handler.processWorkerStates(gameState, system.name);
 		}
 		Promise.all(promises).then(function(values) {
 			for(let i = 0; i < gameState.systems.length; i++) {
@@ -249,5 +266,6 @@ function addMiddleware(newMiddleware) {
 
 export { 
 	init, nextState, loadState, queueCommand, createEntity,
-	addSystem, tick, getState, setState, addMiddleware
+	addSystem, tick, getState, setState, addMiddleware,
+	ThreadWorker, SyncWorker
 }
