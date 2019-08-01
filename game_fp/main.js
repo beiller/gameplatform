@@ -430,7 +430,6 @@ function main() {
 	var interval = 1000/fps;
 	var delta;
 	function mainLoop() {
-		requestAnimationFrame(mainLoop);
 	    //delta = Date.now() - lastFrame; 
 	    //if (delta > interval) {
 		//then = now - (delta % interval);
@@ -443,7 +442,9 @@ function main() {
 		//lastFrame = Date.now();
 		//}
 	}
-	requestAnimationFrame(mainLoop);
+	RENDERER.enableVR();
+	RENDERER.setAnimationLoop(mainLoop);
+	RENDERER.disableVR();
 }
 
 main();

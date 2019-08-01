@@ -546,6 +546,12 @@ function renderObject(state, id, eventHandler, gameState) {
 
 var render = null;  // the render function...
 
+function enableVR() {
+	GLOBAL_RENDERER.vr.enabled = true;
+}
+function disableVR() {
+	GLOBAL_RENDERER.vr.enabled = false;
+}
 function init() {
 	GLOBAL_CAMERA = null;
 	GLOBAL_SCENE = null;
@@ -569,6 +575,7 @@ function init() {
 	initSkyShader();
 
 	render = createRenderFunction(sceneData, scene, camera);
+	document.body.appendChild( THREE.WEBVR.createButton( GLOBAL_RENDERER ) );
 }
 
 function initSkyShader() {
@@ -797,5 +804,21 @@ function applyGPUParticles(state, id, eventHandler, gameState) {
 	return state;
 }
 
-export { renderObject, init, updateCamera, renderFunction, loadMeshFile, loadedObjects, applyConstraints, applyGPUParticles };
+function setAnimationLoop(functionToLoop) {
+	if(GLOBAL_RENDERER.vr.enabled) {
+		GLOBAL_RENDERER.setAnimationLoop(functionToLoop);
+	} else {
+		function newAnimationFunction() {
+			requestAnimationFrame(newAnimationFunction);
+			functionToLoop();
+		}
+		requestAnimationFrame(newAnimationFunction);
+	}
+}
+
+export { 
+	renderObject, init, updateCamera, renderFunction, loadMeshFile, 
+	loadedObjects, applyConstraints, applyGPUParticles, enableVR, disableVR,
+	setAnimationLoop
+};
 

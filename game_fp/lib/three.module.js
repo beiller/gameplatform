@@ -51385,9 +51385,250 @@ let ConvexBufferGeometry = function ( points ) {
 ConvexBufferGeometry.prototype = Object.create( BufferGeometry.prototype );
 ConvexBufferGeometry.prototype.constructor = ConvexBufferGeometry;
 
+/**
+ * @author mrdoob / http://mrdoob.com
+ * @author Mugen87 / https://github.com/Mugen87
+ *
+ * Based on @tojiro's vr-samples-utils.js
+ */
+
+const WEBVR = {
+
+	createButton: function ( renderer, options ) {
+
+		if ( options && options.referenceSpaceType ) {
+
+			renderer.vr.setReferenceSpaceType( options.referenceSpaceType );
+
+		}
+
+		function showEnterVR( device ) {
+
+			button.style.display = '';
+
+			button.style.cursor = 'pointer';
+			button.style.left = 'calc(50% - 50px)';
+			button.style.width = '100px';
+
+			button.textContent = 'ENTER VR';
+
+			button.onmouseenter = function () {
+
+				button.style.opacity = '1.0';
+
+			};
+
+			button.onmouseleave = function () {
+
+				button.style.opacity = '0.5';
+
+			};
+
+			button.onclick = function () {
+
+				device.isPresenting ? device.exitPresent() : device.requestPresent( [ { source: renderer.domElement } ] );
+
+			};
+
+			renderer.vr.setDevice( device );
+
+		}
+
+		function showEnterXR( /*device*/ ) {
+
+			var currentSession = null;
+
+			function onSessionStarted( session ) {
+
+				session.addEventListener( 'end', onSessionEnded );
+
+				renderer.vr.setSession( session );
+				button.textContent = 'EXIT XR';
+
+				currentSession = session;
+
+			}
+
+			function onSessionEnded( /*event*/ ) {
+
+				currentSession.removeEventListener( 'end', onSessionEnded );
+
+				renderer.vr.setSession( null );
+				button.textContent = 'ENTER XR';
+
+				currentSession = null;
+
+			}
+
+			//
+
+			button.style.display = '';
+
+			button.style.cursor = 'pointer';
+			button.style.left = 'calc(50% - 50px)';
+			button.style.width = '100px';
+
+			button.textContent = 'ENTER XR';
+
+			button.onmouseenter = function () {
+
+				button.style.opacity = '1.0';
+
+			};
+
+			button.onmouseleave = function () {
+
+				button.style.opacity = '0.5';
+
+			};
+
+			button.onclick = function () {
+
+				if ( currentSession === null ) {
+
+					navigator.xr.requestSession( 'immersive-vr' ).then( onSessionStarted );
+
+				} else {
+
+					currentSession.end();
+
+				}
+
+			};
+
+		}
+
+		function disableButton() {
+
+			button.style.display = '';
+
+			button.style.cursor = 'auto';
+			button.style.left = 'calc(50% - 75px)';
+			button.style.width = '150px';
+
+			button.onmouseenter = null;
+			button.onmouseleave = null;
+
+			button.onclick = null;
+
+		}
+
+		function showVRNotFound() {
+
+			disableButton();
+
+			button.textContent = 'VR NOT FOUND';
+
+			renderer.vr.setDevice( null );
+
+		}
+
+		function showXRNotFound() {
+
+			disableButton();
+
+			button.textContent = 'XR NOT FOUND';
+
+		}
+
+		function stylizeElement( element ) {
+
+			element.style.position = 'absolute';
+			element.style.bottom = '20px';
+			element.style.padding = '12px 6px';
+			element.style.border = '1px solid #fff';
+			element.style.borderRadius = '4px';
+			element.style.background = 'rgba(0,0,0,0.1)';
+			element.style.color = '#fff';
+			element.style.font = 'normal 13px sans-serif';
+			element.style.textAlign = 'center';
+			element.style.opacity = '0.5';
+			element.style.outline = 'none';
+			element.style.zIndex = '999';
+
+		}
+
+		if ( 'xr' in navigator && 'supportsSession' in navigator.xr ) {
+
+			var button = document.createElement( 'button' );
+			button.style.display = 'none';
+
+			stylizeElement( button );
+
+			navigator.xr.supportsSession( 'immersive-vr' ).then( showEnterXR ).catch( showXRNotFound );
+
+			return button;
+
+		} else if ( 'getVRDisplays' in navigator ) {
+
+			var button = document.createElement( 'button' );
+			button.style.display = 'none';
+
+			stylizeElement( button );
+
+			window.addEventListener( 'vrdisplayconnect', function ( event ) {
+
+				showEnterVR( event.display );
+
+			}, false );
+
+			window.addEventListener( 'vrdisplaydisconnect', function ( /*event*/ ) {
+
+				showVRNotFound();
+
+			}, false );
+
+			window.addEventListener( 'vrdisplaypresentchange', function ( event ) {
+
+				button.textContent = event.display.isPresenting ? 'EXIT VR' : 'ENTER VR';
+
+			}, false );
+
+			window.addEventListener( 'vrdisplayactivate', function ( event ) {
+
+				event.display.requestPresent( [ { source: renderer.domElement } ] );
+
+			}, false );
+
+			navigator.getVRDisplays()
+				.then( function ( displays ) {
+
+					if ( displays.length > 0 ) {
+
+						showEnterVR( displays[ 0 ] );
+
+					} else {
+
+						showVRNotFound();
+
+					}
+
+				} ).catch( showVRNotFound );
+
+			return button;
+
+		} else {
+
+			var message = document.createElement( 'a' );
+			message.href = 'https://webvr.info';
+			message.innerHTML = 'WEBVR NOT SUPPORTED';
+
+			message.style.left = 'calc(50% - 90px)';
+			message.style.width = '180px';
+			message.style.textDecoration = 'none';
+
+			stylizeElement( message );
+
+			return message;
+
+		}
+
+	}
+
+};
 
 
 export { WebGLRenderTargetCube, WebGLRenderTarget, WebGLRenderer, ShaderLib, UniformsLib, UniformsUtils, ShaderChunk, FogExp2, Fog, Scene, Sprite, LOD, SkinnedMesh, Skeleton, Bone, Mesh, LineSegments, LineLoop, Line, Points, Group, VideoTexture, DataTexture, DataTexture3D, CompressedTexture, CubeTexture, CanvasTexture, DepthTexture, Texture, CompressedTextureLoader, DataTextureLoader, CubeTextureLoader, TextureLoader, ObjectLoader, MaterialLoader, BufferGeometryLoader, DefaultLoadingManager, LoadingManager, JSONLoader, ImageLoader, ImageBitmapLoader, FontLoader, FileLoader, Loader, LoaderUtils, Cache, AudioLoader, SpotLightShadow, SpotLight, PointLight, RectAreaLight, HemisphereLight, DirectionalLightShadow, DirectionalLight, AmbientLight, LightShadow, Light, StereoCamera, PerspectiveCamera, OrthographicCamera, CubeCamera, ArrayCamera, Camera, AudioListener, PositionalAudio, AudioContext, AudioAnalyser, Audio, VectorKeyframeTrack, StringKeyframeTrack, QuaternionKeyframeTrack, NumberKeyframeTrack, ColorKeyframeTrack, BooleanKeyframeTrack, PropertyMixer, PropertyBinding, KeyframeTrack, AnimationUtils, AnimationObjectGroup, AnimationMixer, AnimationClip, Uniform, InstancedBufferGeometry, BufferGeometry, Geometry, InterleavedBufferAttribute, InstancedInterleavedBuffer, InterleavedBuffer, InstancedBufferAttribute, Face3, Object3D, Raycaster, Layers, EventDispatcher, Clock, QuaternionLinearInterpolant, LinearInterpolant, DiscreteInterpolant, CubicInterpolant, Interpolant, Triangle, _Math as Math, Spherical, Cylindrical, Plane, Frustum, Sphere, Ray, Matrix4, Matrix3, Box3, Box2, Line3, Euler, Vector4, Vector3, Vector2, Quaternion, Color, ImmediateRenderObject, VertexNormalsHelper, SpotLightHelper, SkeletonHelper, PointLightHelper, RectAreaLightHelper, HemisphereLightHelper, GridHelper, PolarGridHelper, FaceNormalsHelper, DirectionalLightHelper, CameraHelper, BoxHelper, Box3Helper, PlaneHelper, ArrowHelper, AxesHelper, Shape, Path, ShapePath, Font, CurvePath, Curve, ImageUtils, ShapeUtils, WebGLUtils, WireframeGeometry, ParametricGeometry, ParametricBufferGeometry, TetrahedronGeometry, TetrahedronBufferGeometry, OctahedronGeometry, OctahedronBufferGeometry, IcosahedronGeometry, IcosahedronBufferGeometry, DodecahedronGeometry, DodecahedronBufferGeometry, PolyhedronGeometry, PolyhedronBufferGeometry, TubeGeometry, TubeBufferGeometry, TorusKnotGeometry, TorusKnotBufferGeometry, TorusGeometry, TorusBufferGeometry, TextGeometry, TextBufferGeometry, SphereGeometry, SphereBufferGeometry, RingGeometry, RingBufferGeometry, PlaneGeometry, PlaneBufferGeometry, LatheGeometry, LatheBufferGeometry, ShapeGeometry, ShapeBufferGeometry, ExtrudeGeometry, ExtrudeBufferGeometry, EdgesGeometry, ConeGeometry, ConeBufferGeometry, CylinderGeometry, CylinderBufferGeometry, CircleGeometry, CircleBufferGeometry, BoxGeometry, BoxBufferGeometry, ShadowMaterial, SpriteMaterial, RawShaderMaterial, ShaderMaterial, PointsMaterial, MeshPhysicalMaterial, MeshStandardMaterial, MeshPhongMaterial, MeshToonMaterial, MeshNormalMaterial, MeshLambertMaterial, MeshDepthMaterial, MeshDistanceMaterial, MeshBasicMaterial, MeshMatcapMaterial, LineDashedMaterial, LineBasicMaterial, Material, Float64BufferAttribute, Float32BufferAttribute, Uint32BufferAttribute, Int32BufferAttribute, Uint16BufferAttribute, Int16BufferAttribute, Uint8ClampedBufferAttribute, Uint8BufferAttribute, Int8BufferAttribute, BufferAttribute, ArcCurve, CatmullRomCurve3, CubicBezierCurve, CubicBezierCurve3, EllipseCurve, LineCurve, LineCurve3, QuadraticBezierCurve, QuadraticBezierCurve3, SplineCurve, REVISION, MOUSE, CullFaceNone, CullFaceBack, CullFaceFront, CullFaceFrontBack, FrontFaceDirectionCW, FrontFaceDirectionCCW, BasicShadowMap, PCFShadowMap, PCFSoftShadowMap, FrontSide, BackSide, DoubleSide, FlatShading, SmoothShading, NoColors, FaceColors, VertexColors, NoBlending, NormalBlending, AdditiveBlending, SubtractiveBlending, MultiplyBlending, CustomBlending, AddEquation, SubtractEquation, ReverseSubtractEquation, MinEquation, MaxEquation, ZeroFactor, OneFactor, SrcColorFactor, OneMinusSrcColorFactor, SrcAlphaFactor, OneMinusSrcAlphaFactor, DstAlphaFactor, OneMinusDstAlphaFactor, DstColorFactor, OneMinusDstColorFactor, SrcAlphaSaturateFactor, NeverDepth, AlwaysDepth, LessDepth, LessEqualDepth, EqualDepth, GreaterEqualDepth, GreaterDepth, NotEqualDepth, MultiplyOperation, MixOperation, AddOperation, NoToneMapping, LinearToneMapping, ReinhardToneMapping, Uncharted2ToneMapping, CineonToneMapping, UVMapping, CubeReflectionMapping, CubeRefractionMapping, EquirectangularReflectionMapping, EquirectangularRefractionMapping, SphericalReflectionMapping, CubeUVReflectionMapping, CubeUVRefractionMapping, RepeatWrapping, ClampToEdgeWrapping, MirroredRepeatWrapping, NearestFilter, NearestMipMapNearestFilter, NearestMipMapLinearFilter, LinearFilter, LinearMipMapNearestFilter, LinearMipMapLinearFilter, UnsignedByteType, ByteType, ShortType, UnsignedShortType, IntType, UnsignedIntType, FloatType, HalfFloatType, UnsignedShort4444Type, UnsignedShort5551Type, UnsignedShort565Type, UnsignedInt248Type, AlphaFormat, RGBFormat, RGBAFormat, LuminanceFormat, LuminanceAlphaFormat, RGBEFormat, DepthFormat, DepthStencilFormat, RedFormat, RGB_S3TC_DXT1_Format, RGBA_S3TC_DXT1_Format, RGBA_S3TC_DXT3_Format, RGBA_S3TC_DXT5_Format, RGB_PVRTC_4BPPV1_Format, RGB_PVRTC_2BPPV1_Format, RGBA_PVRTC_4BPPV1_Format, RGBA_PVRTC_2BPPV1_Format, RGB_ETC1_Format, RGBA_ASTC_4x4_Format, RGBA_ASTC_5x4_Format, RGBA_ASTC_5x5_Format, RGBA_ASTC_6x5_Format, RGBA_ASTC_6x6_Format, RGBA_ASTC_8x5_Format, RGBA_ASTC_8x6_Format, RGBA_ASTC_8x8_Format, RGBA_ASTC_10x5_Format, RGBA_ASTC_10x6_Format, RGBA_ASTC_10x8_Format, RGBA_ASTC_10x10_Format, RGBA_ASTC_12x10_Format, RGBA_ASTC_12x12_Format, LoopOnce, LoopRepeat, LoopPingPong, InterpolateDiscrete, InterpolateLinear, InterpolateSmooth, ZeroCurvatureEnding, ZeroSlopeEnding, WrapAroundEnding, TrianglesDrawMode, TriangleStripDrawMode, TriangleFanDrawMode, LinearEncoding, sRGBEncoding, GammaEncoding, RGBEEncoding, LogLuvEncoding, RGBM7Encoding, RGBM16Encoding, RGBDEncoding, BasicDepthPacking, RGBADepthPacking, TangentSpaceNormalMap, ObjectSpaceNormalMap, BoxGeometry as CubeGeometry, Face4, LineStrip, LinePieces, MeshFaceMaterial, MultiMaterial, PointCloud, Particle, ParticleSystem, PointCloudMaterial, ParticleBasicMaterial, ParticleSystemMaterial, Vertex, DynamicBufferAttribute, Int8Attribute, Uint8Attribute, Uint8ClampedAttribute, Int16Attribute, Uint16Attribute, Int32Attribute, Uint32Attribute, Float32Attribute, Float64Attribute, ClosedSplineCurve3, SplineCurve3, Spline, AxisHelper, BoundingBoxHelper, EdgesHelper, WireframeHelper, XHRLoader, BinaryTextureLoader, GeometryUtils, Projector, CanvasRenderer, SceneUtils, LensFlare
 	, RGBELoader, PMREMCubeUVPacker, PMREMGenerator, HDRCubeTextureLoader, OrbitControls, Sky, ConvexBufferGeometry, ConvexGeometry
-	, ConvexHull
+	, ConvexHull, WEBVR
 };
