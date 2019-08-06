@@ -589,17 +589,28 @@ const EPS = 0.05;
 const ARMLEG_TWIST = Math.PI * 0.20;
 const THIGH_BEND = Math.PI;
 const THIGH_ROTATE = Math.PI/2;
-const SPINE_BEND = 0.5;
-const SPINE_TWIST = 0.15;
-const COLLAR = Math.PI / 8;
-const SHLDR = Math.PI;
 const KNEE = Math.PI;
-const ELBOW = Math.PI;
 const FOOT_BEND = Math.PI * 0.35;
 const FOOT_TWIST = Math.PI * 0.15;
+const SPINE_BEND = 0.5;
+const CHEST = 0.25;
+const SPINE_TWIST = 0.15;
+/*
+const THIGH_BEND = 0;
+const THIGH_ROTATE = 0;
+const KNEE = 0;
+const FOOT_BEND = 0;
+const FOOT_TWIST = 0;
+const SPINE_BEND = 0;
+const CHEST = 0;
+const SPINE_TWIST = 0;*/
+
+const COLLAR = Math.PI / 8;
+const SHLDR = Math.PI;
+const ELBOW = Math.PI;
 const HAND_BEND = Math.PI * 0.5;
 const HAND_TWIST = Math.PI * 0.15;
-const CHEST = 0.25;
+
 
 const jointData = {
 	'xnalara': {
@@ -899,11 +910,11 @@ function level7() {
 			entity: {}, 
 			render: { type: "convex", points: points }, 
 			physics: {x: r1, y: r3, z: r2, shape: { type: "convex", points: points }, mass: 1, friction: 5.0},
-			particle: {maxAge: 250 },
+			particle: {maxAge: 1000 },
 			stats: {hitCooldown: 5}
 		}, "testConvexMesh"+i);
 		i+=1;
-	}, 150);
+	}, 300);
 
 	for(let eid in entities) {
 		createEntity(entities[eid], eid);
@@ -1013,7 +1024,27 @@ function createCubeMesh(skinnedMesh, namePrefix, pairs) {
 	}
 	return entities;
 }
-	
+
+function calculateConvexHullMass(points, density) {
+	if(!density) density = 500.0;
+	const min = [9999999,9999999,9999999];
+	const max = [-9999999,-9999999,-9999999];
+	for(let i = 0; i < points.length; i++) {
+		const p = points[i];
+		if(p.x > max[0]) { max[0] = p.x}
+		if(p.x < min[0]) { min[0] = p.x}
+		if(p.y > max[1]) { max[1] = p.y}
+		if(p.y < min[1]) { min[1] = p.y}
+		if(p.z > max[2]) { max[2] = p.z}
+		if(p.z < min[2]) { min[2] = p.z}
+	}
+	const mass = (max[0] - min[0]) * (max[1] - min[1]) * (max[2] - min[2]) * density;
+	return mass;
+	/*const TOTAL_MASS = 49.8952;  // 110 lbs
+	const PER_SHAPE_MASS = TOTAL_MASS / jointData['princess'].pairs.length;
+	return PER_SHAPE_MASS;*/
+}
+
 /*
 	Given a GLFT file (character-like)
 	Requires that glft has a SkinnedMesh and 1 armature
@@ -1021,11 +1052,12 @@ function createCubeMesh(skinnedMesh, namePrefix, pairs) {
 	Will output rigid bodies matching the mesh using convex hull
 */
 function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {		
-	const MAX_VERTICES = 75;
+	const MAX_VERTICES = 750;
 	const bonesList = skinnedMesh.skeleton.bones;
 	const position = vectorizeBuffer(skinnedMesh.geometry.attributes.position);
 	const skinIndex = vectorizeBuffer(skinnedMesh.geometry.attributes.skinIndex);
 	const skinWeight = vectorizeBuffer(skinnedMesh.geometry.attributes.skinWeight);
+	let totalMass = 0;
 
 	//create a convex hull for each bone
 	const returnEntities = {};
@@ -1035,7 +1067,9 @@ function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {
 
 		console.log('Building', boneName);
 		const boneIndex = findBoneIndex(boneName, bonesList);
-		let boneVertexList = gatherVertices(boneIndex, skinIndex, skinWeight, position, 0.4);
+		let boneVertexList = gatherVertices(boneIndex, skinIndex, skinWeight, position, 0.35);
+		const mass = calculateConvexHullMass(boneVertexList, 700.0);
+		totalMass += mass;
 
 		if(boneVertexList.length > 3) { // need at least 4 vtx for convex hull
 			if(boneVertexList.length > MAX_VERTICES) { // limit to MAX_VERTICES vertex count
@@ -1058,16 +1092,16 @@ function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {
 			const positioning = {x: vec3.x, y: vec3.y, z: vec3.z, rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w} };
 			returnEntities[namePrefix+".bone."+boneName] = { 
 				entity: {...positioning}, 
-				//render: { type: "convex", points: points, ignoreOffset: true }, 
+				render: { type: "convex", points: points, ignoreOffset: true }, 
 				physics: {
 					...positioning, 
-					shape: { type: "convex", points: points }, mass: .05, friction: 5.0,
-					boneOffsetX: -cP.x, boneOffsetY: -cP.y, boneOffsetZ: -cP.z
+					shape: { type: "convex", points: points }, mass: mass,
+					boneOffsetX: -cP.x, boneOffsetY: -cP.y, boneOffsetZ: -cP.z//, damping: 0.999999
 				}
 			};
 		}
-		console.log('Done', boneName);
 	}
+	console.log("Total mass: ", totalMass);
 	return returnEntities
 }
 
@@ -1136,13 +1170,13 @@ function connectRigidBodies(entities, armature, namePrefix, pairs2) {
 function pinConstriants(entities, namePrefix, pins) {
 	for(let i in pins) {
 		const constraint = namePrefix+".constraint."+pins[i];
+		const pin = namePrefix+".pin."+pins[i];
+		const bone = namePrefix+".bone."+pins[i];
+
 		if(!(constraint in entities)) {
 			console.warn("Unable to find entity: ", namePrefix+".constraint."+pins[i])
 			continue;
 		}
-		
-		const pin = namePrefix+".pin."+pins[i];
-		const bone = namePrefix+".bone."+pins[i];
 		const localA = entities[constraint].constraint.localA;
 		const x = entities[bone].physics.x + localA[0];
 		const y = entities[bone].physics.y + localA[1];
@@ -1156,81 +1190,248 @@ function pinConstriants(entities, namePrefix, pins) {
 					disableCollision: true,
 					rotationLimitsLow : [-0,-0,-0],
 					rotationLimitsHigh : [0, 0, 0],
-					spring: true, stiffness: 5.0, damping: 0.1, distance: 0.01
+					spring: true, stiffness: 5.0
 					//equilibriumPoint: localToWorldEquilibrium
 				}
 			},
 			"particle": {maxAge: 500}
 		}
 	}
+	//pin hips to keep height above x
+	const bone = namePrefix+".bone.RootNode_pelvis";
+	const x = entities[bone].physics.x;
+	const y = entities[bone].physics.y;
+	const z = entities[bone].physics.z;
+	entities[namePrefix+'.hip_height_standing'] = {
+		"constraint": {
+			type: "6DOF", 
+			bodyA: namePrefix+".bone.RootNode_pelvis", 
+			localA: [0,0,0],
+			options: {
+				disableCollision: true,
+				rotationLimitsLow : [-0.1,-0.1,-0.1],
+				rotationLimitsHigh : [0.1, 0.1, 0.1],
+				spring: true, stiffness: 5.0, distance: 0.01
+			}
+		}
+	}
+	const head = entities[namePrefix+".bone.RootNode_head"].physics;
+	const pelvis = entities[namePrefix+".bone.RootNode_pelvis"].physics;
+
+	entities[namePrefix+'.hip_height_standing2'] = {
+		"constraint": {
+			type: "6DOF", 
+			bodyA: namePrefix+".bone.RootNode_head", 			
+			localA: [0,0,0],
+			options: {
+				disableCollision: true,
+				rotationLimitsLow : [-0.1,-0.1,-0.1],
+				rotationLimitsHigh : [0.1, 0.1, 0.1],
+				spring: true, stiffness: 5.0, distance: 0.01
+			}
+		}
+	}
 
 	try {
 		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['disableCollision'] = false;
 		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['spring'] = true;
-		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 15.0;
-		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['damping'] = 1;
+		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 50.0;
+		//entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['damping'] = 1;
 		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['disableCollision'] = false;
 		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['spring'] = true;
-		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 15.0;
-		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['damping'] = 1;
+		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 50.0;
+		//entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['damping'] = 1;
 	} catch(e) { console.warn(e); }
 
 	return entities;
 }
 
+function moveBodies(entities, offset, rotation) {
+	for(let eid in entities) {
+		if('physics' in entities[eid]) {
+			if(rotation) {
+				qua4_1.set(rotation.x, rotation.y, rotation.z, rotation.w)
+				if('rotation' in entities[eid].physics) {
+					qua4_2.set(
+						entities[eid].physics.rotation.x, entities[eid].physics.rotation.y,
+						entities[eid].physics.rotation.z, entities[eid].physics.rotation.w
+					);
+				} else {
+					qua4_2.set(0,0,0,1);
+				}
+				qua4_2.multiply(qua4_1);
+				const quaternion = qua4_1;
+				vec3_1.set(entities[eid].physics.x, entities[eid].physics.y, entities[eid].physics.z);
+				vec3_1.applyQuaternion(quaternion);
+				entities[eid].physics.x = vec3_1.x;
+				entities[eid].physics.y = vec3_1.y;
+				entities[eid].physics.z = vec3_1.z;
+				entities[eid].physics.rotation = {
+					x: qua4_2.x, y: qua4_2.y, z: qua4_2.z, w: qua4_2.w
+				}
+			}
+			entities[eid].physics.x += offset.x;
+			entities[eid].physics.y += offset.y;
+			entities[eid].physics.z += offset.z;
 
-function level8() {
-	/*const meshName = 'nonfree/princess.glb';
-	const pairs = jointData['princess'].pairs;
-	const pairs2 = jointData['princess'].pairs2;*/
-	
-	const meshName = 'jessica.glb';
-	const pairs = jointData['xnalara'].pairs;
-	const pairs2 = jointData['xnalara'].pairs2;
+		}
+	}
+	return entities;
+}
 
-	let pins = [];
+function spawnRagdoll(namePrefix, armature, pairs, pairs2, offset, rotation) {
+	/*let pins = [];
 	for(let i = 0; i < pairs.length; i++) {
 		pins.push(pairs[i][0]);
 	}
-	pins = getRandomSubarray(pins, 2);
-	//const pins = [];
+	pins = getRandomSubarray(pins, 2);	*/
+	const pins = ['RootNode_lFoot', 'RootNode_rFoot']
+
+
+	let entities = createConvexHullMesh(armature, namePrefix, pairs);
+	//let entities = createCubeMesh(armature, namePrefix, pairs);
+	entities = connectRigidBodies(entities, armature.skeleton, namePrefix, pairs2);
+	//entities = moveBodies(entities, offset, rotation);
+	entities = pinConstriants(entities, namePrefix, pins);
 	
+	return entities;
+}
+
+function level8() {
+	const meshName = 'nonfree/princess.glb';
+	const pairs = jointData['princess'].pairs;
+	const pairs2 = jointData['princess'].pairs2;
+	const offsets = {
+		'char1': {x: 0, y: 0, z:0},
+		'char2': {x: 0, y: 0, z:0}
+	};
+	const r1 = new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, 1, 0 ), Math.PI / 2 );
+	const r2 = new THREE.Quaternion().setFromAxisAngle( new THREE.Vector3( 0, -1, 0 ), Math.PI / 2 );
+	const rotations = {
+		'char1': {x: r1.x, y: r1.y, z: r1.z, w: r1.w},
+		'char1': {x: r2.x, y: r2.y, z: r2.z, w: r2.w}
+	};
+	
+	/*const meshName = 'jessica.glb';
+	const pairs = jointData['xnalara'].pairs;
+	const pairs2 = jointData['xnalara'].pairs2;*/
+
 	LOADER.loadGLTF(meshName).then(gltf => {
 		const skinnedMeshList = findSkinnedMesh(gltf.scene);  // Gather all skinned mesh
 		// join all meshes together into one
 		let armature = skinnedMeshList[2];
 		for(let i = 3; i < skinnedMeshList.length; i++) {
-			try{
-				armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
-			} catch(e) {
-				console.log(e);
+			armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
+		}
+
+		const ragdolls = {}
+		//const names = ['char1', 'char2'];
+		const names = ['char1'];
+		names.forEach(namePrefix=>{
+			ragdolls[namePrefix] = spawnRagdoll(
+				namePrefix, armature, pairs, pairs2
+			);
+			for(let eid in ragdolls[namePrefix]) {
+				createEntity(ragdolls[namePrefix][eid], eid);
 			}
-		}
+			/*createEntity({
+				"entity": {x: 0, y: 0, z: 0}, 
+				"render": { type: "animatedMesh", filename: meshName, ignoreOffset: true },
+				"physBone": {
+					boneConstraints: pairs.map(
+						(boneData) => { return {id: namePrefix+".bone."+boneData[0], boneName: boneData[0]}; }
+					)
+				},
+			}, namePrefix+'.characterMesh');*/
+		});
+		const char1Ent = ragdolls['char1']['char1.bone.RootNode_head'].physics;
+		vec3_1.set(char1Ent.x, char1Ent.y, char1Ent.z);
+		qua4_1.set(char1Ent.rotation.x, char1Ent.rotation.y, char1Ent.rotation.z, char1Ent.rotation.w);
+		qua4_1.inverse();
+		vec3_2.set(char1Ent.x, char1Ent.y-0.07, char1Ent.z+0.08);
+		vec3_3.copy(vec3_2).sub(vec3_1).applyQuaternion(qua4_1);
+		setTimeout(function() {
+			createEntity({
+				"constraint": {
+					type: "6DOF", 
+					bodyA: "char1.bone.RootNode_head", 
+					localA: vec3_3.toArray(),
+					bodyB: "char2.bone.RootNode_pelvis", 
+					localB: [0,0,0],
+					options: {  
+						spring: true, distance: 0.065, stiffness: 1, damping: 5000.0
+					}
+				}
+			})
+			createEntity({
+				"constraint": {
+					type: "6DOF", 
+					bodyA: "char2.bone.RootNode_head", 
+					localA: vec3_3.toArray(),
+					bodyB: "char1.bone.RootNode_pelvis", 
+					localB: [0,0,0],
+					options: {  
+						spring: true, distance: 0.065, stiffness: 1, damping: 5000.0
+					}
+				}
+			})
+			/*createEntity({
+				"constraint": {
+					type: "6DOF", 
+					bodyA: "char1.bone.RootNode_rPectoral", 
+					bodyB: "char2.bone.RootNode_lHand", 
+					options: {  
+						spring: true, distance: 0.0001, stiffness: 1, damping: 5000.0
+					}
+				}
+			})
+			createEntity({
+				"constraint": {
+					type: "6DOF", 
+					bodyA: "char1.bone.RootNode_lPectoral", 
+					bodyB: "char2.bone.RootNode_rHand", 
+					options: {  
+						spring: true, distance: 0.0001, stiffness: 1, damping: 5000.0
+					}
+				}
+			})
+			createEntity({
+				"constraint": {
+					type: "6DOF", 
+					bodyA: "char2.bone.RootNode_rPectoral", 
+					bodyB: "char1.bone.RootNode_lHand", 
+					options: {  
+						spring: true, distance: 0.0001, stiffness: 1, damping: 5000.0
+					}
+				}
+			})
+			createEntity({
+				"constraint": {
+					type: "6DOF", 
+					bodyA: "char2.bone.RootNode_lPectoral", 
+					bodyB: "char1.bone.RootNode_rHand", 
+					options: {  
+						spring: true, distance: 0.0001, stiffness: 1, damping: 5000.0
+					}
+				}
+			})*/
+		}, 10000)
 
-		const namePrefix = "character1";
-		//let entities = createConvexHullMesh(armature, namePrefix, pairs);
-		let entities = createCubeMesh(armature, namePrefix, pairs);
-		entities = connectRigidBodies(entities, armature.skeleton, namePrefix, pairs2);
-		entities = pinConstriants(entities, namePrefix, pins);
-
-		for(let eid in entities) {
-			createEntity(entities[eid], eid);
-		}
-		
 		createEntity({
-			"entity": {x: 0, y: 0, z: 0}, 
-			"render": { type: "animatedMesh", filename: meshName, ignoreOffset: true },
-			"physBone": {
-				boneConstraints: pairs.map(
-					(boneData) => { return {id: namePrefix+".bone."+boneData[0], boneName: boneData[0]}; }
-				)
-			},
-		}, namePrefix+'.characterMesh');
+			"entity": {x: 0, y: 2, z: 5 },
+			"render": { type: "light", lightType: "point", intensity: 300000 }
+		}, "point1");
+
+		createEntity({
+			"entity": {x: -3, y: -2, z: 5 },
+			"render": { type: "light", lightType: "point", intensity: 300000 }
+		}, "point2");
 	});
+
 	return defaultState;
 }
 
-const mainLevel = level7;
+const mainLevel = level8;
 const levels = {
 	level1: level1,
 	level2: level2,

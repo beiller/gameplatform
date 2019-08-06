@@ -31,16 +31,23 @@ function processSystemWorker(systemName, systemFunc, gameState) {
     return newStates;
 }
 
-const functionMap = {}
-function registerSystemFunction(systemName, systemFunction) {
-	if(Object.keys(functionMap).length == 0) {
+const functionMap = {};
+const listenerMap = {};
+function registerSystemFunction(systemName, systemFunction, listeners) {
+	if(Object.keys(functionMap).length == 0) { // execute below for first call to this function
 		self.addEventListener('message', function(e) {
+			const newStates = processSystemWorker(e.data.systemName, functionMap[e.data.systemName], e.data.gameState);
 			self.postMessage({
 				responseId: e.data.responseId,
-				response: processSystemWorker(e.data.systemName, functionMap[e.data.systemName], e.data.gameState),
+				response: newStates,
 				events: eventHandler.popEvents()
 			});
+			if(e.data.systemName in listenerMap && listenerMap[e.data.systemName].onEnd) {
+				listenerMap[e.data.systemName].onEnd(eventHandler, e.data.gameState)
+			}
 		}, false);		
-	}
+	} // execute above for first call to this function
+	//register the given function and optional listeners
 	functionMap[systemName] = systemFunction;
+	if(listeners) listenerMap[systemName] = listeners;
 }

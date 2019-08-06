@@ -149,8 +149,8 @@ function createLight(state, lightFunction) {
 	const pos = [state.x, state.y, state.z];
 	const tar = [0,0,0]
 	const light = lightFunction(pos, tar);
-	light.intensity = 20000;
-	light.distance = 1000;
+	light.intensity = state.intensity || 20000;
+	light.distance = state.distance || 1000;
 
 	/*var bulbGeometry = new THREE.SphereGeometry( 0.02, 16, 2.0 );
 	var bulbMat = new THREE.MeshStandardMaterial( {

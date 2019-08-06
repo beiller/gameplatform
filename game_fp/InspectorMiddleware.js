@@ -97,24 +97,22 @@ function setDeep(obj, path, val) {
 
 var modifiers = [];
 
-function middleware(nextStateFn) {
-	function newMiddleware(state) {
-		if(Math.random() > 0.00000) {
-			//console.log('Random event occurred! Now showing state:', state);
-			//doUpdateFunc(state);
+function middleware(state) {
+	/*if(Math.random() > 0.00000) {
+		//console.log('Random event occurred! Now showing state:', state);
+		//doUpdateFunc(state);
+	}*/
+	doUpdateFunc(state);
+	//var ns = nextStateFn(state);
+	if(modifiers.length > 0) {
+		for(var i = 0; i < modifiers.length; i++) {
+			setDeep(state, modifiers[i].path, modifiers[i].val);
 		}
-		var ns = nextStateFn(state);
-		if(modifiers.length > 0) {
-			for(var i = 0; i < modifiers.length; i++) {
-				setDeep(ns, modifiers[i].path, modifiers[i].val);
-			}
-			modifiers = [];
-			$(element).empty();
-			$(element).append(createMenu(ns.state, 'state'));
-		}
-		return ns;
+		modifiers = [];
+		$(element).empty();
+		$(element).append(createMenu(state.state, 'state'));
 	}
-	return newMiddleware;
+	return state;
 }
 
 export { middleware }

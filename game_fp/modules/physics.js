@@ -36,8 +36,8 @@ const BT_CONSTRAINT_CFM = 3;
 const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
-	//m_dynamicsWorld.stepSimulation(stepDt);
-	m_dynamicsWorld.stepSimulation(stepDt, 10, 1./120);
+	m_dynamicsWorld.stepSimulation(stepDt);
+	//m_dynamicsWorld.stepSimulation(stepDt, 10, 1./120);
 };
 
 function buildBodyIdMap(gameState) {
@@ -219,15 +219,11 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	if(!options.quaternionA) { options.quaternionA = [0,0,0,1] };
 	if(!options.quaternionB) { options.quaternionB = [0,0,0,1] };
 
+	temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
+	temp_quat_1.setValue(options.quaternionA[0], options.quaternionA[1], options.quaternionA[2], options.quaternionA[3]);
 	temp_trans_1.setIdentity();
-	if(options.quaternionA) {
-		temp_quat_1.setValue(options.quaternionA[0], options.quaternionA[1], options.quaternionA[2], options.quaternionA[3]);
-		temp_trans_1.setRotation(temp_quat_1);
-	}
-	if(localA) {
-		temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
-		temp_trans_1.setOrigin(temp_vec3_1);
-	}
+	temp_trans_1.setRotation(temp_quat_1);
+	temp_trans_1.setOrigin(temp_vec3_1);
 
 	if(localB) {
 		temp_vec3_2.setValue(localB[0], localB[1], localB[2]);
@@ -253,24 +249,16 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	if(options.spring) {
 		for(let i = 0; i < 7; i++) {
 			constraint.enableSpring(i, true);
-			if(options.stiffness) constraint.setStiffness(i, options.stiffness);
-			if(options.damping) constraint.setDamping(i, options.damping);
+			if(options.stiffness) constraint.setStiffness(i, options.stiffness || 25.0);
+			if(options.damping) constraint.setDamping(i, options.damping || 0.9);
 		}
-		if(options.distance) {
-			const dist = options.distance;
-			if(typeof dist == 'number') {
-				temp_vec3_1.setValue(-dist, -dist, -dist);
-				constraint.setLinearLowerLimit(temp_vec3_1);
-				temp_vec3_2.setValue(dist, dist, dist);
-				constraint.setLinearUpperLimit(temp_vec3_2);
-			} else {
-				temp_vec3_1.setValue(-dist[0], -dist[1], -dist[2]);
-				constraint.setLinearLowerLimit(temp_vec3_1);
-				temp_vec3_2.setValue(dist[0], dist[1], dist[2]);
-				constraint.setLinearUpperLimit(temp_vec3_2);
-			}
-		}
+		const dist = options.distance || 0.1;
+		temp_vec3_1.setValue(-dist, -dist, -dist);
+		constraint.setLinearLowerLimit(temp_vec3_1);
+		temp_vec3_2.setValue(dist, dist, dist);
+		constraint.setLinearUpperLimit(temp_vec3_2);
 		if('equilibriumPoint' in options) {
+			constraint.setEquilibriumPoint();
 			constraint.setEquilibriumPoint(0, options.equilibriumPoint[0]);
 			constraint.setEquilibriumPoint(1, options.equilibriumPoint[1]);
 			constraint.setEquilibriumPoint(2, options.equilibriumPoint[2]);
@@ -284,12 +272,11 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	if('disableCollision' in options && options['disableCollision'] === true) {
 		disableConnectedCollisions = options['disableCollision'];
 	}
-	for(let i = 0; i < 6; i++) {
-		constraint.setParam( BT_CONSTRAINT_STOP_CFM, 0.05, i );
-		constraint.setParam( BT_CONSTRAINT_STOP_ERP, 0.95, i );
-	}
 	world.m_dynamicsWorld.addConstraint(constraint, disableConnectedCollisions);
-	
+	for(let i = 0; i < 6; i++) {
+		constraint.setParam( BT_CONSTRAINT_STOP_CFM, 0.1, i );
+		constraint.setParam( BT_CONSTRAINT_STOP_ERP, 0.9, i );
+	}
 	return constraint;
 }
 
@@ -488,6 +475,7 @@ function resetWorld() {
 }
 
 const tempObject1 = {state: null}
+let simulateLock = false;
 function runSimulation(eventHandler, gameState) {
 	if(world === false) return;
 	if(!world) {
@@ -496,9 +484,15 @@ function runSimulation(eventHandler, gameState) {
 			init();
 		});
 		return;
-	}
-	tempObject1.state = gameState;
-	stepWorld(tempObject1);
+    }
+    if(!simulateLock) {
+        simulateLock = true;
+	    tempObject1.state = gameState;
+        stepWorld(tempObject1);
+        simulateLock = false;
+    } else {
+        console.warning("Physics frame skipped?")
+    }
 }
 
 function applyPhysics(state, id, eventHandler, gameState) {
@@ -675,4 +669,14 @@ function stepWorld(gameState) {
 }
 
 
-export { init, applyPhysics, resetWorld, applyCollision, stepWorld, bodies, applyConstraints, runSimulation }
+//export { init, applyPhysics, resetWorld, applyCollision, stepWorld, bodies, applyConstraints, runSimulation }
+
+if(typeof importScripts === 'function') {
+    importScripts('../engine_worker.js');
+    importScripts('../lib/ammo.js');
+	registerSystemFunction("physics", applyPhysics);
+	registerSystemFunction("constraint", applyConstraints);
+	registerSystemFunction("collision", applyCollision, {onEnd: runSimulation});
+} else {
+	window.applyParticle = applyParticle;
+}

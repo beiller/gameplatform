@@ -16,11 +16,14 @@ function loadEXRMap(renderer) {
 		var hdrUrls = genCubeUrls( '/textures/park1/', '.hdr' );
 		new THREE.HDRCubeTextureLoader().load( THREE.UnsignedByteType, hdrUrls, function ( hdrCubeMap ) {
 			var pmremGenerator = new THREE.PMREMGenerator( hdrCubeMap );
+			const vrSetting = renderer.vr.enabled;
+			renderer.vr.enabled = false;
 			pmremGenerator.update( renderer );
 			var pmremCubeUVPacker = new THREE.PMREMCubeUVPacker( pmremGenerator.cubeLods );
 			pmremCubeUVPacker.update( renderer );
 			//const hdrCubeRenderTarget = pmremCubeUVPacker.CubeUVRenderTarget;
 			hdrCubeMap.dispose();
+			renderer.vr.enabled = vrSetting;
 			resolve(pmremCubeUVPacker.CubeUVRenderTarget);
 		} );
 	});

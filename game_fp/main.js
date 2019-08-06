@@ -374,14 +374,9 @@ function applyAnimation(state, id, eventHandler, gameState) {
 	return state;
 }
 
-/*
-	Read intersections from physics library
-*/
-function applyCollision(state, id, eventHandler, gameState) {
-	return PHYSICS.applyCollision(state, id, eventHandler, gameState);
-}
-
+//run physics in worker
 //const worker1 = new ENGINE.ThreadWorker({workerPath: 'modules/physics.js'})
+
 const systems = [	
 	{ name: "input", func: applyInput },
 	{ name: "ai", func: AI.applyAI },
@@ -390,9 +385,16 @@ const systems = [
 	{ name: "motion", func: applyMotion },
 	{ name: "animation", func: applyAnimation },
 
+	// use the worker
+	//{ name: "physics", handler: worker1},
+	//{ name: "constraint", handler: worker1 },
+	//{ name: "collision", handler: worker1 },
+	
+	
 	{ name: "physics", func: PHYSICS.applyPhysics},
 	{ name: "constraint", func: PHYSICS.applyConstraints },
-	{ name: "collision", func: PHYSICS.applyCollision },
+	{ name: "collision", func: PHYSICS.applyCollision, onEnd: PHYSICS.runSimulation },
+
 
 	{ name: "magic", func: applyMagic },
 	{ name: "entity", func: applyEntity },
@@ -418,9 +420,9 @@ function main() {
 	ENGINE.init({...LEVEL.mainLevel(), systems: systems}, middleware);
 	console.log(ENGINE.getState());
 	RENDERER.init();
-	Ammo().then(function() {  // must initialize ammo
+	/*Ammo().then(function() {  // must initialize ammo
 		PHYSICS.init();
-	});
+	});*/
 
 	//start game loop
 	var fps = 60;
@@ -430,21 +432,12 @@ function main() {
 	var interval = 1000/fps;
 	var delta;
 	function mainLoop() {
-	    //delta = Date.now() - lastFrame; 
-	    //if (delta > interval) {
-		//then = now - (delta % interval);
-		const gameState = ENGINE.getState();
-		setTimeout(function() { // delay this call?
-			ENGINE.tick();
-			PHYSICS.stepWorld(gameState);
-		}, 0);
-		RENDERER.renderFunction(gameState);
-		//lastFrame = Date.now();
-		//}
+		setTimeout(ENGINE.tick, 0, ENGINE.getState());
+		RENDERER.renderFunction(ENGINE.getState());
 	}
-	RENDERER.enableVR();
+	//RENDERER.enableVR();
 	RENDERER.setAnimationLoop(mainLoop);
-	RENDERER.disableVR();
+	
 }
 
 main();
