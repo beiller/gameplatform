@@ -79,7 +79,6 @@ class SyncWorker {
         const result = processSystem(gameState.state[systemName], this.system, e, gameState.state);
         if(this.system.onEnd) this.system.onEnd(e, gameState.state);
         processEvents(e.popEvents());
-        
         return result;
     }
 }
@@ -165,7 +164,7 @@ function doStateTransition(state, objectId, systemName, systemFunc, eventHandler
     try {
         return systemFunc(
             state,
-            objectId, 
+            objectId,
             eventHandler,
             gameState
         );
@@ -257,7 +256,7 @@ let LOCK = false;
 function tick() {
     if(LOCK) return;
     LOCK = true;
-    nextState(GAME_STATE).then((result) => { 
+    nextState(GAME_STATE).then((result) => {
         GAME_STATE = result;
         for(let i = 0; i < MIDDLEWARE.length; i++) {
             GAME_STATE = MIDDLEWARE[i](GAME_STATE);
@@ -270,7 +269,7 @@ function addMiddleware(newMiddleware) {
     nextStateFn = newMiddleware(nextStateFn);
 }
 
-export { 
+export {
     init, nextState, loadState, queueCommand, createEntity,
     addSystem, tick, getState, setState, addMiddleware,
     ThreadWorker, SyncWorker

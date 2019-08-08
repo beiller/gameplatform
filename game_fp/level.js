@@ -605,7 +605,7 @@ const SPINE_BEND = 0;
 const CHEST = 0;
 const SPINE_TWIST = 0;*/
 
-const COLLAR = Math.PI / 8;
+const COLLAR = Math.PI / 4;
 const SHLDR = Math.PI;
 const ELBOW = Math.PI;
 const HAND_BEND = Math.PI * 0.5;
@@ -896,6 +896,32 @@ function level6() {
 	return defaultState;
 }
 
+function springTest() {
+	const points1 = generateRandomPoints(12);
+	const points2 = generateRandomPoints(12);
+
+	createEntity({ 
+		entity: {x: 0, y: 5, z: 0}, 
+		render: { type: "convex", points: points1 }, 
+		physics: {x: 0, y: 5, z: 0, shape: { type: "convex", points: points1 }, mass: 0, staticObject: true},
+	}, "testConvexMesh0");
+	createEntity({ 
+		entity: {x: 0, y: 2, z: 0}, 
+		render: { type: "convex", points: points2 }, 
+		physics: {x: 0, y: 2, z: 0, shape: { type: "convex", points: points2 }, mass: 1},
+	}, "testConvexMesh1");	
+	createEntity({ 
+		constraint: {
+			bodyA: "testConvexMesh0", localA: [0,-.5,0], 
+			bodyB: "testConvexMesh1", localB: [0, .5,0],
+			type: "6DOF", disableCollision: true,
+			options: { distance: 5.0, spring: true, stiffness: 500.0, damping: 0.1, disableCollision: true }
+		}
+	}, "springConst1");	
+
+	return defaultState;
+}
+
 function level7() {
 	const entities = {};
 	let i = 0;
@@ -1068,7 +1094,7 @@ function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {
 		console.log('Building', boneName);
 		const boneIndex = findBoneIndex(boneName, bonesList);
 		let boneVertexList = gatherVertices(boneIndex, skinIndex, skinWeight, position, 0.35);
-		const mass = calculateConvexHullMass(boneVertexList, 700.0);
+		const mass = calculateConvexHullMass(boneVertexList, 500.0);
 		totalMass += mass;
 
 		if(boneVertexList.length > 3) { // need at least 4 vtx for convex hull
@@ -1096,7 +1122,7 @@ function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {
 				physics: {
 					...positioning, 
 					shape: { type: "convex", points: points }, mass: mass,
-					boneOffsetX: -cP.x, boneOffsetY: -cP.y, boneOffsetZ: -cP.z//, damping: 0.999999
+					boneOffsetX: -cP.x, boneOffsetY: -cP.y, boneOffsetZ: -cP.z
 				}
 			};
 		}
@@ -1190,7 +1216,7 @@ function pinConstriants(entities, namePrefix, pins) {
 					disableCollision: true,
 					rotationLimitsLow : [-0,-0,-0],
 					rotationLimitsHigh : [0, 0, 0],
-					spring: true, stiffness: 5.0
+					spring: true, stiffness: 4000.0, distance: 25, damping: .1
 					//equilibriumPoint: localToWorldEquilibrium
 				}
 			},
@@ -1202,45 +1228,44 @@ function pinConstriants(entities, namePrefix, pins) {
 	const x = entities[bone].physics.x;
 	const y = entities[bone].physics.y;
 	const z = entities[bone].physics.z;
+	const mainSpringSetting = {
+		type: "6DOF", 
+		localA: [0,0,0],
+		options: {
+			disableCollision: true,
+			rotationLimitsLow : [-0.1,-0.1,-0.1],
+			rotationLimitsHigh : [0.1, 0.1, 0.1],
+			spring: true, stiffness: 4000.0, distance: 25, damping: .001
+		}
+	}
 	entities[namePrefix+'.hip_height_standing'] = {
 		"constraint": {
-			type: "6DOF", 
+			...mainSpringSetting,
 			bodyA: namePrefix+".bone.RootNode_pelvis", 
-			localA: [0,0,0],
-			options: {
-				disableCollision: true,
-				rotationLimitsLow : [-0.1,-0.1,-0.1],
-				rotationLimitsHigh : [0.1, 0.1, 0.1],
-				spring: true, stiffness: 5.0, distance: 0.01
-			}
-		}
+		}, "particle": {maxAge: 1000}
 	}
 	const head = entities[namePrefix+".bone.RootNode_head"].physics;
 	const pelvis = entities[namePrefix+".bone.RootNode_pelvis"].physics;
 
 	entities[namePrefix+'.hip_height_standing2'] = {
 		"constraint": {
-			type: "6DOF", 
-			bodyA: namePrefix+".bone.RootNode_head", 			
-			localA: [0,0,0],
-			options: {
-				disableCollision: true,
-				rotationLimitsLow : [-0.1,-0.1,-0.1],
-				rotationLimitsHigh : [0.1, 0.1, 0.1],
-				spring: true, stiffness: 5.0, distance: 0.01
-			}
-		}
+			...mainSpringSetting,
+			bodyA: namePrefix+".bone.RootNode_head"
+		}, "particle": {maxAge: 700}
 	}
 
 	try {
-		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['disableCollision'] = false;
-		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['spring'] = true;
-		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['stiffness'] = 50.0;
-		//entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options['damping'] = 1;
-		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['disableCollision'] = false;
-		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['spring'] = true;
-		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['stiffness'] = 50.0;
-		//entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options['damping'] = 1;
+		const springSettings = { 
+			distance: 5.0, spring: true, stiffness: 175.0, damping: 0.5, disableCollision: false 
+		};
+		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options = {
+			...entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options,
+			...springSettings
+		};
+		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options = {
+			...entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options,
+			...springSettings
+		}
 	} catch(e) { console.warn(e); }
 
 	return entities;
@@ -1344,86 +1369,14 @@ function level8() {
 				},
 			}, namePrefix+'.characterMesh');*/
 		});
-		const char1Ent = ragdolls['char1']['char1.bone.RootNode_head'].physics;
-		vec3_1.set(char1Ent.x, char1Ent.y, char1Ent.z);
-		qua4_1.set(char1Ent.rotation.x, char1Ent.rotation.y, char1Ent.rotation.z, char1Ent.rotation.w);
-		qua4_1.inverse();
-		vec3_2.set(char1Ent.x, char1Ent.y-0.07, char1Ent.z+0.08);
-		vec3_3.copy(vec3_2).sub(vec3_1).applyQuaternion(qua4_1);
-		setTimeout(function() {
-			createEntity({
-				"constraint": {
-					type: "6DOF", 
-					bodyA: "char1.bone.RootNode_head", 
-					localA: vec3_3.toArray(),
-					bodyB: "char2.bone.RootNode_pelvis", 
-					localB: [0,0,0],
-					options: {  
-						spring: true, distance: 0.065, stiffness: 1, damping: 5000.0
-					}
-				}
-			})
-			createEntity({
-				"constraint": {
-					type: "6DOF", 
-					bodyA: "char2.bone.RootNode_head", 
-					localA: vec3_3.toArray(),
-					bodyB: "char1.bone.RootNode_pelvis", 
-					localB: [0,0,0],
-					options: {  
-						spring: true, distance: 0.065, stiffness: 1, damping: 5000.0
-					}
-				}
-			})
-			/*createEntity({
-				"constraint": {
-					type: "6DOF", 
-					bodyA: "char1.bone.RootNode_rPectoral", 
-					bodyB: "char2.bone.RootNode_lHand", 
-					options: {  
-						spring: true, distance: 0.0001, stiffness: 1, damping: 5000.0
-					}
-				}
-			})
-			createEntity({
-				"constraint": {
-					type: "6DOF", 
-					bodyA: "char1.bone.RootNode_lPectoral", 
-					bodyB: "char2.bone.RootNode_rHand", 
-					options: {  
-						spring: true, distance: 0.0001, stiffness: 1, damping: 5000.0
-					}
-				}
-			})
-			createEntity({
-				"constraint": {
-					type: "6DOF", 
-					bodyA: "char2.bone.RootNode_rPectoral", 
-					bodyB: "char1.bone.RootNode_lHand", 
-					options: {  
-						spring: true, distance: 0.0001, stiffness: 1, damping: 5000.0
-					}
-				}
-			})
-			createEntity({
-				"constraint": {
-					type: "6DOF", 
-					bodyA: "char2.bone.RootNode_lPectoral", 
-					bodyB: "char1.bone.RootNode_rHand", 
-					options: {  
-						spring: true, distance: 0.0001, stiffness: 1, damping: 5000.0
-					}
-				}
-			})*/
-		}, 10000)
 
 		createEntity({
-			"entity": {x: 0, y: 2, z: 5 },
+			"entity": {x: 0, y: 3, z: 5 },
 			"render": { type: "light", lightType: "point", intensity: 300000 }
 		}, "point1");
 
 		createEntity({
-			"entity": {x: -3, y: -2, z: 5 },
+			"entity": {x: -3, y: 1, z: -2 },
 			"render": { type: "light", lightType: "point", intensity: 300000 }
 		}, "point2");
 	});
@@ -1440,7 +1393,8 @@ const levels = {
 	level5: level5,
 	level6: level6,
 	level7: level7,
-	level8: level8
+	level8: level8,
+	springTest: springTest
 }
 
 export { createHeightMap, mainLevel, levels }

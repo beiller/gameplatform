@@ -97,21 +97,46 @@ function setDeep(obj, path, val) {
 
 var modifiers = [];
 
+function objectToForm(state) {
+	return null;
+}
+
+let stateTracker = null;
 function middleware(state) {
 	/*if(Math.random() > 0.00000) {
 		//console.log('Random event occurred! Now showing state:', state);
 		//doUpdateFunc(state);
 	}*/
-	doUpdateFunc(state);
-	//var ns = nextStateFn(state);
-	if(modifiers.length > 0) {
+	//doUpdateFunc(state);
+	if(!element) {
+		createUIDiv(state);
+	}
+	const key = 'char1.hip_height_standing';
+	if(!stateTracker && key in state.state.constraint) {
+		stateTracker = createMenu(state.state.constraint[key], key);
+		$(element).empty();
+		$(element).append(stateTracker);
+		$(element).dialog({	
+			maxHeight: 500,
+			position: { my: "left top", at: "left top", of: window }
+		}).dialogExtend({
+			"closable" : false,
+			"maximizable" : true,
+			"minimizable" : true,
+			"collapsable" : true,
+			"dblclick" : "collapse",
+			"titlebar" : "transparent",
+			"minimizeLocation" : "right"
+		});
+	}
+	/*if(modifiers.length > 0) {
 		for(var i = 0; i < modifiers.length; i++) {
 			setDeep(state, modifiers[i].path, modifiers[i].val);
 		}
 		modifiers = [];
-		$(element).empty();
-		$(element).append(createMenu(state.state, 'state'));
-	}
+		//$(element).empty();
+		//$(element).append(createMenu(state.state, 'state'));
+	}*/
 	return state;
 }
 
