@@ -901,21 +901,21 @@ function springTest() {
 	const points2 = generateRandomPoints(12);
 
 	createEntity({ 
-		entity: {x: 0, y: 5, z: 0}, 
+		entity: {x: 0, y: 3, z: 0}, 
 		render: { type: "convex", points: points1 }, 
-		physics: {x: 0, y: 5, z: 0, shape: { type: "convex", points: points1 }, mass: 0, staticObject: true},
+		physics: {x: 0, y: 3, z: 0, shape: { type: "convex", points: points1 }, mass: 0, staticObject: true},
 	}, "testConvexMesh0");
 	createEntity({ 
-		entity: {x: 0, y: 2, z: 0}, 
+		entity: {x: 0, y: .5, z: 0}, 
 		render: { type: "convex", points: points2 }, 
-		physics: {x: 0, y: 2, z: 0, shape: { type: "convex", points: points2 }, mass: 1},
+		physics: {x: 0, y: .5, z: 0, shape: { type: "convex", points: points2 }, mass: 1},
 	}, "testConvexMesh1");	
 	createEntity({ 
 		constraint: {
-			bodyA: "testConvexMesh0", localA: [0,-.5,0], 
-			bodyB: "testConvexMesh1", localB: [0, .5,0],
-			type: "6DOF", disableCollision: true,
-			options: { distance: 5.0, spring: true, stiffness: 500.0, damping: 0.1, disableCollision: true }
+			bodyA: "testConvexMesh0", localA: [0,-.15,0], 
+			bodyB: "testConvexMesh1", localB: [0, .15,0],
+			type: "6DOF", disableCollision: false,
+			options: { distance: 5.0, spring: true, stiffness: 50.0, damping: 2 }
 		}
 	}, "springConst1");	
 
@@ -1384,7 +1384,7 @@ function level8() {
 	return defaultState;
 }
 
-const mainLevel = level8;
+const mainLevel = springTest;
 const levels = {
 	level1: level1,
 	level2: level2,

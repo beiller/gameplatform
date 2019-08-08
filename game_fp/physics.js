@@ -238,9 +238,11 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	}
 	const useLinearReferenceFrameB = false;
 	if(bodyB) {
-		var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, bodyB, temp_trans_1, temp_trans_2, useLinearReferenceFrameB);
+		//var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, bodyB, temp_trans_1, temp_trans_2, useLinearReferenceFrameB);
+		var constraint = new Ammo.btGeneric6DofSpring2Constraint(bodyA, bodyB, temp_trans_1, temp_trans_2);
 	} else {
-		var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, temp_trans_1, useLinearReferenceFrameB);
+		//var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, temp_trans_1, useLinearReferenceFrameB);
+		var constraint = new Ammo.btGeneric6DofSpring2Constraint(bodyA, temp_trans_1);
 	}
 
 	var angleLow = options.rotationLimitsLow ? options.rotationLimitsLow : [-Math.PI, -Math.PI/2, -Math.PI];
