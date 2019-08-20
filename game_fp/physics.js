@@ -24,7 +24,7 @@ const collisionFlags = {
 const stepHz = 60;
 const stepDt = 1/stepHz;
 //const constraintSolverIterations = null;  // use null for default
-const constraintSolverIterations = 150;  // use null for default
+const constraintSolverIterations = 70;  // use null for default
 const useSplitImpulse = null;
 const globalCollisionMap = {};
 const bodyIdMap = {};
@@ -37,7 +37,7 @@ const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
 	//m_dynamicsWorld.stepSimulation(stepDt);
-	m_dynamicsWorld.stepSimulation(stepDt, 10, 1./120);
+	m_dynamicsWorld.stepSimulation(stepDt, 5, 1./120);
 };
 
 function buildBodyIdMap(gameState) {
@@ -236,7 +236,7 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 		temp_trans_2.setRotation(temp_quat_2);
 		temp_trans_2.setOrigin(temp_vec3_2);
 	}
-	const useLinearReferenceFrameB = false;
+	//const useLinearReferenceFrameB = false;
 	if(bodyB) {
 		//var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, bodyB, temp_trans_1, temp_trans_2, useLinearReferenceFrameB);
 		var constraint = new Ammo.btGeneric6DofSpring2Constraint(bodyA, bodyB, temp_trans_1, temp_trans_2);

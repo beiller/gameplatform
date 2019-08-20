@@ -541,6 +541,11 @@ function renderObject(state, id, eventHandler, gameState) {
 		const healthRatio = Math.max(0.0001, gameState.stats[id].health / gameState.stats[id].maxHealth);
 		healthBarSprites[id].scale.x = healthRatio;
 	}
+
+	if('materials' in state) {
+		state = applyMaterials(state, id);
+	}
+
 	return state;
 }
 
@@ -792,6 +797,19 @@ function updateParticlesFunction(particleSystem) {
 	}
 	particleSystem.geometry.verticesNeedUpdate = true;
 };
+
+
+function applyMaterials(state, id) {
+	if(id in loadedObjects) {
+		state.materials.forEach((materialParameters, index) => {
+			if(!('needsUpdate' in materialParameters) || materialParameters.needsUpdate === true) {
+				loadedObjects[id].material[index] = new THREE.MeshStandardMaterial({...materialParameters});
+				state.materials[index].needsUpdate = false;
+			}
+		});
+	}
+	return state;
+}
 
 
 function applyGPUParticles(state, id, eventHandler, gameState) {
