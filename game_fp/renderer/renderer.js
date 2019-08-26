@@ -798,13 +798,62 @@ function updateParticlesFunction(particleSystem) {
 	particleSystem.geometry.verticesNeedUpdate = true;
 };
 
+const createMaterial = function(materialOptions) {
+	const map = {
+		'normalScale' : materialOptions.normalScale ? new THREE.Vector2(materialOptions.normalScale, materialOptions.normalScale) : new THREE.Vector2(1, 1),
+		'bumpScale': 'bumpScale' in materialOptions ? materialOptions.bumpScale : 0.0025,
+		'color': materialOptions.color ? new THREE.Color( parseInt(materialOptions.color, 16) ) : new THREE.Color( 0xFFFFFF ),
+		'transparent': materialOptions.transparent ? materialOptions.transparent : false,
+		'opacity': materialOptions.opacity || 1.0,
+		'metalness': materialOptions.metalness || 0,
+		'metalness': 'metalness' in materialOptions ? materialOptions.metalness : 0.0,
+		'roughness': 'roughness' in materialOptions ? materialOptions.roughness : 1.0,
+		'skinning': true,
+		'emissive': materialOptions.emissive ? new THREE.Color( parseInt(materialOptions.emissive, 16) ) : new THREE.Color( 0xFFFFFF ),
+		'emissiveIntensity': 'emissiveIntensity' in materialOptions ? materialOptions.emissiveIntensity : 0.0,
+		'refractionRatio': 'refractionRatio' in materialOptions ? materialOptions.refractionRatio : 0.95,
+		//'reflectivity': 'reflectivity' in materialOptions ? materialOptions.reflectivity : 0.0
+		'side': THREE.DoubleSide,
+		'shadowSide': THREE.BackSide,
+		'name': materialOptions.name
+	};
+
+	console.log("Roughness", map.roughness);
+	if('specular' in map || 'specularPath' in map) {
+		console.log("Warning: you are using specular data when we are roughness based.");
+	}
+
+	//var material = new THREE.MeshStandardMaterial(map);
+	var material = 'phong' in materialOptions ? new THREE.MeshPhongMaterial(map) : new THREE.MeshStandardMaterial(map);
+	
+	var setMaterial = function(texturePath, slotName) {
+		LOADER.loadTexture(texturePath, function(tex) {
+			material[slotName] = tex;
+			material.needsUpdate = true;
+			console.log('loaded', tex, slotName, material);
+		});
+	}
+	var slots = ["map", "specularMap", "normalMap", "alphaMap", "bumpMap", "roughnessMap", "emissiveMap"];
+	var optionValues = ["diffusePath", "specularPath", "normalPath", "alphaPath", "bumpPath", "roughnessPath", "emissivePath"];
+	slots.forEach(function(slot, i) {
+		if(optionValues[i] in materialOptions) {
+			setMaterial(materialOptions[optionValues[i]], slot);
+		}
+	});
+
+	return material;
+};
 
 function applyMaterials(state, id) {
 	if(id in loadedObjects) {
 		state.materials.forEach((materialParameters, index) => {
 			if(!('needsUpdate' in materialParameters) || materialParameters.needsUpdate === true) {
-				loadedObjects[id].material[index] = new THREE.MeshStandardMaterial({...materialParameters});
+				if(!('length' in loadedObjects[id].material)) {
+					loadedObjects[id].material = new Array(state.materials.length);
+				}
+				loadedObjects[id].material[index] = createMaterial(materialParameters);
 				state.materials[index].needsUpdate = false;
+				updateCubeMaps(hdrCubeRenderTarget);
 			}
 		});
 	}

@@ -51,6 +51,105 @@ function findRootBone(root) {
 	return searchTree(root, obj => obj.isBone && (!obj.parent || !obj.parent.isBone));
 }
 
+const matchDefBones = obj => obj.name.startsWith('DEF-');
+
+/*
+	Convert rigify rig from blender to game format
+	Strips out all bones except those prefixed with "DEF-" (deform bones in rigify)
+
+	Returns a THREE.Skeleton with roughly the following hierarchy:
+
+	root->
+	  spine->
+	     face
+	  legs
+	  arms->
+		 hands/fingers
+
+*/
+function rigifyToSimple(rigifySkeleton) {
+	const m1 = new THREE.Matrix4();
+	const allDEFBones = searchTree(rigifySkeleton.getBoneByName("root"), matchDefBones);
+	rigifySkeleton.update();
+
+	const deformFaceBones = searchTree(rigifySkeleton.getBoneByName("ORG-face"), matchDefBones);
+	const lHandBones = searchTree(rigifySkeleton.getBoneByName("DEF-hand_L"), matchDefBones).slice(1);
+	const rHandBones = searchTree(rigifySkeleton.getBoneByName("DEF-hand_R"), matchDefBones).slice(1);
+	
+	const matchOtherBones = obj => !(deformFaceBones.includes(obj) || lHandBones.includes(obj) || rHandBones.includes(obj))
+	const matchOtherDefBones = obj => matchDefBones(obj) && matchOtherBones(obj);
+	
+	const otherBones = searchTree(rigifySkeleton.getBoneByName("root"), matchOtherDefBones);
+	/*console.log('deformFaceBones', deformFaceBones);
+	console.log('lHandBones', lHandBones);
+	console.log('rHandBones', rHandBones);
+	console.log('otherBones', otherBones);*/
+	
+	const rootBone = new THREE.Bone();
+	rootBone.name = "root";
+	const nullBone = new THREE.Bone();
+	const newBones = rigifySkeleton.bones.map(o => nullBone);
+
+	for(let i = 0; i < allDEFBones.length; i++) {
+		const bone = allDEFBones[i];
+		const boneIndex = rigifySkeleton.bones.indexOf(bone);
+		m1.getInverse(rigifySkeleton.boneInverses[boneIndex]);
+		const newBone = new THREE.Bone();
+		newBone.name = bone.name;
+		m1.decompose(newBone.position, newBone.quaternion, newBone.scale);
+		newBone.matrixWorld.copy(m1);
+		newBone.updateMatrix();
+		rootBone.add(newBone);
+		newBones[boneIndex] = newBone;
+	}
+	const rootIndex = rigifySkeleton.bones.indexOf(rigifySkeleton.getBoneByName("root"));
+	newBones[rootIndex] = rootBone;
+
+	const newSkeleton = new THREE.Skeleton(newBones);
+	
+	//f(string, string) -> undefined
+	const reparent = (skeleton, parentBoneName, boneName) => {
+		if(parentBoneName == boneName) return;
+		const parentBone = skeleton.getBoneByName(parentBoneName)
+		const childBone = skeleton.getBoneByName(boneName);
+		childBone.applyMatrix(m1.copy(skeleton.boneInverses[skeleton.bones.indexOf(parentBone)]));
+		parentBone.add(childBone);
+	};
+	deformFaceBones.forEach(bone => reparent(newSkeleton, "DEF-spine_006", bone.name));
+	rHandBones.forEach(bone => reparent(newSkeleton, "DEF-hand_R", bone.name));
+	lHandBones.forEach(bone => reparent(newSkeleton, "DEF-hand_L", bone.name));
+	reparent(newSkeleton, "DEF-spine", "DEF-pelvis_L");
+	reparent(newSkeleton, "DEF-spine", "DEF-pelvis_R");
+	reparent(newSkeleton, "DEF-spine_003", "DEF-breast_L");
+	reparent(newSkeleton, "DEF-spine_003", "DEF-breast_R");
+	newSkeleton.pose()
+
+	return newSkeleton;
+}
+
+function loadRigify(url) {
+	const loaderMap = {
+		'dae': DAEloader, 'gltf': GLTFLoader
+	};
+	function loaderFunc(url, callbackFn) {
+		loaderMap[url.split('.').slice(-1).pop().toLowerCase()].load(url, callbackFn);
+	}
+	return new Promise((resolve) => {
+		loaderFunc(url, (collada) => {
+			const skinnedMeshList = findSkinnedMesh(collada.scene);  // Gather all skinned mesh
+			// join all meshes together into one
+			let armature = skinnedMeshList[0];
+			for(let i = 1; i < skinnedMeshList.length; i++) {
+				armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
+			}
+			//armature.geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+			armature.skeleton = rigifyToSimple(armature.skeleton);
+			armature.add(armature.skeleton.bones[0]);
+			resolve({scene: armature});
+		});
+	});
+}
+
 function loadDAE(url) {
 	return new Promise((resolve) => {
 		DAEloader.load(url, (collada) => {
@@ -60,28 +159,9 @@ function loadDAE(url) {
 			for(let i = 1; i < skinnedMeshList.length; i++) {
 				armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
 			}
-			const skeletonRootBones = findRootBone(collada.scene);
-
-			const matchDefBones = obj => obj.name.startsWith('DEF-')
-			const clone = o => o.clone();
-
-			const deformFaceBones = searchTree(armature.skeleton.getBoneByName("ORG-face"), matchDefBones);
-			const lHandBones = searchTree(armature.skeleton.getBoneByName("DEF-hand_R"), matchDefBones).slice(1);
-			const rHandBones = searchTree(armature.skeleton.getBoneByName("DEF-hand_L"), matchDefBones).slice(1);
-			
-			const matchOtherBones = obj => !(deformFaceBones.includes(obj) || lHandBones.includes(obj) || rHandBones.includes(obj))
-			const matchOtherDefBones = obj => matchDefBones(obj) && matchOtherBones(obj);
-			
-			const otherBones = searchTree(armature.skeleton.getBoneByName("root"), matchOtherDefBones);
-			const clearChildren = (o) => { o.children = []; return o; };
-			console.log('deformFaceBones', deformFaceBones.map(clone).map(clearChildren));
-			console.log('lHandBones', lHandBones.map(clone).map(clearChildren));
-			console.log('rHandBones', rHandBones.map(clone).map(clearChildren));
-			console.log('otherBones', otherBones.map(clone).map(clearChildren));
-
-			for(let i = 0; i < skeletonRootBones.length; i++) {
-				armature.add(skeletonRootBones[i]);
-			}
+			//armature.geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+			armature.skeleton = rigifyToSimple(armature.skeleton);
+			armature.add(armature.skeleton.bones[0]);
 			resolve({scene: armature});
 		});
 	});
@@ -89,12 +169,24 @@ function loadDAE(url) {
 
 function loadGLTF(url) {
 	return new Promise((resolve, reject) => {
-		GLTFLoader.load(
+		/*GLTFLoader.load(
 			url, gltf => resolve(gltf),
 			function ( xhr ) {
 				console.log( ( xhr.loaded / xhr.total * 100 ) + '% loaded' );
 			}, reject
-		);
+		);*/
+		GLTFLoader.load(url, (gltf) => {
+			const skinnedMeshList = findSkinnedMesh(gltf.scene);  // Gather all skinned mesh
+			// join all meshes together into one
+			let armature = skinnedMeshList[0];
+			for(let i = 1; i < skinnedMeshList.length; i++) {
+				armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
+			}
+			//armature.geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+			//armature.skeleton = rigifyToSimple(armature.skeleton);
+			//armature.add(armature.skeleton.bones[0]);
+			resolve({scene: armature});
+		});
 	});
 }
 
@@ -121,6 +213,8 @@ function createCache(functionToCache) {
 		});
 	}
 }
+
+const loadTexture = (url, callback) => Loader.loadTexture(url).then((tex) => {tex.name = url; callback(tex)});
 
 const loadDAECached = createCache(loadDAE);
 const loadGLTFCached = createCache(loadGLTF);
@@ -159,4 +253,4 @@ function loadMeshFile(callbackFn, state) {
 	}
 }
 
-export {loadEXRMap, loadTextureOnce, loadMeshFile, loadGLTF}
+export {loadEXRMap, loadTextureOnce, loadTexture, loadMeshFile, loadGLTF, loadDAE, loadRigify}

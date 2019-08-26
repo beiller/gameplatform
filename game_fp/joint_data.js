@@ -165,6 +165,79 @@ const jointData = {
 		["RootNode_lFoot", "RootNode_lShin", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
 		["RootNode_lMetatarsals", "RootNode_lFoot", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]]
 	]
+	},
+	'princessRigify': {
+		pairs: [
+			["DEF-spine", "DEF-spine_001"],
+			["DEF-spine_001", "DEF-spine_002"],
+			["DEF-spine_002", "DEF-spine_003"],
+			["DEF-spine_003", "DEF-spine_004"],
+			["DEF-spine_004", "DEF-spine_005"],
+			["DEF-spine_005", "DEF-spine_006"],
+			["DEF-spine_006", 0.2],
+
+			["DEF-thigh_R", "DEF-thigh_R_001"],
+			["DEF-thigh_R_001", "DEF-shin_R"],
+			["DEF-shin_R", "DEF-shin_R_001"],
+			["DEF-shin_R_001", "DEF-foot_R"],
+			["DEF-foot_R", "DEF-toe_R"],
+			["DEF-toe_R", 0.1],
+			["DEF-thigh_L", "DEF-thigh_L_001"],
+			["DEF-thigh_L_001", "DEF-shin_L"],
+			["DEF-shin_L", "DEF-shin_L_001"],
+			["DEF-shin_L_001", "DEF-foot_L"],
+			["DEF-foot_L", "DEF-toe_L"],
+			["DEF-toe_L", 0.1],
+
+			["DEF-shoulder_L", 0.2],
+			["DEF-upper_arm_L", 0.2],
+			["DEF-upper_arm_L_001", 0.2],
+			["DEF-forearm_L", 0.2],
+			["DEF-forearm_L_001", 0.2],
+			["DEF-hand_L", 0.2],
+			["DEF-shoulder_R", 0.2],
+			["DEF-upper_arm_R", 0.2],
+			["DEF-upper_arm_R_001", 0.2],
+			["DEF-forearm_R", 0.2],
+			["DEF-forearm_R_001", 0.2],
+			["DEF-hand_R", 0.2]
+		], 
+		pairs2: [
+			["DEF-spine", "DEF-spine_001", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+			["DEF-spine_001", "DEF-spine_002", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+			["DEF-spine_002", "DEF-spine_003", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+			["DEF-spine_003", "DEF-spine_004", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+			["DEF-spine_004", "DEF-spine_005", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+			["DEF-spine_005", "DEF-spine_006", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+
+			["DEF-thigh_R", "DEF-spine", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
+			["DEF-thigh_R_001", "DEF-thigh_R", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-shin_R", "DEF-thigh_R_001", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
+			["DEF-shin_R_001", "DEF-shin_R", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-foot_R", "DEF-shin_R_001", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+			["DEF-toe_R", "DEF-foot_R", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+
+			["DEF-thigh_L", "DEF-spine", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
+			["DEF-thigh_L_001", "DEF-thigh_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-shin_L", "DEF-thigh_L_001", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
+			["DEF-shin_L_001", "DEF-shin_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-foot_L", "DEF-shin_L_001", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+			["DEF-toe_L", "DEF-foot_L", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
+
+			["DEF-shoulder_R", "DEF-spine_003", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
+			["DEF-upper_arm_R", "DEF-shoulder_R", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
+			["DEF-upper_arm_R_001", "DEF-upper_arm_R", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-forearm_R", "DEF-upper_arm_R_001", [-EPS, -EPS, -ELBOW], [EPS, EPS, EPS]],
+			["DEF-forearm_R_001", "DEF-forearm_R", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-hand_R", "DEF-forearm_R_001", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
+			
+			["DEF-shoulder_L", "DEF-spine_003", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
+			["DEF-upper_arm_L", "DEF-shoulder_L", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
+			["DEF-upper_arm_L_001", "DEF-upper_arm_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-forearm_L", "DEF-upper_arm_L_001", [-EPS, -EPS, -ELBOW], [EPS, EPS, EPS]],
+			["DEF-forearm_L_001", "DEF-forearm_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-hand_L", "DEF-forearm_L_001", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
+		]
 	}
 };
 

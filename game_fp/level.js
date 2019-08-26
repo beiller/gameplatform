@@ -789,13 +789,13 @@ function vectorizeBuffer(buffer) {
 	return vect;
 }
 function findBoneIndex(boneName, bonesList) {
-	let boneIndex = 0
+	let boneIndex = -1
 	for(boneIndex = 0; boneIndex < bonesList.length; boneIndex++) {
 		if(bonesList[boneIndex].name == boneName) {
 			break;
 		}
 	}
-	if(boneIndex === 0) { throw('Unable to find bone ' + boneName)}
+	if(boneIndex === -1) { throw('Unable to find bone ' + boneName)}
 	return boneIndex;
 }
 function gatherVertices(boneIndex, skinIndex, skinWeight, position, minimumQueryWeight) {
@@ -909,7 +909,7 @@ function calculateConvexHullMass(points, density) {
 	Will output rigid bodies matching the mesh using convex hull
 */
 function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {		
-	const MAX_VERTICES = 60;
+	const MAX_VERTICES = 15;
 	const bonesList = skinnedMesh.skeleton.bones;
 	const position = vectorizeBuffer(skinnedMesh.geometry.attributes.position);
 	const skinIndex = vectorizeBuffer(skinnedMesh.geometry.attributes.skinIndex);
@@ -1048,40 +1048,14 @@ function pinConstriants(entities, namePrefix, pins) {
 					disableCollision: true,
 					rotationLimitsLow : [-0,-0,-0],
 					rotationLimitsHigh : [0, 0, 0],
-					spring: true, stiffness: 4000.0, distance: 25, damping: .1
+					spring: true, stiffness: 40000.0, distance: 0.01, damping: .1
 					//equilibriumPoint: localToWorldEquilibrium
 				}
 			},
-			"particle": {maxAge: 500}
+			//"particle": {maxAge: 500}
 		}
 	}
-	//pin hips to keep height above x
-	const bone = namePrefix+".bone.RootNode_pelvis";
-	const x = entities[bone].physics.x;
-	const y = entities[bone].physics.y;
-	const z = entities[bone].physics.z;
-	const mainSpringSetting = {
-		type: "6DOF", 
-		localA: [0,0,0],
-		options: {
-			disableCollision: true,
-			rotationLimitsLow : [-0.1,-0.1,-0.1],
-			rotationLimitsHigh : [0.1, 0.1, 0.1],
-			spring: true, stiffness: 40000.0, distance: 5
-		}
-	}
-	entities[namePrefix+'.hip_height_standing'] = {
-		"constraint": {
-			...mainSpringSetting,
-			bodyA: namePrefix+".bone.RootNode_pelvis", 
-		}
-	}
-	entities[namePrefix+'.hip_height_standing2'] = {
-		"constraint": {
-			...mainSpringSetting,
-			bodyA: namePrefix+".bone.RootNode_head"
-		}
-	}
+	
 	try {
 		const springSettings = { 
 			distance: 5.0, spring: true, stiffness: 250.0, disableCollision: false 
@@ -1102,27 +1076,6 @@ function pinConstriants(entities, namePrefix, pins) {
 function moveBodies(entities, offset, rotation) {
 	for(let eid in entities) {
 		if('physics' in entities[eid]) {
-			if(rotation) {
-				qua4_1.set(rotation.x, rotation.y, rotation.z, rotation.w)
-				if('rotation' in entities[eid].physics) {
-					qua4_2.set(
-						entities[eid].physics.rotation.x, entities[eid].physics.rotation.y,
-						entities[eid].physics.rotation.z, entities[eid].physics.rotation.w
-					);
-				} else {
-					qua4_2.set(0,0,0,1);
-				}
-				qua4_2.multiply(qua4_1);
-				const quaternion = qua4_1;
-				vec3_1.set(entities[eid].physics.x, entities[eid].physics.y, entities[eid].physics.z);
-				vec3_1.applyQuaternion(quaternion);
-				entities[eid].physics.x = vec3_1.x;
-				entities[eid].physics.y = vec3_1.y;
-				entities[eid].physics.z = vec3_1.z;
-				entities[eid].physics.rotation = {
-					x: qua4_2.x, y: qua4_2.y, z: qua4_2.z, w: qua4_2.w
-				}
-			}
 			entities[eid].physics.x += offset.x;
 			entities[eid].physics.y += offset.y;
 			entities[eid].physics.z += offset.z;
@@ -1138,7 +1091,7 @@ function spawnRagdoll(namePrefix, armature, pairs, pairs2, offset, rotation) {
 		pins.push(pairs[i][0]);
 	}
 	pins = getRandomSubarray(pins, 2);	*/
-	const pins = ['RootNode_lFoot', 'RootNode_rFoot']
+	const pins = ['DEF-hand_R', 'DEF-hand_L'];
 
 
 	let entities = createConvexHullMesh(armature, namePrefix, pairs);
@@ -1151,10 +1104,10 @@ function spawnRagdoll(namePrefix, armature, pairs, pairs2, offset, rotation) {
 }
 
 function level8() {
-	const meshName = 'nonfree/princess.glb';
-	const meshName2 = 'nonfree/weight_painted_princess.dae';
-	const pairs = jointData['princess'].pairs;
-	const pairs2 = jointData['princess'].pairs2;
+	const meshName = 'nonfree/weight_painted_princess.dae';
+	//const meshName = 'nonfree/weight_painted_princess.gltf';
+	const pairs = jointData['princessRigify'].pairs;
+	const pairs2 = jointData['princessRigify'].pairs2;
 	const offsets = {
 		'char1': {x: 0, y: 0, z:0},
 		'char2': {x: 0, y: 0, z:0}
@@ -1170,11 +1123,13 @@ function level8() {
 	const pairs = jointData['xnalara'].pairs;
 	const pairs2 = jointData['xnalara'].pairs2;*/
 
-	LOADER.loadGLTF(meshName).then(gltf => {
-		const skinnedMeshList = findSkinnedMesh(gltf.scene);  // Gather all skinned mesh
+	LOADER.loadRigify(meshName).then(collada => {
+	//LOADER.loadGLTF(meshName).then(collada => {
+	//LOADER.loadDAE(meshName).then(collada => {
+		const skinnedMeshList = findSkinnedMesh(collada.scene);  // Gather all skinned mesh
 		// join all meshes together into one
-		let armature = skinnedMeshList[2];
-		for(let i = 3; i < skinnedMeshList.length; i++) {
+		let armature = skinnedMeshList[0];
+		for(let i = 1; i < skinnedMeshList.length; i++) {
 			armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
 		}
 
@@ -1192,11 +1147,27 @@ function level8() {
 			createEntity({
 				"entity": {x: 0, y: 0, z: 0}, 
 				"render": { 
-					type: "animatedMesh", filename: meshName2, ignoreOffset: true,
+					type: "animatedMesh", filename: 'nonfree/weight_painted_princess.gltf', ignoreOffset: true,
 					materials: [ 
-						{...defaultMat}, {...defaultMat}, {...defaultMat},
-						{...defaultMat}, {...defaultMat}, {...defaultMat}, {...defaultMat}, {...defaultMat},
-						{...defaultMat}, {...defaultMat}, {...defaultMat}
+						{...defaultMat, name: "lashes",
+						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_lashesDA_1006.png", transparent: true
+						}, 
+						{...defaultMat, name: "arms",
+						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_arms_1004.jpg"
+						}, 
+						{...defaultMat, name: "legs",
+						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_legs_1003.jpg"
+						}, 
+						{...defaultMat, name: "cornea", roughness: 0.01, transparent: true, opacity: 0, metalness: 1.0}, 
+						{...defaultMat, color: "0x000000", roughness: 0.9, name: "pupils"}, 
+						{...defaultMat, name: "face",
+						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_face_1001.jpg"
+						}, 
+						{...defaultMat, color: "0xEEEEEE", name: "teeth"}, 
+						{...defaultMat, name: "torso",
+						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_torso_1002.jpg"
+						}, 
+						{...defaultMat, name: "eyemoisture", roughness: 0.01, transparent: true, opacity: 0.15, metalness: 1.0}
 					]
 				},
 				/*"physBone": {
@@ -1220,6 +1191,7 @@ function level8() {
 
 	return defaultState;
 }
+
 
 const mainLevel = level8;
 const levels = {

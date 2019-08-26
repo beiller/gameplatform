@@ -17,10 +17,10 @@ function removeBehaviour(gameState, behaviourName, objectId) {
     }
 }
 
-let counter = 0;
+let objectCounter = 0;
 function generateObjectId() {
-    counter += 1;
-    return counter;
+    objectCounter += 1;
+    return objectCounter;
 }
 
 //function createEntity(gameState, objectId, state)
