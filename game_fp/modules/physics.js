@@ -36,8 +36,8 @@ const BT_CONSTRAINT_CFM = 3;
 const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
-	m_dynamicsWorld.stepSimulation(stepDt);
-	//m_dynamicsWorld.stepSimulation(stepDt, 10, 1./120);
+	//m_dynamicsWorld.stepSimulation(stepDt);
+	m_dynamicsWorld.stepSimulation(stepDt, 10, 1./240);
 };
 
 function buildBodyIdMap(gameState) {

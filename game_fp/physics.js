@@ -23,8 +23,8 @@ const collisionFlags = {
 
 const stepHz = 60;
 const stepDt = 1/stepHz;
-//const constraintSolverIterations = null;  // use null for default
-const constraintSolverIterations = 70;  // use null for default
+const constraintSolverIterations = null;  // use null for default
+//const constraintSolverIterations = 70;  // use null for default
 const useSplitImpulse = null;
 const globalCollisionMap = {};
 const bodyIdMap = {};
@@ -37,7 +37,7 @@ const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
 	//m_dynamicsWorld.stepSimulation(stepDt);
-	m_dynamicsWorld.stepSimulation(stepDt, 5, 1./120);
+	m_dynamicsWorld.stepSimulation(stepDt, 5, 1./300);
 };
 
 function buildBodyIdMap(gameState) {

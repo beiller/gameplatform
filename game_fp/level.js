@@ -909,7 +909,7 @@ function calculateConvexHullMass(points, density) {
 	Will output rigid bodies matching the mesh using convex hull
 */
 function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {		
-	const MAX_VERTICES = 15;
+	const MAX_VERTICES = 50;
 	const bonesList = skinnedMesh.skeleton.bones;
 	const position = vectorizeBuffer(skinnedMesh.geometry.attributes.position);
 	const skinIndex = vectorizeBuffer(skinnedMesh.geometry.attributes.skinIndex);
@@ -1041,14 +1041,14 @@ function pinConstriants(entities, namePrefix, pins) {
 		const z = entities[bone].physics.z + localA[2];
 		entities[pin] = {
 			"render": {type: "axis", ignoreOffset: true}, "entity": {x: x, y: y, z: z},
-			"physics": {x: x, y: y, z: z, shape: {type: "sphere", radius: 0.025 }, mass: 0, noContact: true, kinematic: true},
+			//"physics": {x: x, y: y, z: z, shape: {type: "sphere", radius: 0.025 }, mass: 0, noContact: true, kinematic: true},
 			"constraint": {
 				type: "6DOF", bodyA: bone, localA: localA,
 				options: {
 					disableCollision: true,
 					rotationLimitsLow : [-0,-0,-0],
 					rotationLimitsHigh : [0, 0, 0],
-					spring: true, stiffness: 40000.0, distance: 0.01, damping: .1
+					spring: true, stiffness: 500.0, distance: 2, damping: 0
 					//equilibriumPoint: localToWorldEquilibrium
 				}
 			},
@@ -1091,7 +1091,7 @@ function spawnRagdoll(namePrefix, armature, pairs, pairs2, offset, rotation) {
 		pins.push(pairs[i][0]);
 	}
 	pins = getRandomSubarray(pins, 2);	*/
-	const pins = ['DEF-hand_R', 'DEF-hand_L'];
+	const pins = ['DEF-hand_R', 'DEF-hand_L', 'DEF-spine_005'];
 
 
 	let entities = createConvexHullMesh(armature, namePrefix, pairs);
@@ -1104,7 +1104,7 @@ function spawnRagdoll(namePrefix, armature, pairs, pairs2, offset, rotation) {
 }
 
 function level8() {
-	const meshName = 'nonfree/weight_painted_princess.dae';
+	const meshName = 'free/free_mesh_standard.dae';
 	//const meshName = 'nonfree/weight_painted_princess.gltf';
 	const pairs = jointData['princessRigify'].pairs;
 	const pairs2 = jointData['princessRigify'].pairs2;
@@ -1144,21 +1144,19 @@ function level8() {
 			for(let eid in ragdolls[namePrefix]) {
 				createEntity(ragdolls[namePrefix][eid], eid);
 			}
-			createEntity({
+			const finalCharacter = {
 				"entity": {x: 0, y: 0, z: 0}, 
 				"render": { 
-					type: "animatedMesh", filename: 'nonfree/weight_painted_princess.gltf', ignoreOffset: true,
+					type: "animatedMesh", filename: meshName, ignoreOffset: true,
 					materials: [ 
-						{...defaultMat, name: "lashes",
-						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_lashesDA_1006.png", transparent: true
-						}, 
+						/*{name: "body", diffusePath: "free/baked_skin_final.png", transparent: true},
 						{...defaultMat, name: "arms",
 						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_arms_1004.jpg"
 						}, 
 						{...defaultMat, name: "legs",
 						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_legs_1003.jpg"
 						}, 
-						{...defaultMat, name: "cornea", roughness: 0.01, transparent: true, opacity: 0, metalness: 1.0}, 
+						{name: "body2", color: "0x3333AA"},
 						{...defaultMat, color: "0x000000", roughness: 0.9, name: "pupils"}, 
 						{...defaultMat, name: "face",
 						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_face_1001.jpg"
@@ -1167,15 +1165,27 @@ function level8() {
 						{...defaultMat, name: "torso",
 						diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_torso_1002.jpg"
 						}, 
-						{...defaultMat, name: "eyemoisture", roughness: 0.01, transparent: true, opacity: 0.15, metalness: 1.0}
+						{...defaultMat, name: "eyemoisture", roughness: 0.01, transparent: true, opacity: 0.15, metalness: 1.0}*/
+						{name: "body", diffusePath: "free/baked_skin_final.png", transparent: true},
+						{...defaultMat, name: "arms", diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_arms_1004.jpg"}, 
+						{...defaultMat, name: "lashes", color: "0x000000"}, 
+						{ name: "generic", color: "0x3333AA", roughness: 0.2 },
+						{...defaultMat, roughness: 0.9, name: "eyes", diffusePath: "../models/brownlight_eye.png"}, 
+						{...defaultMat, name: "eyemoisture", roughness: 0.01, transparent: true, opacity: 0.25, metalness: 1.0},
+						{...defaultMat, name: "toenails", color: "0x000000", roughness: 0.01}, 
+						{...defaultMat, name: "fingernails", color: "0x000000", roughness: 0.01}, 
+						{...defaultMat, color: "0x221111", name: "fleshy"}, 
+						{...defaultMat, color: "0x221111", name: "pupil"}, 
+						{...defaultMat, color: "0x221111", name: "tonge", diffusePath: "../models/tongue01_diffuse.png"}
 					]
 				},
-				/*"physBone": {
+				"physBone": {
 					boneConstraints: pairs.map(
 						(boneData) => { return {id: namePrefix+".bone."+boneData[0], boneName: boneData[0]}; }
 					)
-				},*/
-			}, namePrefix+'.characterMesh');
+				},
+			};
+			createEntity(finalCharacter, namePrefix+'.characterMesh');
 		});
 
 		createEntity({
