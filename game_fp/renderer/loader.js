@@ -69,9 +69,9 @@ const matchDefBones = obj => obj.name.startsWith('DEF-');
 */
 function rigifyToSimple(rigifySkeleton) {
 	const m1 = new THREE.Matrix4();
-	const allDEFBones = searchTree(rigifySkeleton.getBoneByName("root"), matchDefBones);
 	rigifySkeleton.update();
 
+	const allDEFBones = searchTree(rigifySkeleton.getBoneByName("root"), matchDefBones);
 	const deformFaceBones = searchTree(rigifySkeleton.getBoneByName("ORG-face"), matchDefBones);
 	const lHandBones = searchTree(rigifySkeleton.getBoneByName("DEF-hand_L"), matchDefBones).slice(1);
 	const rHandBones = searchTree(rigifySkeleton.getBoneByName("DEF-hand_R"), matchDefBones).slice(1);
@@ -87,8 +87,8 @@ function rigifyToSimple(rigifySkeleton) {
 	
 	const rootBone = new THREE.Bone();
 	rootBone.name = "root";
-	const nullBone = new THREE.Bone();
-	const newBones = rigifySkeleton.bones.map(o => nullBone);
+	//const nullBone = new THREE.Bone();
+	const newBones = [rootBone]; //rigifySkeleton.bones.map(o => nullBone);
 
 	for(let i = 0; i < allDEFBones.length; i++) {
 		const bone = allDEFBones[i];
@@ -100,10 +100,10 @@ function rigifyToSimple(rigifySkeleton) {
 		newBone.matrixWorld.copy(m1);
 		newBone.updateMatrix();
 		rootBone.add(newBone);
-		newBones[boneIndex] = newBone;
+		newBones.push(newBone);
 	}
-	const rootIndex = rigifySkeleton.bones.indexOf(rigifySkeleton.getBoneByName("root"));
-	newBones[rootIndex] = rootBone;
+	//const rootIndex = rigifySkeleton.bones.indexOf(rigifySkeleton.getBoneByName("root"));
+	//newBones[rootIndex] = rootBone;
 
 	const newSkeleton = new THREE.Skeleton(newBones);
 	
@@ -143,11 +143,46 @@ function loadRigify(url) {
 				armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
 			}
 			//armature.geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-			armature.skeleton = rigifyToSimple(armature.skeleton);
+			const simplifiedSkeleton = rigifyToSimple(armature.skeleton);
+			armature.geometry = remapBoneIndex(armature.skeleton, simplifiedSkeleton, armature.geometry)
+			armature.skeleton = simplifiedSkeleton;
 			armature.add(armature.skeleton.bones[0]);
 			resolve({scene: armature});
 		});
 	});
+}
+
+function vectorizeBuffer(buffer) {
+	const vect = [];
+	const consMap = {1: s=>s, 2: THREE.Vector2, 3: THREE.Vector3, 4: THREE.Vector4}
+	const cons = consMap[buffer.itemSize];
+	for(let i = 0; i < buffer.count; i++) {
+		vect.push(new cons().fromBufferAttribute(buffer, i))
+	} 
+	return vect;
+}
+
+function createNameIndexMap(bones) {
+	const mapping = {};
+	for(let i = 0; i < bones.length; i++) {
+		mapping[bones[i].name] = i;
+	}
+	return mapping;
+}
+function remapBoneIndex(originalSkeleton, simplifiedSkeleton, geometry) {
+	const oldNameIndexMap = createNameIndexMap(originalSkeleton.bones);
+	const newNameIndexMap = createNameIndexMap(simplifiedSkeleton.bones);
+	const mapping = {};
+	for(let name in newNameIndexMap) {
+		mapping[oldNameIndexMap[name]] = newNameIndexMap[name];
+	}
+	const skinIndex = vectorizeBuffer(geometry.attributes.skinIndex);
+	//const skinWeight = vectorizeBuffer(geometry.attributes.skinWeight);
+	for(let i = 0; i < skinIndex.length; i++) {
+		const skinIndexVector = skinIndex[i];
+		geometry.attributes.skinIndex.setXYZW(i, mapping[skinIndexVector.x], mapping[skinIndexVector.y], mapping[skinIndexVector.z], mapping[skinIndexVector.w]);
+	}
+	return geometry;
 }
 
 function loadDAE(url) {
@@ -160,7 +195,10 @@ function loadDAE(url) {
 				armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
 			}
 			//armature.geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-			armature.skeleton = rigifyToSimple(armature.skeleton);
+			const simplifiedSkeleton = rigifyToSimple(armature.skeleton);
+			armature.geometry = remapBoneIndex(armature.skeleton, simplifiedSkeleton, armature.geometry)
+			
+			armature.skeleton = simplifiedSkeleton
 			armature.add(armature.skeleton.bones[0]);
 			resolve({scene: armature});
 		});

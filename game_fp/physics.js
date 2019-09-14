@@ -23,8 +23,8 @@ const collisionFlags = {
 
 const stepHz = 60;
 const stepDt = 1/stepHz;
-const constraintSolverIterations = null;  // use null for default
-//const constraintSolverIterations = 70;  // use null for default
+//const constraintSolverIterations = null;  // use null for default
+const constraintSolverIterations = 5;  // use null for default
 const useSplitImpulse = null;
 const globalCollisionMap = {};
 const bodyIdMap = {};
@@ -37,7 +37,7 @@ const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
 	//m_dynamicsWorld.stepSimulation(stepDt);
-	m_dynamicsWorld.stepSimulation(stepDt, 5, 1./300);
+	m_dynamicsWorld.stepSimulation(stepDt, 5, 1./600);
 };
 
 function buildBodyIdMap(gameState) {
@@ -253,7 +253,7 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	constraint.setAngularUpperLimit(temp_vec3_2);
 
 	if(options.spring) {
-		for(let i = 0; i < 7; i++) {
+		for(let i = 0; i < 3; i++) {
 			constraint.enableSpring(i, true);
 			if(options.stiffness) constraint.setStiffness(i, options.stiffness);
 			if(options.damping) constraint.setDamping(i, options.damping);
@@ -276,6 +276,8 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 			constraint.setEquilibriumPoint(0, options.equilibriumPoint[0]);
 			constraint.setEquilibriumPoint(1, options.equilibriumPoint[1]);
 			constraint.setEquilibriumPoint(2, options.equilibriumPoint[2]);
+		} else {
+			//constraint.setEquilibriumPoint();
 		}
 	} else {
 		temp_vec3_1.setValue(0,0,0);

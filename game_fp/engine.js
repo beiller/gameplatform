@@ -186,8 +186,13 @@ function processSystem(systemStates, system, eventHandler, gameState) {
     });
 }
 
+/*
+    Run a command in the event loop
+    parameters:
+        command -> function(gameState)
+                    a function that takes 1 parameter (gameState)
+*/
 let commandQueue = [];
-
 function queueCommand(command) {
     commandQueue.push(command);
 }
@@ -195,7 +200,7 @@ function queueCommand(command) {
 function nextState(gameState) {
     return new Promise(function(resolve, reject) {
         /* Iterate through systems and process them system by system */
-        const eventHandler = getEventHandler(gameState["events"]);
+        //const eventHandler = getEventHandler(gameState["events"]);
         let system = null;
         let promises = [];
         for(let i = 0; i < gameState.systems.length; i++) { // system in gameState["systems"]) {
@@ -252,6 +257,10 @@ function getState() {
     return GAME_STATE;
 }
 
+/*
+    Engine tick function, which locks to prevent running twice
+    when multithreading
+*/
 let LOCK = false;
 function tick() {
     if(LOCK) return;

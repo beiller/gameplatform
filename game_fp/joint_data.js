@@ -23,7 +23,7 @@ const SPINE_BEND = 0;
 const CHEST = 0;
 const SPINE_TWIST = 0;*/
 
-const COLLAR = Math.PI / 4;
+const COLLAR = Math.PI / 12;
 const SHLDR = Math.PI;
 const ELBOW = Math.PI;
 const HAND_BEND = Math.PI * 0.5;

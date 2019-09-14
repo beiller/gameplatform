@@ -9,6 +9,7 @@ import * as InspectorMiddleware from './InspectorMiddleware.js';
 import * as PHYSICS from './physics.js';
 import * as PARTICLE from './modules/particle.js';
 import * as STATS from './modules/stats.js';
+import * as GUI from './ui.js';
 
 //
 function loadRenderableEntity() {
@@ -437,9 +438,24 @@ function main() {
 	}
 	//RENDERER.enableVR();
 	RENDERER.setAnimationLoop(mainLoop);
-	
+	GUI.createDebugConsole(handleCommand);
+}
+
+//function handleParameterUpdate(parameterPath,)
+
+function handleCommand(commandScript) {
+	ENGINE.queueCommand(function(gameState) {
+		try {
+			//ENGINE.createEntity(gameState, JSON.parse(commandScript));
+			eval(commandScript);
+		} catch(e) {
+			console.error(e);
+		}
+	})
 }
 
 main();
 
 console.log('hello world');
+
+export { handleCommand }
