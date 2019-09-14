@@ -238,7 +238,32 @@ const jointData = {
 			["DEF-forearm_L_001", "DEF-forearm_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
 			["DEF-hand_L", "DEF-forearm_L_001", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
 		]
-	}
+	},
+	'long_hair': {
+		pairs: [
+			//head
+			["DEF-spine_006", 0.1],
+
+			//ponytail
+			["bone_006", 0.1],
+			["bone_007", 0.1],
+			["bone_008", 0.1],
+			["bone_009", 0.1],
+			["bone_010", 0.1],
+			["bone_011", 0.1],
+			["bone_012", 0.1],
+			["bone_013", 0.1],
+			["bone_014", 0.1],
+
+			//bangs
+			["bone_015", 0.1],
+
+			//side tail
+			["bone_003", 0.1],
+			["bone_004", 0.1],
+			["bone_005", 0.1]
+		]
+	},
 };
 
 export { jointData }

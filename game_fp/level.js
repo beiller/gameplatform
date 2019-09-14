@@ -764,15 +764,15 @@ function level8() {
 					type: "animatedMesh", filename: meshName, ignoreOffset: true,
 					materials: [ 
 						{...defaultMat, name: "body", diffusePath: "free/baked_skin_final.png", transparent: false},
-						{...defaultMat, name: "arms", diffusePath: "nonfree/princess_fbx_test.images/RyChiyo_arms_1004.jpg"}, 
+						{...defaultMat, name: "teeth", color: "0xEEEEEE"}, 
 						{...defaultMat, name: "lashes", color: "0x000000", diffusePath: "../models/eyelash1.png", transparent: true}, 
-						{...defaultMat, name: "generic", color: "0x3333AA", roughness: 0.9 },
+						{...defaultMat, name: "censor", color: "0x3333AA", roughness: 0.9 },
 						//{...defaultMat, name: "generic", diffusePath: "free/baked_skin_final.png", transparent: false},
 						{...defaultMat, roughness: 0.9, name: "eyes", diffusePath: "../models/brownlight_eye.png"}, 
 						{...defaultMat, name: "eyemoisture", roughness: 0.01, transparent: true, opacity: 0.25, metalness: 1.0},
 						{...defaultMat, name: "toenails", color: "0x000000", roughness: 0.01}, 
 						{...defaultMat, color: "0x221111", name: "innermouth"}, 
-						{...defaultMat, color: "0x221111", name: "pupil"}, 
+						{...defaultMat, color: "0x000000", name: "pupil"}, 
 						{...defaultMat, color: "0x221111", name: "tonge", diffusePath: "../models/tongue01_diffuse.png"},
 						{...defaultMat, name: "lashes", color: "0x000000", diffusePath: "../models/eyebrow010.png", transparent: true}
 					]
@@ -795,6 +795,25 @@ function level8() {
 			"entity": {x: -3, y: 1, z: -2 },
 			"render": { type: "light", lightType: "point", intensity: 300000 }
 		}, "point2");
+
+		const longHair = 'free/long_hair.dae';
+
+		LOADER.loadDAE(longHair).then(collada => {
+			const skinnedMeshList = RIGIFY.findSkinnedMesh(collada.scene);
+			console.log("Loaded hair", skinnedMeshList[0]);
+			const hair = {
+				"entity": {x: 0, y: 0, z: 0}, 
+				"render": { 
+					type: "animatedMesh", filename: longHair, ignoreOffset: true,
+					materials: [ 
+						{...defaultMat, color: "0x000000", name: "hair"}, 
+						{...defaultMat, color: "0x780009", name: "cloth"} 
+					]
+				}
+			}
+			createEntity(hair, 'asdf.hairMesh');
+
+		});
 	});
 
 	return defaultState;

@@ -102,9 +102,6 @@ function rigifyToSimple(rigifySkeleton) {
 		rootBone.add(newBone);
 		newBones.push(newBone);
 	}
-	//const rootIndex = rigifySkeleton.bones.indexOf(rigifySkeleton.getBoneByName("root"));
-	//newBones[rootIndex] = rootBone;
-
 	const newSkeleton = new THREE.Skeleton(newBones);
 	
 	//f(string, string) -> undefined
@@ -194,11 +191,14 @@ function loadDAE(url) {
 			for(let i = 1; i < skinnedMeshList.length; i++) {
 				armature.geometry = MESHUTILS.mergeGeometry(armature.geometry, skinnedMeshList[i].geometry);
 			}
-			//armature.geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
-			const simplifiedSkeleton = rigifyToSimple(armature.skeleton);
-			armature.geometry = remapBoneIndex(armature.skeleton, simplifiedSkeleton, armature.geometry)
-			
-			armature.skeleton = simplifiedSkeleton
+			const allDEFBones = searchTree(armature.skeleton.getBoneByName("root"), matchDefBones);
+			if(allDEFBones.length > 5) {  // Hack to determine if this is a rigify rig. 
+				//armature.geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+				const simplifiedSkeleton = rigifyToSimple(armature.skeleton);
+				armature.geometry = remapBoneIndex(armature.skeleton, simplifiedSkeleton, armature.geometry)
+				
+				armature.skeleton = simplifiedSkeleton
+			} 
 			armature.add(armature.skeleton.bones[0]);
 			resolve({scene: armature});
 		});
