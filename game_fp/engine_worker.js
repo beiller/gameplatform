@@ -35,15 +35,16 @@ const functionMap = {};
 const listenerMap = {};
 function registerSystemFunction(systemName, systemFunction, listeners) {
 	if(Object.keys(functionMap).length == 0) { // execute below for first call to this function
-		self.addEventListener('message', function(e) {
-			const newStates = processSystemWorker(e.data.systemName, functionMap[e.data.systemName], e.data.gameState);
+		self.addEventListener('message', function(e) { // received event from parent thread, contains gameState, etc.
+			const parsed = e.data;
+			const newStates = processSystemWorker(parsed.systemName, functionMap[parsed.systemName], parsed.gameState);
 			self.postMessage({
-				responseId: e.data.responseId,
+				responseId: parsed.responseId,
 				response: newStates,
 				events: eventHandler.popEvents()
 			});
-			if(e.data.systemName in listenerMap && listenerMap[e.data.systemName].onEnd) {
-				listenerMap[e.data.systemName].onEnd(eventHandler, e.data.gameState)
+			if(parsed.systemName in listenerMap && listenerMap[parsed.systemName].onEnd) {
+				listenerMap[parsed.systemName].onEnd(eventHandler, parsed.gameState)
 			}
 		}, false);		
 	} // execute above for first call to this function

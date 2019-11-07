@@ -119,7 +119,7 @@ function rigifyToSimple(rigifySkeleton) {
 	reparent(newSkeleton, "DEF-spine", "DEF-pelvis_R");
 	reparent(newSkeleton, "DEF-spine_003", "DEF-breast_L");
 	reparent(newSkeleton, "DEF-spine_003", "DEF-breast_R");
-	newSkeleton.pose()
+	newSkeleton.pose();
 
 	return newSkeleton;
 }
@@ -185,6 +185,7 @@ function remapBoneIndex(originalSkeleton, simplifiedSkeleton, geometry) {
 function loadDAE(url) {
 	return new Promise((resolve) => {
 		DAEloader.load(url, (collada) => {
+			console.log("Base Collada", collada);
 			const skinnedMeshList = findSkinnedMesh(collada.scene);  // Gather all skinned mesh
 			// join all meshes together into one
 			let armature = skinnedMeshList[0];
@@ -193,13 +194,12 @@ function loadDAE(url) {
 			}
 			const allDEFBones = searchTree(armature.skeleton.getBoneByName("root"), matchDefBones);
 			if(allDEFBones.length > 5) {  // Hack to determine if this is a rigify rig. 
-				//armature.geometry = new THREE.BoxGeometry(0.01, 0.01, 0.01);
+				console.log("simplifying skeleton");
 				const simplifiedSkeleton = rigifyToSimple(armature.skeleton);
-				armature.geometry = remapBoneIndex(armature.skeleton, simplifiedSkeleton, armature.geometry)
-				
-				armature.skeleton = simplifiedSkeleton
-			} 
-			armature.add(armature.skeleton.bones[0]);
+				armature.geometry = remapBoneIndex(armature.skeleton, simplifiedSkeleton, armature.geometry);
+				armature.skeleton = simplifiedSkeleton;
+			}
+			console.log("Constructed mesh", armature);
 			resolve({scene: armature});
 		});
 	});

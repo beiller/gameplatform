@@ -1,5 +1,7 @@
 import * as THREE from './lib/three.module.js';
 import * as LOADER from './renderer/loader.js';
+import * as OBJECTS from './renderer/objects.js';
+import { createEntity } from './engine.js';
 
 function calculateRigidBodyLength(armature, boneName1, boneName2) {
 	const bone1 = armature.getBoneByName(boneName1);
@@ -77,6 +79,26 @@ function vectorizeBuffer(buffer) {
 		vect.push(new cons().fromBufferAttribute(buffer, i))
 	} 
 	return vect;
+}
+
+function gatherVertices2(boneIndex, skinIndex, skinWeight, points, threshold) {
+	/*
+		Returns all vertex that is influenced as dual arrays (x, y, z) and (vertexWeight) given vertex group boneIndex
+	*/
+	if(!threshold) threshold = 0.0001
+	const vertex3 = []
+	const weights = []
+	const weightsPerVertex = 4;
+	const vertexDimensions = 3;
+	for(let i = 0; i < skinIndex.length/weightsPerVertex; i++) {
+		for(let j = 0; j < weightsPerVertex; j++) {
+			if(skinIndex[i*weightsPerVertex+j] == boneIndex && skinWeight[i*weightsPerVertex+j] > threshold) {
+				vertex3.push(points[i*vertexDimensions], points[i*vertexDimensions+1], points[i*vertexDimensions+2]);
+				weights.push(skinWeight[i*weightsPerVertex+j]);
+			}
+		}
+	}
+	return {vertices: vertex3, weights: weights};
 }
 
 function gatherVertices(boneIndex, skinIndex, skinWeight, position, minimumQueryWeight) {
@@ -206,6 +228,10 @@ function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {
 		console.log('Building', boneName);
 		const boneIndex = findBoneIndex(boneName, bonesList);
 		let boneVertexList = gatherVertices(boneIndex, skinIndex, skinWeight, position, 0.35);
+		if(boneVertexList.length < 3) {
+			console.warn("Warning could not gather enough vertices. Retrying");
+			boneVertexList = gatherVertices(boneIndex, skinIndex, skinWeight, position, 0.0001);
+		}
 		const mass = calculateConvexHullMass(boneVertexList, 100.0);
 		totalMass += mass;
 
@@ -224,17 +250,22 @@ function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {
 			cP.divideScalar(localPoints.length); // average of all points
 			const shiftedPoints = localPoints.map(p=>p.clone().sub(cP));
 			const points = shiftedPoints.map( (v)=>{return {x: v.x, y: v.y, z: v.z}} );
-
-
 			vec3.add(cP.clone().applyQuaternion(quat));
+			// flatten points (maybe make it all primitive arrays in the future)
+			const flatPoints = new Float32Array(points.length*3);
+			for(let i = 0; i < points.length; i++) {
+				flatPoints[(i*3)+0] = points[i].x;
+				flatPoints[(i*3)+1] = points[i].y;
+				flatPoints[(i*3)+2] = points[i].z;
+			}
 			
 			const positioning = {x: vec3.x, y: vec3.y, z: vec3.z, rotation: {x: quat.x, y: quat.y, z: quat.z, w: quat.w} };
 			returnEntities[namePrefix+".bone."+boneName] = { 
 				entity: {...positioning}, 
-				//render: { type: "convex", points: points, ignoreOffset: true }, 
+				render: { type: "convex", points: flatPoints, ignoreOffset: true }, 
 				physics: {
 					...positioning, 
-					shape: { type: "convex", points: points }, mass: mass,
+					shape: { type: "convex", points: flatPoints }, mass: mass,
 					boneOffsetX: -cP.x, boneOffsetY: -cP.y, boneOffsetZ: -cP.z
 				}
 			};
@@ -244,32 +275,51 @@ function createConvexHullMesh(skinnedMesh, namePrefix, pairs) {
 	return returnEntities
 }
 
+function connectRigidBodies(idA, idB, physic1, physic2, worldPosition, low, high) {
+	const r1 = physic1.rotation;
+	const r2 = physic2.rotation;
+	const locals = calculateLocalConnectionFromWorld(
+		physic1, physic2, worldPosition[0], worldPosition[1], worldPosition[2]
+	)
+	return {
+		"constraint": {
+			type: "6DOF",
+			bodyA: idA,
+			bodyB: idB,
+			localA: locals.localA,
+			localB: locals.localB,
+			options: {
+				quaternionA: [r1.x, r1.y, r1.z, -r1.w],  //not sure why I have to invert W
+				quaternionB: [r2.x, r2.y, r2.z, -r2.w],  //not sure why I have to invert W
+				disableCollision: true,
+				rotationLimitsLow : low,
+				rotationLimitsHigh : high
+			}
+		}
+	};
+}
+
 /*
 A function that connects rigid bodies given existing rigid
 bodies with a name prefix
 params
 	entites: object containing the rigid body descriptions
-	armature: THREE.Skeleton instane
+	armature: THREE.Skeleton instance
 	namePrefix: namePrefix given to the entities and to these constraints
 */
-function connectRigidBodies(entities, armature, namePrefix, pairs2) {
+function createJointsFromMap(entities, armature, namePrefix, pairs2) {
 	const newEntities = {...entities};
 	for(let i = 0; i < pairs2.length; i++) {	
 		/*
 			Connect joints
 		*/
 		const entity1 = entities[namePrefix+".bone."+pairs2[i][0]];
-		if(!entity1) throw("Unable to find bone: "+pairs2[i][0]);
 		const entity2 = entities[namePrefix+".bone."+pairs2[i][1]];
-		if(!entity2) throw("Unable to find bone: "+pairs2[i][1]);
 		const bone1 = armature.getBoneByName(pairs2[i][0]);
-		const bone2 = armature.getBoneByName(pairs2[i][1]);
+		//const bone2 = armature.getBoneByName(pairs2[i][1]);
 		const coords = getRigidBodyWorldCoordinates(armature, bone1.name);
-		const b1 = coords[0];
-		const locals = calculateLocalConnectionFromWorld(
-			entity1.physics, entity2.physics, b1.x, b1.y, b1.z
-		)
 
+		const b1 = coords[0];
 		const defaultLim = Math.PI;
 		const lim = 20;
 		let low = [-defaultLim / lim, -defaultLim / lim, -defaultLim / lim];
@@ -280,36 +330,27 @@ function connectRigidBodies(entities, armature, namePrefix, pairs2) {
 		if(pairs2[i][3]) {
 			high = pairs2[i][3].map(x=>x * 0.5);
 		}
-		const q1 = bone1.quaternion.clone()
-		bone1.getWorldQuaternion(q1);
-		const q2 = bone2.quaternion.clone()
-		bone2.getWorldQuaternion(q2);
-
-		newEntities[namePrefix+".constraint."+pairs2[i][0]] = {
-			"constraint": {
-				type: "6DOF",
-				bodyA: namePrefix+".bone."+pairs2[i][0],
-				bodyB: namePrefix+".bone."+pairs2[i][1],
-				localA: locals.localA,
-				localB: locals.localB,
-				options: {
-					quaternionA: [q1.x, q1.y, q1.z, -q1.w],
-					quaternionB: [q2.x, q2.y, q2.z, -q2.w],
-					disableCollision: true,
-					rotationLimitsLow : low,
-					rotationLimitsHigh : high
-				}
-			}
-		};
+		newEntities[namePrefix+".constraint."+pairs2[i][0]] = connectRigidBodies(
+			namePrefix+".bone."+pairs2[i][0],
+			namePrefix+".bone."+pairs2[i][1],
+			entity1.physics, 
+			entity2.physics,
+			[b1.x, b1.y, b1.z],
+			low,
+			high
+		)
 	}
 	return newEntities;
 }
 
-function pinConstriants(entities, namePrefix, pins) {
+function pinConstraints(entities, namePrefix, pins) {
 	for(let i in pins) {
 		//const constraint = namePrefix+".constraint."+pins[i];
 		const pin = namePrefix+".pin."+pins[i][0];
 		const bone = namePrefix+".bone."+pins[i][0];
+		if(!bone in entities) {
+			continue;
+		}
 		var x = entities[bone].physics.x;
 		var y = entities[bone].physics.y;
 		var z = entities[bone].physics.z;
@@ -323,7 +364,8 @@ function pinConstriants(entities, namePrefix, pins) {
             [pin+".1"]: {
                 "entity": {x: x, y: y, z: z},
                 "render": {type: "sphere", radius: 0.025 },
-                "physics": {x: x, y: y, z: z, shape: {type: "sphere", radius: 0.025 }, mass: 0, noContact: true, kinematic: true}
+                "physics": {x: x, y: y, z: z, shape: {type: "sphere", radius: 0.025 }, mass: 0, noContact: true, kinematic: true},
+                //"particle": {maxAge: 500}
             },
             [pin+".2"]: {
                 "entity": {x: x, y: y, z: z},
@@ -335,7 +377,7 @@ function pinConstriants(entities, namePrefix, pins) {
                         disableCollision: true,
                         //rotationLimitsLow : [-100,-100,-100],
                         //rotationLimitsHigh : [100, 100, 100],
-                        spring: true, stiffness: 5000.0 * entities[bone].physics.mass, distance: 2, damping: 0.5
+                        spring: true, stiffness: 10000.0 * entities[bone].physics.mass, distance: 20//, damping: 0.5
                     }
                 },
                 //"particle": {maxAge: 500}
@@ -343,19 +385,19 @@ function pinConstriants(entities, namePrefix, pins) {
         }
 	}
 	
-	try {
+	/*try {
 		const springSettings = { 
-			distance: 5.0, spring: true, stiffness: 250.0, disableCollision: false 
+			distance: 0.02, spring: true, stiffness: 250.0//, disableCollision: false 
 		};
-		entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options = {
-			...entities[namePrefix+".constraint.RootNode_rPectoral"].constraint.options,
+		entities[namePrefix+".constraint.DEF-breast_R"].constraint.options = {
+			...entities[namePrefix+".constraint.DEF-breast_R"].constraint.options,
 			...springSettings
 		};
-		entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options = {
-			...entities[namePrefix+".constraint.RootNode_lPectoral"].constraint.options,
+		entities[namePrefix+".constraint.DEF-breast_L"].constraint.options = {
+			...entities[namePrefix+".constraint.DEF-breast_L"].constraint.options,
 			...springSettings
 		}
-	} catch(e) { console.warn(e); }
+	} catch(e) { console.warn(e); }*/
 
 	return entities;
 }
@@ -372,18 +414,20 @@ function moveBodies(entities, offset, rotation) {
 	return entities;
 }
 
-function spawnRagdoll(namePrefix, armature, pairs, pairs2, offset, rotation) {
-    const pins = [
-		['DEF-spine_006', 0.00728, 1.01423, -0.2011]
-	];
-
-	let entities = createConvexHullMesh(armature, namePrefix, pairs);
+function spawnRagdoll(namePrefix, skinnedMesh, pairs, pairs2, offset, rotation, pins) {
+	//const skinnedMesh = OBJECTS.createImplicit(renderState, 'test');
+	let entities = createConvexHullMesh(skinnedMesh, namePrefix, pairs);
 	//let entities = createCubeMesh(armature, namePrefix, pairs);
-	entities = connectRigidBodies(entities, armature.skeleton, namePrefix, pairs2);
+	entities = createJointsFromMap(entities, skinnedMesh.skeleton, namePrefix, pairs2);
 	//entities = moveBodies(entities, offset, rotation);
-	entities = pinConstriants(entities, namePrefix, pins);
+	if(pins) {
+		entities = pinConstraints(entities, namePrefix, pins);
+	}
 	
 	return entities;
 }
 
-export {spawnRagdoll, searchTree, vectorizeBuffer, findSkinnedMesh}
+export {
+	spawnRagdoll, searchTree, vectorizeBuffer, findSkinnedMesh, pinConstraints,
+	connectRigidBodies, getRigidBodyWorldCoordinates, gatherVertices2, createJointsFromMap
+}

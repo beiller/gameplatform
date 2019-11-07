@@ -376,7 +376,7 @@ function applyAnimation(state, id, eventHandler, gameState) {
 }
 
 //run physics in worker
-//const worker1 = new ENGINE.ThreadWorker({workerPath: 'modules/physics.js'})
+const worker1 = new ENGINE.ThreadWorker({workerPath: 'modules/physics.js'})
 
 const systems = [	
 	{ name: "input", func: applyInput },
@@ -412,10 +412,10 @@ const middleware = [
 	InspectorMiddleware.middleware
 ];
 
-function loadWorld(worldFunction) {
+/*function loadWorld(worldFunction) {
 	ENGINE.init({...worldFunction, systems: systems}, middleware);
 	PHYSICS.resetWorld();
-}
+}*/
 
 function main() {
 	ENGINE.init({...LEVEL.mainLevel(), systems: systems}, middleware);

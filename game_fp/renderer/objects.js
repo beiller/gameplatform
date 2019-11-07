@@ -18,6 +18,7 @@ const rockMaterial = new THREE.MeshStandardMaterial(
 )
 const treeMaterial = new THREE.MeshStandardMaterial({roughness: 0.85, color: new THREE.Color(0x332525)});
 const defaultMaterial = new THREE.MeshStandardMaterial({roughness: 0.5});
+//const defaultMaterial = new THREE.MeshBasicMaterial({wireframe: true});
 const groundMaterial = new THREE.MeshStandardMaterial( { roughness: 0.65 } );
 
 const settings = {
@@ -287,11 +288,70 @@ function createTorusKnot(state, id) {
 }
 
 function createConvexHull(state, id) {
-	const newPoints = state.points.map(p => new THREE.Vector3(p.x, p.y, p.z));
+	//const newPoints = state.points.map(p => new THREE.Vector3(p.x, p.y, p.z));
+	const newPoints = [];
+	for(let i = 0; i < state.points.length/3; i++) {
+		const rI = i * 3;
+		newPoints.push(new THREE.Vector3(state.points[rI], state.points[rI+1], state.points[rI+2]));
+	}
 	return new THREE.Mesh(
     	new THREE.ConvexGeometry( newPoints ),
     	defaultMaterial
     );
+}
+
+function createThreeSkeleton(state) {
+	const bones = {}
+	let rootBone = null;
+	state.skeleton.map((b) => {
+		const newBone = new THREE.Bone();
+		if(!rootBone) rootBone = newBone;
+		newBone.name = b.name;
+		bones[b.name] = newBone;
+	});
+	state.skeleton.map((b) => {
+		if(b.parent && b.parent in bones) {
+			bones[b.parent].add(bones[b.name]);
+		}
+		bones[b.name].position.fromArray(b.position);
+		bones[b.name].quaternion.fromArray(b.quaternion);
+	});
+	rootBone.traverse(childBone=>childBone.updateMatrixWorld(true));
+	return new THREE.Skeleton(Object.keys(bones).map(k=>bones[k]));
+}
+function createImplicit(state, id) {
+	const geom = new THREE.BufferGeometry();
+	geom.addAttribute( 'position', new THREE.Float32BufferAttribute( state.points, 3 ) );
+	geom.addAttribute( 'uv', new THREE.Float32BufferAttribute( state.uv, 2 ) );
+	if('index' in state) {
+		geom.setIndex(state.index);
+	}
+	if('skinIndex' in state) {
+		geom.addAttribute( 'skinIndex', new THREE.Float32BufferAttribute( state.skinIndex, 4 ) );
+		geom.addAttribute( 'skinWeight', new THREE.Float32BufferAttribute( state.skinWeight, 4 ) );
+	}
+	if('normal' in state) {
+		geom.addAttribute( 'normal', new THREE.Float32BufferAttribute( state.normal, 3 ) );
+	} else {
+		const g2 = new THREE.Geometry().fromBufferGeometry(geom);
+		g2.mergeVertices();
+		g2.computeVertexNormals();
+		geom.fromGeometry(g2);
+	}
+	if('groups' in state) {
+		for(let i = 0; i < state.groups.length; i++) {
+			geom.addGroup(state.groups[i].start, state.groups[i].count, state.groups[i].materialIndex);
+		}
+	} else {
+		geom.addGroup(0, state.points.length / 3);
+	}
+	
+	if('skeleton' in state) {
+		const mesh = new THREE.SkinnedMesh(geom, defaultMaterial);
+		mesh.bind(createThreeSkeleton(state));
+		return mesh;
+	}
+	return new THREE.Mesh(geom, defaultMaterial);;
 }
 
 function createBox(state, id) {
@@ -473,7 +533,8 @@ const loaders = {
 	"light": createThreeLight,
 	"axis": createDebugAxis,
 	"torusknot": createTorusKnot,
-	"convex": createConvexHull
+	"convex": createConvexHull,
+	"implicit": createImplicit
 }
 
-export {loaders, createLight, createPointLight, createDebugAxis, makeTextTexture}
+export {loaders, createLight, createPointLight, createDebugAxis, makeTextTexture, createImplicit}

@@ -11,7 +11,7 @@ const KNEE = Math.PI;
 const FOOT_BEND = Math.PI * 0.35;
 const FOOT_TWIST = Math.PI * 0.15;
 const SPINE_BEND = 0.5;
-const CHEST = 0.25;
+const CHEST = 0.45;
 const SPINE_TWIST = 0.15;
 /*
 const THIGH_BEND = 0;
@@ -29,6 +29,7 @@ const ELBOW = Math.PI;
 const HAND_BEND = Math.PI * 0.5;
 const HAND_TWIST = Math.PI * 0.15;
 
+const HAIR = Math.PI / 4;
 
 const jointData = {
 	'xnalara': {
@@ -166,7 +167,7 @@ const jointData = {
 		["RootNode_lMetatarsals", "RootNode_lFoot", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]]
 	]
 	},
-	'princessRigify': {
+	'free/free_mesh_standard.dae': {
 		pairs: [
 			["DEF-spine", "DEF-spine_001"],
 			["DEF-spine_001", "DEF-spine_002"],
@@ -175,6 +176,11 @@ const jointData = {
 			["DEF-spine_004", "DEF-spine_005"],
 			["DEF-spine_005", "DEF-spine_006"],
 			["DEF-spine_006", 0.2],
+
+			["DEF-breast_R", 0.2],
+			["DEF-breast_L", 0.2],
+			["DEF-pelvis_R", 0.2],
+			["DEF-pelvis_L", 0.2],
 
 			["DEF-thigh_R", "DEF-thigh_R_001"],
 			["DEF-thigh_R_001", "DEF-shin_R"],
@@ -203,67 +209,89 @@ const jointData = {
 			["DEF-hand_R", 0.2]
 		], 
 		pairs2: [
-			["DEF-spine", "DEF-spine_001", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
-			["DEF-spine_001", "DEF-spine_002", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
-			["DEF-spine_002", "DEF-spine_003", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
-			["DEF-spine_003", "DEF-spine_004", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [SPINE_BEND, SPINE_TWIST, SPINE_TWIST]],
+			["DEF-spine", "DEF-spine_001", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [EPS, SPINE_TWIST, SPINE_TWIST]],
+			["DEF-spine_001", "DEF-spine_002", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [EPS, SPINE_TWIST, SPINE_TWIST]],
+			["DEF-spine_002", "DEF-spine_003", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [EPS, SPINE_TWIST, SPINE_TWIST]],
+			["DEF-spine_003", "DEF-spine_004", [-SPINE_BEND, -SPINE_TWIST, -SPINE_TWIST], [EPS, SPINE_TWIST, SPINE_TWIST]],
 			["DEF-spine_004", "DEF-spine_005", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
 			["DEF-spine_005", "DEF-spine_006", [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
 
-			["DEF-thigh_R", "DEF-spine", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
-			["DEF-thigh_R_001", "DEF-thigh_R", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-breast_L", "DEF-spine_002", [-CHEST, -CHEST, -CHEST], [CHEST, CHEST, CHEST]],
+			["DEF-breast_R", "DEF-spine_002", [-CHEST, -CHEST, -CHEST], [CHEST, CHEST, CHEST]],
+			["DEF-pelvis_L", "DEF-spine",     [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+			["DEF-pelvis_R", "DEF-spine",     [-EPS, -EPS, -EPS], [EPS, EPS, EPS]],
+
+			["DEF-thigh_R", "DEF-pelvis_R", [-THIGH_BEND, -THIGH_ROTATE, -EPS], [EPS, THIGH_ROTATE, EPS]],
+			["DEF-thigh_R_001", "DEF-thigh_R", [-EPS, -EPS, -ARMLEG_TWIST], [EPS, EPS, ARMLEG_TWIST]],
 			["DEF-shin_R", "DEF-thigh_R_001", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
-			["DEF-shin_R_001", "DEF-shin_R", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-shin_R_001", "DEF-shin_R", [-EPS, -EPS, -ARMLEG_TWIST], [EPS, EPS, ARMLEG_TWIST]],
 			["DEF-foot_R", "DEF-shin_R_001", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
 			["DEF-toe_R", "DEF-foot_R", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
 
-			["DEF-thigh_L", "DEF-spine", [-THIGH_BEND, -EPS, -THIGH_ROTATE], [EPS, EPS, THIGH_ROTATE]],
-			["DEF-thigh_L_001", "DEF-thigh_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-thigh_L", "DEF-pelvis_L", [-THIGH_BEND, -THIGH_ROTATE, -EPS], [EPS, THIGH_ROTATE, EPS]],
+			["DEF-thigh_L_001", "DEF-thigh_L", [-EPS, -EPS, -ARMLEG_TWIST], [EPS, EPS, ARMLEG_TWIST]],
 			["DEF-shin_L", "DEF-thigh_L_001", [-EPS, -ARMLEG_TWIST, -EPS], [KNEE, ARMLEG_TWIST, EPS]],
-			["DEF-shin_L_001", "DEF-shin_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-shin_L_001", "DEF-shin_L", [-EPS, -EPS, -ARMLEG_TWIST], [EPS, EPS, ARMLEG_TWIST]],
 			["DEF-foot_L", "DEF-shin_L_001", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
 			["DEF-toe_L", "DEF-foot_L", [-FOOT_BEND, -FOOT_TWIST, -FOOT_TWIST], [FOOT_BEND, FOOT_TWIST, FOOT_TWIST]],
 
 			["DEF-shoulder_R", "DEF-spine_003", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
 			["DEF-upper_arm_R", "DEF-shoulder_R", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
-			["DEF-upper_arm_R_001", "DEF-upper_arm_R", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-upper_arm_R_001", "DEF-upper_arm_R", [-EPS, -EPS, -ARMLEG_TWIST], [EPS, EPS, ARMLEG_TWIST]],
 			["DEF-forearm_R", "DEF-upper_arm_R_001", [-EPS, -EPS, -ELBOW], [EPS, EPS, EPS]],
-			["DEF-forearm_R_001", "DEF-forearm_R", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-forearm_R_001", "DEF-forearm_R", [-EPS, -EPS, -ARMLEG_TWIST], [EPS, EPS, ARMLEG_TWIST]],
 			["DEF-hand_R", "DEF-forearm_R_001", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
 			
 			["DEF-shoulder_L", "DEF-spine_003", [-COLLAR, -COLLAR, -COLLAR], [COLLAR, COLLAR, COLLAR]],
 			["DEF-upper_arm_L", "DEF-shoulder_L", [-SHLDR, -EPS, -SHLDR], [SHLDR, EPS, SHLDR]],
-			["DEF-upper_arm_L_001", "DEF-upper_arm_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-upper_arm_L_001", "DEF-upper_arm_L", [-EPS, -EPS, -ARMLEG_TWIST], [EPS, EPS, ARMLEG_TWIST]],
 			["DEF-forearm_L", "DEF-upper_arm_L_001", [-EPS, -EPS, -ELBOW], [EPS, EPS, EPS]],
-			["DEF-forearm_L_001", "DEF-forearm_L", [-EPS, -ARMLEG_TWIST, -EPS], [EPS, ARMLEG_TWIST, EPS]],
+			["DEF-forearm_L_001", "DEF-forearm_L", [-EPS, -EPS, -ARMLEG_TWIST], [EPS, EPS, ARMLEG_TWIST]],
 			["DEF-hand_L", "DEF-forearm_L_001", [-HAND_BEND, -HAND_TWIST, -HAND_TWIST], [HAND_BEND, HAND_TWIST, HAND_TWIST]],
 		]
 	},
-	'long_hair': {
+	'free/long_hair.dae': {
 		pairs: [
 			//head
 			["DEF-spine_006", 0.1],
 
 			//ponytail
-			["bone_006", 0.1],
-			["bone_007", 0.1],
-			["bone_008", 0.1],
-			["bone_009", 0.1],
-			["bone_010", 0.1],
-			["bone_011", 0.1],
-			["bone_012", 0.1],
-			["bone_013", 0.1],
-			["bone_014", 0.1],
+			["Bone_006", 0.1],
+			["Bone_007", 0.1],
+			["Bone_008", 0.1],
+			["Bone_009", 0.1],
+			["Bone_010", 0.1],
+			["Bone_011", 0.1],
+			["Bone_012", 0.1],
+			["Bone_013", 0.1],
+			["Bone_014", 0.1],
 
 			//bangs
-			["bone_015", 0.1],
+			["Bone_015", 0.1],
 
 			//side tail
-			["bone_003", 0.1],
-			["bone_004", 0.1],
-			["bone_005", 0.1]
+			["Bone_003", 0.1],
+			["Bone_004", 0.1],
+			["Bone_005", 0.1]
+		], 
+		pairs2: [
+			["Bone_006", "DEF-spine_006", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_007", "Bone_006", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_008", "Bone_007", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_009", "Bone_008", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_010", "Bone_009", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_011", "Bone_010", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_012", "Bone_011", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_013", "Bone_012", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_014", "Bone_013", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+
+			["Bone_015", "DEF-spine_006", [-.1, -.1, -.1], [.1, .1, .1]], //bangs
+
+			["Bone_003", "DEF-spine_006", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_004", "Bone_003", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]],
+			["Bone_005", "Bone_004", [-HAIR, -HAIR, -HAIR], [HAIR, HAIR, HAIR]]
 		]
-	},
+	}
 };
 
 export { jointData }

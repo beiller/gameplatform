@@ -50,7 +50,7 @@ const functionMap = {
     "createEntity": createEntity,
     "deleteEntity": deleteEntity,
     "addBehaviour": addBehaviour,
-    "removeBehaviour": deleteEntity
+    "removeBehaviour": removeBehaviour
 }
 
 function processEvents(eventList) {
@@ -92,7 +92,7 @@ class ThreadWorker  {
         this.workerPromises = {};
         this.counter = 0;
         let _self = this;
-        this.worker.addEventListener('message', function(e) {
+        this.worker.addEventListener('message', function(e) { // When we get a message from the worker
             _self.workerPromises[e.data.responseId](e.data.response);
             delete _self.workerPromises[e.data.responseId];
             processEvents(e.data.events);
@@ -103,7 +103,7 @@ class ThreadWorker  {
         const message = {
             responseId: this.counter,
             systemName: systemName,
-            gameState: gameState.state
+            gameState: {...gameState.state, "render": {}}
         };
         this.worker.postMessage(message); // Send data to our worker.
         const promise = new Promise((resolve, reject)=>{this.workerPromises[this.counter] = resolve});
@@ -169,7 +169,9 @@ function doStateTransition(state, objectId, systemName, systemFunc, eventHandler
             gameState
         );
     } catch(e) {
-        console.log(e);
+        console.log("Removing Behaviour", systemName, " from ", objectId, " due to error ", e);
+        console.trace();
+        eventHandler.removeBehaviour(systemName, objectId);
         return state;
     }
 }

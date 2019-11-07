@@ -21,10 +21,12 @@ const collisionFlags = {
 	CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
 };
 
+const MAX_HULL_POINTS = 1000;
+
 const stepHz = 60;
 const stepDt = 1/stepHz;
-//const constraintSolverIterations = null;  // use null for default
-const constraintSolverIterations = 150;  // use null for default
+const constraintSolverIterations = null;  // use null for default
+//const constraintSolverIterations = 5;       // use null for default
 const useSplitImpulse = null;
 const globalCollisionMap = {};
 const bodyIdMap = {};
@@ -37,7 +39,7 @@ const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
 	//m_dynamicsWorld.stepSimulation(stepDt);
-	m_dynamicsWorld.stepSimulation(stepDt, 10, 1./240);
+	m_dynamicsWorld.stepSimulation(stepDt, 3, 1./250);
 };
 
 function buildBodyIdMap(gameState) {
@@ -219,11 +221,15 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	if(!options.quaternionA) { options.quaternionA = [0,0,0,1] };
 	if(!options.quaternionB) { options.quaternionB = [0,0,0,1] };
 
-	temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
-	temp_quat_1.setValue(options.quaternionA[0], options.quaternionA[1], options.quaternionA[2], options.quaternionA[3]);
 	temp_trans_1.setIdentity();
-	temp_trans_1.setRotation(temp_quat_1);
-	temp_trans_1.setOrigin(temp_vec3_1);
+	if(options.quaternionA) {
+		temp_quat_1.setValue(options.quaternionA[0], options.quaternionA[1], options.quaternionA[2], options.quaternionA[3]);
+		temp_trans_1.setRotation(temp_quat_1);
+	}
+	if(localA) {
+		temp_vec3_1.setValue(localA[0], localA[1], localA[2]);
+		temp_trans_1.setOrigin(temp_vec3_1);
+	}
 
 	if(localB) {
 		temp_vec3_2.setValue(localB[0], localB[1], localB[2]);
@@ -232,11 +238,13 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 		temp_trans_2.setRotation(temp_quat_2);
 		temp_trans_2.setOrigin(temp_vec3_2);
 	}
-	const useLinearReferenceFrameB = false;
+	//const useLinearReferenceFrameB = false;
 	if(bodyB) {
-		var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, bodyB, temp_trans_1, temp_trans_2, useLinearReferenceFrameB);
+		//var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, bodyB, temp_trans_1, temp_trans_2, useLinearReferenceFrameB);
+		var constraint = new Ammo.btGeneric6DofSpring2Constraint(bodyA, bodyB, temp_trans_1, temp_trans_2);
 	} else {
-		var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, temp_trans_1, useLinearReferenceFrameB);
+		//var constraint = new Ammo.btGeneric6DofSpringConstraint(bodyA, temp_trans_1, useLinearReferenceFrameB);
+		var constraint = new Ammo.btGeneric6DofSpring2Constraint(bodyA, temp_trans_1);
 	}
 
 	var angleLow = options.rotationLimitsLow ? options.rotationLimitsLow : [-Math.PI, -Math.PI/2, -Math.PI];
@@ -247,21 +255,31 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	constraint.setAngularUpperLimit(temp_vec3_2);
 
 	if(options.spring) {
-		for(let i = 0; i < 7; i++) {
+		for(let i = 0; i < 3; i++) {
 			constraint.enableSpring(i, true);
-			if(options.stiffness) constraint.setStiffness(i, options.stiffness || 25.0);
-			if(options.damping) constraint.setDamping(i, options.damping || 0.9);
+			if(options.stiffness) constraint.setStiffness(i, options.stiffness);
+			if(options.damping) constraint.setDamping(i, options.damping);
 		}
-		const dist = options.distance || 0.1;
-		temp_vec3_1.setValue(-dist, -dist, -dist);
-		constraint.setLinearLowerLimit(temp_vec3_1);
-		temp_vec3_2.setValue(dist, dist, dist);
-		constraint.setLinearUpperLimit(temp_vec3_2);
+		if(options.distance) {
+			const dist = options.distance;
+			if(typeof dist == 'number') {
+				temp_vec3_1.setValue(-dist, -dist, -dist);
+				constraint.setLinearLowerLimit(temp_vec3_1);
+				temp_vec3_2.setValue(dist, dist, dist);
+				constraint.setLinearUpperLimit(temp_vec3_2);
+			} else {
+				temp_vec3_1.setValue(-dist[0], -dist[1], -dist[2]);
+				constraint.setLinearLowerLimit(temp_vec3_1);
+				temp_vec3_2.setValue(dist[0], dist[1], dist[2]);
+				constraint.setLinearUpperLimit(temp_vec3_2);
+			}
+		}
 		if('equilibriumPoint' in options) {
-			constraint.setEquilibriumPoint();
 			constraint.setEquilibriumPoint(0, options.equilibriumPoint[0]);
 			constraint.setEquilibriumPoint(1, options.equilibriumPoint[1]);
 			constraint.setEquilibriumPoint(2, options.equilibriumPoint[2]);
+		} else {
+			//constraint.setEquilibriumPoint();
 		}
 	} else {
 		temp_vec3_1.setValue(0,0,0);
@@ -272,11 +290,12 @@ function createConstraint6DOF(bodyA, bodyB, localA, localB, options) {
 	if('disableCollision' in options && options['disableCollision'] === true) {
 		disableConnectedCollisions = options['disableCollision'];
 	}
-	world.m_dynamicsWorld.addConstraint(constraint, disableConnectedCollisions);
 	for(let i = 0; i < 6; i++) {
-		constraint.setParam( BT_CONSTRAINT_STOP_CFM, 0.1, i );
-		constraint.setParam( BT_CONSTRAINT_STOP_ERP, 0.9, i );
+		constraint.setParam( BT_CONSTRAINT_STOP_CFM, 0.05, i );
+		constraint.setParam( BT_CONSTRAINT_STOP_ERP, 0.95, i );
 	}
+	world.m_dynamicsWorld.addConstraint(constraint, disableConnectedCollisions);
+	
 	return constraint;
 }
 
@@ -375,9 +394,23 @@ function createShape(shapeInfo) {
 			if(!('points' in shapeInfo)) throw("Must specify triangles in shape info");
 			//console.log('Building convex hull');
 			shape = new Ammo.btConvexHullShape();
-			for ( let i = 0; i < shapeInfo.points.length; i++ ) {
-				const point = shapeInfo.points[i];
-				temp_vec3_1.setValue(point.x, point.y, point.z);
+			let points = shapeInfo.points;
+			function getRandomSubarray(arr, size) {
+				var shuffled = arr.slice(0), i = arr.length, temp, index;
+				while (i--) {
+					index = Math.floor((i + 1) * Math.random());
+					temp = shuffled[index];
+					shuffled[index] = shuffled[i];
+					shuffled[i] = temp;
+				}
+				return shuffled.slice(0, size);
+			}
+			/*if(points.length > MAX_HULL_POINTS) {
+				points = getRandomSubarray(points, MAX_HULL_POINTS);
+			}*/
+			for ( let i = 0; i < points.length/3; i++ ) {
+				const rI = i * 3;
+				temp_vec3_1.setValue(points[rI], points[rI+1], points[rI+2]);
 				shape.addPoint(temp_vec3_1);
 			}
 			//console.log('Done');
@@ -401,6 +434,38 @@ function createShape(shapeInfo) {
 	};
 	shape.setMargin(shapeInfo.margin || 0.0001);
 	return shape;
+}
+
+let SOFTBODY_HELPERS = null;
+
+function createSoftBodyShape(vertexData, indexData, mass, pressure) {
+	// Soft Body Margin
+	const margin = 0.05;
+	// Volume physic object
+	const volumeSoftBody = SOFTBODY_HELPERS.CreateFromTriMesh( world.getWorldInfo(), vertexData, indexData, indexData.length / 3, true );
+
+	var sbConfig = volumeSoftBody.get_m_cfg();
+	sbConfig.set_viterations( 40 );
+	sbConfig.set_piterations( 40 );
+
+	// Soft-soft and soft-rigid collisions
+	sbConfig.set_collisions( 0x11 );
+
+	// Friction
+	sbConfig.set_kDF( 0.1 );
+	// Damping
+	sbConfig.set_kDP( 0.01 );
+	// Pressure
+	sbConfig.set_kPR( pressure );
+	// Stiffness
+	volumeSoftBody.get_m_materials().at( 0 ).set_m_kLST( 0.9 );
+	volumeSoftBody.get_m_materials().at( 0 ).set_m_kAST( 0.9 );
+
+	volumeSoftBody.setTotalMass( mass, false )
+	Ammo.castObject( volumeSoftBody, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin );
+	world.addSoftBody( volumeSoftBody, 1, -1 );
+	// Disable deactivation
+	volumeSoftBody.setActivationState( 4 );
 }
 
 function getMat3(pos, rot) {
@@ -431,6 +496,7 @@ function init() {
 	temp_vec3_3 = new Ammo.btVector3(0,0,0);
 	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
+	SOFTBODY_HELPERS = new Ammo.btSoftBodyHelpers();
 	world = initPhysics();
 }
 
@@ -475,7 +541,6 @@ function resetWorld() {
 }
 
 const tempObject1 = {state: null}
-let simulateLock = false;
 function runSimulation(eventHandler, gameState) {
 	if(world === false) return;
 	if(!world) {
@@ -484,15 +549,9 @@ function runSimulation(eventHandler, gameState) {
 			init();
 		});
 		return;
-    }
-    if(!simulateLock) {
-        simulateLock = true;
-	    tempObject1.state = gameState;
-        stepWorld(tempObject1);
-        simulateLock = false;
-    } else {
-        console.warning("Physics frame skipped?")
-    }
+	}
+	tempObject1.state = gameState;
+	stepWorld(tempObject1);
 }
 
 function applyPhysics(state, id, eventHandler, gameState) {
@@ -585,6 +644,9 @@ function applyPhysics(state, id, eventHandler, gameState) {
 				temp_vec3_1.setValue(0, (( terrainMaxHeight + terrainMinHeight ) / 2) - (shapeInfo.margin || 0), 0);
 				t.setOrigin(temp_vec3_1);
 				bodies[id].getMotionState().setWorldTransform(t);
+			}
+			if('points' in state) {
+				delete state.points;
 			}
 			return {
 				...state, shape: shapeInfo

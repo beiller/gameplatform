@@ -334,10 +334,10 @@ function animateObject(state, id, gameState) {
 
 function updateCamera(state, id, eventHandler, gameState) {
 	if(id in gameState.input) {
-		if(gameState.input[id].buttons[2]) {
-			console.log("changing camera to sexycam");
-			return {...state, type: 'sexycam'}
-		} else if(gameState.input[id].buttons[3]) {
+		if('buttons' in gameState.input[id] && gameState.input[id].buttons[2]) {
+			console.log("changing camera to free cam");
+			return {...state, type: 'freecam'}
+		} else if('buttons' in gameState.input[id] && gameState.input[id].buttons[3]) {
 			console.log("changing camera to followcam");
 			return {...state, type: 'follow'}
 		}
@@ -492,16 +492,7 @@ function renderObject(state, id, eventHandler, gameState) {
 				}
 			}
 		}
-
-		return {
-			...state, 
-			loading: false,
-			offsetX: -tempThreeVector3.x, offsetY: -tempThreeVector3.y, offsetZ: -tempThreeVector3.z,
-			boundsX:  tempThreeVector4.x, boundsY:  tempThreeVector4.y, boundsZ:  tempThreeVector4.z,
-			xpos: loadedObjects[id].position.x, ypos: loadedObjects[id].position.y, zpos: loadedObjects[id].position.z,
-			xquat: loadedObjects[id].quaternion.x, yquat: loadedObjects[id].quaternion.y, 
-			zquat: loadedObjects[id].quaternion.z, wquat: loadedObjects[id].quaternion.w
-		};
+		return {...state, loading: false};
 	}
 
 	if(instanceable) {
@@ -544,6 +535,16 @@ function renderObject(state, id, eventHandler, gameState) {
 
 	if('materials' in state) {
 		state = applyMaterials(state, id);
+	}
+
+	if('script' in state) {
+		try {
+			eval(state.script)(loadedObjects[id], gameState, loadedObjects);
+		} catch(e) {
+			console.error("Error executing script:", e);
+			delete state['script'];
+			return {...state};
+		}
 	}
 
 	return state;
@@ -680,15 +681,21 @@ function copyPhysObjectToBone(armature, gameState, entityId, boneName) {
 		const physicsState = gameState.physics[entityId];
 
 		//get bone parent inverse
-		tempMat4_1.copy(bone.parent.matrixWorld);
-		tempMat4_2.getInverse(tempMat4_1);
+		if(bone.parent) {
+			tempMat4_1.copy(bone.parent.matrixWorld);
+			tempMat4_2.getInverse(tempMat4_1);
+		} else {
+			tempMat4_1.identity();
+			tempMat4_2.identity();
+		}
 
 		//calculate a bone offset
 		tempVec3_1.set(physicsState.x, physicsState.y, physicsState.z);
 		tempQua3_1.set(physicsState.rotation.x, physicsState.rotation.y, physicsState.rotation.z, physicsState.rotation.w)
 
 		//move bone by offset //TODO this can be more robust and not working with convex
-		tempVec3_2.set(physicsState.boneOffsetX, physicsState.boneOffsetY, physicsState.boneOffsetZ);
+		const rS = gameState.render[entityId];
+		tempVec3_2.set(rS.offsetX, rS.offsetY, rS.offsetZ);
 		tempVec3_2.applyQuaternion(tempQua3_1);
 		tempVec3_1.add(tempVec3_2);
 		
@@ -699,6 +706,8 @@ function copyPhysObjectToBone(armature, gameState, entityId, boneName) {
 		tempMat4_2.multiply(tempMat4_1).decompose(tempVec3_1, tempQua3_1, tempVec3_2);
 
 		//copy result to bone local coords
+		const newVec = tempVec3_1.clone();
+		newVec.normalize();
 		bone.position.copy(tempVec3_1);  
 		bone.quaternion.copy(tempQua3_1);
 
@@ -800,6 +809,7 @@ function updateParticlesFunction(particleSystem) {
 
 const createMaterial = function(materialOptions) {
 	const map = {
+		'wireframe': materialOptions.wireframe ? materialOptions.wireframe : false,
 		'normalScale' : materialOptions.normalScale ? new THREE.Vector2(materialOptions.normalScale, materialOptions.normalScale) : new THREE.Vector2(1, 1),
 		'bumpScale': 'bumpScale' in materialOptions ? materialOptions.bumpScale : 0.0025,
 		'color': materialOptions.color ? new THREE.Color( parseInt(materialOptions.color, 16) ) : new THREE.Color( 0xFFFFFF ),
@@ -846,6 +856,7 @@ const createMaterial = function(materialOptions) {
 
 function applyMaterials(state, id) {
 	if(id in loadedObjects) {
+		let hasUpdated = false;
 		state.materials.forEach((materialParameters, index) => {
 			if(!('needsUpdate' in materialParameters) || materialParameters.needsUpdate === true) {
 				if(!('length' in loadedObjects[id].material)) {
@@ -853,9 +864,12 @@ function applyMaterials(state, id) {
 				}
 				loadedObjects[id].material[index] = createMaterial(materialParameters);
 				state.materials[index].needsUpdate = false;
-				updateCubeMaps(hdrCubeRenderTarget);
+				hasUpdated = true;
 			}
 		});
+		if(hasUpdated) {
+			updateCubeMaps(hdrCubeRenderTarget);
+		}
 	}
 	return state;
 }

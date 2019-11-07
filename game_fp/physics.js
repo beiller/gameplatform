@@ -21,10 +21,12 @@ const collisionFlags = {
 	CF_DISABLE_SPU_COLLISION_PROCESSING: 64 
 };
 
+const MAX_HULL_POINTS = 1000;
+
 const stepHz = 60;
 const stepDt = 1/stepHz;
-//const constraintSolverIterations = null;  // use null for default
-const constraintSolverIterations = 5;  // use null for default
+const constraintSolverIterations = null;  // use null for default
+//const constraintSolverIterations = 5;       // use null for default
 const useSplitImpulse = null;
 const globalCollisionMap = {};
 const bodyIdMap = {};
@@ -37,7 +39,7 @@ const BT_CONSTRAINT_STOP_CFM = 4;
 
 function step(m_dynamicsWorld, dispatcher) {	
 	//m_dynamicsWorld.stepSimulation(stepDt);
-	m_dynamicsWorld.stepSimulation(stepDt, 5, 1./600);
+	m_dynamicsWorld.stepSimulation(stepDt, 3, 1./250);
 };
 
 function buildBodyIdMap(gameState) {
@@ -392,9 +394,23 @@ function createShape(shapeInfo) {
 			if(!('points' in shapeInfo)) throw("Must specify triangles in shape info");
 			//console.log('Building convex hull');
 			shape = new Ammo.btConvexHullShape();
-			for ( let i = 0; i < shapeInfo.points.length; i++ ) {
-				const point = shapeInfo.points[i];
-				temp_vec3_1.setValue(point.x, point.y, point.z);
+			let points = shapeInfo.points;
+			function getRandomSubarray(arr, size) {
+				var shuffled = arr.slice(0), i = arr.length, temp, index;
+				while (i--) {
+					index = Math.floor((i + 1) * Math.random());
+					temp = shuffled[index];
+					shuffled[index] = shuffled[i];
+					shuffled[i] = temp;
+				}
+				return shuffled.slice(0, size);
+			}
+			/*if(points.length > MAX_HULL_POINTS) {
+				points = getRandomSubarray(points, MAX_HULL_POINTS);
+			}*/
+			for ( let i = 0; i < points.length/3; i++ ) {
+				const rI = i * 3;
+				temp_vec3_1.setValue(points[rI], points[rI+1], points[rI+2]);
 				shape.addPoint(temp_vec3_1);
 			}
 			//console.log('Done');
@@ -418,6 +434,38 @@ function createShape(shapeInfo) {
 	};
 	shape.setMargin(shapeInfo.margin || 0.0001);
 	return shape;
+}
+
+let SOFTBODY_HELPERS = null;
+
+function createSoftBodyShape(vertexData, indexData, mass, pressure) {
+	// Soft Body Margin
+	const margin = 0.05;
+	// Volume physic object
+	const volumeSoftBody = SOFTBODY_HELPERS.CreateFromTriMesh( world.getWorldInfo(), vertexData, indexData, indexData.length / 3, true );
+
+	var sbConfig = volumeSoftBody.get_m_cfg();
+	sbConfig.set_viterations( 40 );
+	sbConfig.set_piterations( 40 );
+
+	// Soft-soft and soft-rigid collisions
+	sbConfig.set_collisions( 0x11 );
+
+	// Friction
+	sbConfig.set_kDF( 0.1 );
+	// Damping
+	sbConfig.set_kDP( 0.01 );
+	// Pressure
+	sbConfig.set_kPR( pressure );
+	// Stiffness
+	volumeSoftBody.get_m_materials().at( 0 ).set_m_kLST( 0.9 );
+	volumeSoftBody.get_m_materials().at( 0 ).set_m_kAST( 0.9 );
+
+	volumeSoftBody.setTotalMass( mass, false )
+	Ammo.castObject( volumeSoftBody, Ammo.btCollisionObject ).getCollisionShape().setMargin( margin );
+	world.addSoftBody( volumeSoftBody, 1, -1 );
+	// Disable deactivation
+	volumeSoftBody.setActivationState( 4 );
 }
 
 function getMat3(pos, rot) {
@@ -448,6 +496,7 @@ function init() {
 	temp_vec3_3 = new Ammo.btVector3(0,0,0);
 	temp_quat_1 = new Ammo.btQuaternion(0,0,0,1);
 	temp_quat_2 = new Ammo.btQuaternion(0,0,0,1);
+	SOFTBODY_HELPERS = new Ammo.btSoftBodyHelpers();
 	world = initPhysics();
 }
 
